@@ -1,0 +1,10 @@
+enum (<<= 1)
+{
+    CMD_USER = 1,
+    CMD_SUPPORTER,
+    CMD_JR_MODERATOR,
+    CMD_MODERATOR,
+    CMD_ADMIN,
+    CMD_DEVELOPER,
+    CMD_RCON
+}
