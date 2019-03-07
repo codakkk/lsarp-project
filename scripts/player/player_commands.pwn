@@ -283,7 +283,7 @@ CMD:b(playerid, params[])
     if(pAdminDuty[playerid])
     {
         new string[256];
-        format(string, sizeof(string), "(( Admin %s [%d]: %s ))", Character_GetOOCName(playerid), playerid, params);
+        format(string, sizeof(string), "(( Admin %s [%d]: %s ))", AccountInfo[playerid][aName], playerid, params);
         ProxDetector(playerid, 15.0, string, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF);
     }
     else
@@ -506,6 +506,62 @@ CMD:annulla(playerid, params[])
     if(gBuyingVehicle[playerid])
     {
         return ShowRoom_PlayerCancelBuy(playerid);
+    }
+    return 1;
+}
+
+flags:rimuovi(CMD_USER);
+CMD:rimuovi(playerid, params[])
+{
+    new
+        text[128];
+    if(sscanf(params, "s[128]", text))
+    {
+        SendClientMessage(playerid, COLOR_ERROR, "/rimuovi <oggetto>");
+        SendClientMessage(playerid, COLOR_ERROR, "Oggetti: zaino");
+        return 1;
+    }
+    if(!strcmp(text, "zaino", true))
+    {
+        if(!Character_HasBag(playerid))
+            return SendClientMessage(playerid, COLOR_ERROR, "Non stai indossando uno zaino!");
+        if(Character_GetInventoryUsedSpace(playerid) > PLAYER_INVENTORY_START_SIZE-1)
+            return SendClientMessage(playerid, COLOR_ERROR, "Non puoi toglierti lo zaino se hai piu' di 9 oggetti!");
+        Character_GiveItem(playerid, pInventoryBag[playerid], 1);
+        pInventoryBag[playerid] = 0;
+        SendClientMessage(playerid, COLOR_GREEN, "Lo zaino è stato rimesso nel tuo inventario!");
+        Character_AMe(playerid, "si toglie lo zaino");
+        return 1;
+    }
+    return 1;
+}
+
+stock GetWeaponAmmoItemID(weapon_id)
+{
+    return 90;
+}
+
+flags:dep(CMD_USER);
+CMD:dep(playerid, params[])
+{
+    new 
+        itemid = GetPlayerWeapon(playerid),
+        ammos = GetPlayerAmmo(playerid),
+        ammoItemId = GetWeaponAmmoItemID(itemid);
+    if(itemid != 0)
+    {
+        if(!Character_HasSpaceForItem(playerid, itemid, 1) || (ammos > 0 && !Character_HasSpaceForItem(playerid, ammoItemId, ammos)))
+        {
+            return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario!");
+        }
+        Character_GiveItem(playerid, itemid, 1);
+        Character_GiveItem(playerid, ammoItemId, ammos);
+        ResetPlayerWeapons(playerid);
+        SendFormattedMessage(playerid, COLOR_GREEN, "Hai depositato la tua arma (%s). Munizioni: %d", ServerItem_GetName(itemid), ammos);
+    }
+    else
+    {
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma!");
     }
     return 1;
 }

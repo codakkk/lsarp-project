@@ -15,7 +15,7 @@ hook OnGameModeInit()
             continue;
         ServerItem_ManualInitializeItem(i, Weapon_GetName(i), ITEM_TYPE:ITEM_TYPE_WEAPON, 1, 1);
     }
-    ServerItem_InitializeItem("Hamburger Preconfezionato", ITEM_TYPE:ITEM_TYPE_FOOD, 2, 0);
+    ServerItem_InitializeItem("Hamburger Preconfezionato", ITEM_TYPE:ITEM_TYPE_FOOD, 0, 2, 0);
 	ServerItem_InitializeItem("Fagioli in barattolo", ITEM_TYPE:ITEM_TYPE_FOOD, 2, 0);
 	ServerItem_InitializeItem("Barrette Energetiche", ITEM_TYPE:ITEM_TYPE_FOOD, 2, 0);
 	ServerItem_InitializeItem("Carne Essiccata", ITEM_TYPE:ITEM_TYPE_FOOD, 2, 0);
@@ -36,9 +36,11 @@ hook OnGameModeInit()
 	ServerItem_InitializeItem("Bende", ITEM_TYPE:ITEM_TYPE_MEDIK, 1, 1);
 	ServerItem_InitializeItem("Kit Pronto Soccorso", ITEM_TYPE:ITEM_TYPE_MEDIK, 1, 1);
 
-    ServerItem_InitializeItem("Zainetto", ITEM_TYPE:ITEM_TYPE_BAG, 1, 1);
-    ServerItem_InitializeItem("Zaino Grande", ITEM_TYPE:ITEM_TYPE_BAG, 1, 1);
+    ServerItem_InitializeItem("Zainetto", ITEM_TYPE:ITEM_TYPE_BAG, _, 1, 1, 5);
+    ServerItem_InitializeItem("Zaino Grande", ITEM_TYPE:ITEM_TYPE_BAG, _, 1, 1, 2);
     
+
+    ServerItem_ManualInitializeItem(90, "Munizioni", ITEM_TYPE:ITEM_TYPE_AMMO, 0, 9999999, 0);
     printf("Total items loaded: %d\n", Iter_Count(ServerItems));
     printf("---------- Server Items Created -------------");
     return 1;

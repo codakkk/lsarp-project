@@ -396,37 +396,38 @@ CMD:giveitem(playerid, params[])
     
     if(id == INVALID_ITEM_ID || !ServerItem_IsValid(itemid))
         return SendClientMessage(playerid, COLOR_ERROR, "L'item inserito non è corretto!");
-
+    
     if(quantity > 0)
     {
         new result = Character_GiveItem(id, itemid, quantity);
-        if(result == INVENTORY_ADD_SUCCESS || result >= 0)
+        if(result == INVENTORY_ADD_SUCCESS)
         {
-            if(result < 0)
-                result = 0;
-            SendFormattedMessage(playerid, COLOR_GREEN, "> Diff: %d", result);
-            SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha givato %s (Qnt: %d - Diff: %d) a %s (%d).", 
-            AccountInfo[playerid][aName], Character_GetOOCName(playerid), ServerItem[itemid][sitemName], quantity, result, Character_GetOOCName(id), id);
+            SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha givato %s (Qnt: %d) a %s (%d).", 
+            AccountInfo[playerid][aName], Character_GetOOCName(playerid), ServerItem[itemid][sitemName], quantity, Character_GetOOCName(id), id);
         }
-        else
+        else if(result == INVENTORY_NO_SPACE)
         {
-            if(result == INVENTORY_NO_SPACE)
-            {
-                SendFormattedMessage(playerid, COLOR_ERROR, "%s (%d) non ha abbastanza spazio nell'inventario!", Character_GetOOCName(id), id);
-            }
-            else
-            {
-                SendFormattedMessage(playerid, COLOR_ERROR, "Impossibile dare %s (Qnt: %d) a %s (%d). Errore sconosciuto. (Error ID: %d)", ServerItem_GetName(itemid), quantity, Character_GetOOCName(id), id, result);
-            }
+            SendFormattedMessage(playerid, COLOR_ERROR, "%s (%d) non ha abbastanza spazio nell'inventario!", Character_GetOOCName(id), id);
         }
     }
     else if(quantity < 0)
     {
         quantity = -quantity;
-        Character_DecreaseItemAmount(id, Character_HasItem(id, itemid), quantity);
+        Character_DecreaseItemAmount(id, itemid, quantity);
         SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha rimosso %s (Qnt: %d) a %s (%d).", 
         AccountInfo[playerid][aName], Character_GetOOCName(playerid), ServerItem[itemid][sitemName], quantity, Character_GetOOCName(id), id);
     }
+    return 1;
+}
+
+flags:giveweapon(CMD_ADMIN);
+CMD:giveweapon(playerid, params[])
+{
+    new id, wid, ammo;
+    if(sscanf(params, "uk<weapon>i", id, wid, ammo))
+        return SendClientMessage(playerid, COLOR_ERROR, "/giveweapon <playerid/partofname> <weaponid/weapon name> <ammo>");
+    GivePlayerWeapon(playerid, wid, ammo);
+    
     return 1;
 }
 

@@ -1,5 +1,10 @@
 #include <YSI/y_hooks>
 
+stock Account_CreateCharacter(playerid)
+{
+    
+    
+}
 
 stock OnAccountLogin(playerid)
 {

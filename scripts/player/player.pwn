@@ -5,6 +5,7 @@
 
 hook OnPlayerClearData(playerid)
 {
+    printf("player.pwn/OnPlayerClearData");
     Character_SetVehsDestroyTime(playerid);
     Character_Clear(playerid);
     return 1;
@@ -13,6 +14,35 @@ hook OnPlayerClearData(playerid)
 hook OnCharacterSaveData(playerid)
 {
     Character_Save(playerid, _, 1);
+    return 1;
+}
+
+hook OnPlayerInvItemUse(playerid, slot_id, item_id)
+{
+    new bool:decrease = false;
+    printf("player_inventory.pwn/OnPlayerInvItemUse", playerid);
+    if(ServerItem_IsBag(item_id))
+    {
+        // If character has bag
+        if(Character_HasBag(playerid))
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "Stai già indossando uno zaino! Usa '/rimuovi zaino' per rimuoverlo.");
+            return 1;
+            //Character_GiveItem(playerid, Character_GetBag(playerid), 1);
+        }
+        Character_AMe(playerid, "indossa lo zaino");
+        SendFormattedMessage(playerid, COLOR_GREEN, "Stai indossando '%s'. Usa '/rimuovi zaino' per rimuoverlo.", ServerItem_GetName(item_id));
+        pInventoryBag[playerid] = item_id;
+        decrease = true;
+    }
+    else if(ServerItem_IsWeapon(item_id))
+    {
+        
+    }
+    if(decrease)
+    {
+        Character_DecreaseItemAmount(playerid, slot_id, 1);
+    }
     return 1;
 }
 

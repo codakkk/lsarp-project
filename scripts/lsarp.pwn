@@ -50,6 +50,7 @@
 
 #include <YSI\y_hooks>
 
+forward TestFunc();
 
 // Others
 #include <utils/colors.pwn>
@@ -102,15 +103,6 @@
 main()
 {
     printf("LSARP - By CodaKKK. Started: 26/02/2019.");
-    /*for(new i = 0; i < MAX_ITEMS_PER_PLAYER; ++i)
-    {
-        printf("%d, ", pInventoryListItem[0][i]);
-    }
-    memset(pInventoryListItem[0], -1);
-    for(new i = 0; i < MAX_ITEMS_PER_PLAYER; ++i)
-    {
-        printf("%d, ", pInventoryListItem[0][i]);
-    }*/
 }
 
 new
@@ -138,7 +130,6 @@ public OnPlayerClearData(playerid)
     CharacterCreation_Reset(playerid);
     return 1;
 }
-
 
 public OnVehicleDeath(vehicleid, killerid)
 {
@@ -236,7 +227,7 @@ public OnPlayerText(playerid, text[])
     {
         //format(string, sizeof(string), "{FFFFFF}(( {FF6347}%s{FFFFFF} [%d]: %s ))", AccountInfo[playerid][aName], playerid, text);
         //ProxDetector(playerid, 15.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
-        pc_cmd_b(playerid, NULL);
+        pc_cmd_b(playerid, text);
     }
     else
     {

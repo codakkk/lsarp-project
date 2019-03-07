@@ -54,6 +54,13 @@ hook OnGameModeInit()
         `ExtraVar` INT(11) NOT NULL, \
         `Time` INT(11) NOT NULL, \
         PRIMARY KEY (`ID`))");
+    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS character_inventory \
+        (`CharacterID` INT(11) NOT NULL, \
+        `Items` VARCHAR(255) NULL, \
+        `ItemsAmount` VARCHAR(255) NULL, \
+        `ItemsExtraData` VARCHAR(255) NULL, \
+        `EquippedBag` INT(11) NULL,  \
+        PRIMARY KEY (`CharacterID`))");
     printf("Database Connected!");
     return 1;
 }

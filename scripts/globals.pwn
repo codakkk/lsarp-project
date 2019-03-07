@@ -27,8 +27,6 @@ new
     gPlayerAMeExpiry[MAX_PLAYERS],
 
     pVehicleKey[MAX_PLAYERS],
-    pGiveRequest[MAX_PLAYERS],
-    pGiveRequestItem[MAX_PLAYERS],
 
     gVehicleDestroyTime[MAX_VEHICLES],
     pLastAdminQuestionTime[MAX_PLAYERS],
