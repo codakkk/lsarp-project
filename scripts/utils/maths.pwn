@@ -29,3 +29,13 @@ stock IsPlayerInRangeOfVehicle(playerid, vehicleid, Float:radius)
     GetVehiclePos(vehicleid, x, y, z);
     return GetPlayerDistanceFromPoint(playerid, x, y, z) <= radius;
 }
+
+stock IsPlayerInRangeOfPickup(playerid, pickupid, Float:radius)
+{
+    if(pickupid < 0)
+        return 0;
+    new 
+        Float:x, Float:y, Float:z;
+    Pickup_GetPosition(pickupid, x, y, z);
+    return IsPlayerInRangeOfPoint(playerid, radius, x, y, z);
+}

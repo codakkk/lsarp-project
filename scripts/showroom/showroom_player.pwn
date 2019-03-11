@@ -64,8 +64,12 @@ stock ClearBuyingVehicleData(playerid)
     return 1;
 }
 
-stock OnPlayerPickUpShowRoomPickup(playerid, showroom_id)
+//stock OnPlayerPickUpShowRoomPickup(playerid, showroom_id)
+hook OnPlayerPickUpElmPickup(playerid, pickupid, elementId, E_ELEMENT_TYPE:type)
 {
+    if(type != ELEMENT_TYPE_DEALERSHIP)
+        return 1;
+    new showroom_id = elementId;
     if(AccountInfo[playerid][aAdmin] > 1)
     {
         new string[64];
@@ -94,15 +98,15 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
             ShowRoom_PlayerConfirmBuy(playerid);
         }
     }
-    else if(gPlayerLastPickup[playerid] != -1 && PRESSED(KEY_WALK))
+    else if(pLastPickup[playerid] != -1 && PRESSED(KEY_WALK))
     {
         new
             eID,
             E_ELEMENT_TYPE:eType,
             Float:x, Float:y, Float:z;
 
-        Pickup_GetInfo(gPlayerLastPickup[playerid], eID, eType);
-        Pickup_GetPosition(gPlayerLastPickup[playerid], x, y, z);
+        Pickup_GetInfo(pLastPickup[playerid], eID, eType);
+        Pickup_GetPosition(pLastPickup[playerid], x, y, z);
 
         if(IsPlayerInRangeOfPoint(playerid, 2.5, x, y, z))
         {

@@ -55,7 +55,7 @@ CMD:aduty(playerid, params[])
     return 1;
 }
 
-flags:setskin(CMD_JR_MODERATOR);
+flags:setskin(CMD_MODERATOR);
 CMD:setskin(playerid, params[])
 {
     new id, skid;
@@ -120,7 +120,7 @@ CMD:givemoney(playerid, params[])
     return 1;
 }
 
-flags:sethp(CMD_JR_MODERATOR);
+flags:sethp(CMD_MODERATOR);
 CMD:sethp(playerid, params[])
 {
     new id, hp;
@@ -142,7 +142,7 @@ CMD:sethp(playerid, params[])
 }
 alias:sethp("sethealth");
 
-flags:setarmour(CMD_JR_MODERATOR);
+flags:setarmour(CMD_MODERATOR);
 CMD:setarmour(playerid, params[])
 {
     new id, hp;
@@ -164,7 +164,7 @@ CMD:setarmour(playerid, params[])
 }
 alias:setarmour("setap");
 
-flags:veh(CMD_JR_MODERATOR);
+flags:veh(CMD_MODERATOR);
 CMD:veh(playerid, params[])
 {
     new veh;
@@ -203,7 +203,7 @@ CMD:jetpack(playerid, params[])
     return 1;
 }
 
-flags:setvhp(CMD_JR_MODERATOR);
+flags:setvhp(CMD_MODERATOR);
 CMD:setvhp(playerid, params[])
 {
     new id, Float:hp;
@@ -228,23 +228,25 @@ CMD:setvhp(playerid, params[])
 }
 alias:setvhp("setvhealth");
 
-flags:gotov(CMD_JR_MODERATOR);
+flags:gotov(CMD_MODERATOR);
 CMD:gotov(playerid, params[])
 {
     new id;
     if(sscanf(params, "d", id))
         return SendClientMessage(playerid, COLOR_ERROR, "> /gotov <vehicleid>");
     
-    if(id < 0 || id >= MAX_VEHICLES)
+    if(id < 1 || id >= MAX_VEHICLES)
         return SendClientMessage(playerid, COLOR_ERROR, "> Il veicolo non esiste!");
 
     new Float:x, Float:y, Float:z;
     GetVehiclePos(id, x, y, z);
     SetPlayerPos(playerid, x, y, z);
+    SetPlayerInterior(playerid, 0);
+    SetPlayerVirtualWorld(playerid, GetVehicleVirtualWorld(id)); 
     return 1;
 }
 
-flags:getvhere(CMD_JR_MODERATOR);
+flags:getvhere(CMD_MODERATOR);
 CMD:getvhere(playerid, params[])
 {
     new id;
@@ -260,7 +262,7 @@ CMD:getvhere(playerid, params[])
     return 1;
 }
 
-flags:apark(CMD_JR_MODERATOR);
+flags:apark(CMD_ADMIN);
 CMD:apark(playerid, params[])
 {
     new vehicleid = GetPlayerVehicleID(playerid);
@@ -289,7 +291,7 @@ CMD:apark(playerid, params[])
 }
 
 //flags:payday(CMD_RCON);
-flags:payday(CMD_JR_MODERATOR);
+flags:payday(CMD_RCON);
 CMD:payday(playerid, params[])
 {
     foreach(new i : Player)
@@ -369,22 +371,7 @@ CMD:check(playerid, params[])
     return 1;
 }
 
-flags:pm(CMD_JR_MODERATOR);
-CMD:pm(playerid, params[])
-{
-    new id, s[128];
-    if(sscanf(params, "us[128]", id, s) || isnull(s) || strlen(s) > 128)
-        return SendClientMessage(playerid, COLOR_ERROR, "> /pm <playerid/partofname> <testo>");
-    if(id < 0 || id >= MAX_PLAYERS || !gAccountLogged[id] || !gCharacterLogged[id])
-        return SendClientMessage(playerid, COLOR_ERROR, "> Il giocatore non è collegato!");
-
-    SendFormattedMessage(id, COLOR_YELLOW, "PM da %s (%d): %s", Character_GetOOCName(playerid), playerid, s);
-    SendFormattedMessage(playerid, COLOR_YELLOW, "PM a %s (%d) inviato.", Character_GetOOCName(id), id);
-    SendFormattedMessage(playerid, COLOR_YELLOW, "Testo: %s", s);
-    return 1;
-}
-
-flags:giveitem(CMD_JR_MODERATOR);
+flags:giveitem(CMD_ADMIN);
 CMD:giveitem(playerid, params[])
 {
     new id, itemid, quantity;
@@ -434,11 +421,29 @@ CMD:giveweapon(playerid, params[])
 flags:acmds(CMD_JR_MODERATOR);
 CMD:acmds(playerid, params[])
 {
-    SendClientMessage(playerid, -1, "/a - /aduty - /setskin - /setadmin - /givemoney");
-    SendClientMessage(playerid, -1, "/sethp - /setarmour - /veh - /jetpack - /setvhp");
-    SendClientMessage(playerid, -1, "/gotov - /getvhere - /apark - /payday - /goto");
-    SendClientMessage(playerid, -1, "/gethere - /gotopos - /check - /pm - /giveitem");
-    SendClientMessage(playerid, -1, "/acmds");
+    if(AccountInfo[playerid][aAdmin] >= 2)
+    {
+        SendClientMessage(playerid, -1, "[MODERATORE JR]: /a - /aduty - /goto - /gethere - /jetpack");
+        SendClientMessage(playerid, -1, "[MODERATORE JR]: /gotopos - /check");
+    }
+    if(AccountInfo[playerid][aAdmin] >= 2)
+    {
+        SendClientMessage(playerid, -1, "[MODERATORE]: /setskin - /sethp - /setvhp - /setarmour");
+        SendClientMessage(playerid, -1, "[MODERATORE]: /veh - /gotov - /getvhere");
+    }
+    if(AccountInfo[playerid][aAdmin] >= 3)
+    {
+        SendClientMessage(playerid, -1, "[ADMIN]: /giveitem - /apark");
+    }
+    if(AccountInfo[playerid][aAdmin] >= 4)
+    {
+        //SendClientMessage(playerid, -1, "[DEVELOPER]: /giveitem - /apark");
+    }
+    if(IsPlayerAdmin(playerid))
+    {
+        SendClientMessage(playerid, -1, "[RCON]: /setadmin - /givemoney - /payday")
+        SendClientMessage(playerid, -1, "[RCON]: /abuildingcmds - /ashowroomcmds");
+    }
     return 1;
 }
 

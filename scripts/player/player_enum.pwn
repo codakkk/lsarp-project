@@ -14,7 +14,16 @@ enum E_PLAYER_DATA
     Float:pHealth,
     Float:pArmour 
 };
-new PlayerInfo[MAX_PLAYERS][E_PLAYER_DATA];
+new 
+    PlayerInfo[MAX_PLAYERS][E_PLAYER_DATA],
+    pToggleOOCAll[MAX_PLAYERS],
+    pTogglePMAll[MAX_PLAYERS],
+    // probably Iterators aren't worth for this.
+    Iterator:pTogglePM[MAX_PLAYERS]<MAX_PLAYERS>,
+    Iterator:pToggleOOC[MAX_PLAYERS]<MAX_PLAYERS>
+    ;
+
+
 
 enum E_PLAYER_RESTORE_DATA
 {

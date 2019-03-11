@@ -390,11 +390,55 @@ stock ProxDetector(playerid, Float:radius, const string[], col1, col2, col3, col
         //printf("ID: %d - X: %f - Y: %f - Z: %f", playerid, x, y, z);
         //printf("ID: %d - X: %f - Y: %f - Z: %f", i, ox, oy, oz);
         //printf("ID: %d - Dist: %f - %f", i, dist, radius);
-        if(dist < (radius * radius) / (16 * 16)) SendClientMessage(i, col1, string);
-        else if(dist < (radius * radius) / (8 * 8)) SendClientMessage(i, col2, string);
-        else if(dist < (radius * radius) / (4 * 4)) SendClientMessage(i, col3, string);
-        else if(dist < (radius * radius) / (2 * 2)) SendClientMessage(i, col4, string);
-        else if(dist < (radius * radius)) SendClientMessage(i, col5, string);
+        if(dist < (radius * radius) / (16 * 16)) SendTwoLinesMessage(i, col1, string);
+        else if(dist < (radius * radius) / (8 * 8)) SendTwoLinesMessage(i, col2, string);
+        else if(dist < (radius * radius) / (4 * 4)) SendTwoLinesMessage(i, col3, string);
+        else if(dist < (radius * radius) / (2 * 2)) SendTwoLinesMessage(i, col4, string);
+        else if(dist < (radius * radius)) SendTwoLinesMessage(i, col5, string);
     }
     return 1;
+}
+
+stock SendTwoLinesMessage(playerid, color, const message[], GLOBAL_TAG_TYPES:...)
+{
+    new string[256];
+    format(string, sizeof(string), message, ___3);
+    new len = strlen(string);
+    if(len > 90)
+    {
+        new tmp1[100], tmp2[100];
+        
+        strmid(tmp1, string, 0, 90);
+        strins(tmp1, " ..", 90, 93);
+        strmid(tmp2, string, 90, len);
+        strins(tmp2, ".. ", 0, 90);
+        SendClientMessage(playerid, color, tmp1);
+        SendClientMessage(playerid, color, tmp2);
+    }
+    else
+    {
+        SendClientMessage(playerid, color, string);
+    }
+}
+
+stock SendTwoLinesMessageToAll(color, const message[], GLOBAL_TAG_TYPES:...)
+{
+    new string[256];
+    format(string, sizeof(string), message, ___3);
+    new len = strlen(string);
+    if(len > 90)
+    {
+        new tmp1[100], tmp2[100];
+        
+        strmid(tmp1, string, 0, 90);
+        strins(tmp1, " ..", 90, 93);
+        strmid(tmp2, string, 90, len);
+        strins(tmp2, ".. ", 0, 90);
+        SendClientMessageToAll(color, tmp1);
+        SendClientMessageToAll(color, tmp2);
+    }
+    else
+    {
+        SendClientMessageToAll(color, string);
+    }
 }

@@ -1,5 +1,7 @@
 #include <YSI\y_hooks>
 
+forward OnPlayerPickUpElementPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type);
+
 hook ClearData(playerid)
 {
     printf("On CLear");
@@ -10,18 +12,12 @@ hook OnPlayerPickUpDynPickup(playerid, pickupid)
     if(!gCharacterLogged[playerid] || IsPlayerInRangeOfPoint(playerid, 5.0, 0.0, 0.0, 0.0))
         return 0;
     new 
-        id = PickupInfo[pickupid][elementID],
+        elementid = PickupInfo[pickupid][elementID],
         E_ELEMENT_TYPE:type = PickupInfo[pickupid][elementType];
 
-    switch(type)
-    {
-        case ELEMENT_TYPE_DEALERSHIP:
-        {
-            OnPlayerPickUpShowRoomPickup(playerid, id);
-        }
-    }
+    CallLocalFunction("OnPlayerPickUpElementPickup", "iiii", playerid, pickupid, elementid, _:type);
 
-    gPlayerLastPickup[playerid] = pickupid;
+    pLastPickup[playerid] = pickupid;
     return 1;
 }
 

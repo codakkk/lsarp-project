@@ -413,6 +413,7 @@ stock Character_LoadInventory(playerid)
     new query[256];
     mysql_format(gMySQL, query, sizeof(query), "SELECT Items, ItemsAmount, ItemsExtraData, EquippedBag FROM `character_inventory` WHERE CharacterID = '%d'", PlayerInfo[playerid][pID]);
     mysql_tquery_inline(gMySQL, query, using inline OnLoad);
+    return 1;
 }
 
 CMD:resetinv(playerid, params[])

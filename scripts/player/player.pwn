@@ -55,17 +55,17 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
         {
             if(gVehicleDestroyTime[vehicleid] != -1)
             {
-                SendFormattedMessage(playerid, COLOR_ERROR, "(( Attenzione: Il proprietario del veicolo si è disconnesso. Il veicolo verrà distrutto in %d minuti. ))", gVehicleDestroyTime[vehicleid]);
+                SendTwoLinesMessage(playerid, COLOR_ERROR, "(( Attenzione: Il proprietario del veicolo (%s) si è disconnesso. Il veicolo verrà distrutto in %d minuti. ))", VehicleInfo[vehicleid][vOwnerName], gVehicleDestroyTime[vehicleid]);
             }
             new
                 playerName[MAX_PLAYER_NAME];
             
             FixName(VehicleInfo[vehicleid][vOwnerName], playerName);
-            SendFormattedMessage(playerid, COLOR_GREEN, "> Questo veicolo (%s) appartiene a %s", GetVehicleName(vehicleid), playerName);
+            SendFormattedMessage(playerid, COLOR_GREEN, "Questo veicolo (%s) appartiene a %s", GetVehicleName(vehicleid), playerName);
 
             if(Vehicle_IsEngineOff(vehicleid))
             {
-                SendClientMessage(playerid, -1, "> Premi SPAZIO (/motore) per accendere il motore.");
+                SendClientMessage(playerid, -1, "Premi SPAZIO (/motore) per accendere il motore.");
             }
         }
     }
@@ -98,7 +98,7 @@ hook OnPlayerRequestSpawn(playerid)
 hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
     new vehicleid = GetPlayerVehicleID(playerid);
-    if(vehicleid > 0)
+    if(vehicleid > 0 && GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
     {
         if( (PRESSED(KEY_HANDBRAKE) && Vehicle_IsEngineOff(vehicleid)) || PRESSED(KEY_ACTION) && Vehicle_IsEngineOn(vehicleid))
         {
@@ -444,17 +444,19 @@ stock GetPlayerNameEx(playerid)
     return string;
 }
 
-stock Character_AMe(playerid, text[])
+stock Character_AMe(playerid, text[], GLOBAL_TAG_TYPES:...)
 {
     gPlayerAMeExpiry[playerid] = 10; // Seconds
 
-    new string[128];
-    format(string, sizeof(string), "* %s *", text);
+    new 
+        textString[128],
+        temp[128];
+    format(textString, sizeof(textString), text, ___2);
 
-    UpdateDynamic3DTextLabelText(gPlayerAMe3DText[playerid], 0xD0AEEBFF, string);
+    format(temp, sizeof(temp), "* %s *", textString);
+    UpdateDynamic3DTextLabelText(gPlayerAMe3DText[playerid], 0xD0AEEBFF, temp);
     
-    format(string, sizeof(string), "* %s %s *", Character_GetOOCName(playerid), text);
-    SendClientMessage(playerid, 0xD0AEEBFF, string); //0xD6C3E3FF
+    SendTwoLinesMessage(playerid, 0xD0AEEBFF, "* %s %s *", Character_GetOOCName(playerid), textString); //0xD6C3E3FF
 
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
@@ -466,23 +468,28 @@ stock Character_AMe(playerid, text[])
     return 1;
 }
 
-stock Character_Me(playerid, text[])
+stock Character_Me(playerid, text[], GLOBAL_TAG_TYPES:...)
 {
     if(!gCharacterLogged[playerid] || strlen(text) > 256)
         return 0;
-    new string[256];
-    format(string, sizeof(string), "* %s %s", Character_GetOOCName(playerid), text);
-    ProxDetector(playerid, 20.0, string, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF); //0xD6C3E3FF
+    new 
+        formattedText[256];
+    format(formattedText, sizeof(formattedText), text, ___2);
+
+    format(formattedText, sizeof(formattedText), "* %s %s", Character_GetOOCName(playerid), formattedText);
+    ProxDetector(playerid, 20.0, formattedText, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF); //0xD6C3E3FF
     return 1;
 }
 
-stock Character_Do(playerid, text[])
+stock Character_Do(playerid, text[], GLOBAL_TAG_TYPES:...)
 {
     if(!gCharacterLogged[playerid] || strlen(text) > 256)
         return 0;
-    new string[256];
-    format(string, sizeof(string), "%s (( %s ))", text, Character_GetOOCName(playerid));
-    ProxDetector(playerid, 20.0, string, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF);
+    new 
+        formattedText[256];
+    format(formattedText, sizeof(formattedText), text, ___2);
+    format(formattedText, sizeof(formattedText), "%s (( %s ))", formattedText, Character_GetOOCName(playerid));
+    ProxDetector(playerid, 20.0, formattedText, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF);
     return 1;
 }
 
@@ -526,7 +533,12 @@ stock Character_ShowStats(playerid, targetid)
 
 stock Character_Clear(playerid)
 {
-    PlayerInfo[playerid][pID] = 0;
+    new CleanData[E_PLAYER_DATA];
+    PlayerInfo[playerid] = CleanData;
+
+    new CleanRestoreData[E_PLAYER_RESTORE_DATA];
+    PlayerRestore[playerid] = CleanRestoreData;
+    /*PlayerInfo[playerid][pID] = 0;
     set(PlayerInfo[playerid][pName], "");
     PlayerInfo[playerid][pMoney] = 0;
     PlayerInfo[playerid][pLevel] = 0;
@@ -546,5 +558,5 @@ stock Character_Clear(playerid)
     PlayerRestore[playerid][pLastHealth] = 0.0;
     PlayerRestore[playerid][pLastArmour] = 0.0;
     PlayerRestore[playerid][pLastInterior] = 0;
-    PlayerRestore[playerid][pLastVirtualWorld] = 0;
+    PlayerRestore[playerid][pLastVirtualWorld] = 0;*/
 }

@@ -12,7 +12,7 @@ new
     Text3D:pAdminDuty3DText[MAX_PLAYERS],
     pSupporterDuty[MAX_PLAYERS],
     pDeathState[MAX_PLAYERS], // 0 = Not dead, 1 = Waiting for healing, 2 = Death
-    gPlayerLastPickup[MAX_PLAYERS],
+    pLastPickup[MAX_PLAYERS],
     gBuyingVehicle[MAX_PLAYERS],
     gBuyingVehicleID[MAX_PLAYERS],
     gBuyingVehiclePrice[MAX_PLAYERS],
@@ -45,7 +45,7 @@ hook OnPlayerClearData(playerid)
     pDeathState[playerid] = 0;
     pAdminDuty[playerid] = 0;
     pSupporterDuty[playerid] = 0;
-    gPlayerLastPickup[playerid] = -1;
+    pLastPickup[playerid] = -1;
     if(gAdminVehicle[playerid] != 0)
     {
         DestroyVehicle(gAdminVehicle[playerid]);

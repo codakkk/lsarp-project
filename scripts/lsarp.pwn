@@ -23,6 +23,7 @@
         https://forum.sa-mp.com/showthread.php?t=435525 -> Timerfix
         https://forum.sa-mp.com/showthread.php?t=120013 -> MapAndreas
         https://forum.sa-mp.com/showthread.php?t=326980 -> JIT
+        https://forum.sa-mp.com/showthread.php?t=489897 -> Bit 
 
 */
 #include <a_samp>
@@ -48,9 +49,14 @@
 #include <streamer>
 #include <strlib>
 
-#include <YSI\y_hooks>
 
-forward TestFunc();
+#include <YSI\y_hooks>
+DEFINE_HOOK_REPLACEMENT(ShowRoom, SR);
+DEFINE_HOOK_REPLACEMENT(Element, Elm);
+
+
+#define AC_GivePlayerWeapon     GivePlayerWeapon
+#define AC_ResetPlayerWeapons    ResetPlayerWeapons
 
 // Others
 #include <utils/colors.pwn>
@@ -78,10 +84,12 @@ forward TestFunc();
 #include <admin/admin_enum.pwn>
 #include <showroom/showroom_enum.pwn>
 #include <inventory/inventory_enum.pwn>
+#include <building/building_enum.pwn>
 
 // Here includes that must hook before everything
 #include <player/player.pwn>
 #include <pickup/pickup.pwn>
+#include <building/building.pwn>
 
 // Others (2)
 #include <account/account.pwn>
@@ -200,7 +208,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
         SendClientMessage(playerid, COLOR_ERROR, "> Non sei un membro dello staff.");
         return 0;
     }
-    else if(flags & CMD_RCON && AccountInfo[playerid][aAdmin] < 5 && !IsPlayerAdmin(playerid))
+    else if(flags & CMD_RCON && (AccountInfo[playerid][aAdmin] < 5 || !IsPlayerAdmin(playerid)))
     {
         SendClientMessage(playerid, COLOR_ERROR, "> Non sei un membro dello staff.");
         return 0;

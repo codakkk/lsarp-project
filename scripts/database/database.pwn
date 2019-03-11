@@ -61,6 +61,25 @@ hook OnGameModeInit()
         `ItemsExtraData` VARCHAR(255) NULL, \
         `EquippedBag` INT(11) NULL,  \
         PRIMARY KEY (`CharacterID`))");
+    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS buildings \
+        (`ID` INT(11) NOT NULL AUTO_INCREMENT, \
+        `Name` VARCHAR(64) NULL, \
+        `OwnerName` VARCHAR(24) NULL, \
+        `WelcomeText` VARCHAR(120) NULL, \
+        `EnterX` FLOAT NULL, \
+        `EnterY` FLOAT NULL, \
+        `EnterZ` FLOAT NULL, \
+        `EnterInterior` INT(11) NULL, \
+        `EnterWorld` INT(11) NULL, \
+        `ExitX` FLOAT NULL, \
+        `ExitY` FLOAT NULL, \
+        `ExitZ` FLOAT NULL, \
+        `ExitInterior` INT(11) NULL, \
+        `Ownable` INT(11) NULL, \
+        `OwnerID` INT(11) NULL, \
+        `Price` INT(11) NULL, \
+        `Locked` INT(11) NULL, \
+        PRIMARY KEY (`ID`))");
     printf("Database Connected!");
     return 1;
 }

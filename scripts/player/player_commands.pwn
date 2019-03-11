@@ -1,10 +1,11 @@
 #include <YSI\y_hooks>
-
+#include <player\commands\chat_commands.pwn>
+#include <player\commands\premium_commands.pwn>
 // CHANGE ME/AME COLOR
 
 hook OnPlayerClearData(playerid)
 {
-    printf("PLayerCOmmands _ Clear Data");
+    printf("player_commands.pwn/OnPlayerClearData");
     if(pVehicleSeller[playerid] != -1 && pVehicleSellingTo[pVehicleSeller[playerid]] == playerid)
     {
         new seller = pVehicleSeller[playerid];
@@ -25,6 +26,20 @@ hook OnPlayerClearData(playerid)
     pSellingVehicleID[playerid] = 0;
     pVehicleSellingTo[playerid] = -1;
     pVehicleSeller[playerid] = -1;
+
+    // before everything, make sure to reset ToggleOOC and PM from players to this playerid
+    foreach(new i : Player)
+    {
+        if(Iter_Contains(pTogglePM[i], playerid))
+            Iter_Remove(pTogglePM[i], playerid);
+        if(Iter_Contains(pToggleOOC[i], playerid))
+            Iter_Remove(pToggleOOC[i], playerid);
+    }
+    Iter_Clear(pTogglePM[playerid]);
+    Iter_Clear(pToggleOOC[playerid]);
+    pTogglePMAll[playerid] = 0;
+    pToggleOOCAll[playerid] = 0;
+
     return 1;
 }
 
@@ -237,70 +252,12 @@ CMD:bagagliaio(playerid, params[])
     return 1;
 }
 
-flags:low(CMD_USER);
-CMD:low(playerid, params[])
-{
-    if(isnull(params) || strlen(params) > 256) 
-        return SendClientMessage(playerid, COLOR_ERROR, "> /b <testo>");
-    new string[256];
-    format(string, sizeof(string), "[A bassa voce] %s (%d): %s ))", Character_GetOOCName(playerid), playerid, params);
-    ProxDetector(playerid, 15.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
-    return 1;
-}
-
-flags:do(CMD_USER);
-CMD:do(playerid, params[])
-{
-    if(isnull(params) || strlen(params) > 256) 
-        return SendClientMessage(playerid, COLOR_ERROR, "> /do <testo>");
-    Character_Do(playerid, params);
-    return 1;
-}
-
-flags:me(CMD_USER);
-CMD:me(playerid, params[])
-{
-    if(isnull(params) || strlen(params) > 256) 
-        return SendClientMessage(playerid, COLOR_ERROR, "> /me <testo>");
-    Character_Me(playerid, params);
-    return 1;
-}
-
-flags:ame(CMD_USER);
-CMD:ame(playerid, params[])
-{
-    if(isnull(params)) 
-        return SendClientMessage(playerid, COLOR_ERROR, "> /ame <descrizione>");
-    Character_AMe(playerid, params);
-    return 1;
-}
-
-flags:b(CMD_USER);
-CMD:b(playerid, params[])
-{
-    if(isnull(params) || strlen(params) > 256) 
-        return SendClientMessage(playerid, COLOR_ERROR, "> /b <testo>");
-    if(pAdminDuty[playerid])
-    {
-        new string[256];
-        format(string, sizeof(string), "(( Admin %s [%d]: %s ))", AccountInfo[playerid][aName], playerid, params);
-        ProxDetector(playerid, 15.0, string, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF);
-    }
-    else
-    {
-        new string[256];
-        format(string, sizeof(string), "(( %s [%d]: %s ))", Character_GetOOCName(playerid), playerid, params);
-        ProxDetector(playerid, 15.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
-    }
-    return 1;
-}
-
 flags:motore(CMD_USER);
 CMD:motore(playerid, params[])
 {
     new vehicleid = GetPlayerVehicleID(playerid);
-    if(vehicleid == 0)
-        return SendClientMessage(playerid, COLOR_ERROR, "> Non sei a bordo di un veicolo!");
+    if(vehicleid == 0 || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un veicolo!");
     if(Vehicle_IsEngineOn(vehicleid))
     {
         Vehicle_SetEngineOff(vehicleid);
@@ -312,16 +269,43 @@ CMD:motore(playerid, params[])
         {
             if((IsABike(vehicleid) || IsAMotorBike(vehicleid)) && VehicleInfo[vehicleid][vLocked])
             {
-                return SendClientMessage(playerid, COLOR_ERROR, "> Il veicolo ha la catena!");
+                return SendClientMessage(playerid, COLOR_ERROR, "Il veicolo ha la catena!");
             }
             Vehicle_SetEngineOn(vehicleid);
             Character_AMe(playerid, "gira la chiave e accende il motore");
         }
         else
         {
-            SendClientMessage(playerid, COLOR_ERROR, "> Non hai le chiavi di questo veicolo!");
+            SendClientMessage(playerid, COLOR_ERROR, "Non hai le chiavi di questo veicolo!");
         }
     }
+    return 1;
+}
+
+flags:entra(CMD_USER);
+CMD:entra(playerid, params[])
+{
+    new pickupid = pLastPickup[playerid], id, E_ELEMENT_TYPE:type;
+    if(pickupid != -1)
+    {
+        Pickup_GetInfo(pickupid, id, type);
+        if(type != ELEMENT_TYPE_BUILDING_ENTRANCE || !Player_Enter(playerid, pickupid, id, type))
+            return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrare di un edificio!");
+    } else return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrare di un edificio!");
+    return 1;
+}
+
+flags:esci(CMD_USER);
+CMD:esci(playerid, params[])
+{
+    new pickupid = pLastPickup[playerid], id, E_ELEMENT_TYPE:type;
+    if(pickupid != -1)
+    {
+        Pickup_GetInfo(pickupid, id, type);
+        if(type != ELEMENT_TYPE_BUILDING_ENTRANCE || !Player_Exit(playerid, pickupid, id, type))
+            return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'uscita di un edificio!");
+    }
+    else return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'uscita di un edificio!");
     return 1;
 }
 
@@ -484,18 +468,22 @@ CMD:compra(playerid, params[])
     {
         return ShowRoom_PlayerConfirmBuy(playerid);
     }
-    if(gPlayerLastPickup[playerid] == -1)
+    if(pLastPickup[playerid] == -1)
         return 0;
     new
         eID,
         E_ELEMENT_TYPE:eType,
         Float:x, Float:y, Float:z;
 
-    Pickup_GetInfo(gPlayerLastPickup[playerid], eID, eType);
-    Pickup_GetPosition(gPlayerLastPickup[playerid], x, y, z);
+    Pickup_GetInfo(pLastPickup[playerid], eID, eType);
+    Pickup_GetPosition(pLastPickup[playerid], x, y, z);
     if(eType == ELEMENT_TYPE_DEALERSHIP && IsPlayerInRangeOfPoint(playerid, 2.5, x, y, z))
     {
         ShowRoom_ShowVehiclesToPlayer(eID, playerid);
+    }
+    else if(eType == ELEMENT_TYPE_BUILDING_ENTRANCE)
+    {
+        
     }
     return 1;
 }
@@ -538,6 +526,7 @@ CMD:rimuovi(playerid, params[])
 
 stock GetWeaponAmmoItemID(weapon_id)
 {
+    #pragma unused weapon_id
     return 90;
 }
 
@@ -556,7 +545,7 @@ CMD:dep(playerid, params[])
         }
         Character_GiveItem(playerid, itemid, 1);
         Character_GiveItem(playerid, ammoItemId, ammos);
-        ResetPlayerWeapons(playerid);
+        AC_ResetPlayerWeapons(playerid);
         SendFormattedMessage(playerid, COLOR_GREEN, "Hai depositato la tua arma (%s). Munizioni: %d", ServerItem_GetName(itemid), ammos);
     }
     else
