@@ -240,6 +240,8 @@ stock LoadCharacterResult(playerid)
 
         cache_get_value_index_int(0, 18, PlayerInfo[playerid][pPayDay]);
         cache_get_value_index_int(0, 19, PlayerInfo[playerid][pExp]);
+
+        cache_get_value_index_int(0, 19, PlayerInfo[playerid][pBuildingKey]);
         return 1;
     }
     return 0;
@@ -271,12 +273,14 @@ stock Character_Save(playerid, spawned = true, disconnected = false)
     mysql_format(gMySQL, query, sizeof(query), "UPDATE `characters` SET \
         Money = '%d', Level = '%d', Age = '%d', Sex = '%d', \
         LastX = '%f', LastY = '%f', LastZ = '%f', LastAngle = '%f', LastInterior = '%d', LastVirtualWorld = '%d', Health = '%f', Armour = '%f', Skin = '%d', \
-        Spawned = '%d', PayDay = '%d', Exp = '%d' \
+        Spawned = '%d', PayDay = '%d', Exp = '%d',  \
+        BuildingKey = '%d'  \
         WHERE ID = '%d'", 
         PlayerInfo[playerid][pMoney], PlayerInfo[playerid][pLevel], PlayerInfo[playerid][pAge], PlayerInfo[playerid][pSex], 
         _x, _y, _z, angle, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid),
         hp, armour, PlayerInfo[playerid][pSkin],
         isSpawned, PlayerInfo[playerid][pPayDay], PlayerInfo[playerid][pExp],
+        PlayerInfo[playerid][pBuildingKey],
         PlayerInfo[playerid][pID]);
     
     mysql_tquery(gMySQL, query);
@@ -295,11 +299,25 @@ stock Character_Delete(playerid, character_db_id, character_name[])
     #pragma unused playerid
     new query[256];
     mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `characters` WHERE ID = '%d' AND LOWER(Name) = LOWER('%e')", character_db_id, character_name);
-    
-    // Delete cars
+    mysql_tquery(gMySQL, query);
+
+    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `player_vehicles` WHERE OwnerID = '%d'", character_db_id);
+    mysql_tquery(gMySQL, query);
+
+    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `character_inventory` WHERE CharacterID = '%d'", character_db_id);
+    mysql_tquery(gMySQL, query);
+
+    foreach(new b : Buildings)
+    {
+        if(Building_GetOwnerID(b) == character_db_id)
+        {
+            Building_ResetOwner(b);
+            break;
+        }
+    }
+
     // Delete all others
 
-    mysql_tquery(gMySQL, query);
     return 1;
 }
 
@@ -526,6 +544,8 @@ stock Character_ShowStats(playerid, targetid)
     SendFormattedMessage(targetid, COLOR_YELLOW, "Soldi: %d", AC_GetPlayerMoney(playerid));
     SendFormattedMessage(targetid, COLOR_YELLOW, "HP: %.2f - Armatura: %.2f - Int: %d - VW: %d", hp, armour, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
     SendFormattedMessage(targetid, COLOR_YELLOW, "Livello: %d - Esperienza: %d", PlayerInfo[playerid][pLevel], PlayerInfo[playerid][pExp]);
+    if(PlayerInfo[playerid][pBuildingKey] != 0)
+        SendFormattedMessage(targetid, COLOR_YELLOW, "Edificio: %d", PlayerInfo[playerid][pBuildingKey]);
     SendFormattedMessage(targetid, COLOR_YELLOW, "Tempo rimanente al PayDay: %d minuti", PlayerInfo[playerid][pPayDay]);
     SendClientMessage(targetid, COLOR_YELLOW, "_______________________________________________________");
     return 1;

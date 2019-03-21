@@ -16,16 +16,23 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
         {
             if(Building_GetOwnerID(buildingid) != 0)
             {
-                format(string, sizeof(string), "%s~y~%s~n~~y~Proprietario: %s.~n~", string, Building_GetName(buildingid), Building_GetOwnerName(buildingid));
+                new bname[MAX_BUILDING_NAME], ownerName[MAX_PLAYER_NAME];
+                Building_GetName(buildingid, bname);
+                Building_GetOwnerName(buildingid, ownerName);
+                format(string, sizeof(string), "%s~y~%s~n~~y~Proprietario: %s.~n~", string, bname, ownerName);
             }
             else
             {
-                format(string, sizeof(string), "%s~y~%s~n~~g~Prezzo:~w~$%d~n~", string, Building_GetName(buildingid), Building_GetPrice(buildingid));
+                new bname[MAX_BUILDING_NAME];
+                Building_GetName(buildingid, bname);
+                format(string, sizeof(string), "%s~y~%s~n~~g~Prezzo:~w~$%d~n~", string, bname, Building_GetPrice(buildingid));
             }
         }
         else
         {
-            format(string, sizeof(string), "%s~y~%s~n~", string, Building_GetName(buildingid));
+            new bname[MAX_BUILDING_NAME];
+            Building_GetName(buildingid, bname);
+            format(string, sizeof(string), "%s~y~%s~n~", string, bname);
         }
         GameTextForPlayer(playerid, string, 2000, 5);
     }
@@ -113,5 +120,25 @@ stock Player_Exit(playerid, pickupid, elementId, E_ELEMENT_TYPE:type)
     SetPlayerInterior(playerid, interiorId);
     SetPlayerVirtualWorld(playerid, world);
     SetPlayerPos(playerid, x, y, z);
+    return 1;
+}
+
+stock Player_BuyBuilding(playerid, buildingid)
+{
+    if(!Building_IsValid(buildingid) || !Building_IsOwnable(buildingid) || Building_GetOwnerID(buildingid) != 0)
+        return 0;
+    
+    if(AC_GetPlayerMoney(playerid) < Building_GetPrice(buildingid))
+        return 0;
+    
+    AC_GivePlayerMoney(playerid, -BuildingInfo[buildingid][bPrice]);
+    
+    Building_SetOwner(buildingid, playerid);
+    
+    PlayerInfo[playerid][pBuildingKey] = BuildingInfo[buildingid][bID];
+
+    SendFormattedMessage(playerid, COLOR_GREEN, "Hai acquistato questo edificio (%s) per $%d.", BuildingInfo[buildingid][bName], Building_GetPrice(buildingid));
+    Building_Save(buildingid);
+    Character_Save(playerid);
     return 1;
 }

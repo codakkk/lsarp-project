@@ -441,7 +441,7 @@ CMD:acmds(playerid, params[])
     }
     if(IsPlayerAdmin(playerid))
     {
-        SendClientMessage(playerid, -1, "[RCON]: /setadmin - /givemoney - /payday")
+        SendClientMessage(playerid, -1, "[RCON]: /setadmin - /givemoney - /payday");
         SendClientMessage(playerid, -1, "[RCON]: /abuildingcmds - /ashowroomcmds");
     }
     return 1;

@@ -147,6 +147,26 @@ stock Building_SetWelcomeText(buildingid, text[])
     set(BuildingInfo[buildingid])
 }
 
+stock Building_SetOwner(buildingid, playerid)
+{
+    if(!Building_IsValid(buildingid) || !Building_IsOwnable(buildingid) || !gCharacterLogged[playerid])
+        return 0;
+    BuildingInfo[buildingid][bOwnerID] = PlayerInfo[playerid][pID];
+    set(BuildingInfo[buildingid][bOwnerName], Character_GetOOCName(playerid));
+    Log(Character_GetOOCName(playerid), "", "Building_SetOwner", buildingid);
+    return 1;
+}
+
+stock Building_ResetOwner(buildingid)
+{
+    if(!Building_IsValid(buildingid))
+        return 0;
+    BuildingInfo[buildingid][bOwnerID] = 0;
+    set(BuildingInfo[buildingid][bOwnerName], "");
+    Log("", "", "Building_ResetOwner", buildingid);
+    return 1;
+}
+
 stock Building_Delete(buildingid)
 {
     // UPDATE OWNERID -> BUILDING_ID TO 0.
@@ -204,7 +224,7 @@ stock Building_DestroyElements(buildingid)
 
 stock Building_IsValid(a) return 0 <= a < MAX_BUILDINGS && BuildingInfo[a][bExists] && BuildingInfo[a][bID];
 
-stock Building_GetName(buildingid, name[])
+stock Building_GetName(buildingid, name[MAX_BUILDING_NAME])
 {
     name = BuildingInfo[buildingid][bName];
     return 1;
@@ -227,7 +247,7 @@ stock Building_GetOwnerID(a)
 
 stock Building_GetOwnerName(a, name[])
 {
-    name = BuildingInfo[a][bOwnerName]
+    set(name, BuildingInfo[a][bOwnerName]);
     return 1;
 }
 

@@ -12,7 +12,8 @@ enum E_PLAYER_DATA
     pSkin,
     pPayDay,
     Float:pHealth,
-    Float:pArmour 
+    Float:pArmour,
+    pBuildingKey,
 };
 new 
     PlayerInfo[MAX_PLAYERS][E_PLAYER_DATA],

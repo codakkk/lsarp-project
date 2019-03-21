@@ -481,9 +481,17 @@ CMD:compra(playerid, params[])
     {
         ShowRoom_ShowVehiclesToPlayer(eID, playerid);
     }
-    else if(eType == ELEMENT_TYPE_BUILDING_ENTRANCE)
+    else if(eType == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_IsValid(eID))
     {
+        if(PlayerInfo[playerid][pBuildingKey] != 0)
+            return SendClientMessage(playerid, COLOR_ERROR, "Possiedi già un edificio!");
+            
+        if(!Building_IsOwnable(eID) || Building_GetOwnerID(eID) != 0)
+            return SendClientMessage(playerid, COLOR_ERROR, "Questo edificio non è in vendita!");
         
+        new result = Player_BuyBuilding(playerid, eID);
+        if(result == 0)
+            return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi per acquistare questo edificio!");
     }
     return 1;
 }
