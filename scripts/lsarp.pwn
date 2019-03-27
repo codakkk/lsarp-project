@@ -33,7 +33,7 @@
 #undef MAX_PLAYERS
 #define MAX_PLAYERS     (100)
 
-#define  INFINITY (Float:0x7F800000)
+#define INFINITY (Float:0x7F800000)
 
 #define PRESSED(%0) \
 	(((newkeys & (%0)) == (%0)) && ((oldkeys & (%0)) != (%0)))
@@ -49,6 +49,11 @@
 #include <streamer>
 #include <strlib>
 
+#define PP_SYNTAX_GENERIC 1
+#define PP_ADDITIONAL_TAGS E_INVENTORY_DATA
+
+#include <PawnPlus>
+
 
 #include <YSI\y_hooks>
 DEFINE_HOOK_REPLACEMENT(ShowRoom, SR);
@@ -60,12 +65,9 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 
 // Others
 #include <utils/colors.pwn>
-#include <utils/weapon_utils.pwn>
-
 #include <database/database.pwn>
 
 #include <globals.pwn>
-#include <utils/utils.pwn>
 #include <utils/maths.pwn>
 #include <sa_zones>
 
@@ -99,7 +101,8 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 #include <inventory/inventory.pwn>
 
 //
-
+#include <utils/utils.pwn>
+#include <utils/weapon_utils.pwn>
 #include <anticheat/anticheat.pwn>
 #include <global_timers.pwn>
 // Character Creation Steps:
@@ -111,6 +114,9 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 main()
 {
     printf("LSARP - By CodaKKK. Started: 26/02/2019.");
+
+    //VehicleInventory = map_new();
+    //Vehicle_InitializeInventory(0);
 }
 
 new
@@ -130,7 +136,22 @@ public OnGameModeInit()
     DisableInteriorEnterExits();
     ManualVehicleEngineAndLights(); 
     EnableStuntBonusForAll(false);
+
+
+
     return 1;
+}
+
+stock Vehicle_InitializeInventory(vehicleid)
+{
+    new List:items = list_new();
+    list_add_arr(items, E_INVENTORY_DATA:{0, 0, 0});
+    map_add(VehicleInventory, vehicleid, items);
+}
+
+stock Vehicle_DeallocateInventory(vehicleid)
+{
+
 }
 
 public OnPlayerClearData(playerid)

@@ -1,5 +1,7 @@
 #include <YSI/y_hooks>
 
+#define MAX_VEHICLES_PER_PLAYER     5
+
 enum E_PLAYER_DATA
 {
     pID,
@@ -21,7 +23,9 @@ new
     pTogglePMAll[MAX_PLAYERS],
     // probably Iterators aren't worth for this.
     Iterator:pTogglePM[MAX_PLAYERS]<MAX_PLAYERS>,
-    Iterator:pToggleOOC[MAX_PLAYERS]<MAX_PLAYERS>
+    Iterator:pToggleOOC[MAX_PLAYERS]<MAX_PLAYERS>,
+    pVehicleListItem[MAX_PLAYERS][MAX_VEHICLES_PER_PLAYER],
+    pSelectedVehicleListItem[MAX_PLAYERS]
     ;
 
 

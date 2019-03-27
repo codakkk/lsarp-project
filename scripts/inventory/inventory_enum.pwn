@@ -1,6 +1,7 @@
 #define MAX_ITEMS_IN_SERVER             (100)
 #define MAX_ITEM_NAME                   (32)
 #define MAX_ITEMS_PER_PLAYER            (50)
+#define MAX_ITEMS_PER_VEHICLE           (50)
 #define INVALID_ITEM_ID                 (-1)
 #define PLAYER_INVENTORY_START_SIZE     (10)
 
@@ -46,7 +47,7 @@ enum EXTRA_TYPE_ID
     EXTRA_BAG_SIZE = 0
 };
 
-enum E_INVENTORY_ITEMS_DATA
+enum E_SERVER_ITEM_DATA
 {
     sitemID,
     sitemName[MAX_ITEM_NAME],
@@ -57,23 +58,31 @@ enum E_INVENTORY_ITEMS_DATA
     sitemModelID
 };
 new     
-    ServerItem[MAX_ITEMS_IN_SERVER][E_INVENTORY_ITEMS_DATA],
+    ServerItem[MAX_ITEMS_IN_SERVER][E_SERVER_ITEM_DATA],
     Iterator:ServerItems<MAX_ITEMS_IN_SERVER>
     ;
 
-enum E_PLAYER_INVENTORY_DATA
+// Common Enum for inventories (characters, houses, vehicles, etc)
+enum _:E_INVENTORY_DATA
 {
     pInvItem,
     pInvAmount,
     pInvExtra
 };
+
+// Player Inventory
 new
-    PlayerInventory[MAX_PLAYERS][MAX_ITEMS_PER_PLAYER][E_PLAYER_INVENTORY_DATA],
+    PlayerInventory[MAX_PLAYERS][MAX_ITEMS_PER_PLAYER][E_INVENTORY_DATA],
     Iterator:PlayerItemsSlot[MAX_PLAYERS]<MAX_ITEMS_PER_PLAYER>,
     pInventoryBag[MAX_PLAYERS],
     pInventoryListItem[MAX_PLAYERS][MAX_ITEMS_PER_PLAYER],
     pInventorySelectedListItem[MAX_PLAYERS];
 
+
+new stock
+    Map:VehicleInventory, // <Key: vehicle_id, Value: List:Items>
+    //VehicleInventory[MAX_VEHICLES][MAX_ITEMS_PER_VEHICLE][E_INVENTORY_DATA],
+    Iterator:VehicleItemsSlot[MAX_VEHICLES]<MAX_ITEMS_PER_VEHICLE>;
 
 // GLOBAL ITEMS ID
 new stock
