@@ -37,9 +37,9 @@ stock Character_GiveItem(playerid, item_id, amount = 1, bool:callback = false)
         {
             //if(freeid < 0) // Should never happen
                 //return INVENTORY_NO_SPACE; // Should never happen
-            PlayerInventory[playerid][freeid][pInvItem] = item_id;
-            PlayerInventory[playerid][freeid][pInvAmount] = 1;
-            PlayerInventory[playerid][freeid][pInvExtra] = 0;
+            PlayerInventory[playerid][freeid][gInvItem] = item_id;
+            PlayerInventory[playerid][freeid][gInvAmount] = 1;
+            PlayerInventory[playerid][freeid][gInvExtra] = 0;
             Iter_Add(PlayerItemsSlot[playerid], freeid);
             //CallLocalFunction("OnPlayerInventoryItemAdd", "iii", playerid, freeid, 1);
             tempAmount--;
@@ -53,13 +53,13 @@ stock Character_GiveItem(playerid, item_id, amount = 1, bool:callback = false)
             hasItem_slot = Character_HasItem(playerid, item_id);
         if(hasItem_slot != -1 && Character_GetItemAmount(playerid, hasItem_slot) < ServerItem_GetMaxStack(item_id))
         {
-            PlayerInventory[playerid][hasItem_slot][pInvAmount] += amount;
+            PlayerInventory[playerid][hasItem_slot][gInvAmount] += amount;
             if(callback)
                 CallLocalFunction("OnPlayerInventoryChanged", "ii", playerid, hasItem_slot);
-            new diff = PlayerInventory[playerid][hasItem_slot][pInvAmount] - ServerItem_GetMaxStack(item_id);
+            new diff = PlayerInventory[playerid][hasItem_slot][gInvAmount] - ServerItem_GetMaxStack(item_id);
             if(diff > 0) // if exceed maximum stack size, try to add them in another slot.
             {
-                PlayerInventory[playerid][hasItem_slot][pInvAmount] = ServerItem[item_id][sitemMaxStack]; // Cap
+                PlayerInventory[playerid][hasItem_slot][gInvAmount] = ServerItem[item_id][sitemMaxStack]; // Cap
                 // Check if playerid has a free slot to add the difference.
                 //new freeid = Character_GetFreeSlot(playerid);
                 //if(freeid == -1) // If playerid has no free slot, returns the difference
@@ -75,19 +75,19 @@ stock Character_GiveItem(playerid, item_id, amount = 1, bool:callback = false)
             new freeid = Character_GetFreeSlot(playerid);
             // if(freeid < 0) // This should never happen too now.
                 //return INVENTORY_NO_SPACE; // This should never happen too now.
-            PlayerInventory[playerid][freeid][pInvItem] = item_id;
-            PlayerInventory[playerid][freeid][pInvAmount] = amount;
-            PlayerInventory[playerid][freeid][pInvExtra] = 0;
+            PlayerInventory[playerid][freeid][gInvItem] = item_id;
+            PlayerInventory[playerid][freeid][gInvAmount] = amount;
+            PlayerInventory[playerid][freeid][gInvExtra] = 0;
             Iter_Add(PlayerItemsSlot[playerid], freeid);
             if(callback)
             {
                 CallLocalFunction("OnPlayerInventoryItemAdd", "iii", playerid, freeid, amount);
                 CallLocalFunction("OnPlayerInventoryChanged", "ii", playerid, freeid);
             }
-            if(PlayerInventory[playerid][freeid][pInvAmount] > ServerItem[item_id][sitemMaxStack])
+            if(PlayerInventory[playerid][freeid][gInvAmount] > ServerItem[item_id][sitemMaxStack])
             {
-                new diff = PlayerInventory[playerid][freeid][pInvAmount] - ServerItem[item_id][sitemMaxStack];
-                PlayerInventory[playerid][freeid][pInvAmount] = ServerItem[item_id][sitemMaxStack];
+                new diff = PlayerInventory[playerid][freeid][gInvAmount] - ServerItem[item_id][sitemMaxStack];
+                PlayerInventory[playerid][freeid][gInvAmount] = ServerItem[item_id][sitemMaxStack];
                 return Character_GiveItem(playerid, item_id, diff);
             }
         }
@@ -156,15 +156,15 @@ stock Character_DecreaseItemAmount(playerid, itemid, amount = 1)
         new diff = tempDecreaseAmount - tempItemAmount;
         if(diff >= 0)
         {
-            PlayerInventory[playerid][i][pInvItem] = 0;
-            PlayerInventory[playerid][i][pInvAmount] = 0;
-            PlayerInventory[playerid][i][pInvExtra] = 0;
+            PlayerInventory[playerid][i][gInvItem] = 0;
+            PlayerInventory[playerid][i][gInvAmount] = 0;
+            PlayerInventory[playerid][i][gInvExtra] = 0;
             Iter_SafeRemove(PlayerItemsSlot[playerid], i, i);
             tempDecreaseAmount = diff;
         }
         else 
         {
-            PlayerInventory[playerid][i][pInvAmount] -= tempDecreaseAmount;
+            PlayerInventory[playerid][i][gInvAmount] -= tempDecreaseAmount;
             tempDecreaseAmount = 0;
         }
     }
@@ -221,9 +221,9 @@ stock Character_RemoveItem(playerid, slotid)
 {
     if(slotid < 0 || slotid >= MAX_ITEMS_PER_PLAYER)
         return 0;
-    PlayerInventory[playerid][slotid][pInvItem] = 0;
-    PlayerInventory[playerid][slotid][pInvAmount] = 0;
-    PlayerInventory[playerid][slotid][pInvExtra] = 0;
+    PlayerInventory[playerid][slotid][gInvItem] = 0;
+    PlayerInventory[playerid][slotid][gInvAmount] = 0;
+    PlayerInventory[playerid][slotid][gInvExtra] = 0;
     Iter_Remove(PlayerItemsSlot[playerid], slotid);
     return 1;
 }
@@ -232,7 +232,7 @@ stock Character_HasItem(playerid, itemid)
 {
     foreach(new i : PlayerItemsSlot[playerid])
     {
-        if(PlayerInventory[playerid][i][pInvItem] == itemid)
+        if(PlayerInventory[playerid][i][gInvItem] == itemid)
             return i;
     }
     return -1;
@@ -242,14 +242,14 @@ stock Character_GetItem(playerid, slotid)
 {
     if(slotid < 0 || slotid >= MAX_ITEMS_PER_PLAYER)
         return 0;
-    return PlayerInventory[playerid][slotid][pInvItem];
+    return PlayerInventory[playerid][slotid][gInvItem];
 }
 
 stock Character_GetItemAmount(playerid, slotid)
 {
     if(slotid < 0 || slotid >= MAX_ITEMS_PER_PLAYER)
         return 0;
-    return PlayerInventory[playerid][slotid][pInvAmount];
+    return PlayerInventory[playerid][slotid][gInvAmount];
 }
 
 stock Character_GetFreeSlot(playerid)
@@ -336,9 +336,9 @@ stock Character_ResetInventory(playerid)
     */
     for(new i = 0; i < MAX_ITEMS_PER_PLAYER; ++i)
     {
-        PlayerInventory[playerid][i][pInvItem] = 0;
-        PlayerInventory[playerid][i][pInvAmount] = 0;
-        PlayerInventory[playerid][i][pInvExtra] = 0;
+        PlayerInventory[playerid][i][gInvItem] = 0;
+        PlayerInventory[playerid][i][gInvAmount] = 0;
+        PlayerInventory[playerid][i][gInvExtra] = 0;
     }
     pInventoryBag[playerid] = 0;
     memset(pInventoryListItem[playerid], -1);
@@ -402,9 +402,9 @@ stock Character_LoadInventory(playerid)
             {
                 if(tempItems[i] == 0 || tempAmounts[i] <= 0)
                     continue;
-                PlayerInventory[playerid][i][pInvItem] = tempItems[i];
-                PlayerInventory[playerid][i][pInvAmount] = tempAmounts[i];
-                PlayerInventory[playerid][i][pInvExtra] = tempExtraData[i];
+                PlayerInventory[playerid][i][gInvItem] = tempItems[i];
+                PlayerInventory[playerid][i][gInvAmount] = tempAmounts[i];
+                PlayerInventory[playerid][i][gInvExtra] = tempExtraData[i];
                 Iter_Add(PlayerItemsSlot[playerid], i);
             }
             cache_get_value_index_int(0, 3, pInventoryBag[playerid]);

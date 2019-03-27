@@ -1,6 +1,5 @@
 #include <YSI\y_hooks>
-#include <inventory/inventory_server.pwn>
-
+#include <inventory\inventory_server.pwn>
 
 
 hook OnGameModeInit()

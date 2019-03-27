@@ -1,6 +1,6 @@
-#include <player/player_global.pwn>
-#include <player/player_inventory.pwn>
-#include <player/player_commands.pwn>
+#include <player\player_global.pwn>
+#include <player\player_commands.pwn>
+#include <player\player_inventory.pwn>
 #include <YSI\y_hooks>
 
 hook OnPlayerClearData(playerid)

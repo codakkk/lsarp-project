@@ -49,7 +49,8 @@
 #include <streamer>
 #include <strlib>
 
-#define PP_SYNTAX_GENERIC 1
+#define PP_SYNTAX 1
+//#define PP_SYNTAX_GENERIC 1
 #define PP_ADDITIONAL_TAGS E_INVENTORY_DATA
 
 #include <PawnPlus>
@@ -115,8 +116,28 @@ main()
 {
     printf("LSARP - By CodaKKK. Started: 26/02/2019.");
 
-    //VehicleInventory = map_new();
-    //Vehicle_InitializeInventory(0);
+    VehicleInventory = map_new();
+    Vehicle_InitializeInventory(5);
+    Vehicle_AddItem(0, 5, 1);
+    Vehicle_AddItem(5, 5, 1);
+    //Vehicle_AddItem(5, 10, 5);
+    //Vehicle_AddItem(5, 11, 1);
+    //Vehicle_AddItem(5, 12, 6);
+    //Vehicle_AddItem(5, 13, 1);
+    for_map(i : VehicleInventory)
+    {
+        new k, List:items;
+        iter_get_key_safe(i, k);
+        iter_get_value_safe(i, items);
+        for(new a = 0; a < list_size(items); a++)
+        {
+            new item[E_INVENTORY_DATA];
+            list_get_arr_safe(items, a, item);
+            printf("%s - %d - %d", ServerItem[item[gInvItem]][sitemName], item[gInvAmount], item[gInvExtra]);
+        }
+    }
+
+    printf("Has space: %d", Vehicle_HasSpaceForItem(5, gItem_RationK, 3));
 }
 
 new
@@ -140,18 +161,6 @@ public OnGameModeInit()
 
 
     return 1;
-}
-
-stock Vehicle_InitializeInventory(vehicleid)
-{
-    new List:items = list_new();
-    list_add_arr(items, E_INVENTORY_DATA:{0, 0, 0});
-    map_add(VehicleInventory, vehicleid, items);
-}
-
-stock Vehicle_DeallocateInventory(vehicleid)
-{
-
 }
 
 public OnPlayerClearData(playerid)

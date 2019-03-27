@@ -65,9 +65,9 @@ new
 // Common Enum for inventories (characters, houses, vehicles, etc)
 enum _:E_INVENTORY_DATA
 {
-    pInvItem,
-    pInvAmount,
-    pInvExtra
+    gInvItem,
+    gInvAmount,
+    gInvExtra
 };
 
 // Player Inventory
@@ -87,3 +87,10 @@ new stock
 // GLOBAL ITEMS ID
 new stock
     gItem_RationK;
+
+/*stock Item(itemid, amount, extra = 0, item[E_INVENTORY_DATA])
+{
+    item[gInvItem] = itemid;
+    item[gInvAmount] = amount;
+    item[gInvExtra] = extra;
+}*/

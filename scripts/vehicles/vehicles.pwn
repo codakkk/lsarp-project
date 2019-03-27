@@ -1,3 +1,4 @@
+#include <vehicles\vehicles_inventory.pwn>
 #include <YSI\y_hooks>
 
 hook OnVehicleSpawn(vehicleid)
@@ -264,6 +265,13 @@ stock Vehicle_Unload(vehicleid)
     VehicleRestore[i][vLastHealth] = 0.0;
     VehicleRestore[i][vEngine] = 0;
     gVehicleDestroyTime[i] = 0;
+
+    new List:vehicleItems;
+    if(map_get_safe(VehicleInventory, i, vehicleItems))
+    {
+        printf("Unloading vehicle %d inventory", vehicleid);
+        list_delete(vehicleItems);
+    }
     return 1;
 }
 
