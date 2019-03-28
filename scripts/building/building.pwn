@@ -140,6 +140,7 @@ stock Building_SetPrice(buildingid, price)
         return 0;
     BuildingInfo[buildingid][bPrice] = price;
     Building_Save(buildingid);
+    return 1;
 }
 
 stock Building_SetWelcomeText(buildingid, text[])
@@ -176,6 +177,7 @@ stock Building_Delete(buildingid)
     mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `buildings` WHERE ID = '%d'",
     BuildingInfo[buildingid][bID]);
     mysql_tquery(gMySQL, query);
+    return 1;
 }
 
 stock Building_Save(buildingid)

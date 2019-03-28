@@ -111,12 +111,12 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 // 1: Age Selection
 // 2: Sex Selection
 // 3: Over
-
+#include <inventory\general\inventory_general.pwn>
 main()
 {
     printf("LSARP - By CodaKKK. Started: 26/02/2019.");
 
-    VehicleInventory = map_new();
+    /*VehicleInventory = map_new();
     Vehicle_InitializeInventory(5);
     Vehicle_AddItem(0, 5, 1);
     Vehicle_AddItem(5, 5, 1);
@@ -135,9 +135,32 @@ main()
             list_get_arr_safe(items, a, item);
             printf("%s - %d - %d", ServerItem[item[gInvItem]][sitemName], item[gInvAmount], item[gInvExtra]);
         }
+    }*/
+
+    for(new i = 0; i < 5; ++i) print("\n");
+
+    print("========== < INVENTORY UNIT TEST > ==========");
+
+    new Inventory:inv = Inventory_New(10);
+    printf("Inventory Space: %d", Inventory_GetSpace(inv));
+
+    Inventory_AddItem(inv, gItem_Hamburger, 999, 0);
+
+    Inventory_Print(inv);
+
+    /*for(new i = 1; i <= 20; ++i)
+    {
+        printf("Has space for %d UNIQUE: %d", i, Inventory_HasSpaceForItem(inv, gItem_RationK, i));  
     }
 
-    printf("Has space: %d", Vehicle_HasSpaceForItem(5, gItem_RationK, 3));
+    for(new i = 1; i <= 21; ++i)
+    {
+        printf("Has space for %d NON UNIQUE: %d", i, Inventory_HasSpaceForItem(inv, gItem_Hamburger, i));    
+    }*/
+    Inventory_Delete(inv);
+
+    print("========== < INVENTORY UNIT TEST > ==========");
+    for(new i = 0; i < 5; ++i) print("\n");
 }
 
 new

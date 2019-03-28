@@ -14,7 +14,7 @@ hook OnGameModeInit()
             continue;
         ServerItem_ManualInitializeItem(i, Weapon_GetName(i), ITEM_TYPE:ITEM_TYPE_WEAPON, 1, 1);
     }
-    ServerItem_InitializeItem("Hamburger Preconfezionato", ITEM_TYPE:ITEM_TYPE_FOOD, 0, 2, 0);
+    gItem_Hamburger = ServerItem_InitializeItem("Hamburger Preconfezionato", ITEM_TYPE:ITEM_TYPE_FOOD, 0, 2, 0);
 	ServerItem_InitializeItem("Fagioli in barattolo", ITEM_TYPE:ITEM_TYPE_FOOD, 2, 0);
 	ServerItem_InitializeItem("Barrette Energetiche", ITEM_TYPE:ITEM_TYPE_FOOD, 2, 0);
 	ServerItem_InitializeItem("Carne Essiccata", ITEM_TYPE:ITEM_TYPE_FOOD, 2, 0);

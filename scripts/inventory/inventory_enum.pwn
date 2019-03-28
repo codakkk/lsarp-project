@@ -86,7 +86,8 @@ new stock
 
 // GLOBAL ITEMS ID
 new stock
-    gItem_RationK;
+    gItem_RationK,
+    gItem_Hamburger;
 
 /*stock Item(itemid, amount, extra = 0, item[E_INVENTORY_DATA])
 {

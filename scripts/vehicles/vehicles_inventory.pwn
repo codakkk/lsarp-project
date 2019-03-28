@@ -24,7 +24,7 @@ stock Vehicle_AddItem(vehicleid, itemid, amount = 1, extra = 0)
     //printf("Adding item: %s - %d", ServerItem[itemid][sitemName], amount);
     list_add_arr(vehicleItems, item);
     //printf("Vehicle has %d items", list_size(vehicleItems));
-    if(!ServerItem_IsValid(item_id))
+    /*if(!ServerItem_IsValid(item_id))
         return INVENTORY_FAILED_INVALID_ITEM;
     if(amount < 0)
         return Character_DecreaseItemAmount(playerid, item_id, amount);
@@ -92,7 +92,7 @@ stock Vehicle_AddItem(vehicleid, itemid, amount = 1, extra = 0)
             }
         }
     }
-    Character_SaveInventory(playerid);
+    Character_SaveInventory(playerid);*/
     return INVENTORY_ADD_SUCCESS;
 }
 
