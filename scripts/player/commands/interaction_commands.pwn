@@ -198,12 +198,13 @@ CMD:rimuovi(playerid, params[])
     }
     if(!strcmp(text, "zaino", true))
     {
+        new Inventory:playerInv = Character_GetInventory(playerid);
         if(!Character_HasBag(playerid))
             return SendClientMessage(playerid, COLOR_ERROR, "Non stai indossando uno zaino!");
-        if(Character_GetInventoryUsedSpace(playerid) > PLAYER_INVENTORY_START_SIZE-1)
+        if(Inventory_GetUsedSpace(playerInv) > PLAYER_INVENTORY_START_SIZE-1)
             return SendClientMessage(playerid, COLOR_ERROR, "Non puoi toglierti lo zaino se hai piu' di 9 oggetti!");
         Character_GiveItem(playerid, pInventoryBag[playerid], 1);
-        pInventoryBag[playerid] = 0;
+        Character_SetBag(playerid, 0);
         SendClientMessage(playerid, COLOR_GREEN, "Lo zaino è stato rimesso nel tuo inventario!");
         Character_AMe(playerid, "si toglie lo zaino");
         return 1;

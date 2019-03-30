@@ -1,8 +1,8 @@
-#define MAX_EVENTS      (10)
+/*#define MAX_EVENTS      (10)
 
 enum Event
 {
     OnInventoryChanged
 };
 
-stock Event_Fire(Event:event, )
+stock Event_Fire(Event:event, )*/

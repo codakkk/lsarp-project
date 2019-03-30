@@ -1,6 +1,3 @@
-#include <player\player_global.pwn>
-#include <player\player_commands.pwn>
-#include <player\player_inventory.pwn>
 #include <YSI\y_hooks>
 
 hook OnPlayerClearData(playerid)
@@ -19,7 +16,9 @@ hook OnCharacterSaveData(playerid)
 
 hook OnPlayerInvItemUse(playerid, slot_id, item_id)
 {
-    new bool:decrease = false;
+    new 
+        bool:decrease = false,
+        decreaseAmount = 1;
     printf("player_inventory.pwn/OnPlayerInvItemUse", playerid);
     if(ServerItem_IsBag(item_id))
     {
@@ -28,20 +27,46 @@ hook OnPlayerInvItemUse(playerid, slot_id, item_id)
         {
             SendClientMessage(playerid, COLOR_ERROR, "Stai già indossando uno zaino! Usa '/rimuovi zaino' per rimuoverlo.");
             return 1;
-            //Character_GiveItem(playerid, Character_GetBag(playerid), 1);
-        }
+        }   
         Character_AMe(playerid, "indossa lo zaino");
         SendFormattedMessage(playerid, COLOR_GREEN, "Stai indossando '%s'. Usa '/rimuovi zaino' per rimuoverlo.", ServerItem_GetName(item_id));
-        pInventoryBag[playerid] = item_id;
+        Character_SetBag(playerid, item_id);
         decrease = true;
+        decreaseAmount = 1;
     }
     else if(ServerItem_IsWeapon(item_id))
     {
-        
+        new 
+            weaponSlot = Weapon_GetSlot(item_id), 
+            weapon, 
+            ammo;
+        if(GetPlayerWeaponData(playerid, weaponSlot, weapon, ammo))
+        {
+            if(weapon != 0)
+                return SendClientMessage(playerid, COLOR_ERROR, "Hai già un arma equipaggiata per questa slot!");
+            if(!Weapon_RequireAmmo(item_id))
+            {
+                AC_GivePlayerWeapon(playerid, item_id, 1);
+                decrease = true;
+                decreaseAmount = 1;
+            }
+            else
+            {
+                if(Character_HasItem(playerid, Weapon_GetAmmoType(item_id), 1) == -1)
+                    SendClientMessage(playerid, COLOR_ERROR, "Non hai i proiettili necessari!");
+                else
+                {
+                    SetPVarInt(playerid, "InventorySelect_WeaponItem", item_id);
+                    // Show Dialog
+                    Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "Inserisci le munizioni che vuoi inserire nell'arma.\nDisponibili: %d", "Usa", "Annulla", 
+                    Inventory_GetItemAmount(Character_GetInventory(playerid), Weapon_GetAmmoType(item_id)));
+                }
+            }
+        }
     }
     if(decrease)
     {
-        Character_DecreaseItemAmount(playerid, slot_id, 1);
+        Character_DecreaseAmountBySlot(playerid, slot_id, decreaseAmount);
     }
     return 1;
 }
@@ -558,25 +583,4 @@ stock Character_Clear(playerid)
 
     new CleanRestoreData[E_PLAYER_RESTORE_DATA];
     PlayerRestore[playerid] = CleanRestoreData;
-    /*PlayerInfo[playerid][pID] = 0;
-    set(PlayerInfo[playerid][pName], "");
-    PlayerInfo[playerid][pMoney] = 0;
-    PlayerInfo[playerid][pLevel] = 0;
-    PlayerInfo[playerid][pExp] = 0;
-    PlayerInfo[playerid][pAge] = 0;
-    PlayerInfo[playerid][pSex] = 0;
-    PlayerInfo[playerid][pSkin] = 0;
-    PlayerInfo[playerid][pPayDay] = 0;
-    PlayerInfo[playerid][pHealth] = 0.0;
-    PlayerInfo[playerid][pArmour] = 0.0;
-    PlayerRestore[playerid][pSpawned] = 0;
-    PlayerRestore[playerid][pFirstSpawn] = 0;
-    PlayerRestore[playerid][pLastX] = 0.0;
-    PlayerRestore[playerid][pLastY] = 0.0;
-    PlayerRestore[playerid][pLastZ] = 0.0;
-    PlayerRestore[playerid][pLastAngle] = 0.0;
-    PlayerRestore[playerid][pLastHealth] = 0.0;
-    PlayerRestore[playerid][pLastArmour] = 0.0;
-    PlayerRestore[playerid][pLastInterior] = 0;
-    PlayerRestore[playerid][pLastVirtualWorld] = 0;*/
 }

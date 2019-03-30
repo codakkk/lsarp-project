@@ -1,4 +1,5 @@
 #include <YSI\y_hooks>
+
 forward OnPlayerInventoryItemAdd(playerid, slotid, amount);
 forward OnPlayerInventoryItemDecrease(playerid, slotid, amount);
 

@@ -37,6 +37,9 @@ new
     pVehicleSellingPrice[MAX_PLAYERS]
     ;
 
+#include <player\global.pwn>
+
+
 hook OnPlayerClearData(playerid)
 {
     gAccountLogged[playerid] = 0;

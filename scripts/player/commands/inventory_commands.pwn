@@ -13,16 +13,15 @@ CMD:dep(playerid, params[])
 {
     new 
         itemid = GetPlayerWeapon(playerid),
-        ammos = GetPlayerAmmo(playerid),
-        ammoItemId = GetWeaponAmmoItemID(itemid);
+        ammos = GetPlayerAmmo(playerid);
     if(itemid != 0)
     {
-        if(!Character_HasSpaceForItem(playerid, itemid, 1) || (ammos > 0 && !Character_HasSpaceForItem(playerid, ammoItemId, ammos)))
+        if(!Character_HasSpaceForWeapon(playerid, itemid, ammos))
         {
             return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario!");
         }
         Character_GiveItem(playerid, itemid, 1);
-        Character_GiveItem(playerid, ammoItemId, ammos);
+        Character_GiveItem(playerid, Weapon_GetAmmoType(itemid), ammos);
         AC_ResetPlayerWeapons(playerid);
         SendFormattedMessage(playerid, COLOR_GREEN, "Hai depositato la tua arma (%s). Munizioni: %d", ServerItem_GetName(itemid), ammos);
     }

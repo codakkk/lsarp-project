@@ -26,6 +26,8 @@
         https://forum.sa-mp.com/showthread.php?t=489897 -> Bit 
 
 */
+#pragma warning disable 208 // actually just a good way to prevent warning: "function with tag result used before definition, forcing reparse".
+
 #include <a_samp>
 
 //#define DEBUG 0
@@ -54,120 +56,45 @@
 #define PP_ADDITIONAL_TAGS E_INVENTORY_DATA
 
 #include <PawnPlus>
-
+#define Inventory List@Inventory
 
 #include <YSI\y_hooks>
 DEFINE_HOOK_REPLACEMENT(ShowRoom, SR);
 DEFINE_HOOK_REPLACEMENT(Element, Elm);
 
 
-#define AC_GivePlayerWeapon     GivePlayerWeapon
-#define AC_ResetPlayerWeapons    ResetPlayerWeapons
+//#define AC_GivePlayerWeapon     GivePlayerWeapon
+//#define AC_ResetPlayerWeapons    ResetPlayerWeapons
 
 // Others
+#include <globals.pwn>
+
 #include <utils/colors.pwn>
+#include <utils/utils.pwn>
+#include <utils/weapons.pwn>
+
 #include <database/database.pwn>
 
-#include <globals.pwn>
 #include <utils/maths.pwn>
 #include <sa_zones>
 
-// Callback(s)
-#include <global_callbacks.pwn>
-#include <inventory/inventory_callbacks.pwn>
-
-
-// Exception.
-#include <pickup/pickup_enum.pwn>
-
-// Include enums on top, to prevents problems like "Undefined ENUM_NAME"
-#include <account/account_enum.pwn>
-#include <player/player_enum.pwn>
-#include <vehicles/vehicles_enum.pwn>
-#include <admin/admin_enum.pwn>
-#include <showroom/showroom_enum.pwn>
-#include <inventory/inventory_enum.pwn>
-#include <building/building_enum.pwn>
-
-// Here includes that must hook before everything
-#include <player/player.pwn>
-#include <pickup/pickup.pwn>
-#include <building/building.pwn>
-
-// Others (2)
-#include <account/account.pwn>
-#include <vehicles/vehicles.pwn>
-#include <showroom/showroom.pwn>
-#include <admin/admin.pwn>
-#include <inventory/inventory.pwn>
+#include <callbacks.pwn>
+#include <enums.pwn>
+#include <systems.pwn>
 
 //
-#include <utils/utils.pwn>
-#include <utils/weapon_utils.pwn>
-#include <anticheat/anticheat.pwn>
+
+
+#include <commands.pwn>
+
+#include <utils/vehicles.pwn>
 #include <global_timers.pwn>
-// Character Creation Steps:
-// 0: Name & Surname
-// 1: Age Selection
-// 2: Sex Selection
-// 3: Over
-#include <inventory\general\inventory_general.pwn>
+
+
 main()
 {
     printf("LSARP - By CodaKKK. Started: 26/02/2019.");
-
-    /*VehicleInventory = map_new();
-    Vehicle_InitializeInventory(5);
-    Vehicle_AddItem(0, 5, 1);
-    Vehicle_AddItem(5, 5, 1);
-    //Vehicle_AddItem(5, 10, 5);
-    //Vehicle_AddItem(5, 11, 1);
-    //Vehicle_AddItem(5, 12, 6);
-    //Vehicle_AddItem(5, 13, 1);
-    for_map(i : VehicleInventory)
-    {
-        new k, List:items;
-        iter_get_key_safe(i, k);
-        iter_get_value_safe(i, items);
-        for(new a = 0; a < list_size(items); a++)
-        {
-            new item[E_INVENTORY_DATA];
-            list_get_arr_safe(items, a, item);
-            printf("%s - %d - %d", ServerItem[item[gInvItem]][sitemName], item[gInvAmount], item[gInvExtra]);
-        }
-    }*/
-
-    for(new i = 0; i < 5; ++i) print("\n");
-
-    print("========== < INVENTORY UNIT TEST > ==========");
-
-    new Inventory:inv = Inventory_New(10);
-    printf("Inventory Space: %d", Inventory_GetSpace(inv));
-
-    Inventory_AddItem(inv, gItem_Hamburger, 999, 0);
-
-    Inventory_Print(inv);
-
-    /*for(new i = 1; i <= 20; ++i)
-    {
-        printf("Has space for %d UNIQUE: %d", i, Inventory_HasSpaceForItem(inv, gItem_RationK, i));  
-    }
-
-    for(new i = 1; i <= 21; ++i)
-    {
-        printf("Has space for %d NON UNIQUE: %d", i, Inventory_HasSpaceForItem(inv, gItem_Hamburger, i));    
-    }*/
-    Inventory_Delete(inv);
-
-    print("========== < INVENTORY UNIT TEST > ==========");
-    for(new i = 0; i < 5; ++i) print("\n");
 }
-
-new
-    gCharacterCreationStep[MAX_PLAYERS],
-    gCharacterSelected[MAX_PLAYERS],
-    gCharacterSelectedName[MAX_PLAYERS][MAX_PLAYER_NAME]
-    ;
     
 
 
@@ -180,57 +107,19 @@ public OnGameModeInit()
     DisableInteriorEnterExits();
     ManualVehicleEngineAndLights(); 
     EnableStuntBonusForAll(false);
-
-
-
     return 1;
 }
 
-public OnPlayerClearData(playerid)
-{
-    CharacterCreation_Reset(playerid);
-    return 1;
-}
-
-public OnVehicleDeath(vehicleid, killerid)
-{
-    return 1;
-}
-
-public OnVehicleSpawn(vehicleid)
-{
-    return 1;
-}
-
-public OnPlayerExitVehicle(playerid, vehicleid)
-{
-    return 1;
-}
-
-public OnPlayerPickUpDynamicPickup(playerid, pickupid)
-{
-    return 1;
-}
-
-public OnPlayerSpawn(playerid)
-{
-    return 1;
-}
-
-public OnPlayerDeath(playerid, killerid, reason)
-{
-    return 0;
-}
-
-public OnPlayerRequestSpawn(playerid)
-{
-    return 1;
-}
-
-public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
-{
-    return 1;
-}
+public OnPlayerRequestClass(playerid, classid) return 1;
+public OnPlayerClearData(playerid) return 1;
+public OnVehicleDeath(vehicleid, killerid) return 1;
+public OnVehicleSpawn(vehicleid) return 1;
+public OnPlayerExitVehicle(playerid, vehicleid) return 1;
+public OnPlayerPickUpDynamicPickup(playerid, pickupid) return 1;
+public OnPlayerSpawn(playerid) return 1;
+public OnPlayerDeath(playerid, killerid, reason) return 0;
+public OnPlayerRequestSpawn(playerid) return 1;
+public OnPlayerKeyStateChange(playerid, newkeys, oldkeys) return 1;
 
 public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 {
@@ -324,7 +213,6 @@ public OnPlayerConnect(playerid)
     gAccountLogged[playerid] = 0;
     gCharacterLogged[playerid] = 0;
     gLoginAttempts[playerid] = 0;
-    gCharacterCreationStep[playerid] = -1;
 
     for(new i = 0; i < 30; ++i)
     {
@@ -366,342 +254,6 @@ public OnQueryError(errorid, const error[], const callback[], const query[], MyS
     printf("ERROR: %s", error);
     printf("QUERY ERROR: %s", query);
     return 1;
-}
-
-public OnPlayerRequestClass(playerid, classid)
-{
-    if(IsPlayerNPC(playerid))
-        return 1;
-
-    if(gCharacterLogged[playerid])
-    {
-        SpawnPlayer(playerid);
-        return 1;
-    }
-
-    if(gAccountLogged[playerid] && !gCharacterLogged[playerid])
-    {
-        ShowCharactersList(playerid);
-        return 1;
-    }
-
-    new 
-        name[24],
-        query[128];
-    
-    GetPlayerName(playerid, name, sizeof(name));
-
-    inline AccountCheckCallback()
-    {
-        if(cache_num_rows() > 0)
-        {
-            new id;
-            cache_get_value_index_int(0, 0, id);
-            Dialog_Show(playerid, Dialog_Login, DIALOG_STYLE_PASSWORD, "Login", "Ciao %s!\nIl tuo account risulta registrato.\nInserisci la password per effettuare il login.", "Login", "Esci", name);
-        }
-        else
-        {
-            Dialog_Show(playerid, DialogNull, DIALOG_STYLE_MSGBOX, "Account non registrato", "Questo account non risulta registrato.\nVisita www.lsarp.it per registrare un account.", "Ok", "", name);
-        }
-    }
-
-    mysql_format(gMySQL, query, sizeof(query), "SELECT ID FROM accounts WHERE LOWER(Name) = LOWER('%e')", name);
-    mysql_tquery_inline(gMySQL, query, using inline AccountCheckCallback);
-    return 1;
-}
-
-Dialog:Dialog_Login(playerid, response, listitem, inputtext[])
-{
-    if(!response)
-    {
-        Kick(playerid);
-        return 1;
-    }
-
-    new query[256];
-    inline OnCheck()
-    {
-        if(LoadAccountData(playerid))
-        {
-            OnAccountLogin(playerid);
-        }
-        else
-        {
-            Dialog_Show(playerid, Dialog_Login, DIALOG_STYLE_PASSWORD, "Login", "{FF0000}Password errata.\n{FFFFFF}Inserisci la tua password per effettuare il login.", "Login", "Esci");
-
-            gLoginAttempts[playerid]++;
-            if(gLoginAttempts[playerid] == 3)
-            {
-                return KickEx(playerid);
-            }
-        }
-    }
-    new 
-        psw[WHIRLPOOL_LEN], 
-        name[24];
-    WP_Hash(psw, sizeof(psw), inputtext);    
-
-    GetPlayerName(playerid, name, sizeof(name));
-
-    mysql_format(gMySQL, query, sizeof(query), "SELECT * FROM accounts WHERE LOWER(Name) = LOWER('%e') AND Password = '%e'", name, psw);
-    mysql_tquery_inline(gMySQL, query, using inline OnCheck);
-    return 1;
-}
-
-stock ShowCharactersList(playerid)
-{
-    if(!gAccountLogged[playerid])
-        return 0;
-
-    inline OnLoad()
-    {
-        new count;
-        cache_get_row_count(count);
-
-        if(cache_num_rows() == 0)
-        {
-            gCharacterCreationStep[playerid] = 0;
-            Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Crea nuovo personaggio", "Attualmente non risultano personaggi creati!\nPer poter giocare, devi disporre di un personaggio.\nInserisci il nome del nuovo personaggio.\nEsempio: Mario Rossi", "Ok", "");
-            return 1;
-        }
-
-        new
-            list[24 * MAX_CHARACTERS] = "",
-            nameTemp[24];
-
-        if(count > MAX_CHARACTERS)
-            count = MAX_CHARACTERS;
-
-        for(new i = 0; i < count; ++i)
-        {
-            cache_get_value_index_int(i, 0, AccountInfo[playerid][aCharacters][i]);
-            cache_get_value_index(i, 1, nameTemp, sizeof(nameTemp));
-            format(list, sizeof(list), "%s%s\n", list, nameTemp);
-        }
-        return Dialog_Show(playerid, Dialog_CharacterSelect, DIALOG_STYLE_LIST, "Gestione Personaggi", "%s", "Utilizza", "Altro", list);
-    }
-
-    new 
-        query[128];
-    
-    mysql_format(gMySQL, query, sizeof(query), "SELECT ID, Name FROM characters WHERE AccountID = '%d'", AccountInfo[playerid][aID]);
-    mysql_tquery_inline(gMySQL, query, using inline OnLoad);
-    return 1;
-}
-
-Dialog:Dialog_ShowCharacters(playerid, response, listitem, inputtext[])
-{
-    if(!gAccountLogged[playerid])
-        return KickEx(playerid);
-
-    ShowCharactersList(playerid);
-    return 1;
-}
-
-Dialog:Dialog_CharCreateOrDel(playerid, response, listitem, inputtext[])
-{
-    if(!response)
-    {
-        return ShowCharactersList(playerid);
-    }
-    if(listitem == 0)
-    {
-        gCharacterCreationStep[playerid] = 0;
-        Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Crea nuovo personaggio", "Inserisci il nome del nuovo personaggio!\nEsempio: Mario Rossi", "Crea", "Indietro");
-    }
-    else if(listitem == 1)
-    {
-        new randcode = 10000 + random(99999);
-        SetPVarInt(playerid, "DeleteCharacter_Code", randcode);
-        return Dialog_Show(playerid, Dialog_CharacterDelete, DIALOG_STYLE_INPUT, "Cancella Personaggio", "Stai per cancellare il personaggio (%s) definitivamente!\nInserisci il codice sottostante per confermare.\nCodice: %d", "Cancella", "Annulla", 
-            gCharacterSelectedName[playerid], randcode);
-    }
-    return 1;
-}
-
-Dialog:Dialog_CharacterDelete(playerid, response, listitem, inputtext[])
-{
-    if(!response)
-    {
-        return Dialog_Show(playerid, Dialog_CharCreateOrDel, DIALOG_STYLE_LIST, "Personaggi", "Crea nuovo personaggio\nCancella personaggio", "Avanti", "Indietro");
-    }
-    if(strval(inputtext) == GetPVarInt(playerid, "DeleteCharacter_Code"))
-    {
-        Character_Delete(playerid, gCharacterSelected[playerid], gCharacterSelectedName[playerid]);
-        DeletePVar(playerid, "DeleteCharacter_Code");
-        ShowCharactersList(playerid);
-        return 1;
-    }
-    return Dialog_Show(playerid, Dialog_CharacterDelete, DIALOG_STYLE_INPUT, "Cancella Personaggio", "{FF0000}Codice inserito non è corretto!\n{FFFFFF}Stai per cancellare il personaggio (%s) definitivamente!\nInserisci il codice sottostante per confermare.\nCodice: %d", "Cancella", "Annulla", 
-            gCharacterSelectedName[playerid], GetPVarInt(playerid, "DeleteCharacter_Code"));
-}
-
-
-Dialog:Dialog_CharacterSelect(playerid, response, listitem, inputtext[])
-{
-    gCharacterSelected[playerid] = AccountInfo[playerid][aCharacters][listitem];
-    if(!response)
-    {
-        inline OnLoad()
-        {
-            cache_get_value_index(0, 0, gCharacterSelectedName[playerid]);
-        }
-        new query[128];
-        mysql_format(gMySQL, query, sizeof(query), "SELECT Name FROM characters WHERE ID = '%d'", gCharacterSelected[playerid]);
-        mysql_tquery_inline(gMySQL, query, using inline OnLoad);
-        return Dialog_Show(playerid, Dialog_CharCreateOrDel, DIALOG_STYLE_LIST, "Personaggi", "Crea nuovo personaggio\nCancella personaggio", "Avanti", "Indietro");
-    }
-
-    inline OnLoad()
-    {
-        OnCharacterLoad(playerid);
-    }
-    new query[128];
-    mysql_format(gMySQL, query, sizeof(query), "SELECT * FROM characters WHERE ID = '%d'", gCharacterSelected[playerid]);
-    mysql_tquery_inline(gMySQL, query, using inline OnLoad);
-    return 1;
-}
-
-Dialog:Dialog_CreateNewChar(playerid, response, listitem, inputtext[])
-{
-    if(!gAccountLogged[playerid])
-        return KickEx(playerid);
-    
-    if(!response)
-    {
-        gCharacterCreationStep[playerid]--;
-        if(gCharacterCreationStep[playerid] == -1)
-            CharacterCreation_Reset(playerid);
-        switch(gCharacterCreationStep[playerid])
-        {
-            case 0: return Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Crea nuovo personaggio", "Inserisci il nome del nuovo personaggio!\nEsempio: Mario Rossi", "Avanti", "Indietro");
-            case 1: return Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Età Personaggio", "Adesso inserisci l'età del nuovo personaggio!\nN.B: 16 - 75 anni.", "Avanti", "Indietro");
-            case 2: return Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_LIST, "Sesso Personaggio", "Maschio\nFemmina\nLorack", "Crea", "Indietro");
-            default: return ShowCharactersList(playerid);
-        }
-        return 1;
-    }
-
-    switch(gCharacterCreationStep[playerid])
-    {
-        // Name & Surname
-        case 0:
-        {
-
-            new 
-                len = strlen(inputtext),
-                retFirst[MAX_PLAYER_NAME],
-                retLast[MAX_PLAYER_NAME],
-                characterName[MAX_PLAYER_NAME];
-
-            if(len > 22)
-            {
-                return Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Crea nuovo personaggio", "{FF0000}La lunghezza massima del nome è 22!\n{FFFFFF}Inserisci il nome del nuovo personaggio.\n{00FF00}Esempio: Mario Rossi", "Crea", "Indietro");
-            }
-
-            inputlength(inputtext, MAX_PLAYER_NAME);
-
-            for(new i = 0; i < len; ++i)
-            {
-                characterName[i] = (inputtext[i] == ' ') ? (characterName[i] = '_') : (characterName[i] = inputtext[i]); // () crashes compiler porca madonna
-            }
-
-            if(!IsValidRPName(characterName, retFirst, retLast))
-            {
-                Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Crea nuovo personaggio", "{FF0000}Il nome del nuovo personaggio non è del formato giusto!\n{00FF00}Esempio: Mario Rossi", "Crea", "Indietro");
-            }
-            else
-            {
-                inline OnCheck()
-                {
-                    if(cache_num_rows() > 0)
-                    {
-                        Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Crea nuovo personaggio", "{FF0000}Esiste già un personaggio con questo nome!\n{FFFFFF}Inserisci il nome del nuovo personaggio.\n{00FF00}Esempio: Mario Rossi", "Crea", "Indietro");
-                    }
-                    else
-                    {
-                        /*if(AccountInfo[playerid][aCharactersCount] >= 3 && AccountInfo[playerid][aPremium] == 0)
-                        {
-                            return Dialog_Show(playerid, Dialog_ShowCharacters, DIALOG_STYLE_MSGBOX, "Personaggio Non Creato", "Non è stato possibile creare il personaggio!\nLimite superato.", "Continua", "", fixedCharName);
-                        }*/
-                        SetPVarString(playerid, "NewCharacter_Name", characterName);
-
-                        // Move to step 2
-                        gCharacterCreationStep[playerid] = 1;
-
-                        Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Età Personaggio", "Adesso inserisci l'età del nuovo personaggio!\nN.B: 16 - 75 anni.", "Avanti", "Indietro");
-                    }
-                }
-                new 
-                    query[128];
-                mysql_format(gMySQL, query, sizeof(query), "SELECT ID FROM characters WHERE LOWER(Name) = LOWER('%e')", characterName);
-                mysql_tquery_inline(gMySQL, query, using inline OnCheck);
-                return 1;
-            }
-        }
-        case 1: // Age Selection
-        {
-            new val = strval(inputtext);
-            if(val < 16 || val > 75)
-            {
-                return Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Età Personaggio", "Adesso inserisci l'età del nuovo personaggio!\nN.B: 16 - 75 anni.", "Avanti", "Indietro");
-            }
-            gCharacterCreationStep[playerid] = 2;
-            SetPVarInt(playerid, "NewCharacter_Age", val);
-            return Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_LIST, "Sesso Personaggio", "Maschio\nFemmina\nLorack", "Crea", "Indietro");
-        }
-        case 2: // Sex Selection
-        {
-            gCharacterCreationStep[playerid] = 3;
-            new
-                name[MAX_PLAYER_NAME], // Underscored Name Porca_Madonna
-                fixedCharName[MAX_PLAYER_NAME], // Not underscored name. Porca Madonna
-                age = GetPVarInt(playerid, "NewCharacter_Age")
-                ;
-            SetPVarInt(playerid, "NewCharacter_Sex", listitem);
-            GetPVarString(playerid, "NewCharacter_Name", name, sizeof(name));
-            
-            FixName(name, fixedCharName);
-
-            Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_MSGBOX, "Riepilogo", "--- Informazioni ---\nNome: %s\nSesso: %s\nEtà: %d\nConfermi?", "Crea", "Annulla", fixedCharName, GetSexName(listitem), age);
-            return 1;
-        }
-        case 3: // Over
-        {
-            if(AccountInfo[playerid][aCharactersCount] >= MAX_CHARACTERS) // Should I prompt this before?
-            {
-                return Dialog_Show(playerid, Dialog_ShowCharacters, DIALOG_STYLE_MSGBOX, "Personaggio Non Creato", "Non è stato possibile creare il personaggio!\nLimite (5) superato.", "Continua", "");
-            }
-            new 
-                query[256],
-                age = GetPVarInt(playerid, "NewCharacter_Age"),
-                sex = GetPVarInt(playerid, "NewCharacter_Sex"),
-                characterName[MAX_PLAYER_NAME];
-            
-            GetPVarString(playerid, "NewCharacter_Name", characterName, sizeof(characterName));
-
-            mysql_format(gMySQL, query, sizeof(query), "INSERT INTO `characters` (Name, AccountID, Sex, Age, FirstSpawn) VALUES('%e', '%d', '%d', '%d', '1')", characterName, AccountInfo[playerid][aID], sex, age);
-            mysql_tquery(gMySQL, query);
-
-            AccountInfo[playerid][aCharactersCount]++;
-            Log(AccountInfo[playerid][aName], characterName, "CharacterCreation");
-            CharacterCreation_Reset(playerid);
-            
-            Dialog_Show(playerid, Dialog_ShowCharacters, DIALOG_STYLE_MSGBOX, "Personaggio Creato", "Il personaggio è stato creato con successo!", "Continua", "");
-            return 1;
-        }
-    }
-    return 1;
-}
-
-// Resets all variables created for CharacterCreationSteps
-stock CharacterCreation_Reset(playerid)
-{
-    gCharacterCreationStep[playerid] = -1;
-    DeletePVar(playerid, "NewCharacter_Sex");
-    DeletePVar(playerid, "NewCharacter_Age");
-    DeletePVar(playerid, "NewCharacter_Name");
-    DeletePVar(playerid, "DeleteCharacter_Code");
 }
 
 stock PreloadAnimations(playerid)

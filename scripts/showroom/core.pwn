@@ -1,8 +1,5 @@
 #include <YSI\y_hooks>
 
-#include <showroom/showroom_admin_commands.pwn>
-#include <showroom/showroom_player.pwn>
-
 hook OnGameModeInit()
 {
     ShowRoom_LoadAll();

@@ -1,4 +1,3 @@
-#include <vehicles\vehicles_inventory.pwn>
 #include <YSI\y_hooks>
 
 hook OnVehicleSpawn(vehicleid)

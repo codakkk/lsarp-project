@@ -1,3 +1,5 @@
+#define for_inventory(%0:%1) for_list(%0:%1)
+
 #define MAX_ITEMS_IN_SERVER             (100)
 #define MAX_ITEM_NAME                   (32)
 #define MAX_ITEMS_PER_PLAYER            (50)
@@ -6,17 +8,7 @@
 #define PLAYER_INVENTORY_START_SIZE     (10)
 
 #define ServerItem_GetName(%0) (ServerItem[%0][sitemName])
-#define ServerItem_GetType(%0) (ServerItem[%0][sitemType])
-#define ServerItem_GetMaxStack(%0) (ServerItem[%0][sitemMaxStack])
 
-#define ServerItem_IsWeapon(%0) (ServerItem[%0][sitemType] == ITEM_TYPE:ITEM_TYPE_WEAPON)
-#define ServerItem_IsFood(%0) (ServerItem[%0][sitemType] == ITEM_TYPE:ITEM_TYPE_FOOD)
-#define ServerItem_IsDrink(%0) (ServerItem[%0][sitemType] == ITEM_TYPE:ITEM_TYPE_DRINK)
-#define ServerItem_IsMedik(%0) (ServerItem[%0][sitemType] == ITEM_TYPE:ITEM_TYPE_MEDIK)
-#define ServerItem_IsBag(%0) (ServerItem[%0][sitemType] == ITEM_TYPE:ITEM_TYPE_BAG)
-
-#define Character_HasBag(%0) (pInventoryBag[%0] != 0 && ServerItem_IsBag(pInventoryBag[%0]))
-#define Character_GetBag(%0) (pInventoryBag[%0])
 enum // Error Type
 {
     //INVENTORY_RESULT_ENUM = 0, // NOT TRUE: -50 because we need positive numbers for diff.
@@ -72,8 +64,7 @@ enum _:E_INVENTORY_DATA
 
 // Player Inventory
 new
-    PlayerInventory[MAX_PLAYERS][MAX_ITEMS_PER_PLAYER][E_INVENTORY_DATA],
-    Iterator:PlayerItemsSlot[MAX_PLAYERS]<MAX_ITEMS_PER_PLAYER>,
+    Map:PlayerInventory, // Map<playerid, Inventory:PINV>
     pInventoryBag[MAX_PLAYERS],
     pInventoryListItem[MAX_PLAYERS][MAX_ITEMS_PER_PLAYER],
     pInventorySelectedListItem[MAX_PLAYERS];
@@ -81,17 +72,15 @@ new
 
 new stock
     Map:VehicleInventory, // <Key: vehicle_id, Value: List:Items>
-    //VehicleInventory[MAX_VEHICLES][MAX_ITEMS_PER_VEHICLE][E_INVENTORY_DATA],
     Iterator:VehicleItemsSlot[MAX_VEHICLES]<MAX_ITEMS_PER_VEHICLE>;
 
 // GLOBAL ITEMS ID
 new stock
     gItem_RationK,
-    gItem_Hamburger;
-
-/*stock Item(itemid, amount, extra = 0, item[E_INVENTORY_DATA])
-{
-    item[gInvItem] = itemid;
-    item[gInvAmount] = amount;
-    item[gInvExtra] = extra;
-}*/
+    gItem_Hamburger,
+    
+    // AMMOS
+    gItem_LightAmmo,
+    gItem_BuckShotAmmo,
+    gItem_HeavyAmmo,
+    gItem_RifleAmmo;

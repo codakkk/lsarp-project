@@ -1,6 +1,5 @@
 #include <YSI\y_hooks>
-#include <building/building_player.pwn>
-#include <building/commands/building_admin.pwn>
+
 
 hook OnGameModeInit()
 {
@@ -228,7 +227,7 @@ stock Building_IsValid(a) return 0 <= a < MAX_BUILDINGS && BuildingInfo[a][bExis
 
 stock Building_GetName(buildingid, name[MAX_BUILDING_NAME])
 {
-    name = BuildingInfo[buildingid][bName];
+    set(name, BuildingInfo[buildingid][bName]);
     return 1;
 }
 

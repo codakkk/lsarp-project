@@ -1,8 +1,5 @@
 #include <YSI\y_hooks>
 
-#include <admin/admin_commands.pwn>
-#include <admin/supporter_commands.pwn>
-
 hook OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
 {
     if(AccountInfo[playerid][aAdmin] <= 0)

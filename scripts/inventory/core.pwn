@@ -1,6 +1,6 @@
-#define Inventory List@Inventory
+#include <YSI\y_hooks>
 
-#define for_inventory(%0:%1) for_list(%0:%1)
+// Remember that we're using set instead of add for inventory size
 
 // Overload operators for the new container "Inventory:" (must be on top of everything)
 
@@ -13,7 +13,7 @@ stock Inventory:Inventory_New(space)
     return inventory;
 }
 
-stock bool:Inventory_IncreaseSize(Inventory:inventory, new_space)
+stock bool:Inventory_Resize(Inventory:inventory, new_space)
 {
     if(!list_valid(inventory))
         return false;
@@ -46,7 +46,10 @@ static stock bool:Inventory_InternalInsertItem(Inventory:inventory, slotid, item
 stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra)
 {
     if(!list_valid(inventory))
+    {
+        printf("Inventory_AddItem/list_valid = false");
         return 0;
+    }
     if(!ServerItem_IsValid(itemid))
         return INVENTORY_FAILED_INVALID_ITEM;
     if(amount < 0)
@@ -70,7 +73,7 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra)
     {
         new 
             hasItem_slot = Inventory_HasItem(inventory, itemid);
-        if(hasItem_slot != -1 && Inventory_GetItemAmount(inventory, hasItem_slot) < maxStack)
+        if(hasItem_slot != -1 && Inventory_GetSlotAmount(inventory, hasItem_slot) < maxStack)
         {
             list_get_arr_safe(inventory, hasItem_slot, item);
             item[gInvAmount] += amount;
@@ -109,7 +112,60 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra)
             }
         }
     }
+    Inventory_Print(inventory);
     return INVENTORY_ADD_SUCCESS;
+}
+
+stock bool:Inventory_DecreaseAmountBySlot(Inventory:inventory, slotid, amount = 1)
+{
+    if(slotid < 0 || slotid >= Inventory_GetSpace(inventory))
+        return false;
+    new item[E_INVENTORY_DATA];
+    if(list_get_arr_safe(inventory, slotid, item))
+    {
+        item[gInvAmount] -= amount;
+        if(item[gInvAmount] <= 0)
+            list_set_var(inventory, slotid, VAR_NULL);
+        else
+            list_set_arr(inventory, slotid, item);
+    }
+    return true;
+}
+
+stock Inventory_DecreaseItemAmount(Inventory:inventory, itemid, amount = 1)
+{
+    if(itemid == 0 || amount <= 0)
+        return INVENTORY_DECREASE_SUCCESS;
+    new 
+        item[E_INVENTORY_DATA],
+        tempDecreaseAmount = amount;
+    for_inventory(i : inventory)
+    {
+        if(iter_sizeof(i) == 0) 
+            continue;
+        
+        iter_get_arr(i, item);
+        
+        if(itemid != item[gInvItem]) 
+            continue; // Safeness
+        
+        new diff = tempDecreaseAmount - item[gInvAmount];
+        if(diff >= 0)
+        {
+            //iter_set_value_arr(i, VAR_NULL);
+            iter_set_var(i, VAR_NULL); // must be used for variadics
+            tempDecreaseAmount = diff;
+
+            printf("Size: %d", iter_sizeof(i));
+        }
+        else 
+        {
+            item[gInvAmount] -= tempDecreaseAmount;
+            iter_set_arr(i, item);
+            tempDecreaseAmount = 0;
+        }
+    }
+    return INVENTORY_DECREASE_SUCCESS;
 }
 
 stock Inventory_HasSpaceForItem(Inventory:inventory, itemid, amount)
@@ -156,24 +212,53 @@ stock Inventory_HasSpaceForItem(Inventory:inventory, itemid, amount)
     return tempAmount <= 0;
 }
 
-stock Inventory_HasItem(Inventory:inventory, itemid)
+// useful function, because weapons are stored in a specific way
+stock Inventory_HasSpaceForWeapon(Inventory:inventory, weaponid, ammo)
+{
+    return Inventory_HasSpaceForItem(inventory, weaponid, 1) && (ammo > 0 && Inventory_HasSpaceForItem(inventory, Weapon_GetAmmoType(weaponid), ammo));
+}
+
+stock Inventory_HasItem(Inventory:inventory, itemid, min = 1)
 {
     new item[E_INVENTORY_DATA];
     for(new i = 0; i < list_size(inventory); ++i)
     {
         list_get_arr_safe(inventory, i, item);
-        if(item[gInvItem] == itemid)
+        if(item[gInvItem] == itemid && item[gInvAmount] >= min)
             return i;
     }
     return -1;
 }
 
-stock Inventory_GetItemAmount(Inventory:inventory, slotid)
+stock Inventory_GetItemData(Inventory:inventory, slotid, item[E_INVENTORY_DATA])
+{
+    list_get_arr_safe(inventory, slotid, item);
+}
+
+stock Inventory_GetItemID(Inventory:inventory, slotid)
 {
     new item[E_INVENTORY_DATA];
-    if(list_get_arr_safe(inventory, slotid, item))
-        return item[gInvAmount];
-    return 0;
+    Inventory_GetItemData(inventory, slotid, item);
+    return item[gInvItem];
+}
+
+stock Inventory_GetSlotAmount(Inventory:inventory, slotid)
+{
+    new item[E_INVENTORY_DATA];
+    Inventory_GetItemData(inventory, slotid, item);
+    return item[gInvAmount];
+}
+
+stock Inventory_GetItemAmount(Inventory:inventory, itemid)
+{
+    new item[E_INVENTORY_DATA], count = 0;
+    for_inventory(i : inventory)
+    {
+        if(iter_sizeof(i) == 0 || !iter_get_arr_safe(i, item) || item[gInvItem] != itemid)
+            continue;
+        count += item[gInvAmount];
+    }
+    return count;
 }
 
 stock Inventory_GetSpace(Inventory:inventory)
@@ -192,6 +277,16 @@ stock Inventory_GetUsedSpace(Inventory:inventory)
             space++;
     }
     return space;
+}
+
+stock bool:Inventory_IsEmpty(Inventory:inventory)
+{
+    for_inventory(i : inventory)
+    {
+        if(iter_sizeof(i) != 0)
+            return false;
+    }
+    return true;
 }
 
 stock Inventory_GetFreeSlot(Inventory:inventory)

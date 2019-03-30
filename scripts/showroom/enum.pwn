@@ -21,7 +21,11 @@ enum E_SHOWROOM_DATA
 }; 
 new stock
     ShowRoomInfo[MAX_SHOWROOMS][E_SHOWROOM_DATA],
-    Iterator:ShowRooms<MAX_SHOWROOMS>;
+    Iterator:ShowRooms<MAX_SHOWROOMS>,
+    gShowRoomListItemList[MAX_PLAYERS][MAX_SHOWROOMS],
+    gAdminSelectedShowRoom[MAX_PLAYERS],
+    gShowRoomItemList[MAX_PLAYERS][MAX_VEHICLES_IN_SHOWROOM]
+;
 
 new CarColors[] =
 {

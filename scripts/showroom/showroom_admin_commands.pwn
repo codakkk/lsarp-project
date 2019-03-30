@@ -1,11 +1,4 @@
 
-new 
-    gShowRoomListItemList[MAX_PLAYERS][MAX_SHOWROOMS],
-    gAdminSelectedShowRoom[MAX_PLAYERS],
-    gShowRoomItemList[MAX_PLAYERS][MAX_VEHICLES_IN_SHOWROOM]
-;
-
-
 stock ShowRoom_ShowInternalVehicles(showroom_id, playerid)
 {
     if(AccountInfo[playerid][aAdmin] < 2) // Safeness

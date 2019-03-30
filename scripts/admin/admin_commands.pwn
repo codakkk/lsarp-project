@@ -404,6 +404,7 @@ CMD:giveitem(playerid, params[])
         SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha rimosso %s (Qnt: %d) a %s (%d).", 
         AccountInfo[playerid][aName], Character_GetOOCName(playerid), ServerItem[itemid][sitemName], quantity, Character_GetOOCName(id), id);
     }
+    //Inventory_Print(Character_GetInventory(id));
     return 1;
 }
 
@@ -413,7 +414,7 @@ CMD:giveweapon(playerid, params[])
     new id, wid, ammo;
     if(sscanf(params, "uk<weapon>i", id, wid, ammo))
         return SendClientMessage(playerid, COLOR_ERROR, "/giveweapon <playerid/partofname> <weaponid/weapon name> <ammo>");
-    GivePlayerWeapon(playerid, wid, ammo);
+    AC_GivePlayerWeapon(playerid, wid, ammo);
     
     return 1;
 }
