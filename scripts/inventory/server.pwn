@@ -111,6 +111,7 @@ stock ServerItem_InitializeItem(name[], ITEM_TYPE:type, modelId = 0, maxStack = 
 
 stock ITEM_TYPE:ServerItem_GetType(itemid) return ServerItem[itemid][sitemType];
 stock ServerItem_IsWeapon(itemid) return ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_WEAPON;
+stock ServerItem_IsAmmo(itemid) return ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_AMMO;
 stock ServerItem_IsFood(itemid) return ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_FOOD;
 stock ServerItem_IsDrink(itemid) return ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_DRINK;
 stock ServerItem_IsMedik(itemid) return ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_MEDIK;

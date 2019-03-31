@@ -434,7 +434,7 @@ CMD:acmds(playerid, params[])
     }
     if(AccountInfo[playerid][aAdmin] >= 3)
     {
-        SendClientMessage(playerid, -1, "[ADMIN]: /giveitem - /apark");
+        SendClientMessage(playerid, -1, "[ADMIN]: /giveitem - /givevehicleitem - /apark");
     }
     if(AccountInfo[playerid][aAdmin] >= 4)
     {
@@ -468,4 +468,44 @@ SSCANF:item(string[])
         }
     }
     return INVALID_ITEM_ID;
+}
+
+flags:givevehicleitem(CMD_ADMIN);
+CMD:givevehicleitem(playerid, params[])
+{
+    new id, itemid, quantity;
+    if(sscanf(params, "dk<item>d", id, itemid, quantity))
+        return SendClientMessage(playerid, COLOR_ERROR, "/givevehicleitem <vehicleid> <itemid/item_name> <quantità>");
+    
+    if(id < 0 || id >= MAX_VEHICLES)
+        return SendClientMessage(playerid, COLOR_ERROR, "Il veicolo non è valido!");
+    
+    if(!Vehicle_HasInventory(id))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo veicolo!");
+
+    if(id == INVALID_ITEM_ID || !ServerItem_IsValid(itemid))
+        return SendClientMessage(playerid, COLOR_ERROR, "L'item inserito non è corretto!");
+    
+    if(quantity > 0)
+    {
+        new result = Vehicle_AddItem(id, itemid, quantity);
+        if(result == INVENTORY_ADD_SUCCESS)
+        {
+            SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha givato %s (Qnt: %d) nel veicolo id %d.", 
+            AccountInfo[playerid][aName], Character_GetOOCName(playerid), ServerItem[itemid][sitemName], quantity, id);
+        }
+        else if(result == INVENTORY_NO_SPACE)
+        {
+            SendFormattedMessage(playerid, COLOR_ERROR, "Il veicolo %d non ha abbastanza spazio nell'inventario!", id);
+        }
+    }
+    else if(quantity < 0)
+    {
+        quantity = -quantity;
+        Vehicle_DecreaseItemAmount(id, itemid, quantity);
+        SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha rimosso %s (Qnt: %d) al veicolo %d.", 
+        AccountInfo[playerid][aName], Character_GetOOCName(playerid), ServerItem[itemid][sitemName], quantity, id);
+    }
+    //Inventory_Print(Character_GetInventory(id));
+    return 1;
 }

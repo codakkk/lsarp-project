@@ -26,12 +26,11 @@ stock Inventory_Delete(Inventory:inventory)
     list_delete(inventory);
 }
 
-static stock bool:Inventory_InternalInsertItem(Inventory:inventory, slotid, itemid, amount, extra)
+stock bool:Inventory_SetItem(Inventory:inventory, slotid, itemid, amount, extra)
 {
-    if(!list_valid(inventory) || amount <= 0 || !ServerItem_IsValid(itemid) || slotid >= list_size(inventory))
+    if(!list_valid(inventory) || (itemid != 0 && amount <= 0) || !ServerItem_IsValid(itemid) || slotid >= list_size(inventory))
         return false;
-    //if(ServerItem_IsUnique(itemid) && amount > 1)
-        //amount = 1;
+    
     if(ServerItem_GetMaxStack(itemid) > amount)
         amount = ServerItem_GetMaxStack(itemid);
     
@@ -65,7 +64,7 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra)
         new tempAmount = amount;
         while(tempAmount > 0)
         {
-            Inventory_InternalInsertItem(inventory, Inventory_GetFreeSlot(inventory), itemid, amount, extra);
+            Inventory_SetItem(inventory, Inventory_GetFreeSlot(inventory), itemid, amount, extra);
             tempAmount--;
         }
     }
@@ -93,7 +92,7 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra)
                 if(diff > maxStack)
                     amountToAdd = maxStack;
                 
-                Inventory_InternalInsertItem(inventory, Inventory_GetFreeSlot(inventory), itemid, amountToAdd, extra);
+                Inventory_SetItem(inventory, Inventory_GetFreeSlot(inventory), itemid, amountToAdd, extra);
                 diff -= amountToAdd;
             }
         }
@@ -107,7 +106,7 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra)
                 amountToAdd = tempAmount;
                 if(amountToAdd > maxStack)
                     amountToAdd = maxStack;
-                Inventory_InternalInsertItem(inventory, Inventory_GetFreeSlot(inventory), itemid, amountToAdd, extra);
+                Inventory_SetItem(inventory, Inventory_GetFreeSlot(inventory), itemid, amountToAdd, extra);
                 tempAmount -= amountToAdd;
             }
         }
@@ -215,7 +214,7 @@ stock Inventory_HasSpaceForItem(Inventory:inventory, itemid, amount)
 // useful function, because weapons are stored in a specific way
 stock Inventory_HasSpaceForWeapon(Inventory:inventory, weaponid, ammo)
 {
-    return Inventory_HasSpaceForItem(inventory, weaponid, 1) && (ammo > 0 && Inventory_HasSpaceForItem(inventory, Weapon_GetAmmoType(weaponid), ammo));
+    return Inventory_HasSpaceForItem(inventory, weaponid, 1) && (ammo >= 0 && Inventory_HasSpaceForItem(inventory, Weapon_GetAmmoType(weaponid), ammo));
 }
 
 stock Inventory_HasItem(Inventory:inventory, itemid, min = 1)

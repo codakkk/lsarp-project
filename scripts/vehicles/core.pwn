@@ -1,10 +1,17 @@
 #include <YSI\y_hooks>
 
+hook OnPlayerCharacterLoad(playerid)
+{
+    Character_LoadVehicles(playerid);
+    return 1;
+}
+
 hook OnVehicleSpawn(vehicleid)
 {
     printf("Hook OnVehicleSpawn %d", vehicleid);
     if(VehicleInfo[vehicleid][vModel] != 0)
         Vehicle_Reload(vehicleid);
+    return 1;
 }
 
 hook OnVehicleDeath(vehicleid, killerid)
@@ -91,53 +98,6 @@ stock Vehicle_UnLock(vehicleid)
 stock Vehicle_IsLocked(vehicleid)
 {
     return VehicleInfo[vehicleid][vLocked];
-}
-
-stock Vehicle_Save(vehicleid)
-{
-    if(!VehicleInfo[vehicleid][vID] || VehicleInfo[vehicleid][vModel] == 0)
-        return 0;
-    new 
-        Float:x, 
-        Float:y, 
-        Float:z, 
-        Float:a,
-        Float:hp,
-        vehSpawned = 0,
-        vehEngine = Vehicle_IsEngineOn(vehicleid);
-    
-    GetVehiclePos(vehicleid, x, y, z);
-    GetVehicleZAngle(vehicleid, a);
-    GetVehicleHealth(vehicleid, hp);
-
-    if(x != 0.0 && y != 0.0 && z != 0.0)
-    {
-        vehSpawned = 1;
-    }
-
-    new query[1024];
-    mysql_format(gMySQL, query, sizeof(query), "UPDATE `player_vehicles` SET \
-    Model = '%d', \
-    Color1 = '%d', Color2 = '%d', \
-    X = '%f', Y = '%f', Z = '%f', Angle = '%f', \
-    Locked = '%d', \
-    LastX = '%f', LastY = '%f', LastZ = '%f', LastA = '%f', \
-    LastHealth = '%f', \
-    Spawned = '%d', \
-    Engine = '%d' \
-    WHERE ID = '%d'", 
-    VehicleInfo[vehicleid][vModel],
-    VehicleInfo[vehicleid][vColor1], VehicleInfo[vehicleid][vColor2],
-    VehicleInfo[vehicleid][vX], VehicleInfo[vehicleid][vY], VehicleInfo[vehicleid][vZ], VehicleInfo[vehicleid][vA],
-    VehicleInfo[vehicleid][vLocked],
-    x, y, z, a,
-    hp,
-    vehSpawned, 
-    vehEngine,
-    VehicleInfo[vehicleid][vID]);
-    mysql_tquery(gMySQL, query);
-    //printf("%s", query);
-    return 1;
 }
 
 stock Vehicle_IsEngineOff(vehicleid)
@@ -238,6 +198,20 @@ stock Vehicle_SetDoorStatus(vehicleid, bonnet, boot, driver_door, passenger_door
     return 1;
 }
 
+stock Vehicle_IsOwnerConnected(vehicleid)
+{
+    if(!VehicleInfo[vehicleid][vID] || !VehicleInfo[vehicleid][vOwnerID] || !VehicleInfo[vehicleid][vModel])
+        return 0;
+    foreach(new i : Player)
+    {
+        if(!gCharacterLogged[i])
+            continue;
+        if(VehicleInfo[vehicleid][vOwnerID] == PlayerInfo[i][pID])
+            return 1;
+    }
+    return 0;
+}
+
 stock Vehicle_Unload(vehicleid)
 {
     new i = vehicleid;
@@ -265,25 +239,53 @@ stock Vehicle_Unload(vehicleid)
     VehicleRestore[i][vEngine] = 0;
     gVehicleDestroyTime[i] = 0;
 
-    new List:vehicleItems;
-    if(map_get_safe(VehicleInventory, i, vehicleItems))
-    {
-        printf("Unloading vehicle %d inventory", vehicleid);
-        list_delete(vehicleItems);
-    }
+    CallLocalFunction(#OnPlayerVehicleUnLoaded, "d", vehicleid);
     return 1;
 }
 
-stock Vehicle_IsOwnerConnected(vehicleid)
+stock Vehicle_Save(vehicleid)
 {
-    if(!VehicleInfo[vehicleid][vID] || !VehicleInfo[vehicleid][vOwnerID] || !VehicleInfo[vehicleid][vModel])
+    if(!VehicleInfo[vehicleid][vID] || VehicleInfo[vehicleid][vModel] == 0)
         return 0;
-    foreach(new i : Player)
+    new 
+        Float:x, 
+        Float:y, 
+        Float:z, 
+        Float:a,
+        Float:hp,
+        vehSpawned = 0,
+        vehEngine = Vehicle_IsEngineOn(vehicleid);
+    
+    GetVehiclePos(vehicleid, x, y, z);
+    GetVehicleZAngle(vehicleid, a);
+    GetVehicleHealth(vehicleid, hp);
+
+    if(x != 0.0 && y != 0.0 && z != 0.0)
     {
-        if(!gCharacterLogged[i])
-            continue;
-        if(VehicleInfo[vehicleid][vOwnerID] == PlayerInfo[i][pID])
-            return 1;
+        vehSpawned = 1;
     }
-    return 0;
+
+    new query[512];
+    mysql_format(gMySQL, query, sizeof(query), "UPDATE `player_vehicles` SET \
+    Model = '%d', \
+    Color1 = '%d', Color2 = '%d', \
+    X = '%f', Y = '%f', Z = '%f', Angle = '%f', \
+    Locked = '%d', \
+    LastX = '%f', LastY = '%f', LastZ = '%f', LastA = '%f', \
+    LastHealth = '%f', \
+    Spawned = '%d', \
+    Engine = '%d' \
+    WHERE ID = '%d'", 
+    VehicleInfo[vehicleid][vModel],
+    VehicleInfo[vehicleid][vColor1], VehicleInfo[vehicleid][vColor2],
+    VehicleInfo[vehicleid][vX], VehicleInfo[vehicleid][vY], VehicleInfo[vehicleid][vZ], VehicleInfo[vehicleid][vA],
+    VehicleInfo[vehicleid][vLocked],
+    x, y, z, a,
+    hp,
+    vehSpawned, 
+    vehEngine,
+    VehicleInfo[vehicleid][vID]);
+    mysql_tquery(gMySQL, query);
+    CallLocalFunction(#OnPlayerVehicleSaved, "d", vehicleid);
+    return 1;
 }

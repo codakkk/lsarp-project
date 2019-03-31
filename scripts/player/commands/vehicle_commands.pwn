@@ -224,8 +224,8 @@ Dialog:Dialog_VehicleAction(playerid, response, listitem, inputtext[])
         }
         case 2: // Trunk
         {
-            SendClientMessage(playerid, COLOR_ERROR, "FUNZIONE NON DISPONIBILE");
-        
+            //SendClientMessage(playerid, COLOR_ERROR, "FUNZIONE NON DISPONIBILE");
+            Vehicle_ShowInventory(vehicle_id, playerid);
         }
         case 3: // Sell to player
         {

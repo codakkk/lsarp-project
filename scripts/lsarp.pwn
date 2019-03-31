@@ -26,7 +26,7 @@
         https://forum.sa-mp.com/showthread.php?t=489897 -> Bit 
 
 */
-#pragma warning disable 208 // actually just a good way to prevent warning: "function with tag result used before definition, forcing reparse".
+// #pragma warning disable 208 // actually just a good way to prevent warning: "function with tag result used before definition, forcing reparse".
 
 #include <a_samp>
 
@@ -67,6 +67,7 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 //#define AC_ResetPlayerWeapons    ResetPlayerWeapons
 
 // Others
+#include <forwarded_functions.pwn>
 #include <globals.pwn>
 
 #include <utils/colors.pwn>
@@ -94,6 +95,9 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 main()
 {
     printf("LSARP - By CodaKKK. Started: 26/02/2019.");
+
+    PlayerInventory = map_new();
+    VehicleInventory = map_new();
 }
     
 
@@ -120,6 +124,7 @@ public OnPlayerSpawn(playerid) return 1;
 public OnPlayerDeath(playerid, killerid, reason) return 0;
 public OnPlayerRequestSpawn(playerid) return 1;
 public OnPlayerKeyStateChange(playerid, newkeys, oldkeys) return 1;
+public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ) return 1;
 
 public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 {
@@ -200,8 +205,8 @@ public OnPlayerDisconnect(playerid, reason)
     if(!gAccountLogged[playerid] || !gCharacterLogged[playerid])
         return 0;
     
-    CallLocalFunction("OnCharacterSaveData", "i", playerid);
-    CallLocalFunction("OnPlayerClearData", "i", playerid);
+    CallLocalFunction(#OnCharacterSaveData, "i", playerid);
+    CallLocalFunction(#OnPlayerClearData, "i", playerid);
     return 1;
 }
 
@@ -293,6 +298,9 @@ stock PreloadAnimations(playerid)
     return 1;
 }
 
+// Preload animations
+// Hehe Figo
+// Sono Forte
 stock PreloadAnimLib(playerid, animlib[])
 {
     ApplyAnimation(playerid, animlib, "null", 0.0, 0, 0, 0, 0, 0, 0);

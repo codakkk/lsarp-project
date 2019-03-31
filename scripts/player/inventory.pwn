@@ -18,11 +18,11 @@ stock bool:Character_UnloadInventory(playerid)
     return true;
 }
 
-hook OnCharacterSaveData(playerid)
+/*hook OnCharacterSaveData(playerid)
 {
     Character_SaveInventory(playerid);
     return 1;
-}
+}*/
 
 hook OnPlayerCharacterLoad(playerid)
 {
@@ -40,6 +40,19 @@ hook OnPlayerClearData(playerid)
     return 1;
 }
 
+
+hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
+{
+    printf("OnPlayerWeaponShot Called %d", GetPlayerWeaponState(playerid));
+
+    if(GetPlayerWeaponState(playerid) == WEAPONSTATE_LAST_BULLET && AC_GetPlayerAmmo(playerid) == 1 && /*Has Weapon && */ Character_HasSpaceForWeapon(playerid, weaponid, 0))
+    {
+        SendClientMessage(playerid, COLOR_GREEN, "Hai finito i colpi dell'arma. L'arma è stata rimessa nell'inventario.");
+        Character_GiveItem(playerid, weaponid, 1, 0, false);
+    }
+    return 1;
+}
+
 stock Inventory:Character_GetInventory(playerid)
 {
     new Inventory:inv;
@@ -52,8 +65,6 @@ stock Inventory:Character_GetInventory(playerid)
 stock Character_GiveItem(playerid, item_id, amount = 1, extra = 0, bool:callback = false)
 {
     #pragma unused callback
-    //if(amount < 0)
-        //return Character_DecreaseItemAmount(playerid, item_id, amount);
     
     new Inventory:playerInventory = Character_GetInventory(playerid);
     
@@ -106,30 +117,31 @@ stock Character_ShowInventory(playerid, targetid)
 
     new Inventory:playerInventory = Character_GetInventory(playerid);
 
-    if(Inventory_IsEmpty(playerInventory))
-        return SendClientMessage(playerid, COLOR_ERROR, "L'inventario è vuoto!");
+    //if(Inventory_IsEmpty(playerInventory))
+        //return SendClientMessage(playerid, COLOR_ERROR, "L'inventario è vuoto!");
     new
         string[4096],
         temp[16],
-        count = 0,
-        slotid = -1,
         tempItem[E_INVENTORY_DATA]
     ;
     for_inventory(i : playerInventory)
     {
-        slotid++;
         if(iter_sizeof(i) == 0) // If no item
-            continue;
-
-        iter_get_arr(i, tempItem);
-        new itemid = tempItem[gInvItem],
-            itemAmount = tempItem[gInvAmount];
-        if(ServerItem_IsUnique(itemid))
-            temp = "--";
+        {
+            tempItem[gInvItem] = tempItem[gInvAmount] = tempItem[gInvExtra] = 0;
+            format(string, sizeof(string), "%s{808080}Slot Libera\t{808080}--\t{808080}--\n", string);
+        }
         else
-            format(temp, sizeof(temp), "%d", itemAmount);
-        format(string, sizeof(string), "%s%s\t%s\t%s\n", string, ServerItem[itemid][sitemName], temp, ServerItem_GetTypeName(itemid));
-        pInventoryListItem[playerid][count++] = slotid;
+        {
+            iter_get_arr(i, tempItem);
+            new itemid = tempItem[gInvItem],
+                itemAmount = tempItem[gInvAmount];
+            if(ServerItem_IsUnique(itemid))
+                temp = "--";
+            else
+                format(temp, sizeof(temp), "%d", itemAmount);
+            format(string, sizeof(string), "%s{FFFFFF}%s\t{FFFFFF}%s\t{FFFFFF}%s\n", string, ServerItem[itemid][sitemName], temp, ServerItem_GetTypeName(itemid));
+        }
     }
     new title[48];
     format(title, sizeof(title), "Inventario (%d/%d)", Inventory_GetUsedSpace(playerInventory), Inventory_GetSpace(playerInventory));
@@ -146,6 +158,8 @@ Dialog:Dialog_InventoryItemList(playerid, response, listitem, inputtext[])
         slotid = pInventoryListItem[playerid][listitem],
         itemid = Character_GetItem(playerid, slotid)
         ;
+    if(itemid == 0)
+        return Character_ShowInventory(playerid, playerid);
     pInventorySelectedListItem[playerid] = listitem;
     format(title, sizeof(title), "%s (Quantità: %d)", ServerItem_GetName(itemid), Character_GetItemAmount(playerid, slotid));
     Dialog_Show(playerid, Dialog_InvItemAction, DIALOG_STYLE_LIST, title, "Usa\nGetta\nDai a un giocatore", "Continua", "Annulla");
@@ -186,20 +200,15 @@ stock Character_GetItemAmount(playerid, slotid)
     return Inventory_GetSlotAmount(playerInv, slotid);
 }
 
-stock Character_HasBag(playerid)
-{
-    return pInventoryBag[playerid] != 0 && ServerItem_IsBag(pInventoryBag[playerid]);
-}
-
-stock Character_GetBag(playerid)
-{
-    return pInventoryBag[playerid];
-}
 
 stock Character_HasItem(playerid, itemid, min = 1) return Inventory_HasItem(Character_GetInventory(playerid), itemid, min);
 
 stock Character_HasSpaceForItem(playerid, itemid, amount) return Inventory_HasSpaceForItem(Character_GetInventory(playerid), itemid, amount);
 stock Character_HasSpaceForWeapon(playerid, weaponid, ammo) return Inventory_HasSpaceForWeapon(Character_GetInventory(playerid), weaponid, ammo);
+
+stock Character_HasBag(playerid) return pInventoryBag[playerid] != 0 && ServerItem_IsBag(pInventoryBag[playerid]);
+
+stock Character_GetBag(playerid) return pInventoryBag[playerid];
 
 stock bool:Character_SetBag(playerid, bagid)
 {
@@ -223,23 +232,31 @@ stock Character_SaveInventory(playerid)
         return 0;
 
     new
+        Inventory:inventory = Character_GetInventory(playerid),
         query[1024],
-        tempItems[256],
-        tempAmounts[256],
+        tempItems[128],
+        tempAmounts[128],
+        tempExtra[128],
         tempItem[E_INVENTORY_DATA]
         ;
-    for_inventory(i : Character_GetInventory(playerid))
+    for_inventory(i : inventory)
     {
         if(iter_sizeof(i) == 0)
-            continue;
-        iter_get_arr(i, tempItem);
+        {
+            tempItem[gInvItem] = tempItem[gInvAmount] = tempItem[gInvExtra] = 0;
+        }
+        else
+        {
+            iter_get_arr(i, tempItem);
+        }
         format(tempItems, sizeof(tempItems), "%s%d%c", tempItems, tempItem[gInvItem], '|');
         format(tempAmounts, sizeof(tempAmounts), "%s%d%c", tempAmounts, tempItem[gInvAmount], '|');
+        format(tempExtra, sizeof(tempExtra), "%s%d%c", tempExtra, tempItem[gInvExtra], '|');
     }
     mysql_format(gMySQL, query, sizeof(query), "INSERT INTO `character_inventory` \
-    (CharacterID, Items, ItemsAmount, EquippedBag) VALUES('%d', '%e', '%e', '%d') ON DUPLICATE KEY UPDATE \
-    Items = VALUES(Items), ItemsAmount = VALUES(ItemsAmount), EquippedBag = VALUES(EquippedBag)",
-    PlayerInfo[playerid][pID], tempItems, tempAmounts, pInventoryBag[playerid]
+    (CharacterID, Items, ItemsAmount, ItemsExtraData, EquippedBag) VALUES('%d', '%e', '%e', '%e', '%d') ON DUPLICATE KEY UPDATE \
+    Items = VALUES(Items), ItemsAmount = VALUES(ItemsAmount), ItemsExtraData = VALUES(ItemsExtraData), EquippedBag = VALUES(EquippedBag)",
+    PlayerInfo[playerid][pID], tempItems, tempAmounts, tempExtra, pInventoryBag[playerid]
     );
     mysql_tquery(gMySQL, query);
     return 1;
@@ -276,12 +293,17 @@ stock Character_LoadInventory(playerid)
             cache_get_value_index_int(0, 3, pInventoryBag[playerid]);
 
             Character_ResizeInventory(playerid);
-            
-            for(new i = 0; i < MAX_ITEMS_PER_PLAYER; ++i)
+
+            new Inventory:inventory = Character_GetInventory(playerid);
+            for(new i = 0; i < Character_GetInventorySize(playerid); ++i)
             {
-                if(tempItems[i] == 0 || tempAmounts[i] <= 0)
-                    continue;
-                Character_GiveItem(playerid, tempItems[i], tempAmounts[i], tempExtraData[i]);
+                Inventory_SetItem(inventory, i, tempItems[i], tempAmounts[i], tempExtraData[i]);
+                //Character_GiveItem(playerid, tempItems[i], tempAmounts[i], tempExtraData[i]);
+            }
+
+            if(Character_HasBag(playerid))
+            {
+                SendFormattedMessage(playerid, COLOR_GREEN, "Stai utilizzando: %s.", ServerItem_GetName(Character_GetBag(playerid)));
             }
         }
     }

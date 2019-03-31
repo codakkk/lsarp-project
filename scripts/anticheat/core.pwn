@@ -138,3 +138,8 @@ stock AC_ResetPlayerWeapons(playerid)
     ResetPlayerWeapons(playerid);
     return 1;
 }
+
+stock AC_GetPlayerAmmo(playerid)
+{
+    return GetPlayerAmmo(playerid);
+}

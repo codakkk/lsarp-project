@@ -1,180 +1,211 @@
 #include <YSI\y_hooks>
 
-stock Vehicle_AddItem(vehicleid, itemid, amount = 1, extra = 0)
+stock bool:Vehicle_InitializeInventory(vehicleid)
 {
-    if(!ServerItem_IsValid(itemid))
-        return INVENTORY_FAILED_INVALID_ITEM;
-    if(!map_has_key(VehicleInventory, vehicleid))
-    {
-        printf("Error occurred: no inventory for %d vehicle id.", vehicleid);
-        return INVENTORY_NO_SPACE;
-    }
-    
-    new 
-        item[E_INVENTORY_DATA];
-    item[gInvItem] = itemid;
-    item[gInvAmount] = amount;
-    item[gInvExtra] = extra;
-
-    new List:vehicleItems;
-
-    map_get_safe(VehicleInventory, vehicleid, vehicleItems);
-    //printf("Vehicle has %d items", list_size(vehicleItems));
-
-    //printf("Adding item: %s - %d", ServerItem[itemid][sitemName], amount);
-    list_add_arr(vehicleItems, item);
-    //printf("Vehicle has %d items", list_size(vehicleItems));
-    /*if(!ServerItem_IsValid(item_id))
-        return INVENTORY_FAILED_INVALID_ITEM;
-    if(amount < 0)
-        return Character_DecreaseItemAmount(playerid, item_id, amount);
-    if(!Character_HasSpaceForItem(playerid, item_id, amount))
-        return INVENTORY_NO_SPACE;
-    if(ServerItem_IsUnique(item_id))
-    {
-        new freeid = -1, tempAmount = amount; //Character_GetFreeSlot(playerid);
-        while(tempAmount > 0 && (freeid = Character_GetFreeSlot(playerid)) >= 0)
-        {
-            //if(freeid < 0) // Should never happen
-                //return INVENTORY_NO_SPACE; // Should never happen
-            PlayerInventory[playerid][freeid][gInvItem] = item_id;
-            PlayerInventory[playerid][freeid][gInvAmount] = 1;
-            PlayerInventory[playerid][freeid][gInvExtra] = 0;
-            Iter_Add(PlayerItemsSlot[playerid], freeid);
-            //CallLocalFunction("OnPlayerInventoryItemAdd", "iii", playerid, freeid, 1);
-            tempAmount--;
-        }
-        if(callback)
-            CallLocalFunction("OnPlayerInventoryChanged", "ii", playerid, freeid);
-    }
-    else
-    {
-        new 
-            hasItem_slot = Character_HasItem(playerid, item_id);
-        if(hasItem_slot != -1 && Character_GetItemAmount(playerid, hasItem_slot) < ServerItem_GetMaxStack(item_id))
-        {
-            PlayerInventory[playerid][hasItem_slot][gInvAmount] += amount;
-            if(callback)
-                CallLocalFunction("OnPlayerInventoryChanged", "ii", playerid, hasItem_slot);
-            new diff = PlayerInventory[playerid][hasItem_slot][gInvAmount] - ServerItem_GetMaxStack(item_id);
-            if(diff > 0) // if exceed maximum stack size, try to add them in another slot.
-            {
-                PlayerInventory[playerid][hasItem_slot][gInvAmount] = ServerItem[item_id][sitemMaxStack]; // Cap
-                // Check if playerid has a free slot to add the difference.
-                //new freeid = Character_GetFreeSlot(playerid);
-                //if(freeid == -1) // If playerid has no free slot, returns the difference
-                    //return diff;
-                    // Diff isn't used anymore, because now player should have space anyway,
-                    // because we check for it earlier
-                // Else, recall GiveItem and give item_id by difference..
-                return Character_GiveItem(playerid, item_id, diff);
-            }
-        }
-        else
-        {
-            new freeid = Character_GetFreeSlot(playerid);
-            // if(freeid < 0) // This should never happen too now.
-                //return INVENTORY_NO_SPACE; // This should never happen too now.
-            PlayerInventory[playerid][freeid][gInvItem] = item_id;
-            PlayerInventory[playerid][freeid][gInvAmount] = amount;
-            PlayerInventory[playerid][freeid][gInvExtra] = 0;
-            Iter_Add(PlayerItemsSlot[playerid], freeid);
-            if(callback)
-            {
-                CallLocalFunction("OnPlayerInventoryItemAdd", "iii", playerid, freeid, amount);
-                CallLocalFunction("OnPlayerInventoryChanged", "ii", playerid, freeid);
-            }
-            if(PlayerInventory[playerid][freeid][gInvAmount] > ServerItem[item_id][sitemMaxStack])
-            {
-                new diff = PlayerInventory[playerid][freeid][gInvAmount] - ServerItem[item_id][sitemMaxStack];
-                PlayerInventory[playerid][freeid][gInvAmount] = ServerItem[item_id][sitemMaxStack];
-                return Character_GiveItem(playerid, item_id, diff);
-            }
-        }
-    }
-    Character_SaveInventory(playerid);*/
-    return INVENTORY_ADD_SUCCESS;
+    if(VehicleInfo[vehicleid][vModel] == 0)
+        return false;
+    new Inventory:inv = Inventory_New(2);
+    map_add(VehicleInventory, vehicleid, List:inv);
+    printf("Vehicle %d Inventory initialized", vehicleid);
+    return true;
 }
 
-stock Vehicle_HasSpaceForItem(vehicleid, itemid, amount)
-{
-    new
-        tempAmount = amount,
-        tempCurrentQuantity = 0,
-        item[E_INVENTORY_DATA]
-        ;
-            
-    if(!ServerItem_IsUnique(itemid))
-    {
-        new List:vehicleItems;
-        map_get_safe(VehicleInventory, vehicleid, vehicleItems);
-        for_list(i : vehicleItems)
-        {
-            iter_get_arr_safe(i, item);
-            tempCurrentQuantity = item[gInvAmount];
-            while(item[gInvItem] == itemid && tempCurrentQuantity < ServerItem_GetMaxStack(itemid))
-            {
-                tempCurrentQuantity++;
-                tempAmount--;
-            }
-            //printf("Qnt: %d", tempCurrentQuantity);
-            if(tempAmount <= 0)
-                break;
-        }
-    }
-    new currentFreeSlotCount = Vehicle_GetFreeSlotCount(vehicleid);
-    if(tempAmount > 0 && currentFreeSlotCount == 0)
-        return 0;
-    else
-    {
-        new 
-            occupiedSlots = 0;
-        while(tempAmount > 0 && occupiedSlots < currentFreeSlotCount)
-        {
-            tempAmount -= ServerItem[itemid][sitemMaxStack];
-            occupiedSlots++;
-        }
-    }
-    return tempAmount <= 0;
-}
-
-stock Vehicle_GetItem(vehicleid, slotid)
-{
-    new List:items;
-    if(slotid < 0 || !map_get_safe(VehicleInventory, vehicleid, items) || slotid >= list_size(items))
-        return 0;
-    new item[E_INVENTORY_DATA];
-    if(list_get_arr_safe(items, slotid, item))
-    {
-        return item[gInvItem];
-    }
-    return 0;
-}
-
-stock Vehicle_GetFreeSlotCount(vehicleid)
-{
-    new List:items;
-    if(map_get_safe(VehicleInventory, vehicleid, items))
-    {
-        return Vehicle_GetInventorySize(vehicleid) - list_size(items);
-    }
-    return 0;
-}
-
-// Initialize and adds inventory for vehicleid.
-stock Vehicle_InitializeInventory(vehicleid)
-{
-    new List:items = list_new();
-    map_add(VehicleInventory, vehicleid, items);
-}
-
-stock Vehicle_DeallocateInventory(vehicleid)
+stock bool:Vehicle_UnloadInventory(vehicleid)
 {
     map_remove_deep(VehicleInventory, vehicleid);
-    printf("Vehicle %d inventory deallocated.");
+    printf("Vehicle %d unloaded", vehicleid);
+    return true;
+}
+
+stock Inventory:Vehicle_GetInventory(vehicleid)
+{
+    new Inventory:inv;
+    map_get_safe(VehicleInventory, vehicleid, List:inv);
+    return inv;
+}
+
+stock bool:Vehicle_HasInventory(vehicleid)
+{
+    return list_valid(Vehicle_GetInventory(vehicleid));
+}
+
+hook OnPlayerVehicleSaved(vehicleid)
+{
+    Vehicle_SaveInventory(vehicleid);
+    return 1;
+}
+
+hook OnPlayerVehicleUnLoaded(vehicleid)
+{
+    Vehicle_UnloadInventory(vehicleid);
+    return 1;
+}
+
+hook OnPlayerVehicleLoaded(vehicleid)
+{
+    Vehicle_InitializeInventory(vehicleid);
+    Vehicle_LoadInventory(vehicleid);
+    return 1;
+}
+
+stock Vehicle_AddItem(vehicleid, itemid, amount = 1, extra = 0)
+{
+    new Inventory:vehicleInventory = Vehicle_GetInventory(vehicleid);
+    new result = Inventory_AddItem(vehicleInventory, itemid, amount, extra);
+    Vehicle_SaveInventory(vehicleid);
+    return result;
+}
+
+stock Vehicle_DecreaseItemAmountBySlot(vehicleid, slotid, amount = 1)
+{
+    new Inventory:inventory = Vehicle_GetInventory(vehicleid);
+    
+    new result = Inventory_DecreaseAmountBySlot(inventory, slotid, amount);
+
+    Vehicle_SaveInventory(vehicleid);
+    return result;
+}
+
+stock Vehicle_DecreaseItemAmount(vehicleid, itemid, amount = 1)
+{
+    new Inventory:inventory = Vehicle_GetInventory(vehicleid);
+    
+    new result = Inventory_DecreaseItemAmount(inventory, itemid, amount);
+
+    Vehicle_SaveInventory(vehicleid);
+    return result;
+}
+
+stock bool:Vehicle_HasSpaceForItem(vehicleid, itemid, amount)
+{
+    new Inventory:inventory = Vehicle_GetInventory(vehicleid);
+    if(!list_valid(inventory))
+        return false;
+    return Inventory_HasSpaceForItem(inventory, itemid, amount);
+}
+
+stock bool:Vehicle_HasSpaceForWeapon(vehicleid, weaponid, ammo) return Inventory_HasSpaceForWeapon(Vehicle_GetInventory(vehicleid), weaponid, ammo);
+
+stock Vehicle_GetItemID(vehicleid, slotid)
+{
+    new Inventory:inventory = Vehicle_GetInventory(vehicleid);
+    if(!list_valid(inventory))
+        return 0;
+    new result = Inventory_GetItemID(inventory, slotid);
+    return result;
 }
 
 stock Vehicle_GetInventorySize(vehicleid)
 {
     return 4;
+}
+
+stock bool:Vehicle_ShowInventory(vehicleid, playerid)
+{
+    if(!gAccountLogged[playerid] || !gCharacterLogged[playerid])
+        return false;
+    new Inventory:inventory = Vehicle_GetInventory(vehicleid);
+    if(!list_valid(inventory))
+        return false;
+    
+    new 
+        string[4096],
+        temp[16],
+        tempItem[E_INVENTORY_DATA];
+    for_inventory(i : inventory)
+    {
+        if(iter_sizeof(i) == 0) // If no item
+        {
+            tempItem[gInvItem] = tempItem[gInvAmount] = tempItem[gInvExtra] = 0;
+            format(string, sizeof(string), "%s{808080}Slot Libera\t{808080}--\t{808080}--\n", string);
+        }
+        else
+        {
+            iter_get_arr(i, tempItem);
+            new itemid = tempItem[gInvItem],
+                itemAmount = tempItem[gInvAmount];
+            if(ServerItem_IsUnique(itemid))
+                temp = "--";
+            else
+                format(temp, sizeof(temp), "%d", itemAmount);
+            format(string, sizeof(string), "%s{FFFFFF}%s\t{FFFFFF}%s\t{FFFFFF}%s\n", string, ServerItem[itemid][sitemName], temp, ServerItem_GetTypeName(itemid));
+        }
+    }
+    new title[48];
+    format(title, sizeof(title), "Inventario (%d/%d)", Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory));
+    Dialog_Show(playerid, Dialog_InventoryItemList, DIALOG_STYLE_TABLIST_HEADERS, title, "Nome\tQuantità\tTipo\n%s", "Avanti", "Chiudi", string);
+    return true;
+}
+
+stock Vehicle_SaveInventory(vehicleid)
+{
+    new Inventory:inventory = Vehicle_GetInventory(vehicleid);
+    if(!list_valid(inventory))
+        return;
+    new
+        query[1024],
+        tempItems[128],
+        tempAmounts[128],
+        tempExtra[128],
+        tempItem[E_INVENTORY_DATA]
+    ;
+    for_inventory(i : inventory)
+    {
+        if(iter_sizeof(i) == 0)
+        {
+            tempItem[gInvItem] = tempItem[gInvAmount] = tempItem[gInvExtra] = 0; 
+        }
+        else
+        { 
+            iter_get_arr(i, tempItem);
+        }
+        format(tempItems, sizeof(tempItems), "%s%d%c", tempItems, tempItem[gInvItem], '|');
+        format(tempAmounts, sizeof(tempAmounts), "%s%d%c", tempAmounts, tempItem[gInvAmount], '|');
+        format(tempExtra, sizeof(tempExtra), "%s%d%c", tempExtra, tempItem[gInvExtra], '|');
+    }
+    mysql_format(gMySQL, query, sizeof(query), "INSERT INTO `vehicle_inventory` \
+    (VehicleID, Items, ItemsAmount, ItemsExtraData) VALUES('%d', '%e', '%e', '%e') \
+    ON DUPLICATE KEY UPDATE \
+    Items = VALUES(Items), ItemsAmount = VALUES(ItemsAmount), ItemsExtraData = VALUES(ItemsExtraData)",
+    VehicleInfo[vehicleid][vID], tempItems, tempAmounts, tempExtra);
+}
+
+stock Vehicle_LoadInventory(vehicleid)
+{
+    inline OnLoad()
+    {
+        if(cache_num_rows() > 0)
+        {
+            new 
+                temp[256], 
+                tempItems[MAX_ITEMS_PER_VEHICLE],
+                tempAmounts[MAX_ITEMS_PER_VEHICLE],
+                tempExtraData[MAX_ITEMS_PER_VEHICLE],
+                sscanf_format[16];
+
+            format(sscanf_format, sizeof(sscanf_format), "p<|>a<i>[%d]", MAX_ITEMS_PER_VEHICLE);
+
+            // Load Items Ids
+            cache_get_value_index(0, 0, temp, sizeof(temp));
+            sscanf(temp, sscanf_format, tempItems);
+
+            // Load Items Amounts
+            cache_get_value_index(0, 1, temp, sizeof(temp));
+            sscanf(temp, sscanf_format, tempAmounts);
+
+            // Load Items Extra
+            cache_get_value_index(0, 2, temp, sizeof(temp));
+            sscanf(temp, sscanf_format, tempExtraData);
+
+            new Inventory:inventory = Vehicle_GetInventory(vehicleid);
+            for(new i = 0; i < Vehicle_GetInventorySize(vehicleid); ++i)
+            {
+                Inventory_SetItem(inventory, i, tempItems[i], tempAmounts[i], tempExtraData[i]);
+            }
+            // CallLocalFunction(#OnPlayerVehicleInventoryLoaded, "d", vehicleid);
+        }
+    }
+    new query[256];
+    mysql_format(gMySQL, query, sizeof(query), "SELECT * FROM `vehicle_inventory` WHERE VehicleID = '%d'", vehicleid);
+    mysql_tquery_inline(gMySQL, query, using inline OnLoad);
 }

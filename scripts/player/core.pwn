@@ -42,7 +42,7 @@ hook OnPlayerInvItemUse(playerid, slot_id, item_id)
             ammo;
         if(GetPlayerWeaponData(playerid, weaponSlot, weapon, ammo))
         {
-            if(weapon != 0)
+            if(weapon != 0 && ammo > 0)
                 return SendClientMessage(playerid, COLOR_ERROR, "Hai già un arma equipaggiata per questa slot!");
             if(!Weapon_RequireAmmo(item_id))
             {
@@ -63,6 +63,13 @@ hook OnPlayerInvItemUse(playerid, slot_id, item_id)
                 }
             }
         }
+    }
+    else if(ServerItem_IsAmmo(item_id))
+    {
+        new currentWeapon = GetPlayerWeapon(playerid);
+        if(Weapon_GetAmmoType(currentWeapon) != item_id)
+            return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare queste munizioni su quest'arma.");
+        
     }
     if(decrease)
     {
@@ -228,8 +235,7 @@ stock OnCharacterLoad(playerid)
 
     SetSpawnInfo(playerid, NO_TEAM, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     SpawnPlayer(playerid);
-
-    Character_LoadVehicles(playerid);
+    
     CallLocalFunction("OnPlayerCharacterLoad", "i", playerid);
     return 1;
 }
@@ -315,7 +321,7 @@ stock Character_Save(playerid, spawned = true, disconnected = false)
     // Save Others
 
     // Save A' Mammt
-
+    CallLocalFunction(#OnCharacterSaveData, "d", playerid);
     return 1;
 }
 
@@ -436,6 +442,7 @@ stock Character_LoadVehicles(playerid)
             
             Vehicle_Reload(vehicleid);
             Iter_Add(Vehicles, vehicleid);
+            CallLocalFunction(#OnPlayerVehicleLoaded, "d", vehicleid);
         }
     }
     new query[128];
