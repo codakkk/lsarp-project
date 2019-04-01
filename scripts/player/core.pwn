@@ -8,7 +8,7 @@ hook OnPlayerClearData(playerid)
     return 1;
 }
 
-hook OnCharacterSaveData(playerid)
+hook OnCharacterDisconnected(playerid)
 {
     Character_Save(playerid, _, 1);
     return 1;
@@ -73,7 +73,7 @@ hook OnPlayerInvItemUse(playerid, slot_id, item_id)
     }
     if(decrease)
     {
-        Character_DecreaseAmountBySlot(playerid, slot_id, decreaseAmount);
+        Character_DecreaseSlotAmount(playerid, slot_id, decreaseAmount);
     }
     return 1;
 }
@@ -535,11 +535,10 @@ stock Character_Do(playerid, text[], GLOBAL_TAG_TYPES:...)
 {
     if(!gCharacterLogged[playerid] || strlen(text) > 256)
         return 0;
-    new 
-        formattedText[256];
-    format(formattedText, sizeof(formattedText), text, ___2);
-    format(formattedText, sizeof(formattedText), "%s (( %s ))", formattedText, Character_GetOOCName(playerid));
-    ProxDetector(playerid, 20.0, formattedText, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF);
+    
+    new String:str = str_format(text, ___2);
+    str = str_format("%s (( %s ))", Character_GetOOCName(playerid));
+    ProxDetectorStr(playerid, 20.0, str, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF);
     return 1;
 }
 
@@ -548,6 +547,11 @@ stock Character_GetOOCName(playerid)
     new name[24];
     FixName(PlayerInfo[playerid][pName], name);
     return name;
+}
+
+stock String:Character_GetOOCNameStr(playerid)
+{
+    return @(Character_GetOOCName(playerid));
 }
 
 stock Character_SetVehsDestroyTime(playerid)

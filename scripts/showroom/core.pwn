@@ -169,7 +169,7 @@ stock ShowRoom_LoadAll()
 {
     inline OnLoad()
     {
-        printf("--- LOADING SHOWROOMS --- ");
+        printf("Loading dealerships...");
         new 
             count = 0,
             temp[255],
@@ -201,12 +201,11 @@ stock ShowRoom_LoadAll()
 
             ShowRoom_CreateElements(i);
 
-            printf("> %s [%d]", ShowRoomInfo[i][srName], i);
+            //printf("> %s [%d]", ShowRoomInfo[i][srName], i);
 
             Iter_Add(ShowRooms, i);
         }
-        printf("> %d vehicle showrooms have been loaded successfully!", count);
-        printf("--- FINISHED LOADING SHOWROOMS --- ");
+        printf("> %d dealerships loaded", count);
     }
     mysql_tquery_inline(gMySQL, "SELECT * FROM `showrooms`", using inline OnLoad);
 }

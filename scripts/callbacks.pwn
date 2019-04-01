@@ -1,5 +1,7 @@
 forward OnCharacterPreSaveData(playerid, disconnect);
 
+forward OnCharacterDisconnected(playerid);
+
 forward OnCharacterSaveData(playerid);
 forward OnPlayerClearData(playerid);
 

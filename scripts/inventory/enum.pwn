@@ -9,6 +9,8 @@
 
 #define ServerItem_GetName(%0) (ServerItem[%0][sitemName])
 
+
+
 enum // Error Type
 {
     //INVENTORY_RESULT_ENUM = 0, // NOT TRUE: -50 because we need positive numbers for diff.
@@ -55,7 +57,7 @@ new
     ;
 
 // Common Enum for inventories (characters, houses, vehicles, etc)
-enum _:E_INVENTORY_DATA
+enum _:E_ITEM_DATA
 {
     gInvItem,
     gInvAmount,
@@ -65,9 +67,7 @@ enum _:E_INVENTORY_DATA
 // Player Inventory
 new
     Map:PlayerInventory, // Map<playerid, Inventory:PINV>
-    pInventoryBag[MAX_PLAYERS],
-    pInventoryListItem[MAX_PLAYERS][MAX_ITEMS_PER_PLAYER],
-    pInventorySelectedListItem[MAX_PLAYERS];
+    pInventoryBag[MAX_PLAYERS];
 
 
 new stock

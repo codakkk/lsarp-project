@@ -80,6 +80,12 @@ hook OnGameModeInit()
         `Price` INT(11) NULL, \
         `Locked` INT(11) NULL, \
         PRIMARY KEY (`ID`))");
+    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS vehicle_inventory \
+        (`VehicleID` INT(11) NOT NULL, \
+        `Items` VARCHAR(255) NULL, \
+        `ItemsAmount` VARCHAR(255) NULL, \
+        `ItemsExtraData` VARCHAR(255) NULL, \
+        PRIMARY KEY (`VehicleID`))");
     printf("Database Connected!");
     return 1;
 }

@@ -4,7 +4,6 @@
 hook OnGameModeInit()
 {
     Building_LoadAll();
-    printf("building.pwn/ongamemodeinit");
     return 1;
 }
 

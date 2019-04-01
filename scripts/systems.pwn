@@ -8,6 +8,7 @@
 #include <player\core.pwn>
 #include <player\inventory.pwn>
 #include <player\dialogs.pwn>
+#include <player\drop.pwn>
 
 #include <pickup\core.pwn>
 

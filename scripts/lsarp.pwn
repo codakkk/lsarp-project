@@ -46,16 +46,19 @@
 #include <a_mysql_yinline>
 #include <YSI/y_timers>
 #include <Pawn.CMD>
-#include <easyDialogs>
 #include <whirlpool>
 #include <streamer>
 #include <strlib>
 
 #define PP_SYNTAX 1
 //#define PP_SYNTAX_GENERIC 1
-#define PP_ADDITIONAL_TAGS E_INVENTORY_DATA
+#define PP_ADDITIONAL_TAGS E_ITEM_DATA
 
 #include <PawnPlus>
+
+#include <pp_wrappers.pwn>
+#include <easyDialogs.pwn>
+
 #define Inventory List@Inventory
 
 #include <YSI\y_hooks>
@@ -91,6 +94,7 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 #include <utils/vehicles.pwn>
 #include <global_timers.pwn>
 
+native print_s(AmxString:string) = print;
 
 main()
 {
@@ -98,6 +102,18 @@ main()
 
     PlayerInventory = map_new();
     VehicleInventory = map_new();
+
+    new List:test = list_new();
+    printf("%d", list_add(test, 1));
+    printf("%d", list_add(test, 1));
+    printf("%d", list_add(test, 1));
+    printf("%d", list_add(test, 1));
+    printf("%d", list_add(test, 1));
+    printf("%d", list_add(test, 1));
+
+    new Inventory:inv = Inventory_New(5);
+    Inventory_AddItem(inv, 24, 1, 0);
+    print_s(Inventory_ParseForDialog(inv));
 }
     
 
@@ -205,7 +221,7 @@ public OnPlayerDisconnect(playerid, reason)
     if(!gAccountLogged[playerid] || !gCharacterLogged[playerid])
         return 0;
     
-    CallLocalFunction(#OnCharacterSaveData, "i", playerid);
+    CallLocalFunction(#OnCharacterDisconnected, "i", playerid);
     CallLocalFunction(#OnPlayerClearData, "i", playerid);
     return 1;
 }

@@ -37,5 +37,5 @@ stock IsPlayerInRangeOfPickup(playerid, pickupid, Float:radius)
     new 
         Float:x, Float:y, Float:z;
     Pickup_GetPosition(pickupid, x, y, z);
-    return IsPlayerInRangeOfPoint(playerid, radius, x, y, z);
+    return GetPlayerDistanceFromPoint(playerid, x, y, z) <= radius;
 }

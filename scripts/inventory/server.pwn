@@ -2,7 +2,7 @@
 
 hook OnGameModeInit()
 {
-    printf("---------- Setting Up Server Items ----------");
+    printf("Loading items...");
 
     ServerItem_ManualInitializeItem(0, "Vuoto", ITEM_TYPE:ITEM_TYPE_NONE);
     // Setup weapons
@@ -10,7 +10,7 @@ hook OnGameModeInit()
     {
         if(i == 19 || i == 20 || i == 21) // Invalid items id
             continue;
-        ServerItem_ManualInitializeItem(i, Weapon_GetName(i), ITEM_TYPE:ITEM_TYPE_WEAPON, 1, 1);
+        ServerItem_ManualInitializeItem(i, Weapon_GetName(i), ITEM_TYPE:ITEM_TYPE_WEAPON, Weapon_GetObjectModel(i), 1, 1);
     }
     gItem_Hamburger = ServerItem_InitializeItem("Hamburger Preconfezionato", ITEM_TYPE:ITEM_TYPE_FOOD, 0, 2, 0);
 	ServerItem_InitializeItem("Fagioli in barattolo", ITEM_TYPE:ITEM_TYPE_FOOD, 2, 0);
@@ -42,7 +42,6 @@ hook OnGameModeInit()
     gItem_HeavyAmmo = ServerItem_InitializeItem("Munizioni pesanti", ITEM_TYPE:ITEM_TYPE_AMMO, 0, 9999999, 0);
     gItem_RifleAmmo = ServerItem_InitializeItem("Munizioni fucile", ITEM_TYPE:ITEM_TYPE_AMMO, 0, 9999999, 0);
     printf("Total items loaded: %d\n", Iter_Count(ServerItems));
-    printf("---------- Server Items Created -------------");
     return 1;
 }
 
@@ -64,9 +63,16 @@ stock ServerItem_ManualInitializeItem(item_id, name[], ITEM_TYPE:type, modelId =
     
     format(ServerItem[item_id][sitemName], MAX_ITEM_NAME, "%s", name);
     ServerItem[item_id][sitemType] = type;
-    ServerItem[item_id][sitemUnique] = isUnique;
     ServerItem[item_id][sitemModelID] = modelId;
     
+    if(maxStack == 0 || maxStack == 1 || isUnique == 1)
+    {
+        maxStack = 1;
+        isUnique = 1;
+    }
+    ServerItem[item_id][sitemUnique] = isUnique;
+    ServerItem[item_id][sitemMaxStack] = maxStack;
+
     new num_args = numargs(),
         start_args = 6;
     if(num_args > start_args)
@@ -79,26 +85,15 @@ stock ServerItem_ManualInitializeItem(item_id, name[], ITEM_TYPE:type, modelId =
         for(new i = start_args; i < num_args; ++i)
         {
             ServerItem[item_id][sitemExtraData][i-start_args] = getarg(i);
-            printf("Extra %d: %d", i-start_args, getarg(i));
+            //printf("Extra %d: %d", i-start_args, getarg(i));
         }
     }
 
-    if(maxStack == 0 || maxStack == 1 || isUnique)
-    {
-        maxStack = 1;
-        isUnique = 1;
-    }
-    ServerItem[item_id][sitemMaxStack] = maxStack;
     Iter_Add(ServerItems, item_id);
 
     //DEBUG
-    new uniqueStr[4];
-    if(isUnique)
-        uniqueStr = "Yes";
-    else
-        uniqueStr = "No";
 #if DEBUG
-        //printf("ID: %d - Item: %s - Type: %s - Unique: %s - Max Stack: %d", item_id, ServerItem_GetName(item_id), ServerItem_GetTypeName(item_id), uniqueStr, maxStack);
+        //printf("ID: %d - Item: %s - Type: %s - Unique: %s - Max Stack: %d", item_id, ServerItem_GetName(item_id), ServerItem_GetTypeName(item_id), isUnique ? ("Yes") : ("No"), maxStack);
 #endif
     return item_id;
 }
@@ -153,6 +148,11 @@ stock ServerItem_GetTypeName(item_id)
         }
     }
     return string;
+}
+
+stock ServerItem_GetModelID(itemid)
+{
+    return ServerItem[itemid][sitemModelID];
 }
 
 // Common functions for faster extra 

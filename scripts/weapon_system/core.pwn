@@ -115,3 +115,31 @@ stock Weapon_GetSlot(weaponid)
     }
     return 0;
 }
+
+stock Weapon_GetObjectModel(weaponid)
+{
+    switch(weaponid)
+    {
+        case 1: return 331;
+        case 2 .. 8: return 331 + weaponid;
+        case 9: return 341;
+        case 10: return 321;
+        case 11: return 320;
+        case 12: return 319;
+        case 13: return 318;
+        case 14: return 325;
+        case 15: return 326;
+        case 16 .. 18: return 342 + (weaponid - 16);
+        case 22 .. 24: return 346 + (weaponid - 22);
+        case 25: return 349;
+        case 26: return 351;
+        case 27: return 350;
+        case 28: return 352;
+        case 29: return 353;
+        case 30: return 355;
+        case 31: return 356;
+        case 32: return 372;
+        case 33 .. 46: return 357 + (weaponid - 33);
+    }
+    return 0;
+}

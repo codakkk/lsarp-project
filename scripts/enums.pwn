@@ -3,6 +3,7 @@
 
 
 #include <account/enum.pwn>
+#include <drop_system/enum.pwn>
 #include <player/enum.pwn>
 #include <vehicles/enum.pwn>
 #include <admin/enum.pwn>

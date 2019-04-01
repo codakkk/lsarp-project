@@ -1,0 +1,1401 @@
+	// ==========[scripts/callbacks.pwn]==========
+	"lsarp_OnCharacterPreSaveData": {
+		"prefix": "OnCharacterPreSaveData",
+		"body": "OnCharacterPreSaveData(${1:playerid}, ${2:disconnect})",
+		"description": ""
+	},
+	"lsarp_OnCharacterDisconnected": {
+		"prefix": "OnCharacterDisconnected",
+		"body": "OnCharacterDisconnected(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_OnCharacterSaveData": {
+		"prefix": "OnCharacterSaveData",
+		"body": "OnCharacterSaveData(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_OnPlayerClearData": {
+		"prefix": "OnPlayerClearData",
+		"body": "OnPlayerClearData(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_OnPlayerCharacterLoad": {
+		"prefix": "OnPlayerCharacterLoad",
+		"body": "OnPlayerCharacterLoad(${1:playerid})",
+		"description": "Called when a Player select a character.\n"
+	},
+	"lsarp_OnPlayerAccountLoad": {
+		"prefix": "OnPlayerAccountLoad",
+		"body": "OnPlayerAccountLoad(${1:playerid})",
+		"description": "Called when a Player select a character.\n"
+	},
+	// ==================================================
+	// ==========[scripts/commands.pwn]==========
+	// ==================================================
+	// ==========[scripts/easyDialogs.pwn]==========
+	"lsarp_Dialog_Opened {": {
+		"prefix": "Dialog_Opened {",
+		"body": "Dialog_Opened {(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_Dialog_Close {": {
+		"prefix": "Dialog_Close {",
+		"body": "Dialog_Close {(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_Dialog_Open {": {
+		"prefix": "Dialog_Open {",
+		"body": "Dialog_Open {(${1:playerid}, ${2:const function[]}, ${3:style}, ${4:const caption[]}, ${5:const info[]}, ${6:const button1[]}, ${7:const button2[]}, ${8:{Float}, ${9:_}:...})",
+		"description": ""
+	},
+	"lsarp_Dialog_Open_s": {
+		"prefix": "Dialog_Open_s",
+		"body": "Dialog_Open_s(${1:playerid}, ${2:const function[]}, ${3:style}, ${4:String:caption}, ${5:String:info}, ${6:const button1[]}, ${7:const button2[]})",
+		"description": "made by CodaKKK\n"
+	},
+	// ==================================================
+	// ==========[scripts/enums.pwn]==========
+	// ==================================================
+	// ==========[scripts/forwarded_functions.pwn]==========
+	"lsarp_Inventory:Character_GetInventory": {
+		"prefix": "Inventory:Character_GetInventory",
+		"body": "Inventory:Character_GetInventory(${1:playerid})",
+		"description": "just forward here functions that gives warning: function with tag result used before definition, forcing reparse.\nThose are probably stocks.\n"
+	},
+	"lsarp_bool:Character_SetBag": {
+		"prefix": "bool:Character_SetBag",
+		"body": "bool:Character_SetBag(${1:playerid}, ${2:bagid})",
+		"description": "just forward here functions that gives warning: function with tag result used before definition, forcing reparse.\nThose are probably stocks.\n"
+	},
+	"lsarp_Inventory:Vehicle_GetInventory": {
+		"prefix": "Inventory:Vehicle_GetInventory",
+		"body": "Inventory:Vehicle_GetInventory(${1:vehicleid})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[scripts/globals.pwn]==========
+	// ==================================================
+	// ==========[scripts/global_timers.pwn]==========
+	// ==================================================
+	// ==========[scripts/lsarp.pwn]==========
+	"lsarp_PreloadAnimations": {
+		"prefix": "PreloadAnimations",
+		"body": "PreloadAnimations(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_PreloadAnimLib": {
+		"prefix": "PreloadAnimLib",
+		"body": "PreloadAnimLib(${1:playerid}, ${2:animlib[]})",
+		"description": "Preload animations\nHehe Figo\nSono Forte\n"
+	},
+	"lsarp_Log": {
+		"prefix": "Log",
+		"body": "Log(${1:playerName[]}, ${2:giveplayerName[]}, ${3:text[]}, ${4:extravar = 0})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[scripts/pp_wrappers.pwn]==========
+	"lsarp_mysql_tquery_inline_s": {
+		"prefix": "mysql_tquery_inline_s",
+		"body": "mysql_tquery_inline_s(${1:MySQL:handle}, ${2:String:query}, ${3:callback:inline_callback}, ${4:const format[] = ""}, ${5:{Float}, ${6:_}:...})",
+		"description": ""
+	},
+	"lsarp_mysql_pquery_inline_s": {
+		"prefix": "mysql_pquery_inline_s",
+		"body": "mysql_pquery_inline_s(${1:MySQL:handle}, ${2:String:query}, ${3:callback:inline_callback}, ${4:const format[] = ""}, ${5:{Float}, ${6:_}:...})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[scripts/systems.pwn]==========
+	// ==================================================
+	// ==========[account/core.pwn]==========
+	"lsarp_Account_CreateCharacter": {
+		"prefix": "Account_CreateCharacter",
+		"body": "Account_CreateCharacter(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_OnAccountLogin": {
+		"prefix": "OnAccountLogin",
+		"body": "OnAccountLogin(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_LoadAccountData": {
+		"prefix": "LoadAccountData",
+		"body": "LoadAccountData(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_SaveAccountData": {
+		"prefix": "SaveAccountData",
+		"body": "SaveAccountData(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_Account_ShowCharactersList": {
+		"prefix": "Account_ShowCharactersList",
+		"body": "Account_ShowCharactersList(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_CharacterCreation_Reset": {
+		"prefix": "CharacterCreation_Reset",
+		"body": "CharacterCreation_Reset(${1:playerid})",
+		"description": "Resets all variables created for CharacterCreationSteps\n"
+	},
+	// ==================================================
+	// ==========[account/dialogs.pwn]==========
+	// ==================================================
+	// ==========[account/enum.pwn]==========
+	// ==================================================
+	// ==========[admin/admin_commands.pwn]==========
+	// ==================================================
+	// ==========[admin/core.pwn]==========
+	"lsarp_GetAdminLevelName": {
+		"prefix": "GetAdminLevelName",
+		"body": "GetAdminLevelName(${1:level})",
+		"description": ""
+	},
+	"lsarp_SendMessageToAdmins": {
+		"prefix": "SendMessageToAdmins",
+		"body": "SendMessageToAdmins(${1:forceAlert}, ${2:color}, ${3:str[]}, ${4:{Float}, ${5:_}:...})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[admin/enum.pwn]==========
+	// ==================================================
+	// ==========[admin/supporter_commands.pwn]==========
+	// ==================================================
+	// ==========[anticheat/core.pwn]==========
+	"lsarp_AC_GetPlayerMoney": {
+		"prefix": "AC_GetPlayerMoney",
+		"body": "AC_GetPlayerMoney(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_AC_SetPlayerSkin": {
+		"prefix": "AC_SetPlayerSkin",
+		"body": "AC_SetPlayerSkin(${1:playerid}, ${2:skinid}, ${3:reason[] = ""})",
+		"description": ""
+	},
+	"lsarp_AC_GivePlayerMoney": {
+		"prefix": "AC_GivePlayerMoney",
+		"body": "AC_GivePlayerMoney(${1:playerid}, ${2:money}, ${3:reason[] = ""})",
+		"description": ""
+	},
+	"lsarp_AC_ResetPlayerMoney": {
+		"prefix": "AC_ResetPlayerMoney",
+		"body": "AC_ResetPlayerMoney(${1:playerid}, ${2:reason[]=""})",
+		"description": ""
+	},
+	"lsarp_AC_SetPlayerHealth": {
+		"prefix": "AC_SetPlayerHealth",
+		"body": "AC_SetPlayerHealth(${1:playerid}, ${2:Float:health})",
+		"description": ""
+	},
+	"lsarp_AC_GetPlayerHealth": {
+		"prefix": "AC_GetPlayerHealth",
+		"body": "AC_GetPlayerHealth(${1:playerid}, ${2:&Float:h})",
+		"description": ""
+	},
+	"lsarp_AC_SetPlayerArmour": {
+		"prefix": "AC_SetPlayerArmour",
+		"body": "AC_SetPlayerArmour(${1:playerid}, ${2:Float:armour})",
+		"description": ""
+	},
+	"lsarp_AC_GetPlayerArmour": {
+		"prefix": "AC_GetPlayerArmour",
+		"body": "AC_GetPlayerArmour(${1:playerid}, ${2:&Float:a})",
+		"description": ""
+	},
+	"lsarp_AC_GivePlayerWeapon": {
+		"prefix": "AC_GivePlayerWeapon",
+		"body": "AC_GivePlayerWeapon(${1:playerid}, ${2:weaponid}, ${3:ammo})",
+		"description": ""
+	},
+	"lsarp_AC_ResetPlayerWeapons": {
+		"prefix": "AC_ResetPlayerWeapons",
+		"body": "AC_ResetPlayerWeapons(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_AC_GetPlayerAmmo": {
+		"prefix": "AC_GetPlayerAmmo",
+		"body": "AC_GetPlayerAmmo(${1:playerid})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[building/core.pwn]==========
+	"lsarp_Building_Create": {
+		"prefix": "Building_Create",
+		"body": "Building_Create(${1:name[]}, ${2:Float:x}, ${3:Float:y}, ${4:Float:z}, ${5:interior}, ${6:world})",
+		"description": ""
+	},
+	"lsarp_Building_LoadAll": {
+		"prefix": "Building_LoadAll",
+		"body": "Building_LoadAll(${1:})",
+		"description": ""
+	},
+	"lsarp_Building_SetPosition": {
+		"prefix": "Building_SetPosition",
+		"body": "Building_SetPosition(${1:buildingid}, ${2:Float:x}, ${3:Float:y}, ${4:Float:z}, ${5:vw}, ${6:int})",
+		"description": ""
+	},
+	"lsarp_Building_SetName": {
+		"prefix": "Building_SetName",
+		"body": "Building_SetName(${1:buildingid}, ${2:name[]})",
+		"description": ""
+	},
+	"lsarp_Building_SetInterior": {
+		"prefix": "Building_SetInterior",
+		"body": "Building_SetInterior(${1:buildingid}, ${2:Float:x}, ${3:Float:y}, ${4:Float:z}, ${5:interiorid})",
+		"description": ""
+	},
+	"lsarp_Building_SetOwnable": {
+		"prefix": "Building_SetOwnable",
+		"body": "Building_SetOwnable(${1:buildingid}, ${2:ownable})",
+		"description": ""
+	},
+	"lsarp_Building_SetPrice": {
+		"prefix": "Building_SetPrice",
+		"body": "Building_SetPrice(${1:buildingid}, ${2:price})",
+		"description": ""
+	},
+	"lsarp_Building_SetWelcomeText": {
+		"prefix": "Building_SetWelcomeText",
+		"body": "Building_SetWelcomeText(${1:buildingid}, ${2:text[]})",
+		"description": ""
+	},
+	"lsarp_Building_SetOwner": {
+		"prefix": "Building_SetOwner",
+		"body": "Building_SetOwner(${1:buildingid}, ${2:playerid})",
+		"description": ""
+	},
+	"lsarp_Building_ResetOwner": {
+		"prefix": "Building_ResetOwner",
+		"body": "Building_ResetOwner(${1:buildingid})",
+		"description": ""
+	},
+	"lsarp_Building_Delete": {
+		"prefix": "Building_Delete",
+		"body": "Building_Delete(${1:buildingid})",
+		"description": ""
+	},
+	"lsarp_Building_Save": {
+		"prefix": "Building_Save",
+		"body": "Building_Save(${1:buildingid})",
+		"description": ""
+	},
+	"lsarp_Building_CreateElements": {
+		"prefix": "Building_CreateElements",
+		"body": "Building_CreateElements(${1:buildingid})",
+		"description": ""
+	},
+	"lsarp_Building_DestroyElements": {
+		"prefix": "Building_DestroyElements",
+		"body": "Building_DestroyElements(${1:buildingid})",
+		"description": ""
+	},
+	"lsarp_Building_IsValid": {
+		"prefix": "Building_IsValid",
+		"body": "Building_IsValid(${1:a})",
+		"description": ""
+	},
+	"lsarp_Building_GetName": {
+		"prefix": "Building_GetName",
+		"body": "Building_GetName(${1:buildingid}, ${2:name[MAX_BUILDING_NAME]})",
+		"description": ""
+	},
+	"lsarp_Building_IsOwnable": {
+		"prefix": "Building_IsOwnable",
+		"body": "Building_IsOwnable(${1:a})",
+		"description": ""
+	},
+	"lsarp_Building_IsOwned": {
+		"prefix": "Building_IsOwned",
+		"body": "Building_IsOwned(${1:a})",
+		"description": ""
+	},
+	"lsarp_Building_GetOwnerID": {
+		"prefix": "Building_GetOwnerID",
+		"body": "Building_GetOwnerID(${1:a})",
+		"description": ""
+	},
+	"lsarp_Building_GetOwnerName": {
+		"prefix": "Building_GetOwnerName",
+		"body": "Building_GetOwnerName(${1:a}, ${2:name[]})",
+		"description": ""
+	},
+	"lsarp_Building_IsLocked": {
+		"prefix": "Building_IsLocked",
+		"body": "Building_IsLocked(${1:a})",
+		"description": ""
+	},
+	"lsarp_Building_GetPrice": {
+		"prefix": "Building_GetPrice",
+		"body": "Building_GetPrice(${1:a})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[building/enum.pwn]==========
+	// ==================================================
+	// ==========[building/player.pwn]==========
+	"lsarp_Player_Enter": {
+		"prefix": "Player_Enter",
+		"body": "Player_Enter(${1:playerid}, ${2:pickupid}, ${3:elementId}, ${4:E_ELEMENT_TYPE:type})",
+		"description": ""
+	},
+	"lsarp_Player_Exit": {
+		"prefix": "Player_Exit",
+		"body": "Player_Exit(${1:playerid}, ${2:pickupid}, ${3:elementId}, ${4:E_ELEMENT_TYPE:type})",
+		"description": ""
+	},
+	"lsarp_Player_BuyBuilding": {
+		"prefix": "Player_BuyBuilding",
+		"body": "Player_BuyBuilding(${1:playerid}, ${2:buildingid})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[building\commands/admin.pwn]==========
+	// ==================================================
+	// ==========[database/database.pwn]==========
+	// ==================================================
+	// ==========[drop_system/enum.pwn]==========
+	"lsarp_bool:Drop_GetData": {
+		"prefix": "bool:Drop_GetData",
+		"body": "bool:Drop_GetData(${1:dropid}, ${2:drop[E_DROP_INFO]})",
+		"description": ""
+	},
+	"lsarp_Drop_Create": {
+		"prefix": "Drop_Create",
+		"body": "Drop_Create(${1:Float:x}, ${2:Float:y}, ${3:Float:z}, ${4:world}, ${5:interior}, ${6:itemid}, ${7:amount}, ${8:extra}, ${9:String:createdBy})",
+		"description": ""
+	},
+	"lsarp_Drop_Destroy": {
+		"prefix": "Drop_Destroy",
+		"body": "Drop_Destroy(${1:dropid})",
+		"description": ""
+	},
+	"lsarp_Drop_GetPosition": {
+		"prefix": "Drop_GetPosition",
+		"body": "Drop_GetPosition(${1:dropid}, ${2:&Float:x}, ${3:&Float:y}, ${4:&Float:z})",
+		"description": ""
+	},
+	"lsarp_Drop_GetItem": {
+		"prefix": "Drop_GetItem",
+		"body": "Drop_GetItem(${1:dropid})",
+		"description": ""
+	},
+	"lsarp_Drop_GetItemAmount": {
+		"prefix": "Drop_GetItemAmount",
+		"body": "Drop_GetItemAmount(${1:dropid})",
+		"description": ""
+	},
+	"lsarp_Drop_GetItemExtra": {
+		"prefix": "Drop_GetItemExtra",
+		"body": "Drop_GetItemExtra(${1:dropid})",
+		"description": ""
+	},
+	"lsarp_String:Drop_GetCreatedByStr": {
+		"prefix": "String:Drop_GetCreatedByStr",
+		"body": "String:Drop_GetCreatedByStr(${1:dropid})",
+		"description": ""
+	},
+	"lsarp_Drop_GetCreatedBy": {
+		"prefix": "Drop_GetCreatedBy",
+		"body": "Drop_GetCreatedBy(${1:dropid}, ${2:name[]})",
+		"description": ""
+	},
+	"lsarp_Drop_GetCreatedTime": {
+		"prefix": "Drop_GetCreatedTime",
+		"body": "Drop_GetCreatedTime(${1:dropid})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[event_system/event_enum.pwn]==========
+	"lsarp_Event_Fire*/": {
+		"prefix": "Event_Fire*/",
+		"body": "Event_Fire*/(${1:Event:event}, ${2:})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[inventory/callbacks.pwn]==========
+	"lsarp_OnPlayerInventoryItemAdd": {
+		"prefix": "OnPlayerInventoryItemAdd",
+		"body": "OnPlayerInventoryItemAdd(${1:playerid}, ${2:slotid}, ${3:amount})",
+		"description": ""
+	},
+	"lsarp_OnPlayerInventoryItemDecrease": {
+		"prefix": "OnPlayerInventoryItemDecrease",
+		"body": "OnPlayerInventoryItemDecrease(${1:playerid}, ${2:slotid}, ${3:amount})",
+		"description": ""
+	},
+	"lsarp_OnPlayerInventoryChanged": {
+		"prefix": "OnPlayerInventoryChanged",
+		"body": "OnPlayerInventoryChanged(${1:playerid}, ${2:slot_id})",
+		"description": ""
+	},
+	"lsarp_OnPlayerInventoryItemUse": {
+		"prefix": "OnPlayerInventoryItemUse",
+		"body": "OnPlayerInventoryItemUse(${1:playerid}, ${2:slot_id}, ${3:item_id}, ${4:item_type})",
+		"description": "Hooked becomes: OnPlayerInvItemUse\n"
+	},
+	"lsarp_Trigger_OnPlayerInvItemUse": {
+		"prefix": "Trigger_OnPlayerInvItemUse",
+		"body": "Trigger_OnPlayerInvItemUse(${1:playerid}, ${2:slot_id}, ${3:item_id}, ${4:ITEM_TYPE:item_type})",
+		"description": ""
+	},
+	"lsarp_Trigger_OnPlayerInvChange": {
+		"prefix": "Trigger_OnPlayerInvChange",
+		"body": "Trigger_OnPlayerInvChange(${1:playerid}, ${2:slot_id})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[inventory/core.pwn]==========
+	"lsarp_List:operator=": {
+		"prefix": "List:operator=",
+		"body": "List:operator=(${1:Inventory:l})",
+		"description": ""
+	},
+	"lsarp_Inventory:Inventory_New": {
+		"prefix": "Inventory:Inventory_New",
+		"body": "Inventory:Inventory_New(${1:space})",
+		"description": ""
+	},
+	"lsarp_bool:Inventory_Resize": {
+		"prefix": "bool:Inventory_Resize",
+		"body": "bool:Inventory_Resize(${1:Inventory:inventory}, ${2:new_space})",
+		"description": ""
+	},
+	"lsarp_Inventory_Delete": {
+		"prefix": "Inventory_Delete",
+		"body": "Inventory_Delete(${1:Inventory:inventory})",
+		"description": ""
+	},
+	"lsarp_bool:Inventory_SetItem": {
+		"prefix": "bool:Inventory_SetItem",
+		"body": "bool:Inventory_SetItem(${1:Inventory:inventory}, ${2:slotid}, ${3:itemid}, ${4:amount}, ${5:extra})",
+		"description": ""
+	},
+	"lsarp_Inventory_AddItem": {
+		"prefix": "Inventory_AddItem",
+		"body": "Inventory_AddItem(${1:Inventory:inventory}, ${2:itemid}, ${3:amount}, ${4:extra})",
+		"description": ""
+	},
+	"lsarp_bool:Inventory_DecreaseSlotAmount": {
+		"prefix": "bool:Inventory_DecreaseSlotAmount",
+		"body": "bool:Inventory_DecreaseSlotAmount(${1:Inventory:inventory}, ${2:slotid}, ${3:amount = 1})",
+		"description": ""
+	},
+	"lsarp_Inventory_DecreaseItemAmount": {
+		"prefix": "Inventory_DecreaseItemAmount",
+		"body": "Inventory_DecreaseItemAmount(${1:Inventory:inventory}, ${2:itemid}, ${3:amount = 1})",
+		"description": ""
+	},
+	"lsarp_Inventory_HasSpaceForItem": {
+		"prefix": "Inventory_HasSpaceForItem",
+		"body": "Inventory_HasSpaceForItem(${1:Inventory:inventory}, ${2:itemid}, ${3:amount})",
+		"description": ""
+	},
+	"lsarp_Inventory_HasSpaceForWeapon": {
+		"prefix": "Inventory_HasSpaceForWeapon",
+		"body": "Inventory_HasSpaceForWeapon(${1:Inventory:inventory}, ${2:weaponid}, ${3:ammo})",
+		"description": "useful function, because weapons are stored in a specific way\n"
+	},
+	"lsarp_Inventory_HasItem": {
+		"prefix": "Inventory_HasItem",
+		"body": "Inventory_HasItem(${1:Inventory:inventory}, ${2:itemid}, ${3:min = 1})",
+		"description": ""
+	},
+	"lsarp_bool:Inventory_IsSlotUsed": {
+		"prefix": "bool:Inventory_IsSlotUsed",
+		"body": "bool:Inventory_IsSlotUsed(${1:Inventory:inventory}, ${2:slotid})",
+		"description": ""
+	},
+	"lsarp_Inventory_GetItemData": {
+		"prefix": "Inventory_GetItemData",
+		"body": "Inventory_GetItemData(${1:Inventory:inventory}, ${2:slotid}, ${3:item[E_ITEM_DATA]})",
+		"description": ""
+	},
+	"lsarp_Inventory_GetSlotItem": {
+		"prefix": "Inventory_GetSlotItem",
+		"body": "Inventory_GetSlotItem(${1:Inventory:inventory}, ${2:slotid})",
+		"description": ""
+	},
+	"lsarp_Inventory_GetSlotAmount": {
+		"prefix": "Inventory_GetSlotAmount",
+		"body": "Inventory_GetSlotAmount(${1:Inventory:inventory}, ${2:slotid})",
+		"description": ""
+	},
+	"lsarp_Inventory_GetSlotExtra": {
+		"prefix": "Inventory_GetSlotExtra",
+		"body": "Inventory_GetSlotExtra(${1:Inventory:inventory}, ${2:slotid})",
+		"description": ""
+	},
+	"lsarp_Inventory_GetItemAmount": {
+		"prefix": "Inventory_GetItemAmount",
+		"body": "Inventory_GetItemAmount(${1:Inventory:inventory}, ${2:itemid})",
+		"description": ""
+	},
+	"lsarp_Inventory_GetSpace": {
+		"prefix": "Inventory_GetSpace",
+		"body": "Inventory_GetSpace(${1:Inventory:inventory})",
+		"description": ""
+	},
+	"lsarp_Inventory_GetUsedSpace": {
+		"prefix": "Inventory_GetUsedSpace",
+		"body": "Inventory_GetUsedSpace(${1:Inventory:inventory})",
+		"description": ""
+	},
+	"lsarp_bool:Inventory_IsEmpty": {
+		"prefix": "bool:Inventory_IsEmpty",
+		"body": "bool:Inventory_IsEmpty(${1:Inventory:inventory})",
+		"description": ""
+	},
+	"lsarp_Inventory_GetFreeSlot": {
+		"prefix": "Inventory_GetFreeSlot",
+		"body": "Inventory_GetFreeSlot(${1:Inventory:inventory})",
+		"description": ""
+	},
+	"lsarp_String:Inventory_ParseForDialog": {
+		"prefix": "String:Inventory_ParseForDialog",
+		"body": "String:Inventory_ParseForDialog(${1:Inventory:inventory})",
+		"description": ""
+	},
+	"lsarp_bool:Inventory_ParseForSave": {
+		"prefix": "bool:Inventory_ParseForSave",
+		"body": "bool:Inventory_ParseForSave(${1:Inventory:inventory}, ${2:tempItems[128]}, ${3:tempAmounts[128]}, ${4:tempExtras[128]})",
+		"description": ""
+	},
+	"lsarp_Inventory_Print": {
+		"prefix": "Inventory_Print",
+		"body": "Inventory_Print(${1:Inventory:inventory})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[inventory/enum.pwn]==========
+	// ==================================================
+	// ==========[inventory/server.pwn]==========
+	"lsarp_ServerItem_ManualInitializeItem": {
+		"prefix": "ServerItem_ManualInitializeItem",
+		"body": "ServerItem_ManualInitializeItem(${1:item_id}, ${2:name[]}, ${3:ITEM_TYPE:type}, ${4:modelId = 0}, ${5:maxStack = 0}, ${6:isUnique = 0}, ${7:...})",
+		"description": "Useful for setting item_ids manually (example: weapons)\n"
+	},
+	"lsarp_ServerItem_InitializeItem": {
+		"prefix": "ServerItem_InitializeItem",
+		"body": "ServerItem_InitializeItem(${1:name[]}, ${2:ITEM_TYPE:type}, ${3:modelId = 0}, ${4:maxStack = 0}, ${5:isUnique = 0}, ${6:va_args<>})",
+		"description": "Useful for automatic items id\n"
+	},
+	"lsarp_ITEM_TYPE:ServerItem_GetType": {
+		"prefix": "ITEM_TYPE:ServerItem_GetType",
+		"body": "ITEM_TYPE:ServerItem_GetType(${1:itemid})",
+		"description": ""
+	},
+	"lsarp_ServerItem_IsWeapon": {
+		"prefix": "ServerItem_IsWeapon",
+		"body": "ServerItem_IsWeapon(${1:itemid})",
+		"description": ""
+	},
+	"lsarp_ServerItem_IsAmmo": {
+		"prefix": "ServerItem_IsAmmo",
+		"body": "ServerItem_IsAmmo(${1:itemid})",
+		"description": ""
+	},
+	"lsarp_ServerItem_IsFood": {
+		"prefix": "ServerItem_IsFood",
+		"body": "ServerItem_IsFood(${1:itemid})",
+		"description": ""
+	},
+	"lsarp_ServerItem_IsDrink": {
+		"prefix": "ServerItem_IsDrink",
+		"body": "ServerItem_IsDrink(${1:itemid})",
+		"description": ""
+	},
+	"lsarp_ServerItem_IsMedik": {
+		"prefix": "ServerItem_IsMedik",
+		"body": "ServerItem_IsMedik(${1:itemid})",
+		"description": ""
+	},
+	"lsarp_ServerItem_IsBag": {
+		"prefix": "ServerItem_IsBag",
+		"body": "ServerItem_IsBag(${1:itemid})",
+		"description": ""
+	},
+	"lsarp_ServerItem_GetMaxStack": {
+		"prefix": "ServerItem_GetMaxStack",
+		"body": "ServerItem_GetMaxStack(${1:itemid})",
+		"description": ""
+	},
+	"lsarp_ServerItem_IsValid": {
+		"prefix": "ServerItem_IsValid",
+		"body": "ServerItem_IsValid(${1:itemid})",
+		"description": ""
+	},
+	"lsarp_ServerItem_IsUnique": {
+		"prefix": "ServerItem_IsUnique",
+		"body": "ServerItem_IsUnique(${1:itemid})",
+		"description": ""
+	},
+	"lsarp_ServerItem_GetExtra": {
+		"prefix": "ServerItem_GetExtra",
+		"body": "ServerItem_GetExtra(${1:itemid}, ${2:EXTRA_TYPE_ID:extraid})",
+		"description": ""
+	},
+	"lsarp_ServerItem_GetTypeName": {
+		"prefix": "ServerItem_GetTypeName",
+		"body": "ServerItem_GetTypeName(${1:item_id})",
+		"description": ""
+	},
+	"lsarp_ServerItem_GetModelID": {
+		"prefix": "ServerItem_GetModelID",
+		"body": "ServerItem_GetModelID(${1:itemid})",
+		"description": ""
+	},
+	"lsarp_ServerItem_GetBagSize": {
+		"prefix": "ServerItem_GetBagSize",
+		"body": "ServerItem_GetBagSize(${1:bagid})",
+		"description": "Common functions for faster extra\n"
+	},
+	// ==================================================
+	// ==========[pickup/core.pwn]==========
+	"lsarp_OnPlayerPickUpElementPickup": {
+		"prefix": "OnPlayerPickUpElementPickup",
+		"body": "OnPlayerPickUpElementPickup(${1:playerid}, ${2:pickupid}, ${3:elementid}, ${4:E_ELEMENT_TYPE:type})",
+		"description": ""
+	},
+	"lsarp_Pickup_Create": {
+		"prefix": "Pickup_Create",
+		"body": "Pickup_Create(${1:modelid}, ${2:eId}, ${3:Float:x}, ${4:Float:y}, ${5:Float:z}, ${6:E_ELEMENT_TYPE:eType = ELEMENT_TYPE_NONE}, ${7:worldid = -1}, ${8:interiorid = -1})",
+		"description": "1239 -> Info\n"
+	},
+	"lsarp_Pickup_Destroy": {
+		"prefix": "Pickup_Destroy",
+		"body": "Pickup_Destroy(${1:pickupid})",
+		"description": ""
+	},
+	"lsarp_Pickup_GetPosition": {
+		"prefix": "Pickup_GetPosition",
+		"body": "Pickup_GetPosition(${1:pickupid}, ${2:&Float:x}, ${3:&Float:y}, ${4:&Float:z})",
+		"description": ""
+	},
+	"lsarp_Pickup_GetInfo": {
+		"prefix": "Pickup_GetInfo",
+		"body": "Pickup_GetInfo(${1:pickupid}, ${2:&id}, ${3:&E_ELEMENT_TYPE:type})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[pickup/enum.pwn]==========
+	// ==================================================
+	// ==========[player/commands.pwn]==========
+	"lsarp_GetWeaponAmmoItemID": {
+		"prefix": "GetWeaponAmmoItemID",
+		"body": "GetWeaponAmmoItemID(${1:weapon_id})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[player/core.pwn]==========
+	"lsarp_Character_PayDay": {
+		"prefix": "Character_PayDay",
+		"body": "Character_PayDay(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_OnCharacterLoad": {
+		"prefix": "OnCharacterLoad",
+		"body": "OnCharacterLoad(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_LoadCharacterResult": {
+		"prefix": "LoadCharacterResult",
+		"body": "LoadCharacterResult(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_Character_Save": {
+		"prefix": "Character_Save",
+		"body": "Character_Save(${1:playerid}, ${2:spawned = true}, ${3:disconnected = false})",
+		"description": ""
+	},
+	"lsarp_Character_Delete": {
+		"prefix": "Character_Delete",
+		"body": "Character_Delete(${1:playerid}, ${2:character_db_id}, ${3:character_name[]})",
+		"description": ""
+	},
+	"lsarp_Character_AddVehicle": {
+		"prefix": "Character_AddVehicle",
+		"body": "Character_AddVehicle(${1:playerid}, ${2:model}, ${3:color1}, ${4:color2})",
+		"description": ""
+	},
+	"lsarp_Character_LoadVehicles": {
+		"prefix": "Character_LoadVehicles",
+		"body": "Character_LoadVehicles(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_Character_UnloadVehicles": {
+		"prefix": "Character_UnloadVehicles",
+		"body": "Character_UnloadVehicles(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_Character_SaveAllVehicles": {
+		"prefix": "Character_SaveAllVehicles",
+		"body": "Character_SaveAllVehicles(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_GetPlayerNameEx": {
+		"prefix": "GetPlayerNameEx",
+		"body": "GetPlayerNameEx(${1:playerid})",
+		"description": "Remember that this function doesn't return the same length everytime.\n(MAX_PLAYER_NAME not allowed for checks outside)\n"
+	},
+	"lsarp_Character_AMe": {
+		"prefix": "Character_AMe",
+		"body": "Character_AMe(${1:playerid}, ${2:text[]}, ${3:GLOBAL_TAG_TYPES:...})",
+		"description": ""
+	},
+	"lsarp_Character_Me": {
+		"prefix": "Character_Me",
+		"body": "Character_Me(${1:playerid}, ${2:text[]}, ${3:GLOBAL_TAG_TYPES:...})",
+		"description": ""
+	},
+	"lsarp_Character_Do": {
+		"prefix": "Character_Do",
+		"body": "Character_Do(${1:playerid}, ${2:text[]}, ${3:GLOBAL_TAG_TYPES:...})",
+		"description": ""
+	},
+	"lsarp_Character_GetOOCName": {
+		"prefix": "Character_GetOOCName",
+		"body": "Character_GetOOCName(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_String:Character_GetOOCNameStr": {
+		"prefix": "String:Character_GetOOCNameStr",
+		"body": "String:Character_GetOOCNameStr(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_Character_SetVehsDestroyTime": {
+		"prefix": "Character_SetVehsDestroyTime",
+		"body": "Character_SetVehsDestroyTime(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_Character_ShowStats": {
+		"prefix": "Character_ShowStats",
+		"body": "Character_ShowStats(${1:playerid}, ${2:targetid})",
+		"description": ""
+	},
+	"lsarp_Character_Clear": {
+		"prefix": "Character_Clear",
+		"body": "Character_Clear(${1:playerid})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[player/dialogs.pwn]==========
+	// ==================================================
+	// ==========[player/drop.pwn]==========
+	"lsarp_bool:Character_CollectDrop": {
+		"prefix": "bool:Character_CollectDrop",
+		"body": "bool:Character_CollectDrop(${1:playerid}, ${2:dropid})",
+		"description": ""
+	},
+	"lsarp_bool:Character_CollectDrop": {
+		"prefix": "bool:Character_CollectDrop",
+		"body": "bool:Character_CollectDrop(${1:playerid}, ${2:dropid})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[player/enum.pwn]==========
+	// ==================================================
+	// ==========[player/global.pwn]==========
+	// ==================================================
+	// ==========[player/inventory.pwn]==========
+	"lsarp_bool:Character_InitializeInventory": {
+		"prefix": "bool:Character_InitializeInventory",
+		"body": "bool:Character_InitializeInventory(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_bool:Character_UnloadInventory": {
+		"prefix": "bool:Character_UnloadInventory",
+		"body": "bool:Character_UnloadInventory(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_Inventory:Character_GetInventory": {
+		"prefix": "Inventory:Character_GetInventory",
+		"body": "Inventory:Character_GetInventory(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_Character_GiveItem": {
+		"prefix": "Character_GiveItem",
+		"body": "Character_GiveItem(${1:playerid}, ${2:item_id}, ${3:amount = 1}, ${4:extra = 0}, ${5:bool:callback = false})",
+		"description": "Returns success or not.\nif greater than 0, returns the difference.\n"
+	},
+	"lsarp_Character_DecreaseSlotAmount": {
+		"prefix": "Character_DecreaseSlotAmount",
+		"body": "Character_DecreaseSlotAmount(${1:playerid}, ${2:slotid}, ${3:amount = 1})",
+		"description": ""
+	},
+	"lsarp_Character_DecreaseItemAmount": {
+		"prefix": "Character_DecreaseItemAmount",
+		"body": "Character_DecreaseItemAmount(${1:playerid}, ${2:itemid}, ${3:amount = 1})",
+		"description": ""
+	},
+	"lsarp_Character_ResizeInventory": {
+		"prefix": "Character_ResizeInventory",
+		"body": "Character_ResizeInventory(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_Character_GetInventorySize": {
+		"prefix": "Character_GetInventorySize",
+		"body": "Character_GetInventorySize(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_bool:Character_IsSlotUsed": {
+		"prefix": "bool:Character_IsSlotUsed",
+		"body": "bool:Character_IsSlotUsed(${1:playerid}, ${2:slotid})",
+		"description": ""
+	},
+	"lsarp_Character_ShowInventory": {
+		"prefix": "Character_ShowInventory",
+		"body": "Character_ShowInventory(${1:playerid}, ${2:targetid})",
+		"description": ""
+	},
+	"lsarp_Character_GetSlotItem": {
+		"prefix": "Character_GetSlotItem",
+		"body": "Character_GetSlotItem(${1:playerid}, ${2:slotid})",
+		"description": ""
+	},
+	"lsarp_Character_GetSlotAmount": {
+		"prefix": "Character_GetSlotAmount",
+		"body": "Character_GetSlotAmount(${1:playerid}, ${2:slotid})",
+		"description": ""
+	},
+	"lsarp_Character_HasItem": {
+		"prefix": "Character_HasItem",
+		"body": "Character_HasItem(${1:playerid}, ${2:itemid}, ${3:min = 1})",
+		"description": ""
+	},
+	"lsarp_Character_HasSpaceForItem": {
+		"prefix": "Character_HasSpaceForItem",
+		"body": "Character_HasSpaceForItem(${1:playerid}, ${2:itemid}, ${3:amount})",
+		"description": ""
+	},
+	"lsarp_Character_HasSpaceForWeapon": {
+		"prefix": "Character_HasSpaceForWeapon",
+		"body": "Character_HasSpaceForWeapon(${1:playerid}, ${2:weaponid}, ${3:ammo})",
+		"description": ""
+	},
+	"lsarp_Character_HasBag": {
+		"prefix": "Character_HasBag",
+		"body": "Character_HasBag(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_Character_GetBag": {
+		"prefix": "Character_GetBag",
+		"body": "Character_GetBag(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_bool:Character_SetBag": {
+		"prefix": "bool:Character_SetBag",
+		"body": "bool:Character_SetBag(${1:playerid}, ${2:bagid})",
+		"description": ""
+	},
+	"lsarp_Character_ResetInventory": {
+		"prefix": "Character_ResetInventory",
+		"body": "Character_ResetInventory(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_Character_SaveInventory": {
+		"prefix": "Character_SaveInventory",
+		"body": "Character_SaveInventory(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_Character_LoadInventory": {
+		"prefix": "Character_LoadInventory",
+		"body": "Character_LoadInventory(${1:playerid})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[player\commands/chat_commands.pwn]==========
+	// ==================================================
+	// ==========[player\commands/interaction_commands.pwn]==========
+	// ==================================================
+	// ==========[player\commands/inventory_commands.pwn]==========
+	// ==================================================
+	// ==========[player\commands/premium_commands.pwn]==========
+	// ==================================================
+	// ==========[player\commands/vehicle_commands.pwn]==========
+	// ==================================================
+	// ==========[showroom/core.pwn]==========
+	"lsarp_ShowRoom_Create": {
+		"prefix": "ShowRoom_Create",
+		"body": "ShowRoom_Create(${1:Float:x}, ${2:Float:y}, ${3:Float:z})",
+		"description": ""
+	},
+	"lsarp_ShowRoom_SetName": {
+		"prefix": "ShowRoom_SetName",
+		"body": "ShowRoom_SetName(${1:showroom_id}, ${2:name[]})",
+		"description": ""
+	},
+	"lsarp_ShowRoom_Delete": {
+		"prefix": "ShowRoom_Delete",
+		"body": "ShowRoom_Delete(${1:showroom_id})",
+		"description": ""
+	},
+	"lsarp_ShowRoom_SetPosition": {
+		"prefix": "ShowRoom_SetPosition",
+		"body": "ShowRoom_SetPosition(${1:showroom_id}, ${2:Float:new_x}, ${3:Float:new_y}, ${4:Float:new_z})",
+		"description": ""
+	},
+	"lsarp_ShowRoom_DeleteVehicle": {
+		"prefix": "ShowRoom_DeleteVehicle",
+		"body": "ShowRoom_DeleteVehicle(${1:showroom_id}, ${2:id})",
+		"description": ""
+	},
+	"lsarp_ShowRoom_AddVehicle": {
+		"prefix": "ShowRoom_AddVehicle",
+		"body": "ShowRoom_AddVehicle(${1:showroom_id}, ${2:modelid}, ${3:price})",
+		"description": ""
+	},
+	"lsarp_ShowRoom_SetVehicleSpawnPos": {
+		"prefix": "ShowRoom_SetVehicleSpawnPos",
+		"body": "ShowRoom_SetVehicleSpawnPos(${1:showroom_id}, ${2:Float:x}, ${3:Float:y}, ${4:Float:z}, ${5:Float:a})",
+		"description": ""
+	},
+	"lsarp_ShowRoom_FreeVehicleSlot": {
+		"prefix": "ShowRoom_FreeVehicleSlot",
+		"body": "ShowRoom_FreeVehicleSlot(${1:showroom_id})",
+		"description": ""
+	},
+	"lsarp_ShowRoom_Save": {
+		"prefix": "ShowRoom_Save",
+		"body": "ShowRoom_Save(${1:showroom_id})",
+		"description": ""
+	},
+	"lsarp_ShowRoom_LoadAll": {
+		"prefix": "ShowRoom_LoadAll",
+		"body": "ShowRoom_LoadAll(${1:})",
+		"description": ""
+	},
+	"lsarp_ShowRoom_CreateElements": {
+		"prefix": "ShowRoom_CreateElements",
+		"body": "ShowRoom_CreateElements(${1:showroom_id})",
+		"description": ""
+	},
+	"lsarp_ShowRoom_DestroyElements": {
+		"prefix": "ShowRoom_DestroyElements",
+		"body": "ShowRoom_DestroyElements(${1:showroom_id})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[showroom/enum.pwn]==========
+	// ==================================================
+	// ==========[showroom/player.pwn]==========
+	"lsarp_ClearBuyingVehicleData": {
+		"prefix": "ClearBuyingVehicleData",
+		"body": "ClearBuyingVehicleData(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_ShowRoom_PlayerConfirmBuy": {
+		"prefix": "ShowRoom_PlayerConfirmBuy",
+		"body": "ShowRoom_PlayerConfirmBuy(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_ShowRoom_PlayerCancelBuy": {
+		"prefix": "ShowRoom_PlayerCancelBuy",
+		"body": "ShowRoom_PlayerCancelBuy(${1:playerid})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[showroom/showroom_admin_commands.pwn]==========
+	"lsarp_ShowRoom_ShowInternalVehicles": {
+		"prefix": "ShowRoom_ShowInternalVehicles",
+		"body": "ShowRoom_ShowInternalVehicles(${1:showroom_id}, ${2:playerid})",
+		"description": ""
+	},
+	"lsarp_ShowRoom_ShowAllShowroomsList": {
+		"prefix": "ShowRoom_ShowAllShowroomsList",
+		"body": "ShowRoom_ShowAllShowroomsList(${1:playerid}, ${2:params[]=""})",
+		"description": ""
+	},
+	"lsarp_ShowRoom_ClearEditVars": {
+		"prefix": "ShowRoom_ClearEditVars",
+		"body": "ShowRoom_ClearEditVars(${1:playerid})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[utils/colors.pwn]==========
+	// ==================================================
+	// ==========[utils/maths.pwn]==========
+	"lsarp_GetXYInFrontOfPos": {
+		"prefix": "GetXYInFrontOfPos",
+		"body": "GetXYInFrontOfPos(${1:Float:xx}, ${2:Float:yy}, ${3:Float:a}, ${4:&Float:x2}, ${5:&Float:y2}, ${6:Float:distance})",
+		"description": ""
+	},
+	"lsarp_IsPlayerInRangeOfPlayer": {
+		"prefix": "IsPlayerInRangeOfPlayer",
+		"body": "IsPlayerInRangeOfPlayer(${1:playerid}, ${2:otherid}, ${3:Float:radius})",
+		"description": ""
+	},
+	"lsarp_IsPlayerInRangeOfVehicle": {
+		"prefix": "IsPlayerInRangeOfVehicle",
+		"body": "IsPlayerInRangeOfVehicle(${1:playerid}, ${2:vehicleid}, ${3:Float:radius})",
+		"description": ""
+	},
+	"lsarp_IsPlayerInRangeOfPickup": {
+		"prefix": "IsPlayerInRangeOfPickup",
+		"body": "IsPlayerInRangeOfPickup(${1:playerid}, ${2:pickupid}, ${3:Float:radius})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[utils/utils.pwn]==========
+	"lsarp_GetSexName": {
+		"prefix": "GetSexName",
+		"body": "GetSexName(${1:sex_id})",
+		"description": ""
+	},
+	"lsarp_KickEx": {
+		"prefix": "KickEx",
+		"body": "KickEx(${1:playerid})",
+		"description": ""
+	},
+	"lsarp_FixName": {
+		"prefix": "FixName",
+		"body": "FixName(${1:src[]}, ${2:dst[]})",
+		"description": ""
+	},
+	"lsarp_IsValidRPName": {
+		"prefix": "IsValidRPName",
+		"body": "IsValidRPName(${1:name[]}, ${2:ret_first[]}, ${3:ret_last[]})",
+		"description": ""
+	},
+	"lsarp_set": {
+		"prefix": "set",
+		"body": "set(${1:dest[]}, ${2:source[]})",
+		"description": ""
+	},
+	"lsarp_SendFormattedMessage": {
+		"prefix": "SendFormattedMessage",
+		"body": "SendFormattedMessage(${1:playerid}, ${2:color}, ${3:form[]}, ${4:{AmxString}, ${5:Float}, ${6:_}: ...})",
+		"description": ""
+	},
+	"lsarp_date": {
+		"prefix": "date",
+		"body": "date(${1:timestamp}, ${2:_form=1})",
+		"description": ""
+	},
+	"lsarp_GetVehicleName": {
+		"prefix": "GetVehicleName",
+		"body": "GetVehicleName(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_GetVehicleNameFromModel": {
+		"prefix": "GetVehicleNameFromModel",
+		"body": "GetVehicleNameFromModel(${1:modelid})",
+		"description": ""
+	},
+	"lsarp_IsATruck": {
+		"prefix": "IsATruck",
+		"body": "IsATruck(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_IsABus": {
+		"prefix": "IsABus",
+		"body": "IsABus(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_IsABike": {
+		"prefix": "IsABike",
+		"body": "IsABike(${1:carid})",
+		"description": ""
+	},
+	"lsarp_IsAMotorBike": {
+		"prefix": "IsAMotorBike",
+		"body": "IsAMotorBike(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_IsAPlane": {
+		"prefix": "IsAPlane",
+		"body": "IsAPlane(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_IsAHelicopter": {
+		"prefix": "IsAHelicopter",
+		"body": "IsAHelicopter(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_IsABoat": {
+		"prefix": "IsABoat",
+		"body": "IsABoat(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_ProxDetectorS": {
+		"prefix": "ProxDetectorS",
+		"body": "ProxDetectorS(${1:Float:radius}, ${2:playerid}, ${3:targetid})",
+		"description": ""
+	},
+	"lsarp_ProxDetectorStr": {
+		"prefix": "ProxDetectorStr",
+		"body": "ProxDetectorStr(${1:playerid}, ${2:Float:radius}, ${3:String:string}, ${4:col1}, ${5:col2}, ${6:col3}, ${7:col4}, ${8:col5})",
+		"description": ""
+	},
+	"lsarp_ProxDetector": {
+		"prefix": "ProxDetector",
+		"body": "ProxDetector(${1:playerid}, ${2:Float:radius}, ${3:const string[]}, ${4:col1}, ${5:col2}, ${6:col3}, ${7:col4}, ${8:col5})",
+		"description": ""
+	},
+	"lsarp_SendTwoLinesMessage": {
+		"prefix": "SendTwoLinesMessage",
+		"body": "SendTwoLinesMessage(${1:playerid}, ${2:color}, ${3:const message[]}, ${4:GLOBAL_TAG_TYPES:...})",
+		"description": ""
+	},
+	"lsarp_SendTwoLinesMessageToAll": {
+		"prefix": "SendTwoLinesMessageToAll",
+		"body": "SendTwoLinesMessageToAll(${1:color}, ${2:const message[]}, ${3:GLOBAL_TAG_TYPES:...})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[utils/vehicles.pwn]==========
+	"lsarp_GetClosestVehicle": {
+		"prefix": "GetClosestVehicle",
+		"body": "GetClosestVehicle(${1:playerid}, ${2:Float:radius})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[utils/weapons.pwn]==========
+	"lsarp_Weapon_GetName": {
+		"prefix": "Weapon_GetName",
+		"body": "Weapon_GetName(${1:weaponid})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[vehicles/callbacks.pwn]==========
+	"lsarp_OnPlayerVehicleSaved": {
+		"prefix": "OnPlayerVehicleSaved",
+		"body": "OnPlayerVehicleSaved(${1:vehicleid})",
+		"description": "Called when a player vehicle is saved.\n"
+	},
+	"lsarp_OnPlayerVehicleLoaded": {
+		"prefix": "OnPlayerVehicleLoaded",
+		"body": "OnPlayerVehicleLoaded(${1:vehicleid})",
+		"description": "Called when a player vehicle is loaded\n"
+	},
+	"lsarp_OnPlayerVehicleUnLoaded": {
+		"prefix": "OnPlayerVehicleUnLoaded",
+		"body": "OnPlayerVehicleUnLoaded(${1:vehicleid})",
+		"description": "Called when a player vehicle is unloaded\n"
+	},
+	// ==================================================
+	// ==========[vehicles/core.pwn]==========
+	"lsarp_Vehicle_Reload": {
+		"prefix": "Vehicle_Reload",
+		"body": "Vehicle_Reload(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_Create": {
+		"prefix": "Vehicle_Create",
+		"body": "Vehicle_Create(${1:modelid}, ${2:Float:x}, ${3:Float:y}, ${4:Float:z}, ${5:Float:rotation}, ${6:color1}, ${7:color2}, ${8:respawn_delay}, ${9:addsiren=0})",
+		"description": ""
+	},
+	"lsarp_Vehicle_Park": {
+		"prefix": "Vehicle_Park",
+		"body": "Vehicle_Park(${1:vehicleid}, ${2:Float:nx}, ${3:Float:ny}, ${4:Float:nz}, ${5:Float:na})",
+		"description": ""
+	},
+	"lsarp_Vehicle_Lock": {
+		"prefix": "Vehicle_Lock",
+		"body": "Vehicle_Lock(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_UnLock": {
+		"prefix": "Vehicle_UnLock",
+		"body": "Vehicle_UnLock(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_IsLocked": {
+		"prefix": "Vehicle_IsLocked",
+		"body": "Vehicle_IsLocked(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_IsEngineOff": {
+		"prefix": "Vehicle_IsEngineOff",
+		"body": "Vehicle_IsEngineOff(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_IsEngineOn": {
+		"prefix": "Vehicle_IsEngineOn",
+		"body": "Vehicle_IsEngineOn(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_SetEngineOn": {
+		"prefix": "Vehicle_SetEngineOn",
+		"body": "Vehicle_SetEngineOn(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_SetEngineOff": {
+		"prefix": "Vehicle_SetEngineOff",
+		"body": "Vehicle_SetEngineOff(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_UpdateLockState": {
+		"prefix": "Vehicle_UpdateLockState",
+		"body": "Vehicle_UpdateLockState(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_IsTrunkOpened": {
+		"prefix": "Vehicle_IsTrunkOpened",
+		"body": "Vehicle_IsTrunkOpened(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_OpenTrunk": {
+		"prefix": "Vehicle_OpenTrunk",
+		"body": "Vehicle_OpenTrunk(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_CloseTrunk": {
+		"prefix": "Vehicle_CloseTrunk",
+		"body": "Vehicle_CloseTrunk(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_ResetStats": {
+		"prefix": "Vehicle_ResetStats",
+		"body": "Vehicle_ResetStats(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_DecodeDoors": {
+		"prefix": "Vehicle_DecodeDoors",
+		"body": "Vehicle_DecodeDoors(${1:vehicleid}, ${2:&bonnet}, ${3:&boot}, ${4:&driver_door}, ${5:&passenger_door})",
+		"description": ""
+	},
+	"lsarp_Vehicle_SetDoorStatus": {
+		"prefix": "Vehicle_SetDoorStatus",
+		"body": "Vehicle_SetDoorStatus(${1:vehicleid}, ${2:bonnet}, ${3:boot}, ${4:driver_door}, ${5:passenger_door})",
+		"description": ""
+	},
+	"lsarp_Vehicle_IsOwnerConnected": {
+		"prefix": "Vehicle_IsOwnerConnected",
+		"body": "Vehicle_IsOwnerConnected(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_Unload": {
+		"prefix": "Vehicle_Unload",
+		"body": "Vehicle_Unload(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_Save": {
+		"prefix": "Vehicle_Save",
+		"body": "Vehicle_Save(${1:vehicleid})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[vehicles/enum.pwn]==========
+	// ==================================================
+	// ==========[vehicles/inventory.pwn]==========
+	"lsarp_bool:Vehicle_InitializeInventory": {
+		"prefix": "bool:Vehicle_InitializeInventory",
+		"body": "bool:Vehicle_InitializeInventory(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_bool:Vehicle_UnloadInventory": {
+		"prefix": "bool:Vehicle_UnloadInventory",
+		"body": "bool:Vehicle_UnloadInventory(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Inventory:Vehicle_GetInventory": {
+		"prefix": "Inventory:Vehicle_GetInventory",
+		"body": "Inventory:Vehicle_GetInventory(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_bool:Vehicle_HasInventory": {
+		"prefix": "bool:Vehicle_HasInventory",
+		"body": "bool:Vehicle_HasInventory(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_AddItem": {
+		"prefix": "Vehicle_AddItem",
+		"body": "Vehicle_AddItem(${1:vehicleid}, ${2:itemid}, ${3:amount = 1}, ${4:extra = 0})",
+		"description": ""
+	},
+	"lsarp_Vehicle_DecreaseSlotAmount": {
+		"prefix": "Vehicle_DecreaseSlotAmount",
+		"body": "Vehicle_DecreaseSlotAmount(${1:vehicleid}, ${2:slotid}, ${3:amount = 1})",
+		"description": ""
+	},
+	"lsarp_Vehicle_DecreaseItemAmount": {
+		"prefix": "Vehicle_DecreaseItemAmount",
+		"body": "Vehicle_DecreaseItemAmount(${1:vehicleid}, ${2:itemid}, ${3:amount = 1})",
+		"description": ""
+	},
+	"lsarp_bool:Vehicle_HasSpaceForItem": {
+		"prefix": "bool:Vehicle_HasSpaceForItem",
+		"body": "bool:Vehicle_HasSpaceForItem(${1:vehicleid}, ${2:itemid}, ${3:amount})",
+		"description": ""
+	},
+	"lsarp_bool:Vehicle_HasSpaceForWeapon": {
+		"prefix": "bool:Vehicle_HasSpaceForWeapon",
+		"body": "bool:Vehicle_HasSpaceForWeapon(${1:vehicleid}, ${2:weaponid}, ${3:ammo})",
+		"description": ""
+	},
+	"lsarp_bool:Vehicle_IsSlotUsed": {
+		"prefix": "bool:Vehicle_IsSlotUsed",
+		"body": "bool:Vehicle_IsSlotUsed(${1:vehicleid}, ${2:slotid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_GetItemID": {
+		"prefix": "Vehicle_GetItemID",
+		"body": "Vehicle_GetItemID(${1:vehicleid}, ${2:slotid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_GetSlotAmount": {
+		"prefix": "Vehicle_GetSlotAmount",
+		"body": "Vehicle_GetSlotAmount(${1:vehicleid}, ${2:slotid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_GetSlotExtra": {
+		"prefix": "Vehicle_GetSlotExtra",
+		"body": "Vehicle_GetSlotExtra(${1:vehicleid}, ${2:slotid})",
+		"description": "Should it be called "GetSlotExtra"?\n"
+	},
+	"lsarp_Vehicle_GetInventorySize": {
+		"prefix": "Vehicle_GetInventorySize",
+		"body": "Vehicle_GetInventorySize(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_bool:Vehicle_ShowInventory": {
+		"prefix": "bool:Vehicle_ShowInventory",
+		"body": "bool:Vehicle_ShowInventory(${1:vehicleid}, ${2:playerid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_SaveInventory": {
+		"prefix": "Vehicle_SaveInventory",
+		"body": "Vehicle_SaveInventory(${1:vehicleid})",
+		"description": ""
+	},
+	"lsarp_Vehicle_LoadInventory": {
+		"prefix": "Vehicle_LoadInventory",
+		"body": "Vehicle_LoadInventory(${1:vehicleid})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[weapon_system/core.pwn]==========
+	"lsarp_Weapon_InitializeType": {
+		"prefix": "Weapon_InitializeType",
+		"body": "Weapon_InitializeType(${1:weaponid}, ${2:ammoItem}, ${3:damages}, ${4:damageRatio = 1})",
+		"description": ""
+	},
+	"lsarp_Weapon_GetDamage": {
+		"prefix": "Weapon_GetDamage",
+		"body": "Weapon_GetDamage(${1:weaponid})",
+		"description": ""
+	},
+	"lsarp_Weapon_GetAmmoType": {
+		"prefix": "Weapon_GetAmmoType",
+		"body": "Weapon_GetAmmoType(${1:weaponid})",
+		"description": ""
+	},
+	"lsarp_bool:Weapon_RequireAmmo": {
+		"prefix": "bool:Weapon_RequireAmmo",
+		"body": "bool:Weapon_RequireAmmo(${1:weaponid})",
+		"description": ""
+	},
+	"lsarp_Weapon_GetSlot": {
+		"prefix": "Weapon_GetSlot",
+		"body": "Weapon_GetSlot(${1:weaponid})",
+		"description": ""
+	},
+	"lsarp_Weapon_GetObjectModel": {
+		"prefix": "Weapon_GetObjectModel",
+		"body": "Weapon_GetObjectModel(${1:weaponid})",
+		"description": ""
+	},
+	// ==================================================
+	// ==========[weapon_system/enum.pwn]==========
+	// ==================================================

@@ -1,5 +1,7 @@
 #include <YSI\y_hooks>
 
+// #define Character_%0(%1, Inventory_%0(Character_GetInventory(%1), // It is a convenient way to call Inventory_Func with player inventory
+
 stock bool:Character_InitializeInventory(playerid)
 {
     //if(!gCharacterLogged[playerid])
@@ -18,11 +20,11 @@ stock bool:Character_UnloadInventory(playerid)
     return true;
 }
 
-/*hook OnCharacterSaveData(playerid)
+hook OnCharacterSaveData(playerid)
 {
     Character_SaveInventory(playerid);
     return 1;
-}*/
+}
 
 hook OnPlayerCharacterLoad(playerid)
 {
@@ -73,11 +75,11 @@ stock Character_GiveItem(playerid, item_id, amount = 1, extra = 0, bool:callback
     return result;
 }
 
-stock Character_DecreaseAmountBySlot(playerid, slotid, amount = 1)
+stock Character_DecreaseSlotAmount(playerid, slotid, amount = 1)
 {
     new Inventory:playerInventory = Character_GetInventory(playerid);
     
-    new result = Inventory_DecreaseAmountBySlot(playerInventory, slotid, amount);
+    new result = Inventory_DecreaseSlotAmount(playerInventory, slotid, amount);
 
     //if(result)
         //CallLocalFunction("OnPlayerInventoryItemDecrease", "iii", playerid, itemid, amount);
@@ -110,6 +112,11 @@ stock Character_GetInventorySize(playerid)
     return PLAYER_INVENTORY_START_SIZE + ServerItem_GetBagSize(Character_GetBag(playerid));
 }
 
+stock bool:Character_IsSlotUsed(playerid, slotid)
+{
+    return Inventory_IsSlotUsed(Character_GetInventory(playerid), slotid);
+}
+
 stock Character_ShowInventory(playerid, targetid)
 {
     if(!gCharacterLogged[playerid])
@@ -117,35 +124,10 @@ stock Character_ShowInventory(playerid, targetid)
 
     new Inventory:playerInventory = Character_GetInventory(playerid);
 
-    //if(Inventory_IsEmpty(playerInventory))
-        //return SendClientMessage(playerid, COLOR_ERROR, "L'inventario è vuoto!");
-    new
-        string[4096],
-        temp[16],
-        tempItem[E_INVENTORY_DATA]
-    ;
-    for_inventory(i : playerInventory)
-    {
-        if(iter_sizeof(i) == 0) // If no item
-        {
-            tempItem[gInvItem] = tempItem[gInvAmount] = tempItem[gInvExtra] = 0;
-            format(string, sizeof(string), "%s{808080}Slot Libera\t{808080}--\t{808080}--\n", string);
-        }
-        else
-        {
-            iter_get_arr(i, tempItem);
-            new itemid = tempItem[gInvItem],
-                itemAmount = tempItem[gInvAmount];
-            if(ServerItem_IsUnique(itemid))
-                temp = "--";
-            else
-                format(temp, sizeof(temp), "%d", itemAmount);
-            format(string, sizeof(string), "%s{FFFFFF}%s\t{FFFFFF}%s\t{FFFFFF}%s\n", string, ServerItem[itemid][sitemName], temp, ServerItem_GetTypeName(itemid));
-        }
-    }
-    new title[48];
-    format(title, sizeof(title), "Inventario (%d/%d)", Inventory_GetUsedSpace(playerInventory), Inventory_GetSpace(playerInventory));
-    Dialog_Show(targetid, Dialog_InventoryItemList, DIALOG_STYLE_TABLIST_HEADERS, title, "Nome\tQuantità\tTipo\n%s", "Avanti", "Chiudi", string);
+    new 
+        String:string = @("Nome\tQuantità\tTipo\n") + Inventory_ParseForDialog(playerInventory),
+        String:title = str_format("Inventario (%d/%d)", Inventory_GetUsedSpace(playerInventory), Inventory_GetSpace(playerInventory));
+    Dialog_Show_s(targetid, Dialog_InventoryItemList, DIALOG_STYLE_TABLIST_HEADERS, title, string, "Avanti", "Chiudi");
     return 1;
 }
 
@@ -153,16 +135,14 @@ Dialog:Dialog_InventoryItemList(playerid, response, listitem, inputtext[])
 {
     if(!response)
         return 0;
-    new 
-        title[48],
-        slotid = pInventoryListItem[playerid][listitem],
-        itemid = Character_GetItem(playerid, slotid)
+    new
+        itemid = Character_GetSlotItem(playerid, listitem)
         ;
     if(itemid == 0)
         return Character_ShowInventory(playerid, playerid);
-    pInventorySelectedListItem[playerid] = listitem;
-    format(title, sizeof(title), "%s (Quantità: %d)", ServerItem_GetName(itemid), Character_GetItemAmount(playerid, slotid));
-    Dialog_Show(playerid, Dialog_InvItemAction, DIALOG_STYLE_LIST, title, "Usa\nGetta\nDai a un giocatore", "Continua", "Annulla");
+    new String:title = str_format("%s (Quantità: %d)", ServerItem_GetName(itemid), Character_GetSlotAmount(playerid, listitem));
+    Dialog_Show_s(playerid, Dialog_InvItemAction, DIALOG_STYLE_LIST, title, @("Usa\nGetta\nDai a un giocatore"), "Continua", "Annulla");
+    pSelectedListItem[playerid] = listitem;
     return 1;
 }
 
@@ -172,29 +152,121 @@ Dialog:Dialog_InvItemAction(playerid, response, listitem, inputtext[])
     {
         return Character_ShowInventory(playerid, playerid);
     }
+    new 
+        slotid = pSelectedListItem[playerid],
+        itemid = Character_GetSlotItem(playerid, slotid);
+    if(itemid == 0) // Safeness
+        return 0;
     switch(listitem)
     {
         case 0:
         {
-            new selected = pInventorySelectedListItem[playerid],
-                slotid = pInventoryListItem[playerid][selected],
-                itemid = Character_GetItem(playerid, slotid);
             Trigger_OnPlayerInvItemUse(playerid, slotid, itemid, ServerItem_GetType(itemid));
             return 1;
         }
-        case 1: return 1;
-        case 2: return 1;
+        case 1: 
+        {
+            new String:title = str_format("%s (Quantità: %d)", ServerItem_GetName(itemid), Character_GetSlotAmount(playerid, listitem));
+            new String:content;
+            if(ServerItem_IsUnique(itemid))
+            {
+                content = str_format("Sei sicuro di voler gettare %s?", ServerItem_GetName(itemid));
+            }
+            else
+            {
+                content = str_format("Inserisci la quantità di %s che vuoi gettare (1 di default).", ServerItem_GetName(itemid));
+            }
+            Dialog_Show_s(playerid, Dialog_InvItemDrop, DIALOG_STYLE_INPUT, title, content, "Getta", "Annulla");
+            return 1;
+        }
+        case 2:
+        {
+            new String:title = str_format("%s (Quantità: %d)", ServerItem_GetName(itemid), Character_GetSlotAmount(playerid, listitem));
+            new String:content = @("Inserisci il nome o l'id del giocatore\nseguito dalla quantità.\nEsempio: Mario Rossi 5\nOppure: Mario Rossi per dare solo 1.");
+            Dialog_Show_s(playerid, Dialog_InvItemGivePlayer, DIALOG_STYLE_INPUT, title, content, "Continua", "Annulla");
+            return 1;
+        }
     }
     return 1;
 }
 
-stock Character_GetItem(playerid, slotid)
+Dialog:Dialog_InvItemDrop(playerid, response, listitem, inputtext[])
 {
-    new Inventory:playerInv = Character_GetInventory(playerid);
-    return Inventory_GetItemID(playerInv, slotid);
+    if(!response)
+        return Character_ShowInventory(playerid, playerid);
+    new amount = 0, 
+        slotid = pSelectedListItem[playerid],
+        itemid = Character_GetSlotItem(playerid, slotid);
+    sscanf(inputtext, "D(1)", amount);
+    if(amount <= 0)
+    {
+        new String:title = str_format("%s (Quantità: %d)", ServerItem_GetName(itemid), Character_GetSlotAmount(playerid, listitem));
+        new String:content;
+        if(ServerItem_IsUnique(itemid))
+        {
+            content = str_format("Sei sicuro di voler gettare %s?", ServerItem_GetName(itemid));
+        }
+        else
+        {
+            content = str_format("Inserisci la quantità di %s che vuoi gettare (1 di default).", ServerItem_GetName(itemid));
+        }
+        Dialog_Show_s(playerid, Dialog_InvItemDrop, DIALOG_STYLE_INPUT, title, content, "Getta", "Annulla");
+        return 1;
+    }
+    new Float:x, Float:y, Float:z;
+    GetPlayerPos(playerid, x, y, z);
+    Drop_Create(x, y, z - 0.9, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), itemid, amount, 0, Character_GetOOCNameStr(playerid));
+    Character_DecreaseSlotAmount(playerid, slotid, amount);
+    SendFormattedMessage(playerid, COLOR_GREEN, "Hai gettato: %s (%d)", ServerItem_GetName(itemid), amount);
+    return 1;
 }
 
-stock Character_GetItemAmount(playerid, slotid)
+
+Dialog:Dialog_InvItemGivePlayer(playerid, response, listitem, inputtext[])
+{
+    if(!response)
+        return Character_ShowInventory(playerid, playerid);
+    new 
+        id, amount,
+        slotid = pSelectedListItem[playerid],
+        itemid = Character_GetSlotItem(playerid, slotid),
+        slotAmount = Character_GetSlotAmount(playerid, slotid);
+    if(itemid == 0) // Safeness
+        return 0;
+    if(sscanf(inputtext, "uD(1)", id, amount) || !IsPlayerConnected(id) || !gCharacterLogged[id])
+    {
+        new String:title = str_format("%s (Quantità: %d)", ServerItem_GetName(itemid), Character_GetSlotAmount(playerid, listitem));
+        Dialog_Show_s(playerid, Dialog_InvItemGivePlayer, DIALOG_STYLE_INPUT, title, @("{FF0000}Il giocatore non è connesso.\nInserisci il nome o l'id del giocatore\nseguito dalla quantità.\nEsempio: Mario Rossi 5\nOppure: Mario Rossi per dare solo 1."), "Continua", "Annulla");
+        return 1;
+    }
+    if(amount < 1 || amount > slotAmount)
+    {
+        new String:title = str_format("%s (Quantità: %d)", ServerItem_GetName(itemid), Character_GetSlotAmount(playerid, listitem));
+        Dialog_Show_s(playerid, Dialog_InvItemGivePlayer, DIALOG_STYLE_INPUT, title, @("{FF0000}La quantità inserita non è valida.\nInserisci il nome o l'id del giocatore\nseguito dalla quantità.\nEsempio: Mario Rossi 5\nOppure: Mario Rossi per dare solo 1."), "Continua", "Annulla");
+        return 1;
+    }
+    if(!Character_HasSpaceForItem(id, itemid, amount))
+    {
+        new String:title = str_format("%s (Quantità: %d)", ServerItem_GetName(itemid), Character_GetSlotAmount(playerid, listitem));
+        Dialog_Show_s(playerid, Dialog_InvItemGivePlayer, DIALOG_STYLE_INPUT, title, @("{FF0000}Il giocatore non ha abbastanza spazio nell'inventario.\nInserisci il nome o l'id del giocatore\nseguito dalla quantità.\nEsempio: Mario Rossi 5\nOppure: Mario Rossi per dare solo 1."), "Continua", "Annulla");
+        return 1;
+    }
+    Character_DecreaseSlotAmount(playerid, slotid, amount);
+    Character_GiveItem(id, itemid, amount);
+    SendFormattedMessage(playerid, COLOR_GREEN, "Hai dato l'oggetto (%s, %d) a %s (%d).", ServerItem_GetName(itemid), amount, Character_GetOOCName(id), id);
+    SendFormattedMessage(id, COLOR_GREEN, "%s (%d) ti ha dato un oggetto (%s, %d).", Character_GetOOCName(playerid), playerid, ServerItem_GetName(itemid), amount);
+    Character_AMe(playerid, "prende degli oggetti e li da a %s", Character_GetOOCName(id));
+    return 1;
+}
+
+
+stock Character_GetSlotItem(playerid, slotid)
+{
+    new Inventory:playerInv = Character_GetInventory(playerid);
+    return Inventory_GetSlotItem(playerInv, slotid);
+}
+
+stock Character_GetSlotAmount(playerid, slotid)
 {
     new Inventory:playerInv = Character_GetInventory(playerid);
     return Inventory_GetSlotAmount(playerInv, slotid);
@@ -222,7 +294,6 @@ stock bool:Character_SetBag(playerid, bagid)
 stock Character_ResetInventory(playerid)
 {
     pInventoryBag[playerid] = 0;
-    memset(pInventoryListItem[playerid], -1);
     return 1;
 }
 
@@ -236,29 +307,18 @@ stock Character_SaveInventory(playerid)
         query[1024],
         tempItems[128],
         tempAmounts[128],
-        tempExtra[128],
-        tempItem[E_INVENTORY_DATA]
+        tempExtras[128]
         ;
-    for_inventory(i : inventory)
+    
+    if(Inventory_ParseForSave(inventory, tempItems, tempAmounts, tempExtras))
     {
-        if(iter_sizeof(i) == 0)
-        {
-            tempItem[gInvItem] = tempItem[gInvAmount] = tempItem[gInvExtra] = 0;
-        }
-        else
-        {
-            iter_get_arr(i, tempItem);
-        }
-        format(tempItems, sizeof(tempItems), "%s%d%c", tempItems, tempItem[gInvItem], '|');
-        format(tempAmounts, sizeof(tempAmounts), "%s%d%c", tempAmounts, tempItem[gInvAmount], '|');
-        format(tempExtra, sizeof(tempExtra), "%s%d%c", tempExtra, tempItem[gInvExtra], '|');
+        mysql_format(gMySQL, query, sizeof(query), "INSERT INTO `character_inventory` \
+        (CharacterID, Items, ItemsAmount, ItemsExtraData, EquippedBag) VALUES('%d', '%e', '%e', '%e', '%d') ON DUPLICATE KEY UPDATE \
+        Items = VALUES(Items), ItemsAmount = VALUES(ItemsAmount), ItemsExtraData = VALUES(ItemsExtraData), EquippedBag = VALUES(EquippedBag)",
+        PlayerInfo[playerid][pID], tempItems, tempAmounts, tempExtras, pInventoryBag[playerid]
+        );
+        mysql_tquery(gMySQL, query);
     }
-    mysql_format(gMySQL, query, sizeof(query), "INSERT INTO `character_inventory` \
-    (CharacterID, Items, ItemsAmount, ItemsExtraData, EquippedBag) VALUES('%d', '%e', '%e', '%e', '%d') ON DUPLICATE KEY UPDATE \
-    Items = VALUES(Items), ItemsAmount = VALUES(ItemsAmount), ItemsExtraData = VALUES(ItemsExtraData), EquippedBag = VALUES(EquippedBag)",
-    PlayerInfo[playerid][pID], tempItems, tempAmounts, tempExtra, pInventoryBag[playerid]
-    );
-    mysql_tquery(gMySQL, query);
     return 1;
 }
 

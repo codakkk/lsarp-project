@@ -18,6 +18,9 @@ new stock
     VehicleInfo[MAX_VEHICLES][E_VEHICLE_DATA],
     Iterator:Vehicles<MAX_VEHICLES>;
 
+new 
+    pCurrentVehicleInventory[MAX_PLAYERS]; // Current Opened Vehicle Inventory Dialog
+
 enum E_VEHICLE_RESTORE_DATA
 {
     vSpawned,

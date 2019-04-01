@@ -50,6 +50,8 @@ stock Pickup_GetPosition(pickupid, &Float:x, &Float:y, &Float:z)
 
 stock Pickup_GetInfo(pickupid, &id, &E_ELEMENT_TYPE:type)
 {
+    if(pickupid == -1)
+        return 0;
     id = PickupInfo[pickupid][elementID];
     type = PickupInfo[pickupid][elementType];
     return 1;

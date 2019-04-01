@@ -8,12 +8,12 @@ forward OnPlayerInventoryItemUse(playerid, slot_id, item_id, item_type); // Hook
 
 stock Trigger_OnPlayerInvItemUse(playerid, slot_id, item_id, ITEM_TYPE:item_type)
 {
-    CallLocalFunction("OnPlayerInventoryItemUse", "iiii", playerid, slot_id, item_id, _:item_type);
+    CallLocalFunction(#OnPlayerInventoryItemUse, "iiii", playerid, slot_id, item_id, _:item_type);
 }
 
 stock Trigger_OnPlayerInvChange(playerid, slot_id)
 {
-    CallLocalFunction("OnPlayerInventoryChanged", "ii", playerid, slot_id);
+    CallLocalFunction(#OnPlayerInventoryChanged, "ii", playerid, slot_id);
 }
 
 public OnPlayerInventoryItemUse(playerid, slot_id, item_id)

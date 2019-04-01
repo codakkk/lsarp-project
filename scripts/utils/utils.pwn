@@ -82,7 +82,7 @@ stock set(dest[],source[])
 	dest[count] = 0;
 }
 
-stock SendFormattedMessage(playerid, color, form[], {Float, _}: ...) 
+/*stock SendFormattedMessage(playerid, color, form[], {Float, _}: ...) 
 {
     #pragma unused form
 
@@ -106,6 +106,16 @@ stock SendFormattedMessage(playerid, color, form[], {Float, _}: ...)
     #emit stack n16
 
     return SendClientMessage(t1, t2, tmp);
+}*/
+
+stock SendFormattedMessage(playerid, color, form[], {AmxString, Float, _}: ...)
+{
+    new String:string;
+    if(isnull(form))
+        string = str_new(" ");
+    else
+        string = str_format(form, ___3);
+    return SendClientMessageStr(playerid, color, string);
 }
 
 stock date( timestamp, _form=1 )
@@ -366,6 +376,19 @@ stock ProxDetectorS(Float:radius, playerid, targetid)
     if(GetPlayerVirtualWorld(playerid) == GetPlayerVirtualWorld(targetid) && IsPlayerInRangeOfPoint(playerid, radius, x, y, x))
         return 1;
     return 0;
+}
+
+stock ProxDetectorStr(playerid, Float:radius, String:string, col1, col2, col3, col4, col5)
+{
+    new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
+    amx_to_ref(var, ptr);
+    str_get(string, ptr[0], .size=size);
+
+    new result = ProxDetector(playerid, radius, ptr[0], col1, col2, col3, col4, col5);
+
+    amx_free(var);
+    amx_delete(var);
+    return result;
 }
 
 stock ProxDetector(playerid, Float:radius, const string[], col1, col2, col3, col4, col5)

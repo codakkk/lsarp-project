@@ -1,3 +1,4 @@
+#include <YSI\y_hooks>
 hook GlobalSecondTimer(playerid)
 {
     new keys, updown, leftright;
@@ -108,7 +109,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
         Pickup_GetInfo(pLastPickup[playerid], eID, eType);
         Pickup_GetPosition(pLastPickup[playerid], x, y, z);
 
-        if(IsPlayerInRangeOfPoint(playerid, 2.5, x, y, z))
+        if(eType == ELEMENT_TYPE_DEALERSHIP && IsPlayerInRangeOfPoint(playerid, 2.5, x, y, z))
         {
             ShowRoom_ShowVehiclesToPlayer(eID, playerid);
         }

@@ -34,7 +34,8 @@ new
     pVehicleSellingTo[MAX_PLAYERS],
     pSellingVehicleID[MAX_PLAYERS],
     pVehicleSeller[MAX_PLAYERS],
-    pVehicleSellingPrice[MAX_PLAYERS]
+    pVehicleSellingPrice[MAX_PLAYERS],
+    pSelectedListItem[MAX_PLAYERS] // Used by Dialogs
     ;
 
 #include <player\global.pwn>
@@ -49,6 +50,7 @@ hook OnPlayerClearData(playerid)
     pAdminDuty[playerid] = 0;
     pSupporterDuty[playerid] = 0;
     pLastPickup[playerid] = -1;
+    pSelectedListItem[playerid] = -1;
     if(gAdminVehicle[playerid] != 0)
     {
         DestroyVehicle(gAdminVehicle[playerid]);

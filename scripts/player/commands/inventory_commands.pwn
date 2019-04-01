@@ -31,3 +31,15 @@ CMD:dep(playerid, params[])
     }
     return 1;
 }
+
+/*flags:getta(CMD_USER);
+CMD:getta(playerid, params[])
+{
+    if(GetPlayerWeapon(playerid) == 0)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma da gettare.");
+    new Float:x, Float:y, Float:z;
+    GetPlayerPos(playerid, x, y, z);
+    Drop_Create(x, y, z, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), GetPlayerWeapon(playerid), 1, 0, Character_GetOOCNameStr(playerid));
+    SendClientMessage(playerid, COLOR_GREEN, "Hai gettato l'arma.");
+    return 1;
+}*/
