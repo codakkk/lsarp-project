@@ -12,13 +12,13 @@
 		"samp-incognito/samp-streamer-plugin:v2.9.4",
 		"oscar-broman/strlib",
 		"pawn-lang/YSI-Includes@5.x",
-		"IllidanS4/PawnPlus:v1.0.0-pre"
+		"IllidanS4/PawnPlus:v1.0.0-pre2"
 	],
 	"builds": [
 		{
 			"name": "main",
 			"args": [
-				"-d3"
+				"-d0"
 			],
 			"includes": [
 				"dependencies/legacy",

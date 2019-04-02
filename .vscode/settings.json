@@ -1,5 +1,14 @@
 {
     "editor.minimap.enabled": false,
     "workbench.editor.labelFormat": "short", // For parent folder name in tab
-    "window.title": "${activeEditorShort}${separator}${rootName}"
+    "window.title": "${activeEditorShort}${separator}${rootName}",
+    "emeraldwalk.runonsave": {
+        "commands": [
+            {
+                "match": ".pwn",
+                "isAsync": true,
+                "cmd": "py ${workspaceRoot}\\parse_snippets.py"
+            }
+        ]
+    }
 }

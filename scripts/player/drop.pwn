@@ -4,7 +4,7 @@ forward bool:Character_CollectDrop(playerid, dropid);
 
 hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
-    if(pLastPickup[playerid] != -1 && PRESSED(KEY_WALK))
+    if(pLastPickup[playerid] != -1 && PRESSED(KEY_CROUCH))
     {
         new eID, E_ELEMENT_TYPE:eType;
         new result = Pickup_GetInfo(pLastPickup[playerid], eID, eType);
@@ -19,24 +19,63 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 stock bool:Character_CollectDrop(playerid, dropid)
 {
     new Drop[E_DROP_INFO];
-    if(Drop_GetData(dropid, Drop) && Drop[dItem] != 0 && Drop[dItemAmount] > 0)
+    if(Drop_GetData(dropid, Drop) && Drop[dItem] != 0)
     {
-        if(!Character_HasSpaceForItem(playerid, Drop[dItem], Drop[dItemAmount]) || (ServerItem_IsWeapon(Drop[dItem]) && !Character_HasSpaceForWeapon(playerid, Drop[dItem], Drop[dItemExtra])))
-        {
-            SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario!");
-            return false;
-        }
-        new itemid = Drop[dItem], amount = Drop[dItemAmount], extra = Drop[dItemExtra];
-        Character_GiveItem(playerid, itemid, amount, extra);
-        // Probably I shouldn't use extra for ammos. Instead, put ammos in inventory when /getta is used
-        if(ServerItem_IsWeapon(itemid) && extra > 0)
-        {
-            Character_GiveItem(playerid, Weapon_GetAmmoType(itemid), extra);
-        }
-        SendFormattedMessage(playerid, COLOR_GREEN, "Hai raccolto %s (%d)", ServerItem_GetName(Drop[dItem]), Drop[dItemAmount]);
-        Character_AMe(playerid, "raccoglie qualcosa da terra");
-        Drop_Destroy(dropid);
+        new 
+            String:title,
+            String:content = @("Raccogli\nSposta");
+        title = str_format("%s (%S: %d)", ServerItem_GetName(Drop[dItem]), (ServerItem_IsWeapon(Drop[dItem]) ? @("Munizioni") : @("Quantità")), (ServerItem_IsWeapon(Drop[dItem]) ? Drop[dItemExtra] : Drop[dItemAmount]));
+        if(ServerItem_IsWeapon(Drop[dItem]))
+            content += @("\n{00FF00}Equipaggia{FFFFFF}");
+        SetPVarInt(playerid, "Player_DropID", dropid);
+        Dialog_Show_s(playerid, Dialog_ItemDropAction, DIALOG_STYLE_LIST, title, content, "Continua", "Chiudi");
         return true;
     }
     return false;
+}
+
+Dialog:Dialog_ItemDropAction(playerid, response, listitem, inputtext[])
+{
+    new dropid = GetPVarInt(playerid, "Player_DropID"), Drop[E_DROP_INFO];
+    if(!response || !Drop_GetData(dropid, Drop) || Drop[dItem] == 0)
+    {
+        DeletePVar(playerid, "Player_DropID");
+        return 0;   
+    }
+    new itemid = Drop[dItem], amount = Drop[dItemAmount], extra = Drop[dItemExtra];
+    switch(listitem)
+    {
+        case 0:
+        {
+            if( (ServerItem_IsWeapon(itemid) && !Character_HasSpaceForWeapon(playerid, itemid, extra)) || 
+                !Character_HasSpaceForItem(playerid, itemid, amount))
+                return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario!");
+            Character_GiveItem(playerid, itemid, amount);
+            Character_GiveItem(playerid, Weapon_GetAmmoType(itemid), extra);
+            SendFormattedMessage(playerid, COLOR_GREEN, "Hai raccolto %s (%d)", ServerItem_GetName(Drop[dItem]), ServerItem_IsWeapon(itemid) ? Drop[dItemExtra] : Drop[dItemAmount]);
+            Character_AMe(playerid, "raccoglie qualcosa");
+            Drop_Destroy(dropid);
+        }
+        case 1:
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "Non ancora disponibile");
+        }
+        case 2:
+        {
+            new weapon, ammo;
+            GetPlayerWeaponData(playerid, Weapon_GetSlot(itemid), weapon, ammo);
+
+            if(weapon != 0 && ammo > 0)
+                return SendClientMessage(playerid, COLOR_ERROR, "Non puoi equipaggiare quest'arma!");
+
+            if(extra <= 0)
+                return SendClientMessage(playerid, COLOR_ERROR, "L'arma è scarica e non puo' essere equipaggiata!");
+
+            SendFormattedMessage(playerid, COLOR_GREEN, "Hai raccolto %s (%d)", ServerItem_GetName(Drop[dItem]), Drop[dItemAmount]);
+            Character_AMe(playerid, "raccoglie un'arma");
+            AC_GivePlayerWeapon(playerid, itemid, extra);
+            Drop_Destroy(dropid);
+        }
+    }
+    return 1;
 }

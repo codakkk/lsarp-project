@@ -94,10 +94,9 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 #include <utils/vehicles.pwn>
 #include <global_timers.pwn>
 
-native print_s(AmxString:string) = print;
-
 main()
 {
+    print_s(str_format("Ciao %s!\nIl tuo account risulta registrato.\nInserisci la password per effettuare il login.", "Name"));
     printf("LSARP - By CodaKKK. Started: 26/02/2019.");
 
     PlayerInventory = map_new();
@@ -114,9 +113,13 @@ main()
     new Inventory:inv = Inventory_New(5);
     Inventory_AddItem(inv, 24, 1, 0);
     print_s(Inventory_ParseForDialog(inv));
-}
     
+    new String:s = @("TESTING");
+    print_s(s);
 
+    print_s(str_format("Ciao %s!\nIl tuo account risulta registrato.\nInserisci la password per effettuare il login.", "Name"));
+}   
+    
 
 public OnGameModeInit()
 {

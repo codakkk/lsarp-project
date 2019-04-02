@@ -18,3 +18,42 @@ stock Weapon_GetName(weaponid)
 {
     return gWeaponNames[weaponid];
 }
+
+stock RemovePlayerWeapon(playerid, weaponid)
+{
+	new plyWeapons[12] = 0;
+	new plyAmmo[12] = 0;
+	for(new slot = 0; slot != 12; slot++)
+	{
+		new wep, ammo;
+		GetPlayerWeaponData(playerid, slot, wep, ammo);
+
+		if(wep != weaponid && ammo != 0)
+		{
+			GetPlayerWeaponData(playerid, slot, plyWeapons[slot], plyAmmo[slot]);
+		}
+		else if(wep == weaponid)
+		{
+			// pWeapons[playerid][slot] = 0; // AntiCheat
+			// pAmmo[playerid][slot] = 0; // AntiCheat
+		}
+	}
+
+	ResetPlayerWeapons(playerid);
+	for(new slot = 0; slot != 12; slot++)
+	{
+	    if(plyAmmo[slot] != 0)
+	    {
+			GivePlayerWeapon(playerid, plyWeapons[slot], plyAmmo[slot]);
+		}
+	}
+	return 1;
+}
+
+stock RemovePlayerWeaponBySlot(playerid, slotid)
+{
+    new w, a;
+    GetPlayerWeaponData(playerid, slotid, w, a);
+    RemovePlayerWeapon(playerid, w);
+    return 1;
+}

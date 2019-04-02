@@ -32,14 +32,19 @@ CMD:dep(playerid, params[])
     return 1;
 }
 
-/*flags:getta(CMD_USER);
-CMD:getta(playerid, params[])
+flags:gettaarma(CMD_USER);
+CMD:gettaarma(playerid, params[])
 {
-    if(GetPlayerWeapon(playerid) == 0)
+    new 
+        weaponid = GetPlayerWeapon(playerid), 
+        ammo = GetPlayerAmmo(playerid);
+    if(weaponid == 0 || ammo == 0)
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma da gettare.");
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
-    Drop_Create(x, y, z, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), GetPlayerWeapon(playerid), 1, 0, Character_GetOOCNameStr(playerid));
+    Drop_Create(x, y, z - 0.9, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, ammo, Character_GetOOCNameStr(playerid));
+    RemovePlayerWeapon(playerid, weaponid);
     SendClientMessage(playerid, COLOR_GREEN, "Hai gettato l'arma.");
+    ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 3.0, 0, 0, 0, 0, 0);
     return 1;
-}*/
+}

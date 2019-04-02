@@ -166,17 +166,19 @@ Dialog:Dialog_InvItemAction(playerid, response, listitem, inputtext[])
         }
         case 1: 
         {
-            new String:title = str_format("%s (Quantità: %d)", ServerItem_GetName(itemid), Character_GetSlotAmount(playerid, listitem));
-            new String:content;
+            new String:title = str_format("%s (Quantità: %d)", ServerItem_GetName(itemid), Character_GetSlotAmount(playerid, slotid));
+            new String:content, style;
             if(ServerItem_IsUnique(itemid))
             {
                 content = str_format("Sei sicuro di voler gettare %s?", ServerItem_GetName(itemid));
+                style = DIALOG_STYLE_MSGBOX;
             }
             else
             {
                 content = str_format("Inserisci la quantità di %s che vuoi gettare (1 di default).", ServerItem_GetName(itemid));
+                style = DIALOG_STYLE_INPUT;
             }
-            Dialog_Show_s(playerid, Dialog_InvItemDrop, DIALOG_STYLE_INPUT, title, content, "Getta", "Annulla");
+            Dialog_Show_s(playerid, Dialog_InvItemDrop, style, title, content, "Getta", "Annulla");
             return 1;
         }
         case 2:
@@ -200,22 +202,27 @@ Dialog:Dialog_InvItemDrop(playerid, response, listitem, inputtext[])
     sscanf(inputtext, "D(1)", amount);
     if(amount <= 0)
     {
-        new String:title = str_format("%s (Quantità: %d)", ServerItem_GetName(itemid), Character_GetSlotAmount(playerid, listitem));
-        new String:content;
+        new String:title = str_format("%s (Quantità: %d)", ServerItem_GetName(itemid), Character_GetSlotAmount(playerid, slotid));
+        new String:content, style;
         if(ServerItem_IsUnique(itemid))
         {
             content = str_format("Sei sicuro di voler gettare %s?", ServerItem_GetName(itemid));
+            style = DIALOG_STYLE_MSGBOX;
         }
         else
         {
             content = str_format("Inserisci la quantità di %s che vuoi gettare (1 di default).", ServerItem_GetName(itemid));
+            style = DIALOG_STYLE_INPUT;
         }
-        Dialog_Show_s(playerid, Dialog_InvItemDrop, DIALOG_STYLE_INPUT, title, content, "Getta", "Annulla");
+        Dialog_Show_s(playerid, Dialog_InvItemDrop, style, title, content, "Getta", "Annulla");
         return 1;
     }
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
     Drop_Create(x, y, z - 0.9, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), itemid, amount, 0, Character_GetOOCNameStr(playerid));
+    
+    ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 3.0, 0, 0, 0, 0, 0);
+
     Character_DecreaseSlotAmount(playerid, slotid, amount);
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai gettato: %s (%d)", ServerItem_GetName(itemid), amount);
     return 1;

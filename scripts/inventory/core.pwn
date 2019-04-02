@@ -31,7 +31,7 @@ stock bool:Inventory_SetItem(Inventory:inventory, slotid, itemid, amount, extra)
     if(!list_valid(inventory) || (itemid != 0 && amount <= 0) || !ServerItem_IsValid(itemid) || slotid >= list_size(inventory))
         return false;
     
-    if(ServerItem_GetMaxStack(itemid) > amount)
+    if(amount > ServerItem_GetMaxStack(itemid))
         amount = ServerItem_GetMaxStack(itemid);
     
     if(ServerItem_IsUnique(itemid)) // probably Useless
@@ -182,6 +182,8 @@ stock Inventory_HasSpaceForItem(Inventory:inventory, itemid, amount)
     new 
         inv_size = Inventory_GetSpace(inventory);
     if(inv_size == 0)
+        return 0;
+    if(itemid == 0 || amount <= 0)
         return 1;
     new
         usedSpace = Inventory_GetUsedSpace(inventory),
@@ -224,7 +226,7 @@ stock Inventory_HasSpaceForItem(Inventory:inventory, itemid, amount)
 // useful function, because weapons are stored in a specific way
 stock Inventory_HasSpaceForWeapon(Inventory:inventory, weaponid, ammo)
 {
-    return Inventory_HasSpaceForItem(inventory, weaponid, 1) && (ammo >= 0 && Inventory_HasSpaceForItem(inventory, Weapon_GetAmmoType(weaponid), ammo));
+    return Inventory_HasSpaceForItem(inventory, weaponid, 1) && (ammo <= 0 || (ammo >= 0 && Inventory_HasSpaceForItem(inventory, Weapon_GetAmmoType(weaponid), ammo)));
 }
 
 stock Inventory_HasItem(Inventory:inventory, itemid, min = 1)

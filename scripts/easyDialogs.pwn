@@ -22,7 +22,22 @@ stock Dialog_Close(playerid) {
     return ShowPlayerDialog(playerid, -1, DIALOG_STYLE_MSGBOX, " ", " ", " ", "");
 }
 
+stock Dialog_Open(playerid, const function[], style, const caption[], const info[], const button1[], const button2[], {Float, _}:...) {
+    new name[MAX_FUNCTION_NAME] = "Dlg@";
+    strcat(name, function);
+    strpack(DialogName[playerid], name);
 
+    new String:string;
+
+    if (isnull(info)) {
+        string = str_new(" ");
+    } else {
+        string = str_format("Ciao %s!\nIl tuo account risulta registrato.\nInserisci la password per effettuare il login.", "Name");
+    }
+
+    ShowPlayerDialog_s1(playerid, 32700, style, caption, string, button1, button2);
+    return 1;
+}
 stock Dialog_Open(playerid, const function[], style, const caption[], const info[], const button1[], const button2[], {Float, _}:...) {
     new name[MAX_FUNCTION_NAME] = "Dlg@";
     strcat(name, function);
@@ -36,6 +51,9 @@ stock Dialog_Open(playerid, const function[], style, const caption[], const info
 		string = str_format(info, ___7);
 	}
 
+    print_s(string); 
+    print_s(str_format("%d %d %d", 1, 2, 3));
+    print(name);
 	ShowPlayerDialog_s1(playerid, 32700, style, caption, string, button1, button2);
     return 1;
 }

@@ -36,3 +36,4 @@ stock mysql_pquery_inline_s(MySQL:handle, String:query, callback:inline_callback
     amx_delete(var);
     return result;
 }
+

@@ -1,3 +1,4 @@
+{
 	// ==========[scripts/callbacks.pwn]==========
 	"lsarp_OnCharacterPreSaveData": {
 		"prefix": "OnCharacterPreSaveData",
@@ -78,6 +79,11 @@
 	// ==========[scripts/global_timers.pwn]==========
 	// ==================================================
 	// ==========[scripts/lsarp.pwn]==========
+	"lsarp_print_s = print": {
+		"prefix": "print_s = print",
+		"body": "print_s = print(${1:AmxString:string})",
+		"description": ""
+	},
 	"lsarp_PreloadAnimations": {
 		"prefix": "PreloadAnimations",
 		"body": "PreloadAnimations(${1:playerid})",
@@ -95,6 +101,36 @@
 	},
 	// ==================================================
 	// ==========[scripts/pp_wrappers.pwn]==========
+	"lsarp_SendClientMessageStr = SendClientMessage": {
+		"prefix": "SendClientMessageStr = SendClientMessage",
+		"body": "SendClientMessageStr = SendClientMessage(${1:playerid}, ${2:color}, ${3:AmxString:message})",
+		"description": ""
+	},
+	"lsarp_ShowPlayerDialog_s1 = ShowPlayerDialog": {
+		"prefix": "ShowPlayerDialog_s1 = ShowPlayerDialog",
+		"body": "ShowPlayerDialog_s1 = ShowPlayerDialog(${1:playerid}, ${2:dialogid}, ${3:style}, ${4:const caption[]}, ${5:AmxString:info}, ${6:const button1[]}, ${7:const button2[]})",
+		"description": ""
+	},
+	"lsarp_ShowPlayerDialog_s = ShowPlayerDialog": {
+		"prefix": "ShowPlayerDialog_s = ShowPlayerDialog",
+		"body": "ShowPlayerDialog_s = ShowPlayerDialog(${1:playerid}, ${2:dialogid}, ${3:style}, ${4:AmxString:caption}, ${5:AmxString:info}, ${6:const button1[]}, ${7:const button2[]})",
+		"description": ""
+	},
+	"lsarp_mysql_pquery_s = mysql_pquery": {
+		"prefix": "mysql_pquery_s = mysql_pquery",
+		"body": "mysql_pquery_s = mysql_pquery(${1:MySQL:handle}, ${2:AmxString:query}, ${3:const callback[] = ""}, ${4:const format[] = ""}, ${5:{Float}, ${6:_}:...})",
+		"description": ""
+	},
+	"lsarp_mysql_tquery_s = mysql_tquery": {
+		"prefix": "mysql_tquery_s = mysql_tquery",
+		"body": "mysql_tquery_s = mysql_tquery(${1:MySQL:handle}, ${2:AmxString:query}, ${3:const callback[] = ""}, ${4:const format[] = ""}, ${5:{Float}, ${6:_}:...})",
+		"description": ""
+	},
+	"lsarp_mysql_format_s = mysql_format": {
+		"prefix": "mysql_format_s = mysql_format",
+		"body": "mysql_format_s = mysql_format(${1:MySQL:handle}, ${2:AmxString:query}, ${3:max_len}, ${4:const format[]}, ${5:{Float}, ${6:_}:...})",
+		"description": ""
+	},
 	"lsarp_mysql_tquery_inline_s": {
 		"prefix": "mysql_tquery_inline_s",
 		"body": "mysql_tquery_inline_s(${1:MySQL:handle}, ${2:String:query}, ${3:callback:inline_callback}, ${4:const format[] = ""}, ${5:{Float}, ${6:_}:...})",
@@ -1156,6 +1192,16 @@
 		"body": "Weapon_GetName(${1:weaponid})",
 		"description": ""
 	},
+	"lsarp_RemovePlayerWeapon": {
+		"prefix": "RemovePlayerWeapon",
+		"body": "RemovePlayerWeapon(${1:playerid}, ${2:weaponid})",
+		"description": ""
+	},
+	"lsarp_RemovePlayerWeaponBySlot": {
+		"prefix": "RemovePlayerWeaponBySlot",
+		"body": "RemovePlayerWeaponBySlot(${1:playerid}, ${2:slotid})",
+		"description": ""
+	},
 	// ==================================================
 	// ==========[vehicles/callbacks.pwn]==========
 	"lsarp_OnPlayerVehicleSaved": {
@@ -1399,3 +1445,4 @@
 	// ==================================================
 	// ==========[weapon_system/enum.pwn]==========
 	// ==================================================
+}
