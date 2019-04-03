@@ -50,10 +50,6 @@ stock Dialog_Open(playerid, const function[], style, const caption[], const info
     } else {
 		string = str_format(info, ___7);
 	}
-
-    print_s(string); 
-    print_s(str_format("%d %d %d", 1, 2, 3));
-    print(name);
 	ShowPlayerDialog_s1(playerid, 32700, style, caption, string, button1, button2);
     return 1;
 }
