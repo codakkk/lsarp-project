@@ -1,4 +1,4 @@
-#include <YSI\y_hooks>
+#include <YSI_Coding\y_hooks>
 
 hook OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
 {
@@ -70,7 +70,7 @@ stock SendMessageToAdmins(forceAlert, color, str[], {Float,_}:...)
         {
             if(!gAccountLogged[i] || !gCharacterLogged[i] || AccountInfo[i][aAdmin] < 2 || (pDisableAdminAlerts[i] && !forceAlert))
                 continue;
-            SendClientMessage(i, color, string);
+            SendTwoLinesMessage(i, color, string);
         }
         return 1;
     }
@@ -79,7 +79,7 @@ stock SendMessageToAdmins(forceAlert, color, str[], {Float,_}:...)
     {
         if(!gAccountLogged[i] || !gCharacterLogged[i] || AccountInfo[i][aAdmin] < 2 || (pDisableAdminAlerts[i] && !forceAlert))
             continue;
-        SendClientMessage(i, color, str);
+        SendTwoLinesMessage(i, color, str);
     }
     return 1;
 }

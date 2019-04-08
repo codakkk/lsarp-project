@@ -1,4 +1,4 @@
-#include <YSI\y_hooks>
+#include <YSI_Coding\y_hooks>
 
 // #define Character_%0(%1, Inventory_%0(Character_GetInventory(%1), // It is a convenient way to call Inventory_Func with player inventory
 
@@ -374,8 +374,6 @@ stock Character_LoadInventory(playerid)
             }
         }
     }
-    new query[256];
-    mysql_format(gMySQL, query, sizeof(query), "SELECT Items, ItemsAmount, ItemsExtraData, EquippedBag FROM `character_inventory` WHERE CharacterID = '%d'", PlayerInfo[playerid][pID]);
-    mysql_tquery_inline(gMySQL, query, using inline OnLoad);
+    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT Items, ItemsAmount, ItemsExtraData, EquippedBag FROM `character_inventory` WHERE CharacterID = '%d'", PlayerInfo[playerid][pID]);
     return 1;
 }

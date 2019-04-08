@@ -1,5 +1,6 @@
-#include <YSI\y_hooks>
-hook GlobalSecondTimer(playerid)
+#include <YSI_Coding\y_hooks>
+
+hook GlobalPlayerSecondTimer(playerid)
 {
     new keys, updown, leftright;
     GetPlayerKeys(playerid, keys, updown, leftright);
@@ -210,7 +211,9 @@ stock ShowRoom_PlayerConfirmBuy(playerid)
         SetVehicleVirtualWorld(gBuyingVehicleID[playerid], 0);
         SetPlayerVirtualWorld(playerid, 0);
         PutPlayerInVehicle(playerid, gBuyingVehicleID[playerid], 0);
+        
         Character_AddVehicle(playerid, GetVehicleModel(gBuyingVehicleID[playerid]), CarColors[VehicleColorNum1[playerid]], CarColors[VehicleColorNum2[playerid]]);
+
         Iter_Add(Vehicles, gBuyingVehicleID[playerid]);
     }            
     SetCameraBehindPlayer(playerid);

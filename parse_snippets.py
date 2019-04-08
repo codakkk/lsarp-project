@@ -2,9 +2,15 @@ import glob, os
 import re
 
 startPath = os.path.dirname(__file__) + '\\scripts'
-local_snippets_file = open("C:\\Users\\Ciro\\AppData\\Roaming\\Code\\User\\snippets\\PawnGlobal.code-snippets.json", "w") 
+base_pawn_snippets = open(os.path.dirname(__file__) + '\\base_snippets.txt')
+
+local_snippets_file = open("C:\\Users\\Ciro\\AppData\\Roaming\\Code\\User\\snippets\\pawn.json", "w") 
 print(os.listdir(startPath))
 local_snippets_file.write('{\n')
+
+for line in base_pawn_snippets:
+    local_snippets_file.write(line)
+
 for root, dirs, files in os.walk(startPath):
     for file in files:
         if file.endswith('.pwn') or file.endswith('.p'):
@@ -25,7 +31,9 @@ for root, dirs, files in os.walk(startPath):
                     line = line.replace('static', '')
                     line = line.replace('forward', '')
                     line = line.replace('native', '')
+                    line = line.replace('{', '')
                     line = line.replace(';', '')
+                    line = line.replace('\"', '\'')
                     T = line.split('//', 1)
                     line = T[0]
                     line = line.split('return', 1)[0]
@@ -35,10 +43,12 @@ for root, dirs, files in os.walk(startPath):
                     params = line[line.find('(')+len('('):line.rfind(')')] # Porcamadonna? That should be faster than the previous 
                     
                     func_name = line.replace('(' + params + ')', '').replace('\n', '').strip() # Is strip enough? Should I strip the whole line before?
-                    
+                    S = func_name.split(':')
+                    if(len(S) > 1):
+                        func_name = S[1]
                     split = params.split(',')
                     params = ''
-
+                    #print(func_name)
                     # Params
                     index = 1
                     for s in split:

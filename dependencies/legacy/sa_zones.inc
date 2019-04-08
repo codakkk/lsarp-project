@@ -388,6 +388,19 @@ stock Get2DZoneName(Float:x, Float:y, Float:z, zone[], len)
     return 1;
 }
 
+stock String:Get2DZoneNameStr(Float:x, Float:y, Float:z)
+{
+    #pragma unused z
+    for(new g = 0; g < sizeof(gSAZones); ++g)
+ 	{
+		if(x >= gSAZones[g][SAZONE_AREA][0] && x <= gSAZones[g][SAZONE_AREA][3] && y >= gSAZones[g][SAZONE_AREA][1] && y <= gSAZones[g][SAZONE_AREA][4])
+		{
+			return str_new(gSAZones[g][SAZONE_NAME]);
+		}
+	}
+    return @("Sconosciuta");
+}
+
 stock GetPlayer2DZone(playerid, zone[], len)
 {
 	new Float:x, Float:y, Float:z;

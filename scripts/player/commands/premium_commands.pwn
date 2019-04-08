@@ -1,11 +1,11 @@
-
+flags:blockpm(CMD_PREMIUM_SILVER);
 CMD:blockpm(playerid, params[])
 {
     if(!strcmp(params, "all", true))
     {
-        pTogglePMAll[playerid] = !pTogglePMAll[playerid];
-        SendClientMessage(playerid, COLOR_GREEN, pTogglePMAll[playerid] ? "Hai disabilitato i PM da e verso tutti." : "Hai riabilitato i PM da e verso tutti.");
-        if(pTogglePMAll[playerid])
+        Bit_Set(gPlayerBitArray[e_pTogglePMAll], playerid, !Bit_Get(gPlayerBitArray[e_pTogglePMAll], playerid));
+        SendClientMessage(playerid, COLOR_GREEN, Bit_Get(gPlayerBitArray[e_pTogglePMAll], playerid) ? "Hai disabilitato i PM da e verso tutti." : "Hai riabilitato i PM da e verso tutti.");
+        if(Bit_Get(gPlayerBitArray[e_pTogglePMAll], playerid))
             SendClientMessage(playerid, COLOR_GREEN, "Riutilizza '/blockpm all' per riattivarli.");
     }   
     else
@@ -29,13 +29,14 @@ CMD:blockpm(playerid, params[])
     return 1;
 }
 
+flags:blockb(CMD_PREMIUM_BRONZE);
 CMD:blockb(playerid, params[])
 {
     if(!strcmp(params, "all", true))
     {
-        pToggleOOCAll[playerid] = !pToggleOOCAll[playerid];
-        SendClientMessage(playerid, COLOR_GREEN, pToggleOOCAll[playerid] ? "Hai disabilitato i PM da e verso tutti." : "Hai riabilitato i PM da e verso tutti.");
-        if(pToggleOOCAll[playerid])
+        Bit_Set(gPlayerBitArray[e_pToggleOOCAll], playerid, !Bit_Get(gPlayerBitArray[e_pToggleOOCAll], playerid));
+        SendClientMessage(playerid, COLOR_GREEN, Bit_Get(gPlayerBitArray[e_pToggleOOCAll], playerid) ? "Hai disabilitato i PM da e verso tutti." : "Hai riabilitato i PM da e verso tutti.");
+        if(Bit_Get(gPlayerBitArray[e_pToggleOOCAll], playerid))
             SendClientMessage(playerid, COLOR_GREEN, "Riutilizza '/blockpm all' per riattivarli.");
     }
     else

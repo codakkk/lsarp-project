@@ -1,4 +1,4 @@
-#include <YSI\y_hooks>
+#include <YSI_Coding\y_hooks>
 
 hook OnGameModeInit()
 {
@@ -36,9 +36,7 @@ stock ShowRoom_Create(Float:x, Float:y, Float:z)
         ShowRoom_Save(free_id);
 
     }
-    new query[128];
-    mysql_format(gMySQL, query, sizeof(query), "INSERT INTO `showrooms` (X, Y, Z) VALUES('%f', '%f', '%f')", x, y, z);
-    mysql_tquery_inline(gMySQL, query, using inline OnCreate);
+    MySQL_TQueryInline(gMySQL, using inline OnCreate, "INSERT INTO `showrooms` (X, Y, Z) VALUES('%f', '%f', '%f')", x, y, z);
     return free_id;
 }
 
@@ -71,9 +69,7 @@ stock ShowRoom_Delete(showroom_id)
 
         ShowRoom_DestroyElements(showroom_id); 
     }
-    new query[128];
-    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `showrooms` WHERE ID = '%d'", ShowRoomInfo[showroom_id][srID]);
-    mysql_tquery_inline(gMySQL, query, using inline OnDelete);
+    MySQL_TQueryInline(gMySQL, using inline OnDelete, "DELETE FROM `showrooms` WHERE ID = '%d'", ShowRoomInfo[showroom_id][srID]);
     return 1;
 }
 
@@ -207,7 +203,7 @@ stock ShowRoom_LoadAll()
         }
         printf("> %d dealerships loaded", count);
     }
-    mysql_tquery_inline(gMySQL, "SELECT * FROM `showrooms`", using inline OnLoad);
+    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `showrooms`");
 }
 
 stock ShowRoom_CreateElements(showroom_id)

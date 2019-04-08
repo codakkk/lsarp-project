@@ -4,21 +4,21 @@
 	"entry": "scripts/lsarp.pwn",
 	"output": "gamemodes/lsarp.amx",
 	"dependencies": [
+		"Zeex/amx_assembly@master",
 		"sampctl/samp-stdlib",
 		"urShadow/Pawn.CMD:3.2.0",
-		"maddinat0r/samp-mysql-yinline-include",
+		"IllidanS4/PawnPlus:v1.0.0-pre2",
+		"pawn-lang/YSI-Includes@5.x",
 		"Southclaw/samp-whirlpool",
 		"maddinat0r/sscanf:v2.8.3",
 		"samp-incognito/samp-streamer-plugin:v2.9.4",
-		"oscar-broman/strlib",
-		"pawn-lang/YSI-Includes@5.x",
-		"IllidanS4/PawnPlus:v1.0.0-pre2"
+		"oscar-broman/strlib"
 	],
 	"builds": [
 		{
 			"name": "main",
 			"args": [
-				"-d0"
+				"-d3"
 			],
 			"includes": [
 				"dependencies/legacy",

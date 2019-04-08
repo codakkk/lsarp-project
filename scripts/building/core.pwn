@@ -1,4 +1,4 @@
-#include <YSI\y_hooks>
+#include <YSI_Coding\y_hooks>
 
 
 hook OnGameModeInit()
@@ -35,11 +35,9 @@ stock Building_Create(name[], Float:x, Float:y, Float:z, interior, world)
 
         Iter_Add(Buildings, freeid);
     }
-    new query[512];
-    mysql_format(gMySQL, query, sizeof(query), "INSERT INTO buildings (Name, OwnerName, WelcomeText, EnterX, EnterY, EnterZ, EnterInterior, EnterWorld, ExitX, ExitY, ExitZ, ExitInterior, Ownable, OwnerID, Price, Locked) \
+    MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO buildings (Name, OwnerName, WelcomeText, EnterX, EnterY, EnterZ, EnterInterior, EnterWorld, ExitX, ExitY, ExitZ, ExitInterior, Ownable, OwnerID, Price, Locked) \
                                  VALUES('%e', '', '', '%f', '%f', '%f', '%d', '%d', '0.0', '0.0', '0.0', '0', '0', '0', '0', '1')", 
                                                     name, x, y, z, interior, world);
-    mysql_tquery_inline(gMySQL, query, using inline OnInsert);      
     return freeid;
 }
 
@@ -77,7 +75,7 @@ stock Building_LoadAll()
             Iter_Add(Buildings, i);
         }
     }
-    mysql_tquery_inline(gMySQL, "SELECT * FROM `buildings` ORDER BY ID", using inline OnLoad);
+    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `buildings` ORDER BY ID");
 }
 
 stock Building_SetPosition(buildingid, Float:x, Float:y, Float:z, vw, int)

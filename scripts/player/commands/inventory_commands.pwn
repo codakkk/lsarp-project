@@ -1,4 +1,4 @@
-#include <YSI\y_hooks>
+#include <YSI_Coding\y_hooks>
 
 flags:inventario(CMD_USER);
 CMD:inventario(playerid, params[])

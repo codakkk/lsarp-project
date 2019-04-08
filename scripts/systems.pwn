@@ -16,8 +16,8 @@
 #include <building\player.pwn>
 
 // Others (2)
-#include <account\core.pwn>
-#include <account\dialogs.pwn>
+#include <account_system\core.pwn>
+#include <account_system\dialogs.pwn>
 
 #include <vehicles\core.pwn>
 #include <vehicles\inventory.pwn>
@@ -25,6 +25,13 @@
 #include <showroom\core.pwn>
 #include <showroom\player.pwn>
 
+#include <house_system\core.pwn>
+
 #include <admin\core.pwn>
 
 #include <anticheat/core.pwn>
+
+#include <loot_zone_system\core.pwn>
+#include <loot_zone_system\dialogs.pwn>
+
+#include <drop_system\core.pwn>

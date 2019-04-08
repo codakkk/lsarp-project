@@ -1,11 +1,11 @@
-#include <YSI\y_hooks>
+#include <YSI_Coding\y_hooks>
 
 hook OnGameModeInit()
 {
     printf("Initializing Weapons...");
     Weapon_InitializeType(WEAPON_COLT45, gItem_LightAmmo, 25);
     Weapon_InitializeType(WEAPON_SILENCED, gItem_LightAmmo, 30);
-    Weapon_InitializeType(WEAPON_DEAGLE, gItem_HeavyAmmo, 45);
+    Weapon_InitializeType(WEAPON_DEAGLE, gItem_LightAmmo, 45);
 
     Weapon_InitializeType(WEAPON_SHOTGUN, gItem_BuckShotAmmo, 50);
     Weapon_InitializeType(WEAPON_SAWEDOFF, gItem_BuckShotAmmo, 15);

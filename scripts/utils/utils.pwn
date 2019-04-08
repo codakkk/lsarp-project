@@ -369,11 +369,11 @@ stock IsABoat(vehicleid)
 
 stock ProxDetectorS(Float:radius, playerid, targetid)
 {
-    if(!IsPlayerConnected(playerid) || !IsPlayerConnected(targetid) || GetPlayerState(targetid) != PLAYER_STATE_SPECTATING)
+    if(!IsPlayerConnected(playerid) || !IsPlayerConnected(targetid) || GetPlayerState(targetid) == PLAYER_STATE_SPECTATING)
         return 0;
     new Float:x, Float:y, Float:z;
     GetPlayerPos(targetid, x, y, z);
-    if(GetPlayerVirtualWorld(playerid) == GetPlayerVirtualWorld(targetid) && IsPlayerInRangeOfPoint(playerid, radius, x, y, x))
+    if(GetPlayerVirtualWorld(playerid) == GetPlayerVirtualWorld(targetid) && IsPlayerInRangeOfPlayer(playerid, targetid, radius))
         return 1;
     return 0;
 }
@@ -429,12 +429,12 @@ stock SendTwoLinesMessage(playerid, color, const message[], GLOBAL_TAG_TYPES:...
     new len = strlen(string);
     if(len > 90)
     {
-        new tmp1[100], tmp2[100];
+        new tmp1[85], tmp2[85];
         
-        strmid(tmp1, string, 0, 90);
-        strins(tmp1, " ..", 90, 93);
-        strmid(tmp2, string, 90, len);
-        strins(tmp2, ".. ", 0, 90);
+        strmid(tmp2, string, 80, (len > 149 ? 149 : len));
+        strins(tmp2, ".. ", 0, 84);
+        strmid(tmp1, string, 0, 80);
+        strins(tmp1, " ..", 80, 83);
         SendClientMessage(playerid, color, tmp1);
         SendClientMessage(playerid, color, tmp2);
     }
@@ -442,12 +442,13 @@ stock SendTwoLinesMessage(playerid, color, const message[], GLOBAL_TAG_TYPES:...
     {
         SendClientMessage(playerid, color, string);
     }
+    return 1;
 }
 
 stock SendTwoLinesMessageToAll(color, const message[], GLOBAL_TAG_TYPES:...)
 {
     new string[256];
-    format(string, sizeof(string), message, ___3);
+    format(string, sizeof(string), message, ___2);
     new len = strlen(string);
     if(len > 90)
     {

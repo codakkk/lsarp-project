@@ -1,4 +1,4 @@
-#include <YSI\y_hooks>
+#include <YSI_Coding\y_hooks>
 #include <player\commands\chat_commands.pwn>
 #include <player\commands\premium_commands.pwn>
 #include <player\commands\inventory_commands.pwn>
@@ -41,8 +41,8 @@ hook OnPlayerClearData(playerid)
     }
     Iter_Clear(pTogglePM[playerid]);
     Iter_Clear(pToggleOOC[playerid]);
-    pTogglePMAll[playerid] = 0;
-    pToggleOOCAll[playerid] = 0;
+    Bit_Set(gPlayerBitArray[e_pTogglePMAll], playerid, false);
+    Bit_Set(gPlayerBitArray[e_pToggleOOCAll], playerid, false);
 
     return 1;
 }
@@ -60,10 +60,20 @@ CMD:dom(playerid, params[])
 {
     if(isnull(params))
         return SendClientMessage(playerid, COLOR_ERROR, "/dom <testo>");
-    if(GetTickCount() - pLastAdminQuestionTime[playerid] < 1000 * 30)
-        return SendClientMessage(playerid, COLOR_ERROR, "Puoi inviare una domanda ogni 30 secondi!");
-    SendMessageToAdmins(0, COLOR_ERROR, "(( [DOMANDA] %s [%d]: %s ))", Character_GetOOCName(playerid), playerid, params);
-    SendClientMessage(playerid, -1, "La domanda è stata inviata agli amministratori online. Attendi.");
+    new seconds = (AccountInfo[playerid][aPremium] > 0) ? 15 : 30;
+    if(GetTickCount() - pLastAdminQuestionTime[playerid] < 1000 * seconds)
+        return SendFormattedMessage(playerid, COLOR_ERROR, "Puoi inviare una domanda ogni %d secondi!", seconds);
+    if(AccountInfo[playerid][aPremium])
+    {
+        SendMessageToAdmins(0, COLOR_GREEN, "(( [PREMIUM] %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);
+        SendClientMessage(playerid, -1, "La domanda è stata inviata agli amministratori online. Attendi.");
+        SendClientMessage(playerid, -1, "Essendo un utente Premium, la tua domanda avrà maggiore priorità.");
+    }
+    else
+    {
+        SendMessageToAdmins(0, COLOR_ERROR, "(( %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);
+        SendClientMessage(playerid, -1, "La domanda è stata inviata agli amministratori online. Attendi.");
+    }
     pLastAdminQuestionTime[playerid] = GetTickCount();
     return 1;
 }
@@ -71,17 +81,33 @@ CMD:dom(playerid, params[])
 flags:aiuto(CMD_USER);
 CMD:aiuto(playerid, params[])
 {
-    SendClientMessage(playerid, -1, "[GENERALE]: /info - /ame - /dom - /b - /me - /compra - /annulla");
-    SendClientMessage(playerid, -1, "[GENERALE]: /rimuovi - ");
+    SendClientMessage(playerid, -1, "[GENERALE]: /info - /dom - /compra - /annulla");
+    SendClientMessage(playerid, -1, "[GENERALE]: /rimuovi - /hotkeys");
+    SendClientMessage(playerid, -1, "[CHAT]: /b - /me - /ame - /low - /melow - /do - /dolow - /shout");
+    SendClientMessage(playerid, -1, "[CHAT]: (/w)hisper - (/cw)hisper - /pm - /blockb - /blockpm");
     SendClientMessage(playerid, -1, "[VEICOLI]: /motore - /vmenu - /apri - /chiudi - /parcheggia");
-    SendClientMessage(playerid, -1, "[INVENTARIO]: (/inv)entario - /dep");
+    SendClientMessage(playerid, -1, "[INVENTARIO]: (/inv)entario - /dep - /gettaarma");
     return 1;
 }
 alias:aiuto("cmds", "help");
 
-stock GetWeaponAmmoItemID(weapon_id)
+flags:hotkeys(CMD_USER);
+CMD:hotkeys(playerid, params[])
 {
-    #pragma unused weapon_id
-    return 90;
+    Bit_Set(gPlayerBitArray[e_pHotKeys], playerid, !Bit_Get(gPlayerBitArray[e_pHotKeys], playerid));
+    if(Bit_Get(gPlayerBitArray[e_pHotKeys], playerid))
+    {
+        SendClientMessage(playerid, COLOR_GREEN, "Hai abilitato le HotKeys.");
+        SendClientMessage(playerid, COLOR_GREEN, "Ora puoi utilizzare anche:");
+        SendClientMessage(playerid, COLOR_GREEN, "ENTER/INVIO: Entrare/Uscire da un edificio.");
+        SendClientMessage(playerid, COLOR_GREEN, "Y: Accendi/Spegni veicolo.");
+        SendClientMessage(playerid, COLOR_GREEN, "N: Apri/Chiudi veicolo.");
+        SendClientMessage(playerid, COLOR_GREEN, "2: Accendi/Spegni fari.");
+        SendClientMessage(playerid, COLOR_GREEN, "N.B: I comandi sono mappati di default e non possono essere cambiati.");
+    }
+    else
+    {
+        SendClientMessage(playerid, COLOR_GREEN, "Hai disabilitato le HotKeys.");
+    }
+    return 1;
 }
-

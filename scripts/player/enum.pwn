@@ -1,4 +1,4 @@
-#include <YSI/y_hooks>
+#include <YSI_Coding\y_hooks>
 
 #define MAX_VEHICLES_PER_PLAYER     5
 
@@ -16,11 +16,12 @@ enum E_PLAYER_DATA
     Float:pHealth,
     Float:pArmour,
     pBuildingKey,
+    pHouseKey,
+
+    pLootZone, // MUST REMOVE FROM HERE SOON
 };
 new 
     PlayerInfo[MAX_PLAYERS][E_PLAYER_DATA],
-    pToggleOOCAll[MAX_PLAYERS],
-    pTogglePMAll[MAX_PLAYERS],
     // probably Iterators aren't worth for this.
     Iterator:pTogglePM[MAX_PLAYERS]<MAX_PLAYERS>,
     Iterator:pToggleOOC[MAX_PLAYERS]<MAX_PLAYERS>,
@@ -44,3 +45,14 @@ enum E_PLAYER_RESTORE_DATA
     pLastVirtualWorld
 };
 new PlayerRestore[MAX_PLAYERS][E_PLAYER_RESTORE_DATA];
+
+enum e_Bit1_Data 
+{
+    e_pTogglePMAll,
+    e_pToggleOOCAll,
+    e_pHotKeys,
+    e_pFreezed,
+};
+
+new 
+    BitArray:gPlayerBitArray[e_Bit1_Data]<MAX_PLAYERS>;

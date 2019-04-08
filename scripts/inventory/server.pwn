@@ -1,8 +1,6 @@
-#include <YSI\y_va>
-
 hook OnGameModeInit()
 {
-    printf("Loading items...");
+    printf("Loading items 2...");
 
     ServerItem_ManualInitializeItem(0, "Vuoto", ITEM_TYPE:ITEM_TYPE_NONE);
     // Setup weapons
@@ -99,7 +97,7 @@ stock ServerItem_ManualInitializeItem(item_id, name[], ITEM_TYPE:type, modelId =
 }
 
 // Useful for automatic items id
-stock ServerItem_InitializeItem(name[], ITEM_TYPE:type, modelId = 0, maxStack = 0, isUnique = 0, va_args<>)
+stock ServerItem_InitializeItem(name[], ITEM_TYPE:type, modelId = 0, maxStack = 0, isUnique = 0, ...)
 {
     return ServerItem_ManualInitializeItem(Iter_Free(ServerItems), name, type, modelId, maxStack, isUnique, ___5);
 }

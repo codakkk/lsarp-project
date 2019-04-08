@@ -1,4 +1,4 @@
-#include <YSI\y_hooks>
+#include <YSI_Coding\y_hooks>
 
 hook OnPlayerCharacterLoad(playerid)
 {
@@ -73,6 +73,13 @@ stock Vehicle_Park(vehicleid, Float:nx, Float:ny, Float:nz, Float:na)
     return 1;
 }
 
+stock Vehicle_GetOwnerID(vehicleid)
+{
+    if(!VehicleInfo[vehicleid][vID] || VehicleInfo[vehicleid][vModel] == 0)
+        return 0;
+    return VehicleInfo[vehicleid][vOwnerID];
+}
+
 stock Vehicle_Lock(vehicleid)
 {
     //if(VehicleInfo[vehicleid][vOwnerID] != PlayerInfo[playerid][pID])
@@ -98,6 +105,30 @@ stock Vehicle_UnLock(vehicleid)
 stock Vehicle_IsLocked(vehicleid)
 {
     return VehicleInfo[vehicleid][vLocked];
+}
+
+stock Vehicle_IsLightOn(vehicleid)
+{
+    new engine, lights, alarm, doors, bonnet, boot, objective;
+    GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
+    return !IsABike(vehicleid) && lights;
+}
+
+stock Vehicle_IsLightOff(vehicleid)
+{
+    new engine, lights, alarm, doors, bonnet, boot, objective;
+    GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
+    return !IsABike(vehicleid) && !lights;
+}
+
+stock Vehicle_SetLightState(vehicleid, s)
+{
+    if(!IsABike(vehicleid))
+        return 0;
+    new engine, lights, alarm, doors, bonnet, boot, objective;
+    GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
+    SetVehicleParamsEx(vehicleid, engine, s ? VEHICLE_PARAMS_ON : VEHICLE_PARAMS_OFF, alarm, doors, bonnet, boot, objective);
+    return 1;
 }
 
 stock Vehicle_IsEngineOff(vehicleid)

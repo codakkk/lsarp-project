@@ -1,10 +1,10 @@
-#include <YSI\y_hooks>
+#include <YSI_Coding\y_hooks>
 
 forward bool:Character_CollectDrop(playerid, dropid);
 
 hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
-    if(pLastPickup[playerid] != -1 && PRESSED(KEY_CROUCH))
+    if(pLastPickup[playerid] != -1 && IsPlayerInRangeOfPickup(playerid, pLastPickup[playerid], 2.0) && PRESSED(KEY_CROUCH))
     {
         new eID, E_ELEMENT_TYPE:eType;
         new result = Pickup_GetInfo(pLastPickup[playerid], eID, eType);
@@ -26,7 +26,7 @@ stock bool:Character_CollectDrop(playerid, dropid)
             String:content = @("Raccogli\nSposta");
         title = str_format("%s (%S: %d)", ServerItem_GetName(Drop[dItem]), (ServerItem_IsWeapon(Drop[dItem]) ? @("Munizioni") : @("Quantità")), (ServerItem_IsWeapon(Drop[dItem]) ? Drop[dItemExtra] : Drop[dItemAmount]));
         if(ServerItem_IsWeapon(Drop[dItem]))
-            content += @("\n{00FF00}Equipaggia{FFFFFF}");
+            content += @("\n{FFFFFF}Equipaggia{FFFFFF}");
         SetPVarInt(playerid, "Player_DropID", dropid);
         Dialog_Show_s(playerid, Dialog_ItemDropAction, DIALOG_STYLE_LIST, title, content, "Continua", "Chiudi");
         return true;

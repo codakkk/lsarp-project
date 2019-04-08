@@ -1,5 +1,5 @@
 
-ptask GlobalSecondTimer[1000](playerid)
+ptask GlobalPlayerSecondTimer[1000](playerid)
 {
     if(gPlayerAMeExpiry[playerid] > 0)
     {

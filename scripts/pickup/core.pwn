@@ -1,4 +1,4 @@
-#include <YSI\y_hooks>
+#include <YSI_Coding\y_hooks>
 
 forward OnPlayerPickUpElementPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type);
 

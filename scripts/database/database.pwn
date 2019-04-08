@@ -1,4 +1,4 @@
-#include <YSI/y_hooks>
+#include <YSI_Coding\y_hooks>
 #include <file-import>
 new 
     MySQL:gMySQL;
@@ -86,6 +86,40 @@ hook OnGameModeInit()
         `ItemsAmount` VARCHAR(255) NULL, \
         `ItemsExtraData` VARCHAR(255) NULL, \
         PRIMARY KEY (`VehicleID`))");
+    
+    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS houses \
+        (`ID` INT(11) NOT NULL AUTO_INCREMENT, \
+        `OwnerID` INT(11) NULL, \
+        `OwnerName` VARCHAR(24) NULL, \
+        `EnterX` FLOAT NULL, \
+        `EnterY` FLOAT NULL, \
+        `EnterZ` FLOAT NULL, \
+        `EnterInterior` INT(11) NULL, \
+        `EnterWorld` INT(11) NULL, \
+        `ExitX` FLOAT NULL, \
+        `ExitY` FLOAT NULL, \
+        `ExitZ` FLOAT NULL, \
+        `ExitInterior` INT(11) NULL, \
+        `Price` INT(11) NULL, \
+        `Locked` INT(11) NULL, \
+        PRIMARY KEY (`ID`))");
+    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS house_inventory \
+        (`HouseID` INT(11) NOT NULL, \
+        `Items` VARCHAR(255) NULL, \
+        `ItemsAmount` VARCHAR(255) NULL, \
+        `ItemsExtraData` VARCHAR(255) NULL, \
+        PRIMARY KEY (`HouseID`))");
+    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS loot_zones \
+        (`ID` INT(11) NOT NULL AUTO_INCREMENT, \
+        `lzX` FLOAT NULL, \
+        `lzY` FLOAT NULL, \
+        `lzZ` FLOAT NULL, \
+        `lz_interior` INT(11) NULL, \
+        `lz_virtual_world` INT(11) NULL, \
+        `lz_possible_items` VARCHAR(255) NULL, \
+        `lz_possible_items_amount` VARCHAR(255) NULL, \
+        `lz_items_rarity` VARCHAR(255) NULL, \
+        PRIMARY KEY (`ID`))");
     printf("Database Connected!");
     return 1;
 }

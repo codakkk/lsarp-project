@@ -50,7 +50,7 @@ CMD:aduty(playerid, params[])
             DestroyDynamic3DTextLabel(pAdminDuty3DText[playerid]);
             pAdminDuty3DText[playerid] = Text3D:INVALID_3DTEXT_ID;
         }
-        pAdminDuty3DText[playerid] = CreateDynamic3DTextLabel("Admin", COLOR_ADMINDUTY, 0, 0, 0.5, 30.0, playerid);
+        pAdminDuty3DText[playerid] = CreateDynamic3DTextLabel("Admin", COLOR_ADMINDUTY, 0, 0, 0.3, 30.0, playerid);
     }
     return 1;
 }
@@ -381,9 +381,12 @@ CMD:giveitem(playerid, params[])
     if(!IsPlayerConnected(id) || !gCharacterLogged[id])
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso!");
     
-    if(id == INVALID_ITEM_ID || !ServerItem_IsValid(itemid))
+    if(itemid == INVALID_ITEM_ID || !ServerItem_IsValid(itemid) || itemid == 0)
         return SendClientMessage(playerid, COLOR_ERROR, "L'item inserito non è corretto!");
     
+    if(quantity < -100 || quantity > 100)
+        return SendClientMessage(playerid, COLOR_ERROR, "La quantità inserita è troppo grande. (Range: |-100| - |100| )");
+
     if(quantity > 0)
     {
         new result = Character_GiveItem(id, itemid, quantity);
@@ -443,7 +446,7 @@ CMD:acmds(playerid, params[])
     if(IsPlayerAdmin(playerid))
     {
         SendClientMessage(playerid, -1, "[RCON]: /setadmin - /givemoney - /payday");
-        SendClientMessage(playerid, -1, "[RCON]: /abuildingcmds - /ashowroomcmds");
+        SendClientMessage(playerid, -1, "[RCON]: /abuildingcmds - /ashowroomcmds - /ahousecmds");
     }
     return 1;
 }

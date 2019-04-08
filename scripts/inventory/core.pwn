@@ -1,4 +1,4 @@
-#include <YSI\y_hooks>
+#include <YSI_Coding\y_hooks>
 
 // Remember that we're using set instead of add for inventory size
 
@@ -357,7 +357,7 @@ stock String:Inventory_ParseForDialog(Inventory:inventory)
 {
     if(!list_valid(inventory))
         return STRING_NULL;
-    new String:string = @(""),
+    new String:string,
         tempItem[E_ITEM_DATA];
     for_inventory(i : inventory)
     {
@@ -371,9 +371,12 @@ stock String:Inventory_ParseForDialog(Inventory:inventory)
         {
             new itemid = tempItem[gInvItem],
                 itemAmount = tempItem[gInvAmount];
-            string += str_format("{FFFFFF}%s\t{FFFFFF}%d\t{FFFFFF}%s\n", ServerItem_GetName(itemid), itemAmount, ServerItem_GetTypeName(itemid));
+            new String:s = str_format("%{FFFFFF%}%s\t%{FFFFFF%}%d\t%{FFFFFF%}%s\n", ServerItem_GetName(itemid), itemAmount, ServerItem_GetTypeName(itemid));
+            //print_s(@("Item: ") + s);
+            string += s;
         }
     }
+    //print_s(string);
     return string;
 }
 

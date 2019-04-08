@@ -24,6 +24,7 @@
         https://forum.sa-mp.com/showthread.php?t=120013 -> MapAndreas
         https://forum.sa-mp.com/showthread.php?t=326980 -> JIT
         https://forum.sa-mp.com/showthread.php?t=489897 -> Bit 
+        https://forum.sa-mp.com/showthread.php?t=655688 -> Loot Zones
 
 */
 // #pragma warning disable 208 // actually just a good way to prevent warning: "function with tag result used before definition, forcing reparse".
@@ -43,25 +44,29 @@
 // Includes
 #include <sscanf2>
 #include <a_mysql>
-#include <a_mysql_yinline>
-#include <YSI/y_timers>
+#include <YSI_Coding\y_timers>
+#include <YSI_Coding\y_va>
+#include <YSI_Coding\y_inline>
+// For YSI and PawnPlus yield conflict.
+#undef yield
+#undef @@
 #include <Pawn.CMD>
 #include <whirlpool>
 #include <streamer>
 #include <strlib>
-
+#include <YSI_Data\y_bit>
 #define PP_SYNTAX 1
 //#define PP_SYNTAX_GENERIC 1
 #define PP_ADDITIONAL_TAGS E_ITEM_DATA
 
 #include <PawnPlus>
-
+//native print_s(AmxString:string) = print;
 #include <pp_wrappers.pwn>
 #include <easyDialogs.pwn>
 
 #define Inventory List@Inventory
 
-#include <YSI\y_hooks>
+#include <YSI_Coding\y_hooks>
 DEFINE_HOOK_REPLACEMENT(ShowRoom, SR);
 DEFINE_HOOK_REPLACEMENT(Element, Elm);
 
@@ -69,6 +74,23 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 //#define AC_GivePlayerWeapon     GivePlayerWeapon
 //#define AC_ResetPlayerWeapons    ResetPlayerWeapons
 
+//
+
+enum (<<= 1)
+{
+    CMD_USER = 1,
+    CMD_PREMIUM_BRONZE,
+    CMD_PREMIUM_SILVER,
+    CMD_PREMIUM_GOLD,
+    CMD_SUPPORTER,
+    CMD_JR_MODERATOR,
+    CMD_MODERATOR,
+    CMD_ADMIN,
+    CMD_DEVELOPER,
+    CMD_RCON
+}
+
+//
 // Others
 #include <forwarded_functions.pwn>
 #include <globals.pwn>
@@ -96,13 +118,30 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 
 main()
 {
-    print_s(str_format("Ciao %s!\nIl tuo account risulta registrato.\nInserisci la password per effettuare il login.", "Name"));
     printf("LSARP - By CodaKKK. Started: 26/02/2019.");
 
+    // Should I initialize them in a OnGameModeInit hook?
     PlayerInventory = map_new();
     VehicleInventory = map_new();
+    HouseList = list_new();
+    DropList = list_new();
+    LootZoneList = list_new();
+    
+    /*new data[E_HOUSE_DATA];
+    data[hID] = 1;
+    data[hOwnerID] = 505;
+    data[hOwnerName] = "Testing1";
+    list_add_arr(HouseList, data);
 
-    new List:test = list_new();
+    data[hID] = 2;
+    data[hOwnerID] = 605;
+    data[hOwnerName] = "Testing2";
+    list_add_arr(HouseList, data);*/
+
+    //print_s(str_format("ID: %d - OwnerID: %d - OwnerName: %S", House_GetID(0), House_GetOwnerID(0), House_GetOwnerNameStr(0)));
+    //printf("ID: %d - OwnerID: %d", House_GetID(1), House_GetOwnerID(1));
+
+    /*new List:test = list_new();
     printf("%d", list_add(test, 1));
     printf("%d", list_add(test, 1));
     printf("%d", list_add(test, 1));
@@ -115,13 +154,11 @@ main()
     print_s(Inventory_ParseForDialog(inv));
     
     new String:s = @("TESTING");
-    print_s(s);
-
-    print_s(str_format("Ciao %s!\nIl tuo account risulta registrato.\nInserisci la password per effettuare il login.", "Name"));
+    print_s(s);*/
 }   
     
 
-public OnGameModeInit()
+public OnGameModeInit() 
 {
     SetGameModeText("ApoC1");
     
@@ -149,34 +186,52 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 {
     if(!gAccountLogged[playerid] || !gCharacterLogged[playerid])
         return 0;
+    if(AccountInfo[playerid][aAdmin] <= 0)
+    {
+        if(flags & CMD_PREMIUM_BRONZE && AccountInfo[playerid][aPremium] < 1)
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando!");
+            return 0;
+        }
+        else if(flags & CMD_PREMIUM_SILVER && AccountInfo[playerid][aPremium] < 2)
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando!");
+            return 0;
+        }
+        else if(flags & CMD_PREMIUM_SILVER && AccountInfo[playerid][aPremium] < 3)
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando!");
+            return 0;
+        }
+    }
     if(flags & CMD_SUPPORTER && AccountInfo[playerid][aAdmin] < 1)
     {
-        SendClientMessage(playerid, COLOR_ERROR, "> Non sei un membro dello staff.");
+        SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro dello staff.");
         return 0;
     }
     else if(flags & CMD_JR_MODERATOR && AccountInfo[playerid][aAdmin] < 2)
     {
-        SendClientMessage(playerid, COLOR_ERROR, "> Non sei un membro dello staff.");
+        SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro dello staff.");
         return 0;
     }
     else if(flags & CMD_MODERATOR && AccountInfo[playerid][aAdmin] < 3)
     {
-        SendClientMessage(playerid, COLOR_ERROR, "> Non sei un membro dello staff.");
+        SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro dello staff.");
         return 0;
     }
     else if(flags & CMD_ADMIN && AccountInfo[playerid][aAdmin] < 4)
     {
-        SendClientMessage(playerid, COLOR_ERROR, "> Non sei un membro dello staff.");
+        SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro dello staff.");
         return 0;
     }
     else if(flags & CMD_DEVELOPER && AccountInfo[playerid][aAdmin] < 5)
     {
-        SendClientMessage(playerid, COLOR_ERROR, "> Non sei un membro dello staff.");
+        SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro dello staff.");
         return 0;
     }
     else if(flags & CMD_RCON && (AccountInfo[playerid][aAdmin] < 5 || !IsPlayerAdmin(playerid)))
     {
-        SendClientMessage(playerid, COLOR_ERROR, "> Non sei un membro dello staff.");
+        SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro dello staff.");
         return 0;
     }
     return 1;
@@ -196,7 +251,6 @@ public OnPlayerText(playerid, text[])
 {
     if(isnull(text))
         return 0;
-    new string[256];
     if(pAdminDuty[playerid])
     {
         //format(string, sizeof(string), "{FFFFFF}(( {FF6347}%s{FFFFFF} [%d]: %s ))", AccountInfo[playerid][aName], playerid, text);
@@ -205,8 +259,8 @@ public OnPlayerText(playerid, text[])
     }
     else
     {
-        format(string, sizeof(string), "%s dice: %s", Character_GetOOCName(playerid), text);
-        ProxDetector(playerid, 15.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
+        new String:string = str_format("%s dice: %s", Character_GetOOCName(playerid), text);
+        ProxDetectorStr(playerid, 15.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
     }
     return 0;
 }
@@ -214,12 +268,11 @@ public OnPlayerText(playerid, text[])
 public OnPlayerDisconnect(playerid, reason)
 {
     new const reasonName[3][16] = {"Crash", "Uscito", "Kick/Ban"};
-    new 
-        string[MAX_PLAYER_NAME + 64], name[MAX_PLAYER_NAME];
+    new String:string, name[MAX_PLAYER_NAME];
 
     GetPlayerName(playerid, name, sizeof(name));
-    format(string, sizeof(string), "> %s è uscito dal server. [%s]", name, reasonName[reason]);
-    SendClientMessageToAll(COLOR_GREY, string);
+    string = str_format("%s è uscito dal server. [%s]", name, reasonName[reason]);
+    SendClientMessageToAllStr(COLOR_GREY, string);
 
     if(!gAccountLogged[playerid] || !gCharacterLogged[playerid])
         return 0;
@@ -232,6 +285,7 @@ public OnPlayerDisconnect(playerid, reason)
 // This is the last callback called after the hooks.
 public OnPlayerConnect(playerid)
 {
+    wait_ticks(1);
     PreloadAnimations(playerid);
     SetPlayerColor(playerid, 0xFFFFFFFF);
     gAccountLogged[playerid] = 0;
@@ -327,14 +381,22 @@ stock PreloadAnimLib(playerid, animlib[])
 
 stock Log(playerName[], giveplayerName[], text[], extravar = 0)
 {
-    new query[182];
-    mysql_format(gMySQL, query, sizeof(query), "INSERT INTO `logs` (PlayerID, GivePlayerID, Text, ExtraVar, Time) \
-                                                VALUES('%s', '%s', '%e', '%d', '%d')", 
-                                                playerName, 
+    mysql_tquery_f(gMySQL, "INSERT INTO `logs` \
+                                (PlayerID, GivePlayerID, Text, ExtraVar, Time) \
+                                VALUES('%s', '%s', '%e', '%d', '%d')", playerName, 
                                                 giveplayerName, 
                                                 text,
                                                 extravar,
                                                 gettime());
-    mysql_tquery(gMySQL, query);
+}
+
+stock mysql_tquery_f(MySQL:handle, const query[], GLOBAL_TAG_TYPES:...)
+{
+    new ret = mysql_format(handle, YSI_UNSAFE_HUGE_STRING, YSI_UNSAFE_HUGE_LENGTH, query, ___(2));
+    if(ret)
+    {
+        ret = mysql_tquery(handle, YSI_UNSAFE_HUGE_STRING);
+    }
+    return ret;
 }
 /**/

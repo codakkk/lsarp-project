@@ -3,9 +3,8 @@ CMD:low(playerid, params[])
 {
     if(isnull(params) || strlen(params) > 128) 
         return SendClientMessage(playerid, COLOR_ERROR, "> /low <testo>");
-    new string[256];
-    format(string, sizeof(string), "%s dice a bassa voce: %s", Character_GetOOCName(playerid), params);
-    ProxDetector(playerid, 5.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
+    new String:string = str_format("%s dice a bassa voce: %s", Character_GetOOCName(playerid), params);
+    ProxDetectorStr(playerid, 5.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
     return 1;
 }
 
@@ -17,16 +16,19 @@ CMD:pm(playerid, params[])
         return SendClientMessage(playerid, COLOR_ERROR, "> /pm <playerid/partofname> <testo>");
     if(id < 0 || id >= MAX_PLAYERS || !gAccountLogged[id] || !gCharacterLogged[id])
         return SendClientMessage(playerid, COLOR_ERROR, "> Il giocatore non è collegato!");
+
     if(Iter_Contains(pTogglePM[playerid], id))
         return SendClientMessage(playerid, COLOR_ERROR, "Hai disabilitato i PM verso e da questo giocatore.");
-    if(pTogglePMAll[playerid])
+
+    if(Bit_Get(gPlayerBitArray[e_pTogglePMAll], playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Hai disabilitato i PM verso e da tutti i giocatori!"); 
-    if( ((Iter_Contains(pTogglePM[id], playerid) || pTogglePMAll[id]) && AccountInfo[playerid][aAdmin] <= 1))
+
+    if( ((Iter_Contains(pTogglePM[id], playerid) || Bit_Get(gPlayerBitArray[e_pTogglePMAll], id)) && AccountInfo[playerid][aAdmin] < 1))
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha disabilitato i PM.");
     
+    PlayerPlaySound(id, 1085, 0.0, 0.0, 0.0);
     SendFormattedMessage(id, COLOR_YELLOW, "PM da %s (%d): %s", Character_GetOOCName(playerid), playerid, s);
-    SendFormattedMessage(playerid, COLOR_YELLOW, "PM a %s (%d) inviato.", Character_GetOOCName(id), id);
-    SendFormattedMessage(playerid, COLOR_YELLOW, "Testo: %s", s);
+    SendFormattedMessage(playerid, COLOR_YELLOW, "PM a %s (%d): %s.", Character_GetOOCName(id), id, s);
     return 1;
 }
 
@@ -47,9 +49,8 @@ CMD:shout(playerid, params[])
 {
     if(isnull(params) || strlen(params) > 128) 
         return SendClientMessage(playerid, COLOR_ERROR, "> /s(hout) <testo>");
-    new string[256];
-    format(string, sizeof(string), "%s grida: %s!", Character_GetOOCName(playerid), params);
-    ProxDetector(playerid, 30.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
+    new String:string = str_format("%s grida: %s!", Character_GetOOCName(playerid), params);
+    ProxDetectorStr(playerid, 30.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
     return 1;
 }
 alias:shout("s");
@@ -63,12 +64,30 @@ CMD:do(playerid, params[])
     return 1;
 }
 
+flags:dolow(CMD_USER);
+CMD:dolow(playerid, params[])
+{
+    if(isnull(params) || strlen(params) > 128) 
+        return SendClientMessage(playerid, COLOR_ERROR, "> /dolow <testo>");
+    Character_DoLow(playerid, params);
+    return 1;
+}
+
 flags:me(CMD_USER);
 CMD:me(playerid, params[])
 {
     if(isnull(params) || strlen(params) > 128) 
         return SendClientMessage(playerid, COLOR_ERROR, "> /me <testo>");
     Character_Me(playerid, params);
+    return 1;
+}
+
+flags:melow(CMD_USER);
+CMD:melow(playerid, params[])
+{
+    if(isnull(params) || strlen(params) > 128) 
+        return SendClientMessage(playerid, COLOR_ERROR, "> /melow <testo>");
+    Character_MeLow(playerid, params);
     return 1;
 }
 
@@ -86,17 +105,16 @@ CMD:b(playerid, params[])
 {
     if(isnull(params) || strlen(params) > 128) 
         return SendClientMessage(playerid, COLOR_ERROR, "> /b <testo>");
+    new String:string;
     if(pAdminDuty[playerid])
     {
-        new string[256];
-        format(string, sizeof(string), "(( Admin %s [%d]: %s ))", AccountInfo[playerid][aName], playerid, params);
-        ProxDetector(playerid, 15.0, string, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF);
+        string = str_format("(( Admin %s [%d]: %s ))", AccountInfo[playerid][aName], playerid, params);
+        ProxDetectorStr(playerid, 15.0, string, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF);
     }
     else
     {
-        new string[256];
-        format(string, sizeof(string), "(( %s [%d]: %s ))", Character_GetOOCName(playerid), playerid, params);
-        ProxDetector(playerid, 15.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
+        string = str_format("(( %s [%d]: %s ))", Character_GetOOCName(playerid), playerid, params);
+        ProxDetectorStr(playerid, 15.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
     }
     return 1;
 }
@@ -109,6 +127,8 @@ CMD:whisper(playerid, params[])
         return SendClientMessage(playerid, COLOR_ERROR, "> /w(hisper) <playerid/partofname> <testo>");
     if(!IsPlayerConnected(id) || !gCharacterLogged[id])
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato!");
+    if(playerid == id)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso!");
     if(!ProxDetectorS(3.0, playerid, id))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore!");
     

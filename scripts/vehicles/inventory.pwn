@@ -1,4 +1,4 @@
-#include <YSI\y_hooks>
+#include <YSI_Coding\y_hooks>
 
 hook OnPlayerClearData(playerid)
 {
@@ -6,21 +6,21 @@ hook OnPlayerClearData(playerid)
     return 1;
 }
 
-stock bool:Vehicle_InitializeInventory(vehicleid)
+stock Vehicle_InitializeInventory(vehicleid)
 {
     if(VehicleInfo[vehicleid][vModel] == 0)
-        return false;
+        return 0;
     new Inventory:inv = Inventory_New(2);
     map_add(VehicleInventory, vehicleid, List:inv);
     printf("Vehicle %d Inventory initialized", vehicleid);
-    return true;
+    return 1;
 }
 
-stock bool:Vehicle_UnloadInventory(vehicleid)
+stock Vehicle_UnloadInventory(vehicleid)
 {
     map_remove_deep(VehicleInventory, vehicleid);
     printf("Vehicle %d unloaded", vehicleid);
-    return true;
+    return 1;
 }
 
 stock Inventory:Vehicle_GetInventory(vehicleid)
@@ -309,7 +309,5 @@ stock Vehicle_LoadInventory(vehicleid)
             // CallLocalFunction(#OnPlayerVehicleInventoryLoaded, "d", vehicleid);
         }
     }
-    new query[256];
-    mysql_format(gMySQL, query, sizeof(query), "SELECT * FROM `vehicle_inventory` WHERE VehicleID = '%d'", VehicleInfo[vehicleid][vID]);
-    mysql_tquery_inline(gMySQL, query, using inline OnLoad);
+    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `vehicle_inventory` WHERE VehicleID = '%d'", VehicleInfo[vehicleid][vID]);
 }

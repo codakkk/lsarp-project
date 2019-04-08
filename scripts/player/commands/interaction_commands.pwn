@@ -1,27 +1,28 @@
-#include <YSI\y_hooks>
+#include <YSI_Coding\y_hooks>
 
 flags:entra(CMD_USER);
 CMD:entra(playerid, params[])
 {
-    new pickupid = pLastPickup[playerid], id, E_ELEMENT_TYPE:type;
+    new pickupid = pLastPickup[playerid];
     if(pickupid != -1)
     {
+        new id, E_ELEMENT_TYPE:type;
         Pickup_GetInfo(pickupid, id, type);
-        if(type != ELEMENT_TYPE_BUILDING_ENTRANCE || !Player_Enter(playerid, pickupid, id, type))
-            return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrare di un edificio!");
-    } else return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrare di un edificio!");
+        Player_Enter(playerid, pickupid, id, type);
+    }
+    else return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata di un edificio!");
     return 1;
 }
 
 flags:esci(CMD_USER);
 CMD:esci(playerid, params[])
 {
-    new pickupid = pLastPickup[playerid], id, E_ELEMENT_TYPE:type;
+    new pickupid = pLastPickup[playerid];
     if(pickupid != -1)
     {
+        new id, E_ELEMENT_TYPE:type;
         Pickup_GetInfo(pickupid, id, type);
-        if(type != ELEMENT_TYPE_BUILDING_ENTRANCE || !Player_Exit(playerid, pickupid, id, type))
-            return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'uscita di un edificio!");
+        Player_Exit(playerid, pickupid, id, type);
     }
     else return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'uscita di un edificio!");
     return 1;
@@ -147,7 +148,7 @@ CMD:compra(playerid, params[])
     {
         return ShowRoom_PlayerConfirmBuy(playerid);
     }
-    if(pLastPickup[playerid] == -1)
+    if(pLastPickup[playerid] == -1 || !IsPlayerInRangeOfPickup(playerid, pLastPickup[playerid], 3.0))
         return 0;
     new
         eID,
@@ -156,21 +157,18 @@ CMD:compra(playerid, params[])
 
     Pickup_GetInfo(pLastPickup[playerid], eID, eType);
     Pickup_GetPosition(pLastPickup[playerid], x, y, z);
-    if(eType == ELEMENT_TYPE_DEALERSHIP && IsPlayerInRangeOfPoint(playerid, 2.5, x, y, z))
+
+    if(eType == ELEMENT_TYPE_DEALERSHIP)
     {
         ShowRoom_ShowVehiclesToPlayer(eID, playerid);
     }
     else if(eType == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_IsValid(eID))
     {
-        if(PlayerInfo[playerid][pBuildingKey] != 0)
-            return SendClientMessage(playerid, COLOR_ERROR, "Possiedi già un edificio!");
-            
-        if(!Building_IsOwnable(eID) || Building_GetOwnerID(eID) != 0)
-            return SendClientMessage(playerid, COLOR_ERROR, "Questo edificio non è in vendita!");
-        
-        new result = Player_BuyBuilding(playerid, eID);
-        if(result == 0)
-            return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi per acquistare questo edificio!");
+        return Player_BuyBuilding(playerid, eID);
+    }
+    else if(eType == ELEMENT_TYPE_HOUSE_ENTRANCE)
+    {
+        return Player_BuyHouse(playerid, eID);
     }
     return 1;
 }

@@ -1,4 +1,4 @@
-#include <YSI\y_hooks>
+#include <YSI_Coding\y_hooks>
 
 hook OnPlayerClearData(playerid)
 {
@@ -11,6 +11,63 @@ hook OnPlayerClearData(playerid)
 hook OnCharacterDisconnected(playerid)
 {
     Character_Save(playerid, _, 1);
+    return 1;
+}
+
+hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
+{
+    if(type == ELEMENT_TYPE_BUILDING_ENTRANCE)
+    {
+        new buildingid = elementid,
+            String:string;
+        if(AccountInfo[playerid][aAdmin] > 1)
+        {
+            string += str_format("~r~ID:~w~ %d~n~", elementid);
+        }
+        if(Building_IsOwnable(buildingid))
+        {
+            if(Building_GetOwnerID(buildingid) != 0)
+            {
+                new bname[MAX_BUILDING_NAME], ownerName[MAX_PLAYER_NAME];
+                Building_GetName(buildingid, bname);
+                Building_GetOwnerName(buildingid, ownerName);
+                string += str_format("%s~y~%s~n~~y~Proprietario: %s.~n~", string, bname, ownerName);
+            }
+            else
+            {
+                new bname[MAX_BUILDING_NAME];
+                Building_GetName(buildingid, bname);
+                string += str_format("%s~y~%s~n~~g~Prezzo:~w~$%d~n~", string, bname, Building_GetPrice(buildingid));
+            }
+        }
+        else
+        {
+            new bname[MAX_BUILDING_NAME];
+            Building_GetName(buildingid, bname);
+            string += str_format("%s~y~%s~n~", string, bname);
+        }
+        GameTextForPlayerStr(playerid, string, 2000, 5);
+    }
+    else if(type == ELEMENT_TYPE_HOUSE_ENTRANCE)
+    {
+        new houseid = elementid, String:string;
+        if(AccountInfo[playerid][aAdmin] > 1)
+        {
+            string += str_format("~r~ID:~w~ %d~n~", houseid);
+        }
+        if(House_IsOwned(houseid))
+        {
+            string += str_format("~y~Proprietario: ~w~%S~n~", House_GetOwnerNameStr(houseid));
+            if(House_GetOwnerID(houseid) == PlayerInfo[playerid][pID])
+                string += @("Premi ~b~~k~~SNEAK_ABOUT~~w~ per il menù.~n~");
+        }
+        else
+        {
+            string += str_format("~g~In vendita!~n~~g~Prezzo: ~w~$%d", House_GetPrice(houseid));
+        }
+        string += str_format("~r~Interno:~w~ %d", House_GetInterior(houseid));
+        GameTextForPlayerStr(playerid, string, 2000, 5);
+    }
     return 1;
 }
 
@@ -58,7 +115,7 @@ hook OnPlayerInvItemUse(playerid, slot_id, item_id)
                 {
                     SetPVarInt(playerid, "InventorySelect_WeaponItem", item_id);
                     // Show Dialog
-                    Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "Inserisci le munizioni che vuoi inserire nell'arma.\nDisponibili: %d", "Usa", "Annulla", 
+                    Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "Immetti la quantità di munizioni che vuoi inserire nell'arma.\n{00FF00}Quantità: %d{FFFFFF}", "Usa", "Annulla", 
                     Inventory_GetItemAmount(Character_GetInventory(playerid), Weapon_GetAmmoType(item_id)));
                 }
             }
@@ -129,16 +186,97 @@ hook OnPlayerRequestSpawn(playerid)
 
 hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
-    new vehicleid = GetPlayerVehicleID(playerid);
-    if(vehicleid > 0 && GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
+    if(Bit_Get(gPlayerBitArray[e_pHotKeys], playerid))
     {
-        if( (PRESSED(KEY_HANDBRAKE) && Vehicle_IsEngineOff(vehicleid)) || PRESSED(KEY_ACTION) && Vehicle_IsEngineOn(vehicleid))
+        if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
         {
-            pc_cmd_motore(playerid, NULL);
+            new vehicleid = GetPlayerVehicleID(playerid);
+            if( (PRESSED(KEY_YES) ) )
+            {
+                pc_cmd_motore(playerid, "");
+            }
+            else if( (PRESSED(KEY_LOOK_BEHIND)) )
+            {
+                Vehicle_SetLightState(vehicleid, !Vehicle_IsLightOn(vehicleid));
+            }
+        }
+        new pickupid = pLastPickup[playerid];
+        if(pickupid != -1 && Bit_Get(gPlayerBitArray[e_pHotKeys], playerid) && IsPlayerInRangeOfPickup(playerid, pickupid, 2.0) && !IsPlayerInAnyVehicle(playerid))
+        {
+            new 
+                elementId, 
+                E_ELEMENT_TYPE:type;
+            Pickup_GetInfo(pickupid, elementId, type);
+            if(PRESSED(KEY_SECONDARY_ATTACK))
+            {
+                // Should I write an "OnInteract" callback?
+                if(type == ELEMENT_TYPE_BUILDING_ENTRANCE || type == ELEMENT_TYPE_HOUSE_ENTRANCE)
+                {
+                    Player_Enter(playerid, pickupid, elementId, type);
+                }
+                else if(type == ELEMENT_TYPE_BUILDING_EXIT || type == ELEMENT_TYPE_HOUSE_EXIT)
+                {
+                    Player_Exit(playerid, pickupid, elementId, type);
+                }
+            }
+            else if(PRESSED(KEY_WALK))
+            {
+                if(type == ELEMENT_TYPE_HOUSE_ENTRANCE || type == ELEMENT_TYPE_HOUSE_EXIT)
+                {
+                    new houseid = elementId;
+                    if(House_GetOwnerID(houseid) == PlayerInfo[playerid][pID])
+                    {
+                        Dialog_Show(playerid, Dialog_House, DIALOG_STYLE_LIST, "Casa", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nCambia Interior", "Continua", "Chiudi");
+                    }
+                }
+            }
+        }
+        if( (PRESSED(KEY_NO)))
+        {
+            new vehicleid = GetClosestVehicle(playerid, 3.5);
+            if(Vehicle_GetOwnerID(vehicleid) == Character_GetID(playerid)) //We're owners
+            {
+                if((IsABike(vehicleid) || IsAMotorBike(vehicleid)) && Vehicle_IsEngineOn(vehicleid))
+                {
+                    SendClientMessage(playerid, -1, "Prima spegni il motore!");
+                }
+                else
+                {
+                    if(Vehicle_IsLocked(vehicleid))
+                    {
+                        SendFormattedMessage(playerid, COLOR_GREEN, "Hai aperto il tuo veicolo (%s).", GetVehicleName(vehicleid));
+                        if(IsABike(vehicleid) || IsAMotorBike(vehicleid))
+                        {
+                            //ApplyAnimation(playerid, "BOMBER", "BOM_Plant_Crouch_In", 4.1, 0, 0, 0, 0, 1000, 0);
+                            Character_AMe(playerid, "toglie la catena dal suo veicolo");
+                        }
+                        else
+                        {
+                            Character_AMe(playerid, "prende le chiavi e apre il suo veicolo");
+                        }
+                        Vehicle_UnLock(vehicleid);
+                    }
+                    else
+                    {
+                        SendFormattedMessage(playerid, COLOR_GREEN, "Hai chiuso il tuo veicolo (%s).", GetVehicleName(vehicleid));
+                        if(IsABike(vehicleid) || IsAMotorBike(vehicleid))
+                        {
+                            //ApplyAnimation(playerid, "BOMBER", "BOM_Plant_Crouch_In", 4.1, 0, 0, 0, 0, 1000, 0);
+                            Character_AMe(playerid, "prende la catena e l'attacca al veicolo");
+                        }
+                        else
+                        {
+                            Character_AMe(playerid, "prende le chiavi e chiude il suo veicolo");
+                        }
+                        Vehicle_Lock(vehicleid);
+                    }
+                }
+            }
         }
     }
     return 1;
 }
+
 
 hook OnPlayerSpawn(playerid)
 {
@@ -154,7 +292,7 @@ hook OnPlayerSpawn(playerid)
 
     if(PlayerRestore[playerid][pFirstSpawn]) // First Login/Spawn
     {
-        SendClientMessage(playerid, -1, "> First Spawn <");
+        // SendClientMessage(playerid, -1, "> First Spawn <");
         PlayerRestore[playerid][pFirstSpawn] = 0;
         AC_SetPlayerSkin(playerid, 46);
         // Should I give first login money here?
@@ -176,7 +314,7 @@ hook OnPlayerSpawn(playerid)
         SetPlayerVirtualWorld(playerid, PlayerRestore[playerid][pLastVirtualWorld]);
         AC_SetPlayerHealth(playerid, PlayerRestore[playerid][pLastHealth]);
         AC_SetPlayerArmour(playerid, PlayerRestore[playerid][pLastArmour]);
-        SendClientMessage(playerid, -1, "> Spawned");
+        // SendClientMessage(playerid, -1, "> Spawned");
     }
     else if(pDeathState[playerid] == 2 && !pAdminDuty[playerid])
     {
@@ -272,7 +410,8 @@ stock LoadCharacterResult(playerid)
         cache_get_value_index_int(0, 18, PlayerInfo[playerid][pPayDay]);
         cache_get_value_index_int(0, 19, PlayerInfo[playerid][pExp]);
 
-        cache_get_value_index_int(0, 19, PlayerInfo[playerid][pBuildingKey]);
+        cache_get_value_index_int(0, 20, PlayerInfo[playerid][pBuildingKey]);
+        cache_get_value_index_int(0, 21, PlayerInfo[playerid][pHouseKey]);
         return 1;
     }
     return 0;
@@ -305,13 +444,13 @@ stock Character_Save(playerid, spawned = true, disconnected = false)
         Money = '%d', Level = '%d', Age = '%d', Sex = '%d', \
         LastX = '%f', LastY = '%f', LastZ = '%f', LastAngle = '%f', LastInterior = '%d', LastVirtualWorld = '%d', Health = '%f', Armour = '%f', Skin = '%d', \
         Spawned = '%d', PayDay = '%d', Exp = '%d',  \
-        BuildingKey = '%d'  \
+        BuildingKey = '%d', HouseKey = '%d' \
         WHERE ID = '%d'", 
         PlayerInfo[playerid][pMoney], PlayerInfo[playerid][pLevel], PlayerInfo[playerid][pAge], PlayerInfo[playerid][pSex], 
         _x, _y, _z, angle, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid),
         hp, armour, PlayerInfo[playerid][pSkin],
         isSpawned, PlayerInfo[playerid][pPayDay], PlayerInfo[playerid][pExp],
-        PlayerInfo[playerid][pBuildingKey],
+        PlayerInfo[playerid][pBuildingKey], PlayerInfo[playerid][pHouseKey],
         PlayerInfo[playerid][pID]);
     
     mysql_tquery(gMySQL, query);
@@ -332,17 +471,40 @@ stock Character_Delete(playerid, character_db_id, character_name[])
     mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `characters` WHERE ID = '%d' AND LOWER(Name) = LOWER('%e')", character_db_id, character_name);
     mysql_tquery(gMySQL, query);
 
-    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `player_vehicles` WHERE OwnerID = '%d'", character_db_id);
-    mysql_tquery(gMySQL, query);
-
     mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `character_inventory` WHERE CharacterID = '%d'", character_db_id);
     mysql_tquery(gMySQL, query);
+
+    inline OnVehicles()
+    {
+        new count = cache_num_rows(), vid;
+        for(new i = 0; i < count; ++i)
+        {
+            cache_get_value_index_int(i, 0, vid);
+            mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `vehicle_inventory` WHERE VehicleID = '%d'", vid);
+            mysql_tquery(gMySQL, query);
+        }
+        mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `player_vehicles` WHERE OwnerID = '%d'", character_db_id);
+        mysql_tquery(gMySQL, query);
+    }
+    MySQL_TQueryInline(gMySQL, using inline OnVehicles, "SELECT ID FROM `player_vehicles` WHERE OwnerID = '%d'", character_db_id);
+
 
     foreach(new b : Buildings)
     {
         if(Building_GetOwnerID(b) == character_db_id)
         {
             Building_ResetOwner(b);
+            break;
+        }
+    }
+
+    for(new i = 0; i < list_size(HouseList); ++i)
+    {
+        new ownerid = House_GetOwnerID(i);
+        if(character_db_id == ownerid)
+        {
+            House_ResetOwner(i);
+            House_Save(i);
             break;
         }
     }
@@ -375,12 +537,12 @@ stock Character_AddVehicle(playerid, model, color1, color2)
         VehicleInfo[vehicleid][vLocked] = 0;
         gVehicleDestroyTime[vehicleid] = -1;
         Vehicle_SetEngineOff(vehicleid);
+        Vehicle_InitializeInventory(vehicleid);
+        mysql_tquery_f(gMySQL, "INSERT INTO `vehicle_inventory` (VehicleID) VALUES('%d')", VehicleInfo[vehicleid][vID]);
     }
-    new query[512];
-    mysql_format(gMySQL, query, sizeof(query), "INSERT INTO `player_vehicles` (OwnerID, Model, Color1, Color2, X, Y, Z, Angle, Locked)\
+    MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO `player_vehicles` (OwnerID, Model, Color1, Color2, X, Y, Z, Angle, Locked) \
         VALUES('%d', '%d', '%d', '%d', '%f', '%f', '%f', '%f', '0')",
         PlayerInfo[playerid][pID], model, color1, color2, x, y, z, a);
-    mysql_tquery_inline(gMySQL, query, using inline OnInsert);
 }
 
 stock Character_LoadVehicles(playerid)
@@ -445,9 +607,7 @@ stock Character_LoadVehicles(playerid)
             CallLocalFunction(#OnPlayerVehicleLoaded, "d", vehicleid);
         }
     }
-    new query[128];
-    mysql_format(gMySQL, query, sizeof(query), "SELECT * FROM `player_vehicles` WHERE OwnerID = '%d' ORDER BY ID", PlayerInfo[playerid][pID]);
-    mysql_tquery_inline(gMySQL, query, using inline OnLoad);
+    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `player_vehicles` WHERE OwnerID = '%d' ORDER BY ID", PlayerInfo[playerid][pID]);
 }
 
 stock Character_UnloadVehicles(playerid)
@@ -496,17 +656,26 @@ stock GetPlayerNameEx(playerid)
 
 stock Character_AMe(playerid, text[], GLOBAL_TAG_TYPES:...)
 {
-    gPlayerAMeExpiry[playerid] = 10; // Seconds
+    gPlayerAMeExpiry[playerid] = 4; // Seconds
 
     new 
-        textString[128],
-        temp[128];
+        textString[148],
+        temp[148];
     format(textString, sizeof(textString), text, ___2);
 
     format(temp, sizeof(temp), "* %s *", textString);
+    SendTwoLinesMessage(playerid, 0xD0AEEBFF, "> %s %s ", Character_GetOOCName(playerid), textString); //0xD6C3E3FF
+    
+    format(temp, 120, "%s", textString);
+	if(strlen(temp) > 43)
+	    strins(temp, "-\n-", 43, sizeof(temp));
+	if(strlen(temp) > 95)
+	    strins(temp, "-\n-", 90, sizeof(temp));
+	strins(temp, "* ", 0, sizeof(temp));
+	strins(temp, " *", strlen(temp), sizeof(temp));
+
     UpdateDynamic3DTextLabelText(gPlayerAMe3DText[playerid], 0xD0AEEBFF, temp);
     
-    SendTwoLinesMessage(playerid, 0xD0AEEBFF, "* %s %s *", Character_GetOOCName(playerid), textString); //0xD6C3E3FF
 
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
@@ -531,14 +700,36 @@ stock Character_Me(playerid, text[], GLOBAL_TAG_TYPES:...)
     return 1;
 }
 
+stock Character_MeLow(playerid, text[], GLOBAL_TAG_TYPES:...)
+{
+    if(!gCharacterLogged[playerid] || strlen(text) > 256)
+        return 0;
+    
+    new String:str = str_format(text, ___2);
+    str = str_format("* %s %S", Character_GetOOCName(playerid), str);
+    ProxDetectorStr(playerid, 7.0, str, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF); //0xD6C3E3FF
+    return 1;
+}
+
 stock Character_Do(playerid, text[], GLOBAL_TAG_TYPES:...)
 {
     if(!gCharacterLogged[playerid] || strlen(text) > 256)
         return 0;
     
     new String:str = str_format(text, ___2);
-    str = str_format("%s (( %s ))", Character_GetOOCName(playerid));
+    str += str_format(" (( %s ))", Character_GetOOCName(playerid));
     ProxDetectorStr(playerid, 20.0, str, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF);
+    return 1;
+}
+
+stock Character_DoLow(playerid, text[], GLOBAL_TAG_TYPES:...)
+{
+    if(!gCharacterLogged[playerid] || strlen(text) > 256)
+        return 0;
+    
+    new String:str = str_format(text, ___2);
+    str += str_format(" (( %s ))", Character_GetOOCName(playerid));
+    ProxDetectorStr(playerid, 7.0, str, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF);
     return 1;
 }
 
@@ -580,8 +771,12 @@ stock Character_ShowStats(playerid, targetid)
     SendFormattedMessage(targetid, COLOR_YELLOW, "Soldi: %d", AC_GetPlayerMoney(playerid));
     SendFormattedMessage(targetid, COLOR_YELLOW, "HP: %.2f - Armatura: %.2f - Int: %d - VW: %d", hp, armour, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
     SendFormattedMessage(targetid, COLOR_YELLOW, "Livello: %d - Esperienza: %d", PlayerInfo[playerid][pLevel], PlayerInfo[playerid][pExp]);
-    if(PlayerInfo[playerid][pBuildingKey] != 0)
+    if(PlayerInfo[playerid][pBuildingKey] != 0 && PlayerInfo[playerid][pHouseKey] != 0)
+        SendFormattedMessage(targetid, COLOR_YELLOW, "Edificio: %d - Casa: %d", PlayerInfo[playerid][pBuildingKey], PlayerInfo[playerid][pHouseKey]);
+    else if(PlayerInfo[playerid][pBuildingKey] != 0)
         SendFormattedMessage(targetid, COLOR_YELLOW, "Edificio: %d", PlayerInfo[playerid][pBuildingKey]);
+    else if(PlayerInfo[playerid][pHouseKey] != 0)
+        SendFormattedMessage(targetid, COLOR_YELLOW, "Casa: %d", PlayerInfo[playerid][pHouseKey]);
     SendFormattedMessage(targetid, COLOR_YELLOW, "Tempo rimanente al PayDay: %d minuti", PlayerInfo[playerid][pPayDay]);
     SendClientMessage(targetid, COLOR_YELLOW, "_______________________________________________________");
     return 1;
@@ -594,4 +789,169 @@ stock Character_Clear(playerid)
 
     new CleanRestoreData[E_PLAYER_RESTORE_DATA];
     PlayerRestore[playerid] = CleanRestoreData;
+}
+
+stock Player_Enter(playerid, pickupid, elementId, E_ELEMENT_TYPE:type)
+{
+    if(!IsPlayerInRangeOfPickup(playerid, pickupid, 2.5))
+        return 0;
+    if(type != ELEMENT_TYPE_BUILDING_ENTRANCE && type != ELEMENT_TYPE_HOUSE_ENTRANCE)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata di un edificio!");
+    new 
+        Float:x = 0.0, 
+        Float:y = 0.0, 
+        Float:z = 0.0,
+        interiorId = 0,
+        world = 0,
+        locked = 0;
+    if(type == ELEMENT_TYPE_BUILDING_ENTRANCE)
+    {
+        x = BuildingInfo[elementId][bExitX]; 
+        y = BuildingInfo[elementId][bExitY]; 
+        z = BuildingInfo[elementId][bExitZ];
+        interiorId = BuildingInfo[elementId][bExitInterior];
+        world = elementId;
+        locked = BuildingInfo[elementId][bLocked];
+    }
+    else if(type == ELEMENT_TYPE_HOUSE_ENTRANCE)
+    {
+        House_GetExitPosition(elementId, x, y, z);
+        interiorId = House_GetExitInterior(elementId);
+        world = elementId;
+        locked = House_IsLocked(elementId);
+    }
+    if(locked)
+        return GameTextForPlayer(playerid, "~r~Chiuso", 8000, 1);
+    
+    Character_AMe(playerid, "apre la porta ed entra");
+    Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
+    SetPlayerInterior(playerid, interiorId);
+    SetPlayerVirtualWorld(playerid, world);
+    SetPlayerPos(playerid, x, y, z);
+    return 1;
+}
+
+stock Player_Exit(playerid, pickupid, elementId, E_ELEMENT_TYPE:type)
+{
+    if(!IsPlayerInRangeOfPickup(playerid, pickupid, 2.5))
+        return 0;
+    if(type != ELEMENT_TYPE_BUILDING_EXIT && type != ELEMENT_TYPE_HOUSE_EXIT)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'uscita di un edificio!");
+    new 
+        Float:x = 0.0, 
+        Float:y = 0.0, 
+        Float:z = 0.0,
+        interiorId = 0,
+        world = 0,
+        locked = 0;
+    
+    if(type == ELEMENT_TYPE_BUILDING_EXIT)
+    {
+        x = BuildingInfo[elementId][bEnterX]; 
+        y = BuildingInfo[elementId][bEnterY]; 
+        z = BuildingInfo[elementId][bEnterZ];
+        interiorId = BuildingInfo[elementId][bEnterInterior];
+        world = BuildingInfo[elementId][bEnterWorld];
+        locked = BuildingInfo[elementId][bLocked];
+    }
+    else if(type == ELEMENT_TYPE_HOUSE_EXIT)
+    {
+        House_GetEnterPosition(elementId, x, y, z);
+        interiorId = House_GetEnterInterior(elementId);
+        world = House_GetEnterWorld(elementId);
+        locked = House_IsLocked(elementId);
+    }
+    if(locked)
+        return GameTextForPlayer(playerid, "~r~Chiuso", 8000, 1);
+    Character_AMe(playerid, "apre la porta ed esce");
+    Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
+    SetPlayerInterior(playerid, interiorId);
+    SetPlayerVirtualWorld(playerid, world);
+    SetPlayerPos(playerid, x, y, z);
+    return 1;
+}
+
+stock Player_BuyBuilding(playerid, buildingid)
+{
+    if(!Building_IsValid(buildingid))
+        return 0;
+    
+    if(!Building_IsOwnable(buildingid) || Building_GetOwnerID(buildingid) != 0)
+        return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita!");
+
+    if(AC_GetPlayerMoney(playerid) < Building_GetPrice(buildingid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi per acquistare questa proprietà!");
+    
+    AC_GivePlayerMoney(playerid, -BuildingInfo[buildingid][bPrice]);
+    
+    Building_SetOwner(buildingid, playerid);
+    
+    PlayerInfo[playerid][pBuildingKey] = BuildingInfo[buildingid][bID];
+
+    SendFormattedMessage(playerid, COLOR_GREEN, "Hai acquistato questo edificio (%s) per $%d.", BuildingInfo[buildingid][bName], Building_GetPrice(buildingid));
+    Building_Save(buildingid);
+    Character_Save(playerid);
+    return 1;
+}
+
+stock Player_BuyHouse(playerid, houseid)
+{
+    if(!House_IsValid(houseid))
+        return 0;
+
+    if(House_GetOwnerID(houseid) != 0)
+        return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita!");
+
+    if(Character_HasHouseKey(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Sei già proprietario di una casa!");
+
+    new price = House_GetPrice(houseid);
+    if(AC_GetPlayerMoney(playerid) < price)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi per acquistare questa proprietà!");
+
+    House_SetOwner(houseid, playerid);
+
+    AC_GivePlayerMoney(playerid, -price, "Player_BuyHouse");
+
+    SendFormattedMessage(playerid, COLOR_GREEN, "Congratulazioni! Hai acquistato questa casa per $%d!", price);
+
+    House_Save(houseid);
+    Character_Save(playerid);
+    return 1;
+}
+
+stock Character_HasBuildingKey(playerid)
+{
+    return PlayerInfo[playerid][pBuildingKey] > 0;
+}
+
+stock Character_GetBuildingKey(playerid)
+{
+    return PlayerInfo[playerid][pBuildingKey];
+}
+
+stock Character_HasHouseKey(playerid)
+{
+    return PlayerInfo[playerid][pHouseKey] > 0;
+}
+
+stock Character_GetHouseKey(playerid)
+{
+    return PlayerInfo[playerid][pHouseKey];
+}
+
+stock Character_GetID(playerid)
+{
+    return PlayerInfo[playerid][pID];
+}
+
+stock Character_IsFreezed(playerid)
+{
+    return Bit_Get(gPlayerBitArray[e_pFreezed], playerid);
+}
+
+stock Character_SetFreezed(playerid, freeze)
+{
+    Bit_Set(gPlayerBitArray[e_pFreezed], playerid, freeze);
+    TogglePlayerControllable(playerid, !freeze);
 }
