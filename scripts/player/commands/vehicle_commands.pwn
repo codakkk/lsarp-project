@@ -37,6 +37,23 @@ CMD:vmenu(playerid, params[])
     return 1;
 }
 
+flags:parcheggia(CMD_USER);
+CMD:parcheggia(playerid, params[])
+{
+	new vehicleid = GetPlayerVehicleID(playerid);
+	if(vehicleid <= 0 || Vehicle_GetOwnerID(vehicleid) != Character_GetID(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un tuo veicolo!");
+
+	new 
+		Float:x, Float:y, Float:z, Float:a;
+	GetVehiclePos(vehicleid, x, y, z);
+	GetVehicleZAngle(vehicleid, a);
+	Vehicle_Park(vehicleid, x, y, z, a);
+	SendFormattedMessage(playerid, COLOR_GREEN, "Hai parcheggiato qui la tua %s.", GetVehicleName(vehicleid));
+	return 1;
+}
+alias:parcheggia("park");
+
 flags:chiudi(CMD_USER);
 CMD:chiudi(playerid, params[])
 {

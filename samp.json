@@ -13,7 +13,7 @@
 				"samp-incognito/samp-streamer-plugin:v2.9.4",
 				"Southclaws/samp-whirlpool:v1.0.0",
 				"maddinat0r/sscanf:v2.8.3",
-				"IllidanS4/PawnPlus:v1.0.0-pre2"
+				"IllidanS4/PawnPlus:v1.0.0-pre3"
 			],
 	"maxplayers": 32
 }

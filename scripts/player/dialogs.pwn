@@ -6,13 +6,14 @@ Dialog:Dialog_InvSelectAmmo(playerid, response, listitem, inputtext[])
         itemid = GetPVarInt(playerid, "InventorySelect_WeaponItem"),
         ammoType = Weapon_GetAmmoType(itemid);
     if(ammo <= 0 || ammo > Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType))
-        return Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "{FF0000}Munizioni non valide!\n{FFFFFF}Inserisci le munizioni", "Immetti la quantità di munizioni che vuoi inserire nell'arma.\n{00FF00}Quantità: %d{FFFFFF}", "Usa", "Annulla", 
+        return Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "{FF0000}Munizioni non valide!{FFFFFF}\nImmetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}", "Usa", "Annulla", 
                     Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType));
     AC_GivePlayerWeapon(playerid, itemid, ammo);
     Character_DecreaseItemAmount(playerid, itemid, 1);
     Character_DecreaseItemAmount(playerid, ammoType, ammo);
     return 1;
 }
+
 
 Dialog:Dialog_House(playerid, response, listitem, inputtext[])
 {
@@ -62,12 +63,15 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
         }
         case 6: // Cambia interior
         {
-            new String:string;
+            new String:string, interiorid = House_GetInteriorID(houseid);
             for(new i = 0, sz = sizeof(allHouseInteriors); i < sz; ++i)
             {
-                string += str_format("Interno %d\n", i);
+				if(allHouseInteriors[interiorid][iType] != allHouseInteriors[i][iType])
+                	string += @("{FF0000}");
+				string += str_format("Interno %d", i);
+				string += @("{FFFFFF}\n");
             }
-            return Dialog_Show_s(playerid, Dialog_HouseInterior, DIALOG_STYLE_MSGBOX, @("Cambio Interior"), string, "Vendi", "Annulla");
+            return Dialog_Show_s(playerid, Dialog_HouseInterior, DIALOG_STYLE_LIST, @("Cambio Interior"), string, "Vendi", "Annulla");
         }
     }
     return 1;
@@ -123,6 +127,10 @@ Dialog:Dialog_HouseInterior(playerid, response, listitem, inputtext[])
     if(!response)
         return 0;
     new houseid = Character_GetHouseKey(playerid);
+	if(!IsPlayerInRangeOfHouseEntrance(playerid, houseid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata della tua casa!");
+	if(allHouseInteriors[House_GetInteriorID(houseid)][iType] != allHouseInteriors[listitem][iType])
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi selezionare questo interno per questa casa!");
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato l'interno della tua casa. Nuovo interno: %d.", listitem);
     House_SetInterior(houseid, listitem);
     House_Save(houseid);

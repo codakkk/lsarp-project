@@ -35,7 +35,7 @@ CMD:blockb(playerid, params[])
     if(!strcmp(params, "all", true))
     {
         Bit_Set(gPlayerBitArray[e_pToggleOOCAll], playerid, !Bit_Get(gPlayerBitArray[e_pToggleOOCAll], playerid));
-        SendClientMessage(playerid, COLOR_GREEN, Bit_Get(gPlayerBitArray[e_pToggleOOCAll], playerid) ? "Hai disabilitato i PM da e verso tutti." : "Hai riabilitato i PM da e verso tutti.");
+        SendClientMessage(playerid, COLOR_GREEN, Bit_Get(gPlayerBitArray[e_pToggleOOCAll], playerid) ? "Hai disabilitato la chat OOC da e verso tutti." : "Hai riabilitato la chat OOC da e verso tutti.");
         if(Bit_Get(gPlayerBitArray[e_pToggleOOCAll], playerid))
             SendClientMessage(playerid, COLOR_GREEN, "Riutilizza '/blockpm all' per riattivarli.");
     }
@@ -48,12 +48,12 @@ CMD:blockb(playerid, params[])
             return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso!");
         if(Iter_Contains(pToggleOOC[playerid], id))
         {
-            SendFormattedMessage(playerid, COLOR_YELLOW, "Hai riabilitato i PM da e verso %s.", Character_GetOOCName(id));
+            SendFormattedMessage(playerid, COLOR_YELLOW, "Hai riabilitato la chat OOC da e verso %s.", Character_GetOOCName(id));
             Iter_Remove(pToggleOOC[playerid], id);
         }
         else
         {
-            SendFormattedMessage(playerid, COLOR_YELLOW, "Hai disabilitato i PM da e verso %s.", Character_GetOOCName(id));
+            SendFormattedMessage(playerid, COLOR_YELLOW, "Hai disabilitato la chat OOC da e verso %s.", Character_GetOOCName(id));
             Iter_Add(pToggleOOC[playerid], id);
         }
     }

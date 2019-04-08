@@ -86,7 +86,12 @@ CMD:aiuto(playerid, params[])
     SendClientMessage(playerid, -1, "[CHAT]: /b - /me - /ame - /low - /melow - /do - /dolow - /shout");
     SendClientMessage(playerid, -1, "[CHAT]: (/w)hisper - (/cw)hisper - /pm - /blockb - /blockpm");
     SendClientMessage(playerid, -1, "[VEICOLI]: /motore - /vmenu - /apri - /chiudi - /parcheggia");
-    SendClientMessage(playerid, -1, "[INVENTARIO]: (/inv)entario - /dep - /gettaarma");
+    SendClientMessage(playerid, -1, "[INVENTARIO]: (/inv)entario - (/dep)osita - (/dis)assembla - /gettaarma");
+	SendClientMessage(playerid, -1, "[INVENTARIO]: /invmode - /usa");
+	if(AccountInfo[playerid][aAdmin] > 0)
+		SendClientMessage(playerid, COLOR_GREEN, "[SUPPORTER]: /asupportercmds");
+	if(AccountInfo[playerid][aAdmin] > 1)
+		SendClientMessage(playerid, COLOR_GREEN, "[ADMIN]: /acmds");
     return 1;
 }
 alias:aiuto("cmds", "help");
@@ -98,11 +103,11 @@ CMD:hotkeys(playerid, params[])
     if(Bit_Get(gPlayerBitArray[e_pHotKeys], playerid))
     {
         SendClientMessage(playerid, COLOR_GREEN, "Hai abilitato le HotKeys.");
-        SendClientMessage(playerid, COLOR_GREEN, "Ora puoi utilizzare anche:");
-        SendClientMessage(playerid, COLOR_GREEN, "ENTER/INVIO: Entrare/Uscire da un edificio.");
-        SendClientMessage(playerid, COLOR_GREEN, "Y: Accendi/Spegni veicolo.");
-        SendClientMessage(playerid, COLOR_GREEN, "N: Apri/Chiudi veicolo.");
-        SendClientMessage(playerid, COLOR_GREEN, "2: Accendi/Spegni fari.");
+        SendClientMessage(playerid, -1, "Ora puoi utilizzare anche:");
+        SendClientMessage(playerid, -1, "{00FF00}ENTER/INVIO: Entrare/Uscire da un edificio.");
+        SendClientMessage(playerid, -1, "{00FF00}Y: Accendi/Spegni veicolo.");
+        SendClientMessage(playerid, -1, "{00FF00}N: Apri/Chiudi veicolo.");
+        SendClientMessage(playerid, -1, "{00FF00}2: Accendi/Spegni fari.");
         SendClientMessage(playerid, COLOR_GREEN, "N.B: I comandi sono mappati di default e non possono essere cambiati.");
     }
     else

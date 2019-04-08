@@ -14,7 +14,39 @@ hook OnGameModeInit()
 	mysql_log(ERROR | WARNING);
     //gMySQL = mysql_connect("localhost", "root", ""/*"Mrrobot123?"*/, "lsarp");
 
-    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS accounts (`ID` INT(11) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`ID`))");
+    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS accounts \
+	(`ID` INT(11) NOT NULL AUTO_INCREMENT, \
+	`Name` VARCHAR(24) NOT NULL, \
+	`Password` TEXT NOT NULL, \
+	`Admin` INT(11) DEFAULT '0', \
+	`Premium` INT(11) DEFAULT '0', \
+	`PremiumExpiry` INT(11) DEFAULT '0', \
+	`CharactersCounter` INT(11) DEFAULT '0', \
+	PRIMARY KEY (`ID`))");
+	mysql_query(gMySQL, "CREATE TABLE `characters` (\
+	`ID` int(11) NOT NULL AUTO_INCREMENT, \
+	`AccountID` int(11) NOT NULL, \
+	`Name` varchar(32) NOT NULL, \
+	`Money` int(11) DEFAULT '0', \
+	`Level` int(11) NOT NULL DEFAULT '1', \
+	`Age` int(11) DEFAULT '0', \
+	`Sex` int(11) DEFAULT '0', \
+	`LastX` float DEFAULT '0', \
+	`LastY` float DEFAULT '0', \
+	`LastZ` float DEFAULT '0', \
+	`LastInterior` int(11) DEFAULT '0', \
+	`LastVirtualWorld` int(11) DEFAULT '0', \
+	`FirstSpawn` int(11) DEFAULT '1', \
+	`Health` float DEFAULT '0', \
+	`Armour` float DEFAULT '0', \
+	`Skin` int(11) DEFAULT '1', \
+	`LastAngle` float DEFAULT '0', \
+	`Spawned` int(11) NOT NULL DEFAULT '0', \
+	`PayDay` int(11) NOT NULL DEFAULT '0', \
+	`Exp` int(11) NOT NULL DEFAULT '0', \
+	`BuildingKey` int(11) NOT NULL DEFAULT '0', \
+	`HouseKey` int(11) NOT NULL DEFAULT '0', \
+	PRIMARY KEY (`ID`)");
     mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS showrooms \
             (`ID` INT(11) NOT NULL AUTO_INCREMENT, \
             `Name` VARCHAR(24) NULL, \

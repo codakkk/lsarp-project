@@ -125,7 +125,7 @@ main()
     VehicleInventory = map_new();
     HouseList = list_new();
     DropList = list_new();
-    LootZoneList = list_new();
+    //LootZoneList = list_new();
     
     /*new data[E_HOUSE_DATA];
     data[hID] = 1;
@@ -167,6 +167,8 @@ public OnGameModeInit()
     DisableInteriorEnterExits();
     ManualVehicleEngineAndLights(); 
     EnableStuntBonusForAll(false);
+
+	SetWorldTime(0);
     return 1;
 }
 
@@ -279,6 +281,8 @@ public OnPlayerDisconnect(playerid, reason)
     
     CallLocalFunction(#OnCharacterDisconnected, "i", playerid);
     CallLocalFunction(#OnPlayerClearData, "i", playerid);
+	gAccountLogged[playerid] = 0;
+    gCharacterLogged[playerid] = 0;
     return 1;
 }
 

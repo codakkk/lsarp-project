@@ -397,15 +397,15 @@ stock ProxDetector(playerid, Float:radius, const string[], col1, col2, col3, col
         return 0;
     new 
         int = GetPlayerInterior(playerid), vw = GetPlayerVirtualWorld(playerid),
-        Float:x, Float:y, Float:z, Float:dist,
+        Float:x, Float:y, Float:z;/* Float:dist,
         Float:ox, Float:oy, Float:oz,
-        Float:tx, Float:ty, Float:tz;
+        Float:tx, Float:ty, Float:tz;*/
     GetPlayerPos(playerid, x, y, z);
     foreach(new i : Player)
     {
         if(GetPlayerInterior(i) != int || GetPlayerVirtualWorld(i) != vw)
             continue;
-        GetPlayerPos(i, ox, oy, oz);
+        /*GetPlayerPos(i, ox, oy, oz);
         tx = (x - ox);
         tz = (y - oy);
         tz = (z - oz);
@@ -417,7 +417,13 @@ stock ProxDetector(playerid, Float:radius, const string[], col1, col2, col3, col
         else if(dist < (radius * radius) / (8 * 8)) SendTwoLinesMessage(i, col2, string);
         else if(dist < (radius * radius) / (4 * 4)) SendTwoLinesMessage(i, col3, string);
         else if(dist < (radius * radius) / (2 * 2)) SendTwoLinesMessage(i, col4, string);
-        else if(dist < (radius * radius)) SendTwoLinesMessage(i, col5, string);
+        else if(dist < (radius * radius)) SendTwoLinesMessage(i, col5, string);**/
+		new Float:distance = GetPlayerDistanceFromPoint(i, x, y, z);
+		if(distance < radius/16) SendTwoLinesMessage(i, col1, string);
+		else if(distance < radius/8) SendTwoLinesMessage(i, col2, string);
+		else if(distance < radius/4) SendTwoLinesMessage(i, col3, string);
+		else if(distance < radius/2) SendTwoLinesMessage(i, col4, string);
+		else if(distance < radius) SendTwoLinesMessage(i, col5, string);
     }
     return 1;
 }

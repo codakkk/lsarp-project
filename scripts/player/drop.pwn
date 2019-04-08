@@ -47,12 +47,13 @@ Dialog:Dialog_ItemDropAction(playerid, response, listitem, inputtext[])
     {
         case 0:
         {
-            if( (ServerItem_IsWeapon(itemid) && !Character_HasSpaceForWeapon(playerid, itemid, extra)) || 
+            if( /*(ServerItem_IsWeapon(itemid) && !Character_HasSpaceForWeapon(playerid, itemid, extra)) || */
                 !Character_HasSpaceForItem(playerid, itemid, amount))
                 return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario!");
-            Character_GiveItem(playerid, itemid, amount);
-            Character_GiveItem(playerid, Weapon_GetAmmoType(itemid), extra);
-            SendFormattedMessage(playerid, COLOR_GREEN, "Hai raccolto %s (%d)", ServerItem_GetName(Drop[dItem]), ServerItem_IsWeapon(itemid) ? Drop[dItemExtra] : Drop[dItemAmount]);
+            //Character_GiveItem(playerid, itemid, amount);
+			Character_GiveItem(playerid, itemid, amount, extra);
+            //Character_GiveItem(playerid, Weapon_GetAmmoType(itemid), extra);
+            SendFormattedMessage(playerid, COLOR_GREEN, "Hai raccolto %s (%d)", ServerItem_GetName(Drop[dItem]), ServerItem_IsWeapon(itemid) ? extra : amount);
             Character_AMe(playerid, "raccoglie qualcosa");
             Drop_Destroy(dropid);
         }
@@ -71,7 +72,7 @@ Dialog:Dialog_ItemDropAction(playerid, response, listitem, inputtext[])
             if(extra <= 0)
                 return SendClientMessage(playerid, COLOR_ERROR, "L'arma è scarica e non puo' essere equipaggiata!");
 
-            SendFormattedMessage(playerid, COLOR_GREEN, "Hai raccolto %s (%d)", ServerItem_GetName(Drop[dItem]), Drop[dItemAmount]);
+            SendFormattedMessage(playerid, COLOR_GREEN, "Hai raccolto %s (%d)", ServerItem_GetName(Drop[dItem]), extra);
             Character_AMe(playerid, "raccoglie un'arma");
             AC_GivePlayerWeapon(playerid, itemid, extra);
             Drop_Destroy(dropid);

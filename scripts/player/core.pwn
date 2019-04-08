@@ -1,5 +1,17 @@
 #include <YSI_Coding\y_hooks>
 
+hook OnCharacterPreSaveData(playerid, disconnect)
+{
+	if(disconnect)
+	{
+		if(pAdminDuty[playerid])
+		{
+			AC_SetPlayerHealth(playerid, 100.0);
+			AC_SetPlayerArmour(playerid, 0.0);
+		}
+	}
+}
+
 hook OnPlayerClearData(playerid)
 {
     printf("player.pwn/OnPlayerClearData");
@@ -59,13 +71,18 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
         {
             string += str_format("~y~Proprietario: ~w~%S~n~", House_GetOwnerNameStr(houseid));
             if(House_GetOwnerID(houseid) == PlayerInfo[playerid][pID])
-                string += @("Premi ~b~~k~~SNEAK_ABOUT~~w~ per il menù.~n~");
+			{
+                if(Bit_Get(gPlayerBitArray[e_pHotKeys], playerid))
+					string += @("Premi ~b~~k~~SNEAK_ABOUT~~w~ (/casa) per il menu.~n~");
+				else
+					string += @("Digita ~b~/casa~w~ per il menu.~n~");
+			}
         }
         else
         {
-            string += str_format("~g~In vendita!~n~~g~Prezzo: ~w~$%d", House_GetPrice(houseid));
+            string += str_format("~g~In vendita!~n~~g~Prezzo: ~w~$%d~n~", House_GetPrice(houseid));
         }
-        string += str_format("~r~Interno:~w~ %d", House_GetInterior(houseid));
+        string += str_format("~r~Interno:~w~ %d~n~", House_GetInteriorID(houseid));
         GameTextForPlayerStr(playerid, string, 2000, 5);
     }
     return 1;
@@ -76,7 +93,7 @@ hook OnPlayerInvItemUse(playerid, slot_id, item_id)
     new 
         bool:decrease = false,
         decreaseAmount = 1;
-    printf("player_inventory.pwn/OnPlayerInvItemUse", playerid);
+    // printf("player_inventory.pwn/OnPlayerInvItemUse", playerid);
     if(ServerItem_IsBag(item_id))
     {
         // If character has bag
@@ -109,24 +126,35 @@ hook OnPlayerInvItemUse(playerid, slot_id, item_id)
             }
             else
             {
-                if(Character_HasItem(playerid, Weapon_GetAmmoType(item_id), 1) == -1)
-                    SendClientMessage(playerid, COLOR_ERROR, "Non hai i proiettili necessari!");
-                else
-                {
-                    SetPVarInt(playerid, "InventorySelect_WeaponItem", item_id);
-                    // Show Dialog
-                    Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "Immetti la quantità di munizioni che vuoi inserire nell'arma.\n{00FF00}Quantità: %d{FFFFFF}", "Usa", "Annulla", 
-                    Inventory_GetItemAmount(Character_GetInventory(playerid), Weapon_GetAmmoType(item_id)));
-                }
+				new extra = Character_GetItemExtraBySlot(playerid, slot_id);
+				if(extra > 0)
+				{
+					AC_GivePlayerWeapon(playerid, item_id, extra);
+					decrease = true;
+					decreaseAmount = 1;
+				}
+				else
+				{
+					if(Character_HasItem(playerid, Weapon_GetAmmoType(item_id), 1) == -1)
+						SendClientMessage(playerid, COLOR_ERROR, "Non hai i proiettili necessari!");
+					else
+					{
+						SetPVarInt(playerid, "InventorySelect_WeaponItem", item_id);
+						new ammos = Inventory_GetItemAmount(Character_GetInventory(playerid), Weapon_GetAmmoType(item_id));
+						Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "Immetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}.", "Usa", "Annulla", ammos);
+					}
+				}
             }
         }
     }
     else if(ServerItem_IsAmmo(item_id))
     {
         new currentWeapon = GetPlayerWeapon(playerid);
-        if(Weapon_GetAmmoType(currentWeapon) != item_id)
+        if(currentWeapon == 0 || Weapon_GetAmmoType(currentWeapon) != item_id)
             return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare queste munizioni su quest'arma.");
-        
+		new ammos = Inventory_GetItemAmount(Character_GetInventory(playerid), item_id);
+		SetPVarInt(playerid, "InventorySelect_CurrentWeaponItem", currentWeapon);
+		Dialog_Show(playerid, Dialog_InvSelectAddAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "Immetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}.", "Usa", "Annulla", ammos);
     }
     if(decrease)
     {
@@ -134,6 +162,30 @@ hook OnPlayerInvItemUse(playerid, slot_id, item_id)
     }
     return 1;
 }
+
+Dialog:Dialog_InvSelectAddAmmo(playerid, response, listitem, inputtext[])
+{
+    if(!response)
+	{
+		DeletePVar(playerid, "InventorySelect_CurrentWeaponItem");
+        return 0;
+	}
+    new ammo = strval(inputtext), 
+		weaponid = GetPVarInt(playerid, "InventorySelect_CurrentWeaponItem"),
+		ammoType = Weapon_GetAmmoType(weaponid),
+		amount = Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType)
+	;
+    if(ammo <= 0 || ammo > amount)
+        return Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", 
+					"{FF0000}Munizioni non valide!{FFFFFF}\nImmetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}", "Usa", "Annulla", 
+					amount);
+    AC_GivePlayerAmmo(playerid, weaponid, ammo);
+    Character_DecreaseItemAmount(playerid, ammoType, ammo);
+	Character_AMe(playerid, "prende delle munizioni e le inserisce nell'arma");
+	DeletePVar(playerid, "InventorySelect_CurrentWeaponItem");
+    return 1;
+}
+
 
 hook OnPlayerStateChange(playerid, newstate, oldstate)
 {
@@ -154,7 +206,10 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
 
             if(Vehicle_IsEngineOff(vehicleid))
             {
-                SendClientMessage(playerid, -1, "Premi SPAZIO (/motore) per accendere il motore.");
+				if(Bit_Get(gPlayerBitArray[e_pHotKeys], playerid))
+                	SendClientMessage(playerid, -1, "Premi Y (oppure digita /motore) per accendere il motore.");
+				else 
+					SendClientMessage(playerid, -1, "Digita /motore per accendere il motore.");
             }
         }
     }
@@ -197,7 +252,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
             }
             else if( (PRESSED(KEY_LOOK_BEHIND)) )
             {
-                Vehicle_SetLightState(vehicleid, !Vehicle_IsLightOn(vehicleid));
+                Vehicle_SetLightState(vehicleid, !Vehicle_IsLightOff(vehicleid));
             }
         }
         new pickupid = pLastPickup[playerid];
@@ -226,6 +281,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
                     new houseid = elementId;
                     if(House_GetOwnerID(houseid) == PlayerInfo[playerid][pID])
                     {
+						// REMEMBER TO EDIT /casa IF THIS DIALOG IS EDITED
                         Dialog_Show(playerid, Dialog_House, DIALOG_STYLE_LIST, "Casa", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nCambia Interior", "Continua", "Chiudi");
                     }
                 }
@@ -351,6 +407,7 @@ stock Character_PayDay(playerid)
         SendFormattedMessage(playerid, COLOR_YELLOW, "Congratulazioni! Hai raggiunto il livello %d. Per il prossimo livello hai bisogno di %d punti esperienza.", PlayerInfo[playerid][pLevel], expForNewLevel);
     }
     SendClientMessage(playerid, COLOR_YELLOW, "____________________________________________________");
+	
     Character_Save(playerid);
     GameTextForPlayer(playerid, "~y~PayDay", 5000, 1);
 }
@@ -696,7 +753,7 @@ stock Character_Me(playerid, text[], GLOBAL_TAG_TYPES:...)
     format(formattedText, sizeof(formattedText), text, ___2);
 
     format(formattedText, sizeof(formattedText), "* %s %s", Character_GetOOCName(playerid), formattedText);
-    ProxDetector(playerid, 20.0, formattedText, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF); //0xD6C3E3FF
+    ProxDetector(playerid, 15.0, formattedText, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF); //0xD6C3E3FF
     return 1;
 }
 
@@ -763,22 +820,26 @@ stock Character_ShowStats(playerid, targetid)
     if(!gCharacterLogged[playerid])
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato!");
     new 
-        Float:hp, Float:armour;
+        Float:hp, Float:armour,
+		expForNewLevel = (PlayerInfo[playerid][pLevel]+1) * 2;
     AC_GetPlayerHealth(playerid, hp);
     AC_GetPlayerArmour(playerid, armour);
-    SendClientMessage(targetid, COLOR_YELLOW, "_______________________________________________________");
-    SendFormattedMessage(targetid, COLOR_YELLOW, "Nome: %s - Età: %d - Sesso: %s", Character_GetOOCName(playerid), PlayerInfo[playerid][pAge], GetSexName(playerid));
-    SendFormattedMessage(targetid, COLOR_YELLOW, "Soldi: %d", AC_GetPlayerMoney(playerid));
-    SendFormattedMessage(targetid, COLOR_YELLOW, "HP: %.2f - Armatura: %.2f - Int: %d - VW: %d", hp, armour, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
-    SendFormattedMessage(targetid, COLOR_YELLOW, "Livello: %d - Esperienza: %d", PlayerInfo[playerid][pLevel], PlayerInfo[playerid][pExp]);
+    SendClientMessage(targetid, COLOR_GREEN, "_____________________[STATISTICHE]_____________________");
+	SendFormattedMessage(targetid, -1, "[Account]: Account: %s", AccountInfo[playerid][aName]);
+    SendFormattedMessage(targetid, -1, "[Personaggio]: Nome: %s - Età: %d - Sesso: %s", Character_GetOOCName(playerid), PlayerInfo[playerid][pAge], GetSexName(playerid));
+	SendFormattedMessage(targetid, -1, "[Personaggio]: Livello: %d - Skin: %d", PlayerInfo[playerid][pLevel], GetPlayerSkin(playerid));
+    SendFormattedMessage(targetid, -1, "[Denaro]: Soldi: $%d", AC_GetPlayerMoney(playerid));
+    SendFormattedMessage(targetid, -1, "[Salute]: HP: %.2f - Armatura: %.2f", hp, armour);
+	SendFormattedMessage(targetid, -1, "[Altro]: Interior: %d - VW: %d", GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
     if(PlayerInfo[playerid][pBuildingKey] != 0 && PlayerInfo[playerid][pHouseKey] != 0)
-        SendFormattedMessage(targetid, COLOR_YELLOW, "Edificio: %d - Casa: %d", PlayerInfo[playerid][pBuildingKey], PlayerInfo[playerid][pHouseKey]);
+        SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietà]: Edificio: %d - Casa: %d", PlayerInfo[playerid][pBuildingKey], PlayerInfo[playerid][pHouseKey]);
     else if(PlayerInfo[playerid][pBuildingKey] != 0)
-        SendFormattedMessage(targetid, COLOR_YELLOW, "Edificio: %d", PlayerInfo[playerid][pBuildingKey]);
+        SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietà]: Edificio: %d", PlayerInfo[playerid][pBuildingKey]);
     else if(PlayerInfo[playerid][pHouseKey] != 0)
-        SendFormattedMessage(targetid, COLOR_YELLOW, "Casa: %d", PlayerInfo[playerid][pHouseKey]);
+        SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietà]: Casa: %d", PlayerInfo[playerid][pHouseKey]);
+	SendFormattedMessage(playerid, -1, "Ti mancano %d/%d punti esperienza per salire di livello.", PlayerInfo[playerid][pExp], expForNewLevel);
     SendFormattedMessage(targetid, COLOR_YELLOW, "Tempo rimanente al PayDay: %d minuti", PlayerInfo[playerid][pPayDay]);
-    SendClientMessage(targetid, COLOR_YELLOW, "_______________________________________________________");
+    SendClientMessage(targetid, COLOR_GREEN, "_______________________________________________________");
     return 1;
 }
 

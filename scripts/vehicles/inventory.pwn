@@ -139,7 +139,7 @@ stock bool:Vehicle_ShowInventory(vehicleid, playerid)
         if(iter_sizeof(i) == 0) // If no item
         {
             tempItem[gInvItem] = tempItem[gInvAmount] = tempItem[gInvExtra] = 0;
-            format(string, sizeof(string), "%s{808080}Slot Libera\t{808080}--\t{808080}--\n", string);
+            format(string, sizeof(string), "%s{808080}Slot Libero\t{808080}--\t{808080}--\n", string);
         }
         else
         {

@@ -50,7 +50,7 @@ CMD:shout(playerid, params[])
     if(isnull(params) || strlen(params) > 128) 
         return SendClientMessage(playerid, COLOR_ERROR, "> /s(hout) <testo>");
     new String:string = str_format("%s grida: %s!", Character_GetOOCName(playerid), params);
-    ProxDetectorStr(playerid, 30.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
+    ProxDetectorStr(playerid, 40.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
     return 1;
 }
 alias:shout("s");
@@ -132,8 +132,8 @@ CMD:whisper(playerid, params[])
     if(!ProxDetectorS(3.0, playerid, id))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore!");
     
-    SendFormattedMessage(playerid, COLOR_YELLOW, "%s sussura: %s", Character_GetOOCName(playerid), Character_GetOOCName(id), params);
-    SendFormattedMessage(id, COLOR_YELLOW, "%s sussura: %s", Character_GetOOCName(playerid), Character_GetOOCName(id), params);
+    SendFormattedMessage(playerid, COLOR_YELLOW, "%s sussurra: %s", Character_GetOOCName(playerid), params);
+    SendFormattedMessage(id, COLOR_YELLOW, "%s sussurra: %s", Character_GetOOCName(playerid), params);
 
     Character_AMe(playerid, "sussurra qualcosa a %s", Character_GetOOCName(id));
     return 1;

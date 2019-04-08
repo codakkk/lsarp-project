@@ -1,5 +1,16 @@
 #include <YSI_Coding\y_hooks>
 
+/*ptask OnVehicleTimer()[120000]
+{
+	foreach(new vehicleid : Vehicles)
+	{
+		if(!VehicleInfo[vehicleid][vModel])
+			continue;
+
+		VehicleInfo[vehicleid][vFuel] -= 1;
+	}
+}*/
+
 hook OnPlayerCharacterLoad(playerid)
 {
     Character_LoadVehicles(playerid);

@@ -213,6 +213,7 @@ CMD:setvhp(playerid, params[])
     if(id < 0 || id >= MAX_VEHICLES)
         return SendClientMessage(playerid, COLOR_ERROR, "> Il veicolo non esiste!");
 
+	//RepairVehicle(id);
     SetVehicleHealth(id, hp);
     SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha settato gli HP a %f del veicolo %d.", AccountInfo[playerid][aName], Character_GetOOCName(playerid), hp, id);
     Log(AccountInfo[playerid][aName], "", "/setvhp", id);
@@ -227,6 +228,23 @@ CMD:setvhp(playerid, params[])
     return 1;
 }
 alias:setvhp("setvhealth");
+
+flags:fixveh(CMD_MODERATOR);
+CMD:fixveh(playerid, params[])
+{
+    new id = GetPlayerVehicleID(playerid);
+    
+    if(id < 0 || id >= MAX_VEHICLES)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei su un veicolo");
+
+    SetVehicleHealth(id, 999.0);
+	RepairVehicle(id);
+
+    SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha riparato il suo veicolo.", AccountInfo[playerid][aName], Character_GetOOCName(playerid));
+    Log(AccountInfo[playerid][aName], "", "/fixveh", id);
+    return 1;
+}
+alias:fixveh("fix");
 
 flags:gotov(CMD_MODERATOR);
 CMD:gotov(playerid, params[])
@@ -384,8 +402,8 @@ CMD:giveitem(playerid, params[])
     if(itemid == INVALID_ITEM_ID || !ServerItem_IsValid(itemid) || itemid == 0)
         return SendClientMessage(playerid, COLOR_ERROR, "L'item inserito non è corretto!");
     
-    if(quantity < -100 || quantity > 100)
-        return SendClientMessage(playerid, COLOR_ERROR, "La quantità inserita è troppo grande. (Range: |-100| - |100| )");
+    if(quantity < -1000 || quantity > 1000)
+        return SendClientMessage(playerid, COLOR_ERROR, "La quantità inserita è troppo grande. (Range: |-1000| - |1000| )");
 
     if(quantity > 0)
     {
@@ -433,7 +451,7 @@ CMD:acmds(playerid, params[])
     if(AccountInfo[playerid][aAdmin] >= 2)
     {
         SendClientMessage(playerid, -1, "[MODERATORE]: /setskin - /sethp - /setvhp - /setarmour");
-        SendClientMessage(playerid, -1, "[MODERATORE]: /veh - /gotov - /getvhere");
+        SendClientMessage(playerid, -1, "[MODERATORE]: /veh - (/fix)veh - /gotov - /getvhere");
     }
     if(AccountInfo[playerid][aAdmin] >= 3)
     {

@@ -29,6 +29,7 @@ enum E_VEHICLE_RESTORE_DATA
     Float:vLastZ,
     Float:vLastA,
     Float:vLastHealth,
+	vFuel,
     vEngine
 };
 new VehicleRestore[MAX_VEHICLES][E_VEHICLE_RESTORE_DATA];

@@ -35,10 +35,10 @@ hook OnGameModeInit()
     ServerItem_InitializeItem("Zaino Grande", ITEM_TYPE:ITEM_TYPE_BAG, _, 1, 1, 2);
     
 
-    gItem_LightAmmo = ServerItem_InitializeItem("Munizioni leggere", ITEM_TYPE:ITEM_TYPE_AMMO, 0, 9999999, 0);
-    gItem_BuckShotAmmo = ServerItem_InitializeItem("Munizioni a pallettoni", ITEM_TYPE:ITEM_TYPE_AMMO, 0, 9999999, 0);
-    gItem_HeavyAmmo = ServerItem_InitializeItem("Munizioni pesanti", ITEM_TYPE:ITEM_TYPE_AMMO, 0, 9999999, 0);
-    gItem_RifleAmmo = ServerItem_InitializeItem("Munizioni fucile", ITEM_TYPE:ITEM_TYPE_AMMO, 0, 9999999, 0);
+    gItem_LightAmmo = ServerItem_InitializeItem("Munizioni leggere", ITEM_TYPE:ITEM_TYPE_AMMO, 3016, 1000, 0);
+    gItem_BuckShotAmmo = ServerItem_InitializeItem("Munizioni a pallettoni", ITEM_TYPE:ITEM_TYPE_AMMO, 2041, 1000, 0);
+    gItem_HeavyAmmo = ServerItem_InitializeItem("Munizioni pesanti", ITEM_TYPE:ITEM_TYPE_AMMO, 3013, 1000, 0);
+    gItem_RifleAmmo = ServerItem_InitializeItem("Munizioni fucile", ITEM_TYPE:ITEM_TYPE_AMMO, 2041, 1000, 0);
     printf("Total items loaded: %d\n", Iter_Count(ServerItems));
     return 1;
 }

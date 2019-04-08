@@ -28,7 +28,7 @@ stock Inventory_Delete(Inventory:inventory)
 
 stock bool:Inventory_SetItem(Inventory:inventory, slotid, itemid, amount, extra)
 {
-    if(!list_valid(inventory) || (itemid != 0 && amount <= 0) || !ServerItem_IsValid(itemid) || slotid >= list_size(inventory))
+    if(!list_valid(inventory) || (itemid != 0 && amount <= 0) || !ServerItem_IsValid(itemid) || slotid < 0 || slotid >= list_size(inventory))
         return false;
     
     if(amount > ServerItem_GetMaxStack(itemid))
@@ -37,17 +37,17 @@ stock bool:Inventory_SetItem(Inventory:inventory, slotid, itemid, amount, extra)
     if(ServerItem_IsUnique(itemid)) // probably Useless
         amount = 1;
 
-    if(itemid != 0)
+    if(itemid == 0)
+    {
+        list_set_var(inventory, slotid, VAR_NULL);
+    }
+    else
     {
         new item[E_ITEM_DATA];
         item[gInvItem] = itemid;
         item[gInvAmount] = amount;
         item[gInvExtra] = extra;
         list_set_arr(inventory, slotid, item);
-    }
-    else
-    {
-        list_set_var(inventory, slotid, VAR_NULL);
     }
     return true;
 }
@@ -66,12 +66,11 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra)
     if(!Inventory_HasSpaceForItem(inventory, itemid, amount))
         return INVENTORY_NO_SPACE;
     new 
-        item[E_ITEM_DATA],
-        maxStack = ServerItem_GetMaxStack(itemid)
+        maxStack = ServerItem_GetMaxStack(itemid),
+		tempAmount = amount
     ;
     if(ServerItem_IsUnique(itemid))
     {
-        new tempAmount = amount;
         while(tempAmount > 0)
         {
             Inventory_SetItem(inventory, Inventory_GetFreeSlot(inventory), itemid, amount, extra);
@@ -80,55 +79,55 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra)
     }
     else
     {
-        new 
-            hasItem_slot = Inventory_HasItem(inventory, itemid);
-        if(hasItem_slot != -1 && Inventory_GetSlotAmount(inventory, hasItem_slot) < maxStack)
-        {
-            list_get_arr_safe(inventory, hasItem_slot, item);
-            item[gInvAmount] += amount;
+        new List:hasItemSlots = Inventory_HasItemBySlots(inventory, itemid);
+		tempAmount = amount;
+		for_list(i : hasItemSlots)
+		{
+			if(tempAmount <= 0)
+				break;
+			new 
+				slotid = iter_get(i), 
+				itemAmount = Inventory_GetSlotAmount(inventory, slotid);
+			
+			if(itemAmount >= maxStack)
+				continue;
 
-            new diff = item[gInvAmount] - maxStack; // Calculate difference
+			new preAdd = itemAmount;
 
-            if(item[gInvAmount] > maxStack)
-            {
-                item[gInvAmount] = maxStack;
-                list_set_arr(inventory, hasItem_slot, item);
-            }
+			itemAmount += amount;
 
-            while(diff > 0) // While diff is greater than 0, add it to inventory
-            {
-                new amountToAdd = diff;
-                
-                if(diff > maxStack)
-                    amountToAdd = maxStack;
-                
-                Inventory_SetItem(inventory, Inventory_GetFreeSlot(inventory), itemid, amountToAdd, extra);
-                diff -= amountToAdd;
-            }
-        }
-        else // If no items with same id and enough amount, add item in new slot
-        {
-            new 
-                tempAmount = amount,
+			if(itemAmount > maxStack)
+				itemAmount = maxStack;
+
+			tempAmount -= (itemAmount - preAdd);
+
+			printf("Sizeof: %d", list_sizeof(inventory, slotid));
+			list_set_cell(inventory, slotid, gInvAmount, itemAmount);
+			list_set_cell(inventory, slotid, gInvExtra, extra);
+		}
+		if(tempAmount > 0)// If no items with same id and enough amount, add item in new slot
+		{
+			new
                 amountToAdd = tempAmount;
             while(tempAmount > 0)
-            {
-                amountToAdd = tempAmount;
-                if(amountToAdd > maxStack)
-                    amountToAdd = maxStack;
-                Inventory_SetItem(inventory, Inventory_GetFreeSlot(inventory), itemid, amountToAdd, extra);
-                tempAmount -= amountToAdd;
-            }
-        }
-    }
-    //Inventory_Print(inventory);
-    return INVENTORY_ADD_SUCCESS;
+			{
+				amountToAdd = tempAmount;
+				if(amountToAdd > maxStack)
+					amountToAdd = maxStack;
+				Inventory_SetItem(inventory, Inventory_GetFreeSlot(inventory), itemid, amountToAdd, extra);
+				tempAmount -= amountToAdd;
+			}
+		}
+	}
+	//Inventory_Print(inventory);
+	return INVENTORY_ADD_SUCCESS;
 }
 
 stock bool:Inventory_DecreaseSlotAmount(Inventory:inventory, slotid, amount = 1)
 {
-    if(slotid < 0 || slotid >= Inventory_GetSpace(inventory))
+    if(slotid < 0 || slotid >= Inventory_GetSpace(inventory) || list_sizeof(inventory, slotid) == 0)
         return false;
+	
     new item[E_ITEM_DATA];
     if(list_get_arr_safe(inventory, slotid, item))
     {
@@ -241,6 +240,21 @@ stock Inventory_HasItem(Inventory:inventory, itemid, min = 1)
     return -1;
 }
 
+// Returns a List with all slots that contains this itemid.
+stock List:Inventory_HasItemBySlots(Inventory:inventory, itemid)
+{
+	new List:list = list_new(), item[E_ITEM_DATA];
+	for(new i = 0; i < list_size(inventory); ++i)
+    {
+		if(list_sizeof(inventory, i) == 0)
+			continue;
+        list_get_arr_safe(inventory, i, item);
+        if(item[gInvItem] == itemid && item[gInvAmount] > 0)
+            list_add(list, i);
+    }
+	return list;
+}
+
 stock bool:Inventory_IsSlotUsed(Inventory:inventory, slotid)
 {
     return list_valid(inventory) && (list_sizeof(inventory, slotid) != 0 || Inventory_GetSlotItem(inventory, slotid) != 0 );
@@ -253,23 +267,23 @@ stock Inventory_GetItemData(Inventory:inventory, slotid, item[E_ITEM_DATA])
 
 stock Inventory_GetSlotItem(Inventory:inventory, slotid)
 {
-    new item[E_ITEM_DATA];
-    Inventory_GetItemData(inventory, slotid, item);
-    return item[gInvItem];
+	if(list_sizeof(inventory, slotid) == 0)
+		return 0;
+    return list_get(inventory, slotid, gInvItem);
 }
 
 stock Inventory_GetSlotAmount(Inventory:inventory, slotid)
 {
-    new item[E_ITEM_DATA];
-    Inventory_GetItemData(inventory, slotid, item);
-    return item[gInvAmount];
+	if(list_sizeof(inventory, slotid) == 0)
+		return 0;
+    return list_get(inventory, slotid, gInvAmount);
 }
 
 stock Inventory_GetSlotExtra(Inventory:inventory, slotid)
 {
-    new item[E_ITEM_DATA];
-    Inventory_GetItemData(inventory, slotid, item);
-    return item[gInvExtra];
+    if(list_sizeof(inventory, slotid) == 0)
+		return 0;
+    return list_get(inventory, slotid, gInvExtra);
 }
 
 stock Inventory_GetItemAmount(Inventory:inventory, itemid)
@@ -319,10 +333,10 @@ stock Inventory_GetFreeSlot(Inventory:inventory)
     {
         iter_get_arr_safe(i, tempItem);
         if(iter_sizeof(i) == 0 || tempItem[gInvItem] == 0 || tempItem[gInvAmount] == 0)
-            break;
-        index++;
+            return index;
+		index++;
     }
-    return index;
+    return -1;
 }
 
 /*stock bool:Inventory_ParseForDialog(Inventory:inventory, string[2048])
@@ -337,7 +351,7 @@ stock Inventory_GetFreeSlot(Inventory:inventory)
         if(iter_sizeof(i) == 0 || tempItem[gInvItem] == 0) // If no item
         {
             tempItem[gInvItem] = tempItem[gInvAmount] = tempItem[gInvExtra] = 0;
-            format(string, sizeof(string), "%s{808080}Slot Libera\t{808080}--\t{808080}--\n", string);
+            format(string, sizeof(string), "%s{808080}Slot Libero\t{808080}--\t{808080}--\n", string);
         }
         else
         {
@@ -357,7 +371,7 @@ stock String:Inventory_ParseForDialog(Inventory:inventory)
 {
     if(!list_valid(inventory))
         return STRING_NULL;
-    new String:string,
+    new String:string = @("Nome\tQuantità\tTipo\tAltro\n"),
         tempItem[E_ITEM_DATA];
     for_inventory(i : inventory)
     {
@@ -365,14 +379,20 @@ stock String:Inventory_ParseForDialog(Inventory:inventory)
         if(iter_sizeof(i) == 0 || tempItem[gInvItem] == 0) // If no item
         {
             tempItem[gInvItem] = tempItem[gInvAmount] = tempItem[gInvExtra] = 0;
-            string += @("{808080}Slot Libera\t{808080}--\t{808080}--\n");
+            string += @("{808080}Slot Libero\t{808080}--\t{808080}--\t--\n");
         }
         else
         {
             new itemid = tempItem[gInvItem],
-                itemAmount = tempItem[gInvAmount];
-            new String:s = str_format("%{FFFFFF%}%s\t%{FFFFFF%}%d\t%{FFFFFF%}%s\n", ServerItem_GetName(itemid), itemAmount, ServerItem_GetTypeName(itemid));
-            //print_s(@("Item: ") + s);
+                itemAmount = tempItem[gInvAmount],
+				extra = tempItem[gInvExtra];
+			
+            new String:s = str_format("{FFFFFF}%s\t{FFFFFF}%d\t{FFFFFF}%s\t", ServerItem_GetName(itemid), itemAmount, ServerItem_GetTypeName(itemid));
+			if(ServerItem_GetType(itemid) == ITEM_TYPE:ITEM_TYPE_WEAPON && Weapon_RequireAmmo(itemid))
+				s += str_val(extra);
+			else
+				s += @("--");
+			s += @("\n");
             string += s;
         }
     }

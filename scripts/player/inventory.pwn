@@ -45,7 +45,6 @@ hook OnPlayerClearData(playerid)
 
 hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
-    printf("OnPlayerWeaponShot Called %d", GetPlayerWeaponState(playerid));
 
     if(GetPlayerWeaponState(playerid) == WEAPONSTATE_LAST_BULLET && AC_GetPlayerAmmo(playerid) == 1 && /*Has Weapon && */ Character_HasSpaceForWeapon(playerid, weaponid, 0))
     {
@@ -117,6 +116,11 @@ stock bool:Character_IsSlotUsed(playerid, slotid)
     return Inventory_IsSlotUsed(Character_GetInventory(playerid), slotid);
 }
 
+stock Character_GetItemExtraBySlot(playerid, slotid)
+{
+	return Inventory_GetSlotExtra(Character_GetInventory(playerid), slotid);
+}
+
 stock Character_ShowInventory(playerid, targetid)
 {
     if(!gCharacterLogged[playerid])
@@ -125,7 +129,7 @@ stock Character_ShowInventory(playerid, targetid)
     new Inventory:playerInventory = Character_GetInventory(playerid);
 
     new 
-        String:string = @("Nome\tQuantità\tTipo\n") + Inventory_ParseForDialog(playerInventory),
+        String:string = Inventory_ParseForDialog(playerInventory),
         String:title = str_format("Inventario (%d/%d)", Inventory_GetUsedSpace(playerInventory), Inventory_GetSpace(playerInventory));
     Dialog_Show_s(targetid, Dialog_InventoryItemList, DIALOG_STYLE_TABLIST_HEADERS, title, string, "Avanti", "Chiudi");
     return 1;
@@ -139,12 +143,31 @@ Dialog:Dialog_InventoryItemList(playerid, response, listitem, inputtext[])
         itemid = Character_GetSlotItem(playerid, listitem)
         ;
     if(itemid == 0)
-        return Character_ShowInventory(playerid, playerid);
+	{
+		return Dialog_Show(playerid, Dialog_InvEmptyItemAction, DIALOG_STYLE_LIST, "Slot Libero", "Deposita arma\nDisassembla arma", "Avanti", "Indietro");
+	}
     new String:title = str_format("%s (Quantità: %d)", ServerItem_GetName(itemid), Character_GetSlotAmount(playerid, listitem));
     Dialog_Show_s(playerid, Dialog_InvItemAction, DIALOG_STYLE_LIST, title, @("Usa\nGetta\nDai a un giocatore"), "Continua", "Annulla");
     pSelectedListItem[playerid] = listitem;
     return 1;
 }
+
+Dialog:Dialog_InvEmptyItemAction(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+		return Character_ShowInventory(playerid, playerid);
+	if(listitem == 0) // /dep
+	{
+		pc_cmd_deposita(playerid, "");
+	}
+	else if(listitem == 1) // Dis
+	{
+		pc_cmd_disassembla(playerid, "");
+	}
+	Character_ShowInventory(playerid, playerid);
+	return 1;
+}
+
 
 Dialog:Dialog_InvItemAction(playerid, response, listitem, inputtext[])
 {

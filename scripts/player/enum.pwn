@@ -52,6 +52,7 @@ enum e_Bit1_Data
     e_pToggleOOCAll,
     e_pHotKeys,
     e_pFreezed,
+	e_pInvMode, // 0: Dialog - 1: Chat
 };
 
 new 

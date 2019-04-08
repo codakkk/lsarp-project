@@ -31,7 +31,7 @@
 
 #include <anticheat/core.pwn>
 
-#include <loot_zone_system\core.pwn>
-#include <loot_zone_system\dialogs.pwn>
+//#include <loot_zone_system\core.pwn>
+//#include <loot_zone_system\dialogs.pwn>
 
 #include <drop_system\core.pwn>

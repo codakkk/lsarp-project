@@ -39,12 +39,12 @@ stock RemovePlayerWeapon(playerid, weaponid)
 		}
 	}
 
-	ResetPlayerWeapons(playerid);
+	AC_ResetPlayerWeapons(playerid);
 	for(new slot = 0; slot != 12; slot++)
 	{
 	    if(plyAmmo[slot] != 0)
 	    {
-			GivePlayerWeapon(playerid, plyWeapons[slot], plyAmmo[slot]);
+			AC_GivePlayerWeapon(playerid, plyWeapons[slot], plyAmmo[slot]);
 		}
 	}
 	return 1;

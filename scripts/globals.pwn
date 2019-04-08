@@ -43,8 +43,6 @@ new
 
 hook OnPlayerClearData(playerid)
 {
-    gAccountLogged[playerid] = 0;
-    gCharacterLogged[playerid] = 0;
     gPlayerJetpack[playerid] = 0;
     pDeathState[playerid] = 0;
     pAdminDuty[playerid] = 0;

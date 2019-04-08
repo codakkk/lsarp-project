@@ -139,7 +139,24 @@ stock AC_ResetPlayerWeapons(playerid)
     return 1;
 }
 
+stock AC_RemovePlayerWeapon(playerid, weaponid)
+{
+	return RemovePlayerWeapon(playerid, weaponid);
+}
+
 stock AC_GetPlayerAmmo(playerid)
 {
     return GetPlayerAmmo(playerid);
+}
+
+stock AC_SetPlayerAmmo(playerid, weaponid, ammo)
+{
+	return SetPlayerAmmo(playerid, weaponid, ammo);
+}
+
+stock AC_GivePlayerAmmo(playerid, weaponid, ammo)
+{
+	new w, a;
+	GetPlayerWeaponData(playerid, Weapon_GetSlot(weaponid), w, a);
+	return AC_SetPlayerAmmo(playerid, weaponid, a + ammo);
 }
