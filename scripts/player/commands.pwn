@@ -85,9 +85,7 @@ CMD:aiuto(playerid, params[])
     SendClientMessage(playerid, -1, "[GENERALE]: /rimuovi - /hotkeys");
     SendClientMessage(playerid, -1, "[CHAT]: /b - /me - /ame - /low - /melow - /do - /dolow - /shout");
     SendClientMessage(playerid, -1, "[CHAT]: (/w)hisper - (/cw)hisper - /pm - /blockb - /blockpm");
-    SendClientMessage(playerid, -1, "[VEICOLI]: /motore - /vmenu - /apri - /chiudi - /parcheggia");
-    SendClientMessage(playerid, -1, "[INVENTARIO]: (/inv)entario - (/dep)osita - (/dis)assembla - /gettaarma");
-	SendClientMessage(playerid, -1, "[INVENTARIO]: /invmode - /usa");
+    SendClientMessage(playerid, -1, "[ALTRO]: /vehcmds - /invcmds");
 	if(AccountInfo[playerid][aAdmin] > 0)
 		SendClientMessage(playerid, COLOR_GREEN, "[SUPPORTER]: /asupportercmds");
 	if(AccountInfo[playerid][aAdmin] > 1)
@@ -95,6 +93,21 @@ CMD:aiuto(playerid, params[])
     return 1;
 }
 alias:aiuto("cmds", "help");
+
+flags:vehcmds(CMD_USER);
+CMD:vehcmds(playerid, params[])
+{
+	SendClientMessage(playerid, -1, "[VEICOLI]: /motore - /vmenu - /vapri - /vchiudi - /vparcheggia - /vpark");
+	return 1;
+}
+
+flags:invcmds(CMD_USER);
+CMD:invcmds(playerid, params[])
+{
+	SendClientMessage(playerid, -1, "[INVENTARIO]: (/inv)entario - (/dep)osita - (/dis)assembla - /gettaarma");
+	SendClientMessage(playerid, -1, "[INVENTARIO]: /invmode - /usa");
+	return 1;
+}
 
 flags:hotkeys(CMD_USER);
 CMD:hotkeys(playerid, params[])

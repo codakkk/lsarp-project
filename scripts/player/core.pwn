@@ -825,12 +825,12 @@ stock Character_ShowStats(playerid, targetid)
     AC_GetPlayerHealth(playerid, hp);
     AC_GetPlayerArmour(playerid, armour);
     SendClientMessage(targetid, COLOR_GREEN, "_____________________[STATISTICHE]_____________________");
-	SendFormattedMessage(targetid, -1, "[Account]: Account: %s", AccountInfo[playerid][aName]);
-    SendFormattedMessage(targetid, -1, "[Personaggio]: Nome: %s - Età: %d - Sesso: %s", Character_GetOOCName(playerid), PlayerInfo[playerid][pAge], GetSexName(playerid));
-	SendFormattedMessage(targetid, -1, "[Personaggio]: Livello: %d - Skin: %d", PlayerInfo[playerid][pLevel], GetPlayerSkin(playerid));
-    SendFormattedMessage(targetid, -1, "[Denaro]: Soldi: $%d", AC_GetPlayerMoney(playerid));
-    SendFormattedMessage(targetid, -1, "[Salute]: HP: %.2f - Armatura: %.2f", hp, armour);
-	SendFormattedMessage(targetid, -1, "[Altro]: Interior: %d - VW: %d", GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
+	SendFormattedMessage(targetid, -1, "[Account] Account: %s", AccountInfo[playerid][aName]);
+    SendFormattedMessage(targetid, -1, "[Personaggio] Nome: %s - Età: %d - Sesso: %s", Character_GetOOCName(playerid), PlayerInfo[playerid][pAge], GetSexName(playerid));
+	SendFormattedMessage(targetid, -1, "[Personaggio] Livello: %d - Skin: %d", PlayerInfo[playerid][pLevel], GetPlayerSkin(playerid));
+    SendFormattedMessage(targetid, -1, "[Denaro] Soldi: $%d", AC_GetPlayerMoney(playerid));
+    SendFormattedMessage(targetid, -1, "[Salute] HP: %.2f - Armatura: %.2f", hp, armour);
+	SendFormattedMessage(targetid, -1, "[Altro] Interior: %d - VW: %d", GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
     if(PlayerInfo[playerid][pBuildingKey] != 0 && PlayerInfo[playerid][pHouseKey] != 0)
         SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietà]: Edificio: %d - Casa: %d", PlayerInfo[playerid][pBuildingKey], PlayerInfo[playerid][pHouseKey]);
     else if(PlayerInfo[playerid][pBuildingKey] != 0)

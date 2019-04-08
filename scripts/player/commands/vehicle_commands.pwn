@@ -37,8 +37,8 @@ CMD:vmenu(playerid, params[])
     return 1;
 }
 
-flags:parcheggia(CMD_USER);
-CMD:parcheggia(playerid, params[])
+flags:vparcheggia(CMD_USER);
+CMD:vparcheggia(playerid, params[])
 {
 	new vehicleid = GetPlayerVehicleID(playerid);
 	if(vehicleid <= 0 || Vehicle_GetOwnerID(vehicleid) != Character_GetID(playerid))
@@ -52,10 +52,10 @@ CMD:parcheggia(playerid, params[])
 	SendFormattedMessage(playerid, COLOR_GREEN, "Hai parcheggiato qui la tua %s.", GetVehicleName(vehicleid));
 	return 1;
 }
-alias:parcheggia("park");
+alias:vparcheggia("vpark");
 
-flags:chiudi(CMD_USER);
-CMD:chiudi(playerid, params[])
+flags:vchiudi(CMD_USER);
+CMD:vchiudi(playerid, params[])
 {
     new vehicleid;
     if(sscanf(params, "d", vehicleid))
@@ -91,8 +91,8 @@ CMD:chiudi(playerid, params[])
     return 1;
 }
 
-flags:apri(CMD_USER);
-CMD:apri(playerid, params[])
+flags:vapri(CMD_USER);
+CMD:vapri(playerid, params[])
 {
     new vehicleid;
     if(sscanf(params, "d", vehicleid))
@@ -126,8 +126,8 @@ CMD:apri(playerid, params[])
     return 1;
 }
 
-flags:bagagliaio(CMD_USER);
-CMD:bagagliaio(playerid, params[])
+flags:vbagagliaio(CMD_USER);
+CMD:vbagagliaio(playerid, params[])
 {
     new vehicleid;
     if(sscanf(params, "d", vehicleid))
@@ -146,6 +146,7 @@ CMD:bagagliaio(playerid, params[])
     Vehicle_ShowInventory(vehicleid, playerid);
     return 1;
 }
+alias:vbagagliaio("vtrunk");
 
 flags:motore(CMD_USER);
 CMD:motore(playerid, params[])
