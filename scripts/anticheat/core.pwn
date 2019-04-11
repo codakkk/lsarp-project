@@ -5,7 +5,7 @@
 
 // Is this Timer expansive?
 // probably yes, but still better than OnPlayerUpdate (called each tick)
-ptask AntiCheatTimer[500](playerid) 
+ptask AntiCheatTimer[250](playerid) 
 {
     if(!gAccountLogged[playerid] || !gCharacterLogged[playerid] /*|| AccountInfo[playerid][aAdmin] > 2*/)
         return 0;
@@ -45,6 +45,64 @@ ptask AntiCheatTimer[500](playerid)
         AC_GivePlayerMoney(playerid, 0); // Resets player money
     }
 
+	if(!pDeathState[playerid])
+	{
+		new currentWeapon = GetPlayerWeapon(playerid),
+		currentAmmo = GetPlayerAmmo(playerid),
+		slot = Weapon_GetSlot(currentWeapon),
+		anticheatWeapon = ACInfo[playerid][acWeapons][slot],
+		anticheatAmmo = ACInfo[playerid][acAmmo][slot];
+		if(currentWeapon != anticheatWeapon && slot != 0 && currentWeapon != 0 && currentWeapon != WEAPON_BOMB && currentWeapon != WEAPON_PARACHUTE)
+		{
+			if(35 <= currentWeapon <= 39)
+			{
+				KickEx(playerid);
+			}
+			else if(slot == 1 || slot == 10)
+				RemovePlayerWeapon(playerid, currentWeapon);
+			else
+				SetPlayerAmmo(playerid, slot, 0);
+			AC_Detect(playerid, AC_WEAPON_HACK);
+			SetPlayerArmedWeapon(playerid, 0);
+		}
+		else if(currentWeapon == anticheatWeapon && currentWeapon != 0 && 2 <= slot <= 8 && !IsPlayerInAnyVehicle(playerid))
+		{
+			if(currentAmmo > anticheatAmmo)
+			{
+				if(anticheatAmmo > 0)
+				{
+					SetPlayerArmedWeapon(playerid, 0);
+					SetPlayerAmmo(playerid, currentWeapon, anticheatAmmo);
+				}
+				else
+				{
+					SetPlayerAmmo(playerid, slot, 0);
+				}
+				AC_Detect(playerid, AC_AMMO_HACK);
+			}
+			else if(currentAmmo < anticheatAmmo)
+			{
+				pAmmoSync{playerid}++;
+				if(pAmmoSync{playerid} >= 5)
+				{
+					ACInfo[playerid][acAmmo][slot] = currentAmmo;
+					pAmmoSync{playerid} = 0;
+				}
+			}
+			else
+				pAmmoSync{playerid} = 0;
+		}
+
+		static lastWeapon;
+		currentWeapon = GetPlayerWeapon(playerid);
+
+		if(lastWeapon != currentWeapon)
+		{
+			ACInfo[playerid][acShotCounter] = 0;
+			lastWeapon = currentWeapon;
+		}
+	}
+
     // Anti-cheats we can pass-on if we're admins goes here.
     if(AccountInfo[playerid][aAdmin] > 1)
         return 1;
@@ -59,6 +117,11 @@ ptask AntiCheatTimer[500](playerid)
     return 1;
 }
 
+CMD:trigger(playerid, params[])
+{
+	GivePlayerWeapon(playerid, 24, 1);
+	return 1;
+}
 
 stock AC_GetPlayerMoney(playerid)
 {
@@ -129,12 +192,31 @@ stock AC_GetPlayerArmour(playerid, &Float:a)
 
 stock AC_GivePlayerWeapon(playerid, weaponid, ammo)
 {
-    GivePlayerWeapon(playerid, weaponid, ammo);
-    return 1;
+	new slot = Weapon_GetSlot(weaponid);
+	if(2 <= slot <= 8) // Requires ammo?
+	{
+		if(ACInfo[playerid][acWeapons][slot] == weaponid)
+		{
+			if(ACInfo[playerid][acAmmo][slot] > 0)
+				ACInfo[playerid][acAmmo][slot] += ammo;
+			else
+				ACInfo[playerid][acAmmo][slot] = ammo;
+		}
+		else
+		{
+			ACInfo[playerid][acAmmo][slot] = ammo;
+		}
+	}
+	ACInfo[playerid][acWeapons][slot] = weaponid;
+    return GivePlayerWeapon(playerid, weaponid, ammo);
 }
 
 stock AC_ResetPlayerWeapons(playerid)
 {
+	for(new i = 0; i < 13; ++i)
+	{
+		ACInfo[playerid][acWeapons][i] = ACInfo[playerid][acAmmo][i] = 0;
+	}
     ResetPlayerWeapons(playerid);
     return 1;
 }
@@ -159,4 +241,22 @@ stock AC_GivePlayerAmmo(playerid, weaponid, ammo)
 	new w, a;
 	GetPlayerWeaponData(playerid, Weapon_GetSlot(weaponid), w, a);
 	return AC_SetPlayerAmmo(playerid, weaponid, a + ammo);
+}
+
+stock AC_AntiWeaponCheck(playerid, weaponid, &ammo)
+{
+	new 
+		slot = Weapon_GetSlot(weaponid),
+		ac_w = ACInfo[playerid][acWeapons][slot],
+		ac_a = ACInfo[playerid][acAmmo][slot];
+	if(weaponid != ac_w && slot != 0 && weaponid != 0 && weaponid != 40 && weaponid != 46)
+		return 0;
+	if(weaponid == ac_w && 2 <= slot <= 8 && ammo > ac_a)
+	{
+		if(ac_a > 0)
+			ammo = ac_a;
+		else 
+			return 0;
+	}
+	return 1;
 }

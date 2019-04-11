@@ -2,19 +2,10 @@
 
 hook OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
 {
-    if(AccountInfo[playerid][aAdmin] <= 0)
+    if(AccountInfo[playerid][aAdmin] <= 0 || !pAdminDuty[playerid])
         return 0;
     SetPlayerPos(playerid, fX, fY, fZ);
     return 1;
-}
-
-hook OnPlayerExitVehicle(playerid, vehicleid)
-{
-    if(gAdminVehicle[playerid] == vehicleid)
-    {
-        DestroyVehicle(gAdminVehicle[playerid]);
-        gAdminVehicle[playerid] = 0;
-    }
 }
 
 stock GetAdminLevelName(level)

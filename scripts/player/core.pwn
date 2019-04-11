@@ -192,24 +192,27 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
     if(newstate == PLAYER_STATE_DRIVER)
     {
         new vehicleid = GetPlayerVehicleID(playerid);
-        if(VehicleInfo[vehicleid][vModel] != 0)
+        if(VehicleInfo[vehicleid][vModel] != 0) // Probably a useless check
         {
-            if(gVehicleDestroyTime[vehicleid] != -1)
-            {
-                SendTwoLinesMessage(playerid, COLOR_ERROR, "(( Attenzione: Il proprietario del veicolo (%s) si è disconnesso. Il veicolo verrà distrutto in %d minuti. ))", VehicleInfo[vehicleid][vOwnerName], gVehicleDestroyTime[vehicleid]);
-            }
-            new
-                playerName[MAX_PLAYER_NAME];
-            
-            FixName(VehicleInfo[vehicleid][vOwnerName], playerName);
-            SendFormattedMessage(playerid, COLOR_GREEN, "Questo veicolo (%s) appartiene a %s", GetVehicleName(vehicleid), playerName);
+			if(Vehicle_GetOwnerID(vehicleid) != 0)
+			{
+				if(gVehicleDestroyTime[vehicleid] != -1)
+				{
+					SendTwoLinesMessage(playerid, COLOR_ERROR, "(( Attenzione: Il proprietario del veicolo (%s) si è disconnesso. Il veicolo verrà despawnato in %d minuti. ))", VehicleInfo[vehicleid][vOwnerName], gVehicleDestroyTime[vehicleid]);
+				}
+				new
+					playerName[MAX_PLAYER_NAME];
+				
+				FixName(VehicleInfo[vehicleid][vOwnerName], playerName);
+				SendFormattedMessage(playerid, COLOR_GREEN, "(( Questo veicolo (%s) appartiene a %s ))", GetVehicleName(vehicleid), playerName);
+			}
 
             if(Vehicle_IsEngineOff(vehicleid))
             {
 				if(Bit_Get(gPlayerBitArray[e_pHotKeys], playerid))
-                	SendClientMessage(playerid, -1, "Premi Y (oppure digita /motore) per accendere il motore.");
+                	SendClientMessage(playerid, -1, "Premi {00FF00}Y{FFFFFF} (oppure digita {00FF00}/motore{FFFFFF}) per accendere il motore.");
 				else 
-					SendClientMessage(playerid, -1, "Digita /motore per accendere il motore.");
+					SendClientMessage(playerid, -1, "Digita {00FF00}/motore{FFFFFF} per accendere il motore.");
             }
         }
     }
@@ -370,7 +373,7 @@ hook OnPlayerSpawn(playerid)
         SetPlayerVirtualWorld(playerid, PlayerRestore[playerid][pLastVirtualWorld]);
         AC_SetPlayerHealth(playerid, PlayerRestore[playerid][pLastHealth]);
         AC_SetPlayerArmour(playerid, PlayerRestore[playerid][pLastArmour]);
-        // SendClientMessage(playerid, -1, "> Spawned");
+        Character_RestoreWeapons(playerid);
     }
     else if(pDeathState[playerid] == 2 && !pAdminDuty[playerid])
     {
@@ -469,9 +472,27 @@ stock LoadCharacterResult(playerid)
 
         cache_get_value_index_int(0, 20, PlayerInfo[playerid][pBuildingKey]);
         cache_get_value_index_int(0, 21, PlayerInfo[playerid][pHouseKey]);
+
+		cache_get_value_index(0, 22, PlayerRestore[playerid][pWeaponsString]);
+		
         return 1;
     }
     return 0;
+}
+
+stock Character_RestoreWeapons(playerid)
+{
+	if(strlen(PlayerRestore[playerid][pWeaponsString]) == 0)
+		return 0;
+	new weapons[26];
+	sscanf(PlayerRestore[playerid][pWeaponsString], "p<,>a<i>[26]", weapons);
+	for(new i = 0; i < 26; i += 2)
+	{
+		if(weapons[i] != 0)
+			AC_GivePlayerWeapon(playerid, weapons[i], weapons[i+1]);
+	}
+	SetPlayerArmedWeapon(playerid, 0);
+	return 1;
 }
 
 stock Character_Save(playerid, spawned = true, disconnected = false)
@@ -484,10 +505,25 @@ stock Character_Save(playerid, spawned = true, disconnected = false)
     
     new 
         query[1024],
+		weapData[128],
         Float:_x, Float:_y, Float:_z,
         Float:angle,
         Float:hp, Float:armour,
         isSpawned = false;
+
+	new weapons[13][2], tempWeap;
+	new ac_weapon;
+	for(new i = 0; i < 13; ++i)
+	{
+		GetPlayerWeaponData(playerid, i, weapons[i][0], weapons[i][1]);
+		tempWeap = weapons[i][0];
+		if(!AC_AntiWeaponCheck(playerid, tempWeap, weapons[i][1]))
+		{
+			if(tempWeap != ac_weapon || weapons[i][1] <= 0)
+				weapons[i] = {0, 0};
+		}
+		format(weapData, sizeof(weapData), "%s%d,%d,", weapData, weapons[i][0], weapons[i][1]);
+	}
 
     //if() 
     isSpawned = pDeathState[playerid] == 0 && spawned;
@@ -501,13 +537,15 @@ stock Character_Save(playerid, spawned = true, disconnected = false)
         Money = '%d', Level = '%d', Age = '%d', Sex = '%d', \
         LastX = '%f', LastY = '%f', LastZ = '%f', LastAngle = '%f', LastInterior = '%d', LastVirtualWorld = '%d', Health = '%f', Armour = '%f', Skin = '%d', \
         Spawned = '%d', PayDay = '%d', Exp = '%d',  \
-        BuildingKey = '%d', HouseKey = '%d' \
+        BuildingKey = '%d', HouseKey = '%d', \
+		Weapons = '%e' \
         WHERE ID = '%d'", 
         PlayerInfo[playerid][pMoney], PlayerInfo[playerid][pLevel], PlayerInfo[playerid][pAge], PlayerInfo[playerid][pSex], 
         _x, _y, _z, angle, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid),
         hp, armour, PlayerInfo[playerid][pSkin],
         isSpawned, PlayerInfo[playerid][pPayDay], PlayerInfo[playerid][pExp],
         PlayerInfo[playerid][pBuildingKey], PlayerInfo[playerid][pHouseKey],
+		weapData,
         PlayerInfo[playerid][pID]);
     
     mysql_tquery(gMySQL, query);
@@ -571,10 +609,11 @@ stock Character_Delete(playerid, character_db_id, character_name[])
     return 1;
 }
 
-stock Character_AddVehicle(playerid, model, color1, color2)
+stock Character_AddOwnedVehicle(playerid, vehicleid)
 {
-    new 
-        vehicleid = GetPlayerVehicleID(playerid),
+	if(!Vehicle_IsValid(vehicleid))
+		return 0;
+    new
         Float:x, Float:y, Float:z, Float:a;
     
     GetVehiclePos(vehicleid, x, y, z);
@@ -584,22 +623,22 @@ stock Character_AddVehicle(playerid, model, color1, color2)
         VehicleInfo[vehicleid][vID] = cache_insert_id();
         VehicleInfo[vehicleid][vOwnerID] = PlayerInfo[playerid][pID];
         set(VehicleInfo[vehicleid][vOwnerName], PlayerInfo[playerid][pName]);
-        VehicleInfo[vehicleid][vModel] = model;
-        VehicleInfo[vehicleid][vColor1] = color1;
-        VehicleInfo[vehicleid][vColor2] = color2;
+        VehicleInfo[vehicleid][vModel] = GetVehicleModel(vehicleid);
+        VehicleInfo[vehicleid][vColor1] = Vehicle_GetColor1(vehicleid);
+        VehicleInfo[vehicleid][vColor2] = Vehicle_GetColor2(vehicleid);
         VehicleInfo[vehicleid][vX] = x;
         VehicleInfo[vehicleid][vY] = y;
         VehicleInfo[vehicleid][vZ] = z;
         VehicleInfo[vehicleid][vA] = a;
         VehicleInfo[vehicleid][vLocked] = 0;
         gVehicleDestroyTime[vehicleid] = -1;
-        Vehicle_SetEngineOff(vehicleid);
         Vehicle_InitializeInventory(vehicleid);
         mysql_tquery_f(gMySQL, "INSERT INTO `vehicle_inventory` (VehicleID) VALUES('%d')", VehicleInfo[vehicleid][vID]);
     }
     MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO `player_vehicles` (OwnerID, Model, Color1, Color2, X, Y, Z, Angle, Locked) \
         VALUES('%d', '%d', '%d', '%d', '%f', '%f', '%f', '%f', '0')",
-        PlayerInfo[playerid][pID], model, color1, color2, x, y, z, a);
+        PlayerInfo[playerid][pID], GetVehicleModel(vehicleid), Vehicle_GetColor1(vehicleid), Vehicle_GetColor2(vehicleid), x, y, z, a);
+	return 1;
 }
 
 stock Character_LoadVehicles(playerid)
@@ -634,7 +673,7 @@ stock Character_LoadVehicles(playerid)
                 continue;
             }
 
-            new vehicleid = CreateVehicle(modelid, 0, 0, 0, 0, 0, 0, 0, 0);
+            new vehicleid = Vehicle_Create(modelid, 0, 0, 0, 0, 0, 0, 0, 0);
             VehicleInfo[vehicleid][vID] = id;
             cache_get_value_index_int(i, 1, VehicleInfo[vehicleid][vOwnerID]);
             VehicleInfo[vehicleid][vModel] = modelid;
@@ -660,7 +699,6 @@ stock Character_LoadVehicles(playerid)
             gVehicleDestroyTime[vehicleid] = -1;
             
             Vehicle_Reload(vehicleid);
-            Iter_Add(Vehicles, vehicleid);
             CallLocalFunction(#OnPlayerVehicleLoaded, "d", vehicleid);
         }
     }
@@ -1015,4 +1053,42 @@ stock Character_SetFreezed(playerid, freeze)
 {
     Bit_Set(gPlayerBitArray[e_pFreezed], playerid, freeze);
     TogglePlayerControllable(playerid, !freeze);
+}
+
+// 283,75
+// 284
+
+// Returns a PP List with all house ids owned (not affittate) by playerid.
+// Remember to delete List with list_delete/list_delete_deep
+stock List:Character_GetOwnedHouses(playerid)
+{
+	new List:list = list_new();
+	for(new i = 0; i < list_size(HouseList); ++i)
+	{
+		new owner = list_get(HouseList, i, hOwnerID);
+		if(owner == PlayerInfo[playerid][pID])
+			list_add(list, i);
+	}
+	return list;
+}
+
+stock Character_GetNearHouseID(playerid)
+{
+	if(pLastPickup[playerid] == -1)
+		return -1;
+	new id, E_ELEMENT_TYPE:type;
+	Pickup_GetInfo(pLastPickup[playerid], id, type);
+	if(type == ELEMENT_TYPE_HOUSE_ENTRANCE || type == ELEMENT_TYPE_HOUSE_EXIT)
+		return id;
+	return -1;
+}
+
+stock Character_GetNearHouseIDMenu(playerid)
+{
+	new houseid = Character_GetNearHouseID(playerid);
+	if(House_GetOwnerID(houseid) == Character_GetID(playerid))
+		return houseid;
+	if(House_GetID(houseid) == Character_GetHouseKey(playerid))
+		return houseid;
+	return -1;
 }

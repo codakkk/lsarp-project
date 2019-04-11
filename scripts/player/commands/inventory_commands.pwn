@@ -30,19 +30,30 @@ CMD:inventario(playerid, params[])
 		new tempItem[E_ITEM_DATA], slotid = -1;
 		for_inventory(i : playerInventory)
 		{
+			new String:s;
 			slotid++;
 			iter_get_arr(i, tempItem);
 			if(iter_sizeof(i) == 0 || tempItem[gInvItem] == 0) // If no item
-				continue;
-			new itemid = tempItem[gInvItem],
-				itemAmount = tempItem[gInvAmount],
-				extra = tempItem[gInvExtra];
-			
-			new String:s = str_format("Slot {0080FF}%d{FFFFFF} - {FFFFFF}%s{FFFFFF} ({FFFFFF}%d{FFFFFF})", slotid, ServerItem_GetName(itemid), itemAmount);
-			
-			if(ServerItem_GetType(itemid) == ITEM_TYPE:ITEM_TYPE_WEAPON)
-				s += @(" - ") + str_val(extra);
-			
+			{
+				s = str_format("Slot {0080FF}%d{FFFFFF} - Slot Libero", slotid);
+			}
+			else
+			{
+				new itemid = tempItem[gInvItem],
+					itemAmount = tempItem[gInvAmount],
+					extra = tempItem[gInvExtra];
+				
+				s = str_format("Slot {0080FF}%d{FFFFFF} - {FFFFFF}%s{FFFFFF} ({FFFFFF}%d{FFFFFF})", slotid, ServerItem_GetName(itemid), itemAmount);
+				
+				if(ServerItem_GetType(itemid) == ITEM_TYPE:ITEM_TYPE_WEAPON)
+				{
+					s += @(" - ");
+					if(extra <= 0)
+						s += @("Vuota");
+					else
+						s += str_val(extra);
+				}
+			}
 			SendClientMessageStr(playerid, -1, s);
 		}
 		SendClientMessage(playerid, COLOR_GREEN, "__________________________________________");
@@ -75,7 +86,7 @@ CMD:deposita(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario!");
 	Character_GiveItem(playerid, itemid, 1, AC_GetPlayerAmmo(playerid));
 	AC_RemovePlayerWeapon(playerid, itemid);
-	SendClientMessage(playerid, COLOR_GREEN, "Hai depositato la tua arma nell'inventaario!");
+	SendClientMessage(playerid, COLOR_GREEN, "Hai depositato la tua arma nell'inventario!");
 	return 1;
 }
 alias:deposita("dep");

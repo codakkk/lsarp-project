@@ -1,9 +1,11 @@
 
-#define MAX_DROP_TIME_AS_MIN        1 //
+#define MAX_DROP_TIME_AS_MIN		1 //
+#define MAX_DROPS					100
 #define for_drops(%0) for_list(%0 : DropList)
 
 enum _:E_DROP_INFO // _: for tag mismatch thing
 {
+	dCreated,
     Float:dX,
     Float:dY,
     Float:dZ,
@@ -18,12 +20,5 @@ enum _:E_DROP_INFO // _: for tag mismatch thing
     dPickup
 };
 new 
-    List:DropList;
-
-stock bool:Drop_GetData(dropid, drop[E_DROP_INFO])
-{
-    if(list_get_arr_safe(DropList, dropid, drop))
-        return true;
-    return false;
-}
-
+	DropInfo[MAX_DROPS][E_DROP_INFO],
+	Iterator:DropsIterator<MAX_DROPS>;

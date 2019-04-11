@@ -28,7 +28,7 @@ CMD:pm(playerid, params[])
     
     PlayerPlaySound(id, 1085, 0.0, 0.0, 0.0);
     SendFormattedMessage(id, COLOR_YELLOW, "PM da %s (%d): %s", Character_GetOOCName(playerid), playerid, s);
-    SendFormattedMessage(playerid, COLOR_YELLOW, "PM a %s (%d): %s.", Character_GetOOCName(id), id, s);
+    SendFormattedMessage(playerid, COLOR_YELLOW, "PM a %s (%d): %s", Character_GetOOCName(id), id, s);
     return 1;
 }
 

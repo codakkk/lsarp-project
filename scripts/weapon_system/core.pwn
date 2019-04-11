@@ -48,7 +48,7 @@ hook OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
     if(weaponDamage)
     {
         if(currentArmour >= weaponDamage) 
-            AC_SetPlayerArmour(playerid, weaponDamage);
+            AC_SetPlayerArmour(playerid, currentArmour - weaponDamage);
         else if(currentArmour && currentArmour < weaponDamage)
         {
             AC_SetPlayerArmour(playerid, 0);
@@ -142,4 +142,37 @@ stock Weapon_GetObjectModel(weaponid)
         case 33 .. 46: return 357 + (weaponid - 33);
     }
     return 0;
+}
+
+stock Weapon_GetMagSize(weaponid)
+{
+	static WeaponMagSizes[17] = {
+		// Pistols
+		017, // 22 M9 x2 WHEN DUAL
+		017, // 23 M9 SD
+		007, // 24 Desert Eagle
+
+		// Shotgun
+		001, // 25 Shotgun
+		002, // 26 Sawnoff x2 WHEN DUAL
+		007, // 27 Spas 12
+
+		// Automatic
+		050, // 28 Mac 10 x2 WHEN DUAL
+		030, // 29 MP5
+		030, // 30 AK-47
+		050, // 31 M16
+		050, // 32 Tec 9 x2 WHEN DUAL
+
+		// Rifle
+		001, // 33 Rifle
+		001, // 34 Sniper
+
+		// Heavy
+		001, // 35 RPG
+		001, // 36 Heatseeker
+		500, // 37 Flamer
+		500 // 38 Minigun
+	};
+	return WeaponMagSizes[weaponid - 22];
 }

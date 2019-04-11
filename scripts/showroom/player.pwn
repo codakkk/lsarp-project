@@ -50,7 +50,7 @@ hook OnPlayerClearData(playerid)
 {
     if(gBuyingVehicle[playerid] && gBuyingVehicleID[playerid])
     {
-        DestroyVehicle(gBuyingVehicleID[playerid]);
+        Vehicle_Destroy(gBuyingVehicleID[playerid]);
     }
     ClearBuyingVehicleData(playerid);
     return 1;
@@ -168,7 +168,7 @@ Dialog:Dialog_PlayerShowRoom(playerid, response, listitem, inputtext[])
     }
     gBuyingVehicle[playerid] = 1;
     gBuyingVehiclePrice[playerid] = vehicle_price;
-    gBuyingVehicleID[playerid] = CreateVehicle(vehicle_model, ShowRoomInfo[showroom_id][srVehX], ShowRoomInfo[showroom_id][srVehY], ShowRoomInfo[showroom_id][srVehZ], 0, 0, 0, 0, 0);
+    gBuyingVehicleID[playerid] = Vehicle_Create(vehicle_model, ShowRoomInfo[showroom_id][srVehX], ShowRoomInfo[showroom_id][srVehY], ShowRoomInfo[showroom_id][srVehZ], 0, 0, 0, 0, 0);
     
     SetPlayerPos(playerid, ShowRoomInfo[showroom_id][srVehX], ShowRoomInfo[showroom_id][srVehY], ShowRoomInfo[showroom_id][srVehZ]);
     SetPlayerVirtualWorld(playerid, playerid + 1);
@@ -199,23 +199,24 @@ stock ShowRoom_PlayerConfirmBuy(playerid)
     {
         new showroomid = gCurrentShowRoom[playerid];
         SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi!");
-        DestroyVehicle(gBuyingVehicleID[playerid]);
+        Vehicle_Destroy(gBuyingVehicleID[playerid]);
         SetPlayerVirtualWorld(playerid, 0);
         SetPlayerPos(playerid, ShowRoomInfo[showroomid][srX], ShowRoomInfo[showroomid][srY], ShowRoomInfo[showroomid][srZ]);
         ClearBuyingVehicleData(playerid);
     }
     else
     {
-        SendFormattedMessage(playerid, COLOR_YELLOW, "Congratulazioni! Hai acquistato questo veicolo (%s) per $%d!", GetVehicleName(gBuyingVehicleID[playerid]), gBuyingVehiclePrice[playerid]);
+        SendFormattedMessage(playerid, -1, "Congratulazioni! Hai acquistato questo veicolo ({00AA00}%s{FFFFFF}) per {00FF00}$%d{FFFFFF}!", GetVehicleName(gBuyingVehicleID[playerid]), gBuyingVehiclePrice[playerid]);
         AC_GivePlayerMoney(playerid, -gBuyingVehiclePrice[playerid], "Concessionaria");
         SetVehicleVirtualWorld(gBuyingVehicleID[playerid], 0);
         SetPlayerVirtualWorld(playerid, 0);
         PutPlayerInVehicle(playerid, gBuyingVehicleID[playerid], 0);
         
-        Character_AddVehicle(playerid, GetVehicleModel(gBuyingVehicleID[playerid]), CarColors[VehicleColorNum1[playerid]], CarColors[VehicleColorNum2[playerid]]);
-
-        Iter_Add(Vehicles, gBuyingVehicleID[playerid]);
+        Character_AddOwnedVehicle(playerid, gBuyingVehicleID[playerid]);
+		Vehicle_SetEngineOff(gBuyingVehicleID[playerid]);
     }            
+	gBuyingVehicleID[playerid] = 0;
+	gBuyingVehiclePrice[playerid] = 0;
     SetCameraBehindPlayer(playerid);
     ClearBuyingVehicleData(playerid);
     TogglePlayerControllable(playerid, 1);
@@ -225,7 +226,7 @@ stock ShowRoom_PlayerConfirmBuy(playerid)
 stock ShowRoom_PlayerCancelBuy(playerid)
 {
     new showroom = gCurrentShowRoom[playerid];
-    DestroyVehicle(gBuyingVehicleID[playerid]);
+    Vehicle_Destroy(gBuyingVehicleID[playerid]);
     SetPlayerPos(playerid, ShowRoomInfo[showroom][srX], ShowRoomInfo[showroom][srY], ShowRoomInfo[showroom][srZ]);
     TogglePlayerControllable(playerid, 1);
     SetPlayerVirtualWorld(playerid, 0);

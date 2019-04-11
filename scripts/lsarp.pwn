@@ -30,7 +30,7 @@
 // #pragma warning disable 208 // actually just a good way to prevent warning: "function with tag result used before definition, forcing reparse".
 
 #include <a_samp>
-
+native IsValidVehicle(vehicleid);
 //#define DEBUG 0
 
 #undef MAX_PLAYERS
@@ -70,12 +70,6 @@
 DEFINE_HOOK_REPLACEMENT(ShowRoom, SR);
 DEFINE_HOOK_REPLACEMENT(Element, Elm);
 
-
-//#define AC_GivePlayerWeapon     GivePlayerWeapon
-//#define AC_ResetPlayerWeapons    ResetPlayerWeapons
-
-//
-
 enum (<<= 1)
 {
     CMD_USER = 1,
@@ -97,7 +91,6 @@ enum (<<= 1)
 
 #include <utils/colors.pwn>
 #include <utils/utils.pwn>
-#include <utils/weapons.pwn>
 
 #include <database/database.pwn>
 
@@ -108,6 +101,7 @@ enum (<<= 1)
 #include <enums.pwn>
 #include <systems.pwn>
 
+#include <utils/weapons.pwn> 
 //
 
 
@@ -124,7 +118,6 @@ main()
     PlayerInventory = map_new();
     VehicleInventory = map_new();
     HouseList = list_new();
-    DropList = list_new();
     //LootZoneList = list_new();
     
     /*new data[E_HOUSE_DATA];
@@ -182,7 +175,39 @@ public OnPlayerSpawn(playerid) return 1;
 public OnPlayerDeath(playerid, killerid, reason) return 0;
 public OnPlayerRequestSpawn(playerid) return 1;
 public OnPlayerKeyStateChange(playerid, newkeys, oldkeys) return 1;
-public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ) return 1;
+public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ) 
+{
+	if( !( -1000.0 <= fX <= 1000.0 ) || !( -1000.0 <= fY <= 1000.0 ) || !( -1000.0 <= fZ <= 1000.0 ) )
+        return 0;
+	// If the server isn't performing well, updates to this callback will be
+	// delayed and could stack up resulting in a sudden mass-call of this
+	// callback which can cause false positives.
+	// More research needed into this though as player lag can also cause this,
+	// possibly a ping check or packet loss check would work.
+	if(GetServerTickRate() < 100)
+		return 1;
+	new magSize = Weapon_GetMagSize(weaponid);
+	ACInfo[playerid][acShotCounter]++;
+	if(ACInfo[playerid][acShotCounter] == magSize && magSize > 1)
+	{
+		AC_Detect(playerid, AC_NO_RELOAD_HACK);
+
+	} else ACInfo[playerid][acShotCounter] = 0;
+	return 1;
+}
+
+hook OnAntiCheatDetected(playerid, code)
+{
+	SendMessageToAdmins(true, COLOR_ERROR, "[ADMIN-ALERT]: %s (%d) è sospetto di hack. (%s)", Character_GetOOCName(playerid), playerid, AC_Name[code]);
+	return 1;
+}
+
+public OnVehicleMod(playerid, vehicleid, componentid)
+{
+	RemoveVehicleComponent(vehicleid, componentid);
+	return 0;
+}
+
 
 public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 {

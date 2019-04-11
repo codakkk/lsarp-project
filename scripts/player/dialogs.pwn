@@ -21,14 +21,11 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
         return 0;
     new pickupid = pLastPickup[playerid];
     if(pickupid == -1 || !IsPlayerInRangeOfPickup(playerid, pickupid, 2.0))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita della casa.");
-    new 
-        elementId, 
-        E_ELEMENT_TYPE:type;
-    Pickup_GetInfo(pickupid, elementId, type);
-    if(type != ELEMENT_TYPE_HOUSE_ENTRANCE && type != ELEMENT_TYPE_HOUSE_EXIT)
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita della casa.");
-    new houseid = elementId;
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita della tua casa.");
+
+	new houseid = Character_GetNearHouseIDMenu(playerid);
+	if(houseid == -1)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita della tua casa.");
     switch(listitem)
     {
         case 0: // Apri/Chiudi Porta
@@ -54,7 +51,7 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
         }
         case 4: // Vendi 
         {
-            return Dialog_Show(playerid, Dialog_HouseSell, DIALOG_STYLE_MSGBOX, "Vendi", "Sei sicuro di voler vendere la tua casa per {00FF00}$%d{FFFFFF}", "Vendi", "Annulla", House_GetPrice(houseid));
+            return Dialog_Show(playerid, Dialog_HouseSell, DIALOG_STYLE_MSGBOX, "Vendi", "Sei sicuro di voler vendere la tua casa per {00FF00}$%d{FFFFFF}", "Vendi", "Annulla", House_GetPrice(houseid)/2);
         }
         case 5: // Vendi a giocatore
         {
@@ -81,13 +78,16 @@ Dialog:Dialog_HouseDeposit(playerid, response, listitem, inputtext[])
 {
     if(!response)
         return 0;
+    new houseid = Character_GetNearHouseIDMenu(playerid);
+	if(houseid == -1)
+		return 0;
     new amount = strval(inputtext);
     if(amount <= 0 || amount > AC_GetPlayerMoney(playerid))
         return Dialog_Show(playerid, Dialog_HouseDeposit, DIALOG_STYLE_INPUT, "Deposita soldi", "{FF0000}Ammontare non valido!\n{FFFFFF}Inserisci l'ammontare di soldi che vuoi depositare in casa.", "Deposita", "Annulla");
-    new houseid = Character_GetHouseKey(playerid);
     House_GiveMoney(houseid, amount);
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai depositato $%d all'interno della tua casa.", amount);
     SendFormattedMessage(playerid, COLOR_GREEN, "Attuale: $%d", House_GetMoney(houseid));
+	House_Save(houseid);
     return 1;
 }
 
@@ -95,14 +95,17 @@ Dialog:Dialog_HouseWithdraw(playerid, response, listitem, inputtext[])
 {
     if(!response)
         return 0;
-    new amount = strval(inputtext),
-        houseid = Character_GetHouseKey(playerid);
+	new houseid = Character_GetNearHouseIDMenu(playerid);
+	if(houseid == -1)
+		return 0;
+    new amount = strval(inputtext);
     if(amount <= 0 || amount > House_GetMoney(houseid))
         return Dialog_Show(playerid, Dialog_HouseWithdraw, DIALOG_STYLE_INPUT, "Ritira soldi", "{FF0000}Ammontare non valido!\n{FFFFFF}Inserisci l'ammontare di soldi che vuoi ritirare dalla casa.\n{00FF00}Cassa: $%d{FFFFFF}", "Ritira", "Annulla", House_GetMoney(houseid));
     House_GiveMoney(houseid, -amount);
     AC_GivePlayerMoney(playerid, amount, "Dialog_HouseWithdraw");
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai ritirato $%d dalla tua casa.", amount);
     SendFormattedMessage(playerid, COLOR_GREEN, "Attuale: $%d", House_GetMoney(houseid));
+	House_Save(houseid);
     return 1;
 }
 
@@ -110,9 +113,9 @@ Dialog:Dialog_HouseSell(playerid, response, listitem, inputtext[])
 {
     if(!response)
         return 0;
-    new houseid = Character_GetHouseKey(playerid);
-    if(houseid == 0)
-        return 0; // Bug?
+	new houseid = Character_GetNearHouseIDMenu(playerid);
+	if(houseid == -1)
+		return 0;
     new sellPrice = House_GetPrice(houseid) / 2;
     AC_GivePlayerMoney(playerid, sellPrice, "Dialog_HouseSell");
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai venduto la tua casa per $%d.", sellPrice);
@@ -126,7 +129,9 @@ Dialog:Dialog_HouseInterior(playerid, response, listitem, inputtext[])
 {
     if(!response)
         return 0;
-    new houseid = Character_GetHouseKey(playerid);
+	new houseid = Character_GetNearHouseIDMenu(playerid);
+	if(houseid == -1)
+		return 0;
 	if(!IsPlayerInRangeOfHouseEntrance(playerid, houseid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata della tua casa!");
 	if(allHouseInteriors[House_GetInteriorID(houseid)][iType] != allHouseInteriors[listitem][iType])

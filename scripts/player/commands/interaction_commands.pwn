@@ -28,6 +28,10 @@ CMD:esci(playerid, params[])
     return 1;
 }
 
+
+Weapon_
+
+
 flags:dai(CMD_USER);
 CMD:dai(playerid, params[])
 {
@@ -37,16 +41,41 @@ CMD:dai(playerid, params[])
     if(sscanf(params, "us[128]", id, text))
     {
         SendClientMessage(playerid, COLOR_ERROR, "/dai <playerid/partofname> <oggetto>");
-        SendClientMessage(playerid, COLOR_ERROR, "Oggetti: chiave");
+        SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma");
         return 1;
     }
     
     if(id < 0 || id >= MAX_PLAYERS || !gCharacterLogged[id])
         return SendClientMessage(playerid, COLOR_ERROR, "Giocatore non connesso!");
     
-    if(!ProxDetectorS(5.0, playerid, id))
+    if(!ProxDetectorS(3.0, playerid, id))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore!");
     
+	if(pPendingRequest[id][rdPending] && GetTickCount() - pPendingRequest[id][rdTime] < 20 * 1000) // 20 seconds
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta attiva!");
+
+	if(!strcmp(text, "arma", true))
+	{
+		new weapon = GetPlayerWeapon(playerid);
+		new ammo = GetPlayerAmmo(playerid);
+		if(weapon == 0 || ammo <= 0)
+			return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma in mano!");
+		SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto di dare l'arma (%s) con %d proiettili a %s (%d).", Weapon_GetName(weapon), ammo, Character_GetOOCName(id), id);
+		SendFormattedMessage(id, COLOR_GREEN, "%s (%d) vuole darti un'arma (%s) con %d proiettili.", Character_GetOOCName(playerid), playerid, Weapon_GetName(weapon), ammo);
+		SendClientMessage(playerid, -1, "Digita '{00FF00}/accetta arma{FFFFFF}' per accettare.");
+
+		pPendingRequest[id][rdPending] = 1;
+		pPendingRequest[id][rdByPlayer] = playerid;
+		pPendingRequest[id][rdTime] = GetTickCount();
+		pPendingRequest[id][rdItem] = weapon;
+		pPendingRequest[id][rdAmount] = 1;
+		pPendingRequest[id][rdExtra] = ammo;
+		pPendingRequest[id][rdType] = PENDING_TYPE_WEAPON;
+	}
+	else
+	{
+		SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma");
+	}
     /*if(!strcmp(text, "chiave", true))
     {
         new vehicleid = GetPlayerVehicleID(playerid);
@@ -71,10 +100,32 @@ CMD:accetta(playerid, params[])
     if(sscanf(params, "s[128]", text))
     {
         SendClientMessage(playerid, COLOR_ERROR, "/accetta <oggetto>");
-        SendClientMessage(playerid, COLOR_ERROR, "Oggetti: chiave, veicolo");
+        SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma, chiave, veicolo");
         return 1;
     }
-    if(!strcmp(text, "veicolo", true))
+	if(!strcmp(text, "arma", true))
+	{
+		if(!pPendingRequest[playerid][rdPending] || pPendingRequest[playerid][rdType] != PENDING_TYPE_WEAPON)
+			return SendClientMessage(playerid, color, "Non hai una richiesta d'arma attiva!");
+		new weaponid = pPendingRequest[playerid][rdItem],
+			ammo = pPendingRequest[playerid][rdExtra],
+			requestSender = pPendingRequest[playerid][rdByPlayer];
+		if(ACInfo[playerid][pWeapons][Weapon_GetSlot(weaponid)] == 0)
+		{
+			AC_GivePlayerWeapon(playerid, weaponid, ammo);
+			SendFormattedMessage(playerid, COLOR_GREEN, "Hai accettato l'arma (%s) con %d proiettili da %s (%d).", Weapon_GetName(weaponid), ammo, Character_GetOOCName(requestSender), requestSender);
+		}
+		else if(Character_HasSpaceForItem(playerid, weaponid, ammo))
+		{
+			Character_GiveItem(playerid, weaponid, 1, ammo);
+			SendFormattedMessage(playerid, COLOR_GREEN, "Hai accettato l'arma (%s) con %d proiettili da %s (%d).", Weapon_GetName(weaponid), ammo, Character_GetOOCName(requestSender), requestSender);
+			SendClientMessage(playerid, COLOR_GREEN, "L'arma è stata messa nell'inventario poiché lo slot è occupato!");
+		}
+		else
+			SendClientMessage(playerid, COLOR_ERROR, "Hai già un'arma e non hai abbastanza spazio nell'inventario!");
+
+	}
+    else if(!strcmp(text, "veicolo", true))
     {
         // I must check if seller disconnected (must clear data too)
         if(! (pVehicleSeller[playerid] != -1 && pVehicleSellingTo[pVehicleSeller[playerid]] == playerid))
@@ -108,6 +159,7 @@ CMD:accetta(playerid, params[])
         pVehicleSeller[playerid] = -1;
         return 1;
     }
+	else return SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma, chiave, veicolo");
     /*if(!strcmp(text, "chiave", true))
     {
         new 

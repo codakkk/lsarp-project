@@ -45,11 +45,24 @@ hook OnPlayerClearData(playerid)
 
 hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
-
-    if(GetPlayerWeaponState(playerid) == WEAPONSTATE_LAST_BULLET && AC_GetPlayerAmmo(playerid) == 1 && /*Has Weapon && */ Character_HasSpaceForWeapon(playerid, weaponid, 0))
+	new ammo = GetPlayerAmmo(playerid);
+    if(GetPlayerWeaponState(playerid) == WEAPONSTATE_LAST_BULLET && AC_AntiWeaponCheck(playerid, weaponid, ammo) && ammo <= 1)
     {
-        SendClientMessage(playerid, COLOR_GREEN, "Hai finito i colpi dell'arma. L'arma è stata rimessa nell'inventario.");
-        Character_GiveItem(playerid, weaponid, 1, 0, false);
+		if(Character_HasSpaceForWeapon(playerid, weaponid, 0))
+        {
+			SendClientMessage(playerid, COLOR_GREEN, "Hai finito i colpi dell'arma. L'arma è stata rimessa nell'inventario.");
+        	Character_GiveItem(playerid, weaponid, 1, 0, false);
+		}
+		else
+		{
+			SendClientMessage(playerid, COLOR_ERROR, "Hai finito i colpi dell'arma. Hai l'inventario pieno, quindi l'arma è stata gettata a terra.");
+			new Float:x, Float:y, Float:z;
+			if(IsPlayerInAnyVehicle(playerid))
+				GetVehiclePos(GetPlayerVehicleID(playerid), x, y, z);
+			else 
+			 	GetPlayerPos(playerid, x, y, z);
+			Drop_Create(x, y, z - 0.9, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, 0, Character_GetOOCNameStr(playerid));
+		}
     }
     return 1;
 }
@@ -189,6 +202,8 @@ Dialog:Dialog_InvItemAction(playerid, response, listitem, inputtext[])
         }
         case 1: 
         {
+			if(IsPlayerInAnyVehicle(playerid))
+				return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando all'interno di un veicolo!");
             new String:title = str_format("%s (Quantità: %d)", ServerItem_GetName(itemid), Character_GetSlotAmount(playerid, slotid));
             new String:content, style;
             if(ServerItem_IsUnique(itemid))

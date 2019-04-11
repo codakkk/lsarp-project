@@ -19,7 +19,6 @@ new
     VehicleColorNum1[MAX_PLAYERS],
     VehicleColorNum2[MAX_PLAYERS],
     gCurrentShowRoom[MAX_PLAYERS],
-    gAdminVehicle[MAX_PLAYERS],
     gRespawnVehicle[MAX_VEHICLES],
     //gPlayerVehicles[MAX_PLAYERS][]
    
@@ -49,11 +48,6 @@ hook OnPlayerClearData(playerid)
     pSupporterDuty[playerid] = 0;
     pLastPickup[playerid] = -1;
     pSelectedListItem[playerid] = -1;
-    if(gAdminVehicle[playerid] != 0)
-    {
-        DestroyVehicle(gAdminVehicle[playerid]);
-    }
-    gAdminVehicle[playerid] = 0;
     if(IsValidDynamic3DTextLabel(pAdminDuty3DText[playerid]))
     {
         DestroyDynamic3DTextLabel(pAdminDuty3DText[playerid]);

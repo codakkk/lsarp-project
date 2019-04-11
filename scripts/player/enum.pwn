@@ -26,7 +26,8 @@ new
     Iterator:pTogglePM[MAX_PLAYERS]<MAX_PLAYERS>,
     Iterator:pToggleOOC[MAX_PLAYERS]<MAX_PLAYERS>,
     pVehicleListItem[MAX_PLAYERS][MAX_VEHICLES_PER_PLAYER],
-    pSelectedVehicleListItem[MAX_PLAYERS]
+    pSelectedVehicleListItem[MAX_PLAYERS],
+	pAmmoSync[MAX_PLAYERS char]
     ;
 
 
@@ -42,7 +43,8 @@ enum E_PLAYER_RESTORE_DATA
     Float:pLastHealth,
     Float:pLastArmour,
     pLastInterior,
-    pLastVirtualWorld
+    pLastVirtualWorld,
+	pWeaponsString[128]
 };
 new PlayerRestore[MAX_PLAYERS][E_PLAYER_RESTORE_DATA];
 
@@ -57,3 +59,36 @@ enum e_Bit1_Data
 
 new 
     BitArray:gPlayerBitArray[e_Bit1_Data]<MAX_PLAYERS>;
+
+enum PendingType
+{
+	PENDING_TYPE_NONE,
+	PENDING_TYPE_WEAPON
+}
+
+enum e_RequestData
+{
+	rdPending,
+	rdByPlayer,
+	rdToPlayer,
+	rdTime,
+	rdItem,
+	rdAmount,
+	rdExtra,
+	rdType,
+};
+
+new 
+	pPendingRequest[MAX_PLAYERS][e_RequestData]
+	;
+
+stock ResetPendingRequest(playerid)
+{
+	pPendingRequest[playerid][rdPending] = 0;
+	pPendingRequest[playerid][rdByPlayer] = -1;
+	pPendingRequest[playerid][rdTime] = 0;
+	pPendingRequest[playerid][rdItem] = 0;
+	pPendingRequest[playerid][rdAmount] = 0;
+	pPendingRequest[playerid][rdExtra] = 0;
+	pPendingRequest[playerid][rdType] = PENDING_TYPE_NONE;
+}

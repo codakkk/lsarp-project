@@ -118,6 +118,7 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra)
 				tempAmount -= amountToAdd;
 			}
 		}
+		list_delete_deep(hasItemSlots);
 	}
 	//Inventory_Print(inventory);
 	return INVENTORY_ADD_SUCCESS;
@@ -389,7 +390,12 @@ stock String:Inventory_ParseForDialog(Inventory:inventory)
 			
             new String:s = str_format("{FFFFFF}%s\t{FFFFFF}%d\t{FFFFFF}%s\t", ServerItem_GetName(itemid), itemAmount, ServerItem_GetTypeName(itemid));
 			if(ServerItem_GetType(itemid) == ITEM_TYPE:ITEM_TYPE_WEAPON && Weapon_RequireAmmo(itemid))
-				s += str_val(extra);
+			{
+				if(extra == 0)
+					s += @("Vuota");
+				else
+					s += str_val(extra);
+			}
 			else
 				s += @("--");
 			s += @("\n");

@@ -189,7 +189,7 @@ Dialog:Dialog_VehicleList(playerid, response, listitem, inputtext[])
     pSelectedVehicleListItem[playerid] = vehicle_id;
     new string[64];
     format(string, sizeof(string), "%s", GetVehicleName(vehicle_id));
-    Dialog_Show(playerid, Dialog_VehicleAction, DIALOG_STYLE_LIST, string, "Apri/Chiudi\nParcheggia\nBagagliaio\nVendi a giocatore\nVendi", "Avanti", "Annulla");
+    Dialog_Show(playerid, Dialog_VehicleAction, DIALOG_STYLE_LIST, string, "Apri/Chiudi\nParcheggia\nBagagliaio\nVendi a giocatore\nVendi\nInfo", "Avanti", "Annulla");
     return 1;
 }
 
@@ -260,6 +260,12 @@ Dialog:Dialog_VehicleAction(playerid, response, listitem, inputtext[])
             if(!IsPlayerInRangeOfVehicle(playerid, vehicle_id, 5.0))
                 return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo!");
         }
+		case 5: // Info
+		{
+			new Float:health;
+			GetVehicleHealth(vehicle_id, health);
+			SendFormattedMessage(playerid, -1, "ID Veicolo: {00FF00}%d{FFFFFF} - HP: {00FF00}%03f{FFFFFF}", vehicle_id, health);
+		}
     }
     return 1;
 }

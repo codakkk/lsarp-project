@@ -167,20 +167,19 @@ alias:setarmour("setap");
 flags:veh(CMD_MODERATOR);
 CMD:veh(playerid, params[])
 {
-    new veh;
-    if(sscanf(params, "d", veh))
-        return SendClientMessage(playerid, COLOR_ERROR, "> /veh <modelid>");
-    if(gAdminVehicle[playerid] != 0)
-        DestroyVehicle(gAdminVehicle[playerid]);
+    new veh, c1, c2;
+    if(sscanf(params, "ddd", veh, c1, c2))
+        return SendClientMessage(playerid, COLOR_ERROR, "> /veh <modelid> <color1> <color2>");
     new 
         Float:_x, 
         Float:_y, 
         Float:_z;
     GetPlayerPos(playerid, _x, _y, _z);
 
-    gAdminVehicle[playerid] = CreateVehicle(veh, _x, _y, _z, 0, 0, 3, 0, 0);
-    PutPlayerInVehicle(playerid, gAdminVehicle[playerid], 0);
-    Vehicle_SetEngineOn(gAdminVehicle[playerid]);
+    new id = Vehicle_Create(veh, _x, _y, _z, 0, c1, c2, 0, 0);
+    PutPlayerInVehicle(playerid, id, 0);
+    Vehicle_SetEngineOn(id);
+	SendFormattedMessage(playerid, COLOR_GREEN, "Veicolo %d creato. Non dimenticare di distruggerlo con /vdelete id", id);
     Log(AccountInfo[playerid][aName], "", "/veh", veh);
     return 1;
 }
@@ -285,9 +284,9 @@ CMD:apark(playerid, params[])
 {
     new vehicleid = GetPlayerVehicleID(playerid);
     if(vehicleid == 0)
-        return SendClientMessage(playerid, COLOR_ERROR, "> Non sei su un veicolo!");
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei su un veicolo!");
     if(!VehicleInfo[vehicleid][vModel])
-        return SendClientMessage(playerid, COLOR_ERROR, "> Non puoi utilizzare questo comando su questo veicolo!");
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo veicolo!");
     new Float:x, Float:y, Float:z, Float:a;
     GetVehiclePos(vehicleid, x, y, z);
     GetVehicleZAngle(vehicleid, a);
@@ -302,8 +301,8 @@ CMD:apark(playerid, params[])
     }
     new fixed[24];
     FixName(PlayerInfo[pid][pName], fixed);
-    SendFormattedMessage(playerid, COLOR_GREEN, "> [ADMIN] Hai parcheggiato qui il veicolo di %s [%d].", fixed, pid);
-    SendFormattedMessage(pid, COLOR_ERROR, "> [ADMIN-ALERT]: %s [%d] ha parcheggiato il tuo veicolo altrove. Motivo: %s", AccountInfo[playerid][aName], playerid, params);
+    SendFormattedMessage(playerid, COLOR_GREEN, "[ADMIN] Hai parcheggiato qui il veicolo di %s [%d].", fixed, pid);
+    SendFormattedMessage(pid, COLOR_ERROR, "[ADMIN-ALERT]: %s [%d] ha parcheggiato il tuo veicolo altrove. Motivo: %s", AccountInfo[playerid][aName], playerid, params);
     Log(AccountInfo[playerid][aName], "", "/apark", vehicleid);
     return 1;
 }
@@ -440,6 +439,49 @@ CMD:giveweapon(playerid, params[])
     return 1;
 }
 
+flags:vowner(CMD_ADMIN);
+CMD:vowner(playerid, params[])
+{
+	new vehicleid = GetPlayerVehicleID(playerid);
+	if(vehicleid == 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un veicolo");
+	new id;
+	if(sscanf(params, "u", id))
+		return SendClientMessage(playerid, COLOR_ERROR, "/vowner <playerid/partofname>");
+	if(!Vehicle_IsOwnable(vehicleid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo veicolo!");
+	if(!IsPlayerConnected(id) || !gAccountLogged[id] || !gCharacterLogged[id])
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso!");
+	Character_AddOwnedVehicle(id, vehicleid);
+	SendFormattedMessage(id, COLOR_GREEN, "L'admin %s (%d) ti ha settato proprietario del veicolo %d.", AccountInfo[playerid][aName], playerid, vehicleid);
+	SendMessageToAdmins(true, COLOR_YELLOW, "[ADMIN ALERT]: %s (%d) ha settato %s (%d) proprietario del veicolo %d.", AccountInfo[playerid][aName], playerid, Character_GetOOCName(id), id, vehicleid);
+	return 1;
+}
+
+flags:vdelete(CMD_MODERATOR);
+CMD:vdelete(playerid, params[])
+{
+	new vehicleid = GetPlayerVehicleID(playerid);
+
+	if(vehicleid <= 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un veicolo!");
+	// If Vehicle Faction, don't make it callable
+
+	if(Vehicle_GetOwnerID(vehicleid) != 0)
+	{
+		if(AccountInfo[playerid][aAdmin] < 3)
+			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo veicolo!");
+		SendMessageToAdmins(true, COLOR_YELLOW, "[ADMIN-ALERT]: %s (%d) ha deletato il veicolo %d di %s.", AccountInfo[playerid][aName], playerid, vehicleid, VehicleInfo[vehicleid][vOwnerName]);
+		Vehicle_Delete(vehicleid);
+	}
+	else
+	{
+		SendMessageToAdmins(true, COLOR_YELLOW, "[ADMIN-ALERT]: %s (%d) ha deletato il veicolo %d.", AccountInfo[playerid][aName], playerid, vehicleid);
+		Vehicle_Destroy(vehicleid);
+	}
+	return 1;
+}
+
 flags:acmds(CMD_JR_MODERATOR);
 CMD:acmds(playerid, params[])
 {
@@ -451,11 +493,11 @@ CMD:acmds(playerid, params[])
     if(AccountInfo[playerid][aAdmin] >= 2)
     {
         SendClientMessage(playerid, -1, "[MODERATORE]: /setskin - /sethp - /setvhp - /setarmour");
-        SendClientMessage(playerid, -1, "[MODERATORE]: /veh - (/fix)veh - /gotov - /getvhere");
+        SendClientMessage(playerid, -1, "[MODERATORE]: /veh - /vdelete - (/fix)veh - /gotov - /getvhere");
     }
     if(AccountInfo[playerid][aAdmin] >= 3)
     {
-        SendClientMessage(playerid, -1, "[ADMIN]: /giveitem - /givevehicleitem - /apark");
+        SendClientMessage(playerid, -1, "[ADMIN]: /giveitem - /givevehicleitem - /apark - /vowner");
     }
     if(AccountInfo[playerid][aAdmin] >= 4)
     {

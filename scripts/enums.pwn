@@ -1,7 +1,7 @@
 // Exception. Must be on top of all others.
 #include <pickup\enum.pwn>
 
-
+#include <anticheat\enum.pwn>
 #include <account_system\enum.pwn>
 #include <drop_system\enum.pwn>
 #include <player\enum.pwn>

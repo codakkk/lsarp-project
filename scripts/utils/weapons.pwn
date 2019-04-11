@@ -34,8 +34,8 @@ stock RemovePlayerWeapon(playerid, weaponid)
 		}
 		else if(wep == weaponid)
 		{
-			// pWeapons[playerid][slot] = 0; // AntiCheat
-			// pAmmo[playerid][slot] = 0; // AntiCheat
+			ACInfo[playerid][acWeapons][slot] = 0; // AntiCheat
+			ACInfo[playerid][acAmmo][slot] = 0; // AntiCheat
 		}
 	}
 

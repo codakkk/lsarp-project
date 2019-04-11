@@ -68,8 +68,56 @@ stock Vehicle_Reload(vehicleid)
 
 stock Vehicle_Create(modelid, Float:x, Float:y, Float:z, Float:rotation, color1, color2, respawn_delay, addsiren=0)
 {
-    new vehicle_id = CreateVehicle(vehicletype, x, y, z, rotation, color1, color2, respawn_delay, addsiren);
-    Iter_Add(Vehicles, vehicle_id);
+    new vehicleid = CreateVehicle(modelid, x, y, z, rotation, color1, color2, respawn_delay, addsiren);
+	VehicleInfo[vehicleid][vModel] = modelid;
+	VehicleInfo[vehicleid][vColor1] = color1;
+	VehicleInfo[vehicleid][vColor2] = color2;
+	VehicleInfo[vehicleid][vX] = x;
+	VehicleInfo[vehicleid][vY] = y;
+	VehicleInfo[vehicleid][vZ] = z;
+	VehicleInfo[vehicleid][vA] = rotation;
+	VehicleInfo[vehicleid][vLocked] = 0;
+    Iter_Add(Vehicles, vehicleid);
+	return vehicleid;
+}
+
+stock Vehicle_Destroy(vehicleid)
+{
+	if(!IsValidVehicle(vehicleid))
+		return 0;
+    Vehicle_Reset(vehicleid);
+	DestroyVehicle(vehicleid);
+	Iter_Remove(Vehicles, vehicleid);
+	return 1;
+}
+
+stock Vehicle_Reset(vehicleid)
+{
+	VehicleInfo[vehicleid][vID] = 0;
+    VehicleInfo[vehicleid][vOwnerID] = 0;
+    set(VehicleInfo[vehicleid][vOwnerName], "");
+    VehicleInfo[vehicleid][vModel] = 0;
+    VehicleInfo[vehicleid][vColor1] = 0;
+    VehicleInfo[vehicleid][vColor2] = 0;
+    VehicleInfo[vehicleid][vX] = 0.0;
+    VehicleInfo[vehicleid][vY] = 0.0;
+    VehicleInfo[vehicleid][vZ] = 0.0;
+    VehicleInfo[vehicleid][vA] = 0.0;
+    VehicleInfo[vehicleid][vLocked] = 0;
+    VehicleRestore[vehicleid][vSpawned] = 0;
+    VehicleRestore[vehicleid][vLastX] = 0.0;
+    VehicleRestore[vehicleid][vLastY] = 0.0;
+    VehicleRestore[vehicleid][vLastZ] = 0.0;
+    VehicleRestore[vehicleid][vLastA] = 0.0;
+    VehicleRestore[vehicleid][vLastHealth] = 0.0;
+    VehicleRestore[vehicleid][vEngine] = 0;
+    gVehicleDestroyTime[vehicleid] = 0;
+	return 1;
+}
+
+stock Vehicle_IsValid(vehicleid)
+{
+	return IsValidVehicle(vehicleid);
 }
 
 stock Vehicle_Park(vehicleid, Float:nx, Float:ny, Float:nz, Float:na)
@@ -259,29 +307,14 @@ stock Vehicle_Unload(vehicleid)
     new i = vehicleid;
     if(!VehicleInfo[vehicleid][vID] || VehicleInfo[i][vModel] == 0)
         return 0;
-    Vehicle_Save(i);
-    DestroyVehicle(i);
-    VehicleInfo[i][vID] = 0;
-    VehicleInfo[i][vOwnerID] = 0;
-    set(VehicleInfo[i][vOwnerName], "");
-    VehicleInfo[i][vModel] = 0;
-    VehicleInfo[i][vColor1] = 0;
-    VehicleInfo[i][vColor2] = 0;
-    VehicleInfo[i][vX] = 0.0;
-    VehicleInfo[i][vY] = 0.0;
-    VehicleInfo[i][vZ] = 0.0;
-    VehicleInfo[i][vA] = 0.0;
-    VehicleInfo[i][vLocked] = 0;
-    VehicleRestore[i][vSpawned] = 0;
-    VehicleRestore[i][vLastX] = 0.0;
-    VehicleRestore[i][vLastY] = 0.0;
-    VehicleRestore[i][vLastZ] = 0.0;
-    VehicleRestore[i][vLastA] = 0.0;
-    VehicleRestore[i][vLastHealth] = 0.0;
-    VehicleRestore[i][vEngine] = 0;
-    gVehicleDestroyTime[i] = 0;
-
-    CallLocalFunction(#OnPlayerVehicleUnLoaded, "d", vehicleid);
+	
+	if(VehicleInfo[i][vOwnerID] != 0)
+	{
+    	CallLocalFunction(#OnPlayerVehicleUnLoaded, "d", vehicleid);
+		Vehicle_Save(i);
+	}
+    
+    Vehicle_Destroy(i);
     return 1;
 }
 
@@ -330,4 +363,72 @@ stock Vehicle_Save(vehicleid)
     mysql_tquery(gMySQL, query);
     CallLocalFunction(#OnPlayerVehicleSaved, "d", vehicleid);
     return 1;
+}
+
+// Deletes a vehicle (vehicleid). If it's a player vehicle, all their references are destroyed too (database, ecc).
+stock Vehicle_Delete(vehicleid)
+{
+	if(!Vehicle_IsValid(vehicleid) || VehicleInfo[vehicleid][vID] == 0)
+		return 0;
+	new query[256];
+	if(VehicleInfo[vehicleid][vOwnerID] != 0) // We suppose it's a player vehicle
+	{
+		mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `player_vehicles` WHERE ID = '%d' AND OwnerID = '%d'", Vehicle_GetID(vehicleid), Vehicle_GetOwnerID(vehicleid));
+		mysql_tquery(gMySQL, query);
+
+		mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `vehicle_inventory` WHERE VehicleID = '%d'", VehicleInfo[vehicleid][vID]);
+		mysql_tquery(gMySQL, query);
+	}
+
+	Vehicle_Destroy(vehicleid);
+	return 1;
+}
+
+stock Vehicle_IsOwnable(vehicleid)
+{
+	if(!Vehicle_IsValid(vehicleid))
+		return 0;
+	// IS FACTION VEHICLE?
+	return 1;
+}
+
+stock Vehicle_GetID(vehicleid)
+{
+	//if(!IsValidVehicle(vehicleid))
+		//return 0;
+	return VehicleInfo[vehicleid][vID];
+}
+
+stock Vehicle_GetOwnerName(vehicleid, name[])
+{
+	if(!IsValidVehicle(vehicleid) || VehicleInfo[vehicleid][vOwnerID] == 0)
+		return 0;
+	set(name, VehicleInfo[vehicleid][vOwnerName]);
+	return 1;
+}
+
+stock String:Vehicle_GetOwnerNameStr(vehicleid)
+{
+	if(!IsValidVehicle(vehicleid) || VehicleInfo[vehicleid][vOwnerID] == 0)
+		return STRING_NULL;
+	return str_new(VehicleInfo[vehicleid][vOwnerName]);
+}
+
+stock Vehicle_GetColor1(vehicleid)
+{
+	return VehicleInfo[vehicleid][vColor1];
+}
+
+stock Vehicle_GetColor2(vehicleid)
+{
+	return VehicleInfo[vehicleid][vColor2];
+}
+
+stock Vehicle_GetColors(vehicleid, &color1, &color2)
+{
+	if(!Vehicle_IsValid(vehicleid))
+		return 0;
+	color1 = VehicleInfo[vehicleid][vColor1];
+	color2 = VehicleInfo[vehicleid][vColor2];
+	return 1;
 }
