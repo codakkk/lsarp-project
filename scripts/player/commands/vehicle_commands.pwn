@@ -12,7 +12,7 @@ CMD:vmenu(playerid, params[])
     memset(pVehicleListItem[playerid], 0);
     foreach(new v : Vehicles)
     {
-        if(VehicleInfo[v][vOwnerID] != PlayerInfo[playerid][pID] || count >= MAX_VEHICLES_PER_PLAYER)
+        if(VehicleInfo[v][vOwnerID] != PlayerInfo[playerid][pID])
             continue;
         new Float:x, Float:y, Float:z;
         GetVehiclePos(v, x , y, z);
@@ -161,14 +161,19 @@ CMD:motore(playerid, params[])
     }
     else
     {
+		if(Vehicle_GetFuel(vehicleid) < 0.5)
+			return SendClientMessage(playerid, COLOR_ERROR, "Non c'è benzina nel veicolo!");
+		if(Vehicle_GetHealth(vehicleid) <= 350.0)
+			return SendClientMessage(playerid, COLOR_ERROR, "Il motore del veicolo non funziona!");
         if(VehicleInfo[vehicleid][vOwnerID] == PlayerInfo[playerid][pID])
         {
             if((IsABike(vehicleid) || IsAMotorBike(vehicleid)) && VehicleInfo[vehicleid][vLocked])
             {
                 return SendClientMessage(playerid, COLOR_ERROR, "Il veicolo ha la catena!");
             }
-            Vehicle_SetEngineOn(vehicleid);
-            Character_AMe(playerid, "gira la chiave e accende il motore");
+            Character_AMe(playerid, "inserisce la chiave e la gira");
+			Character_SetFreezed(playerid, true);
+			defer TurnOnVehicleEngine(playerid);
         }
         else
         {
@@ -176,6 +181,37 @@ CMD:motore(playerid, params[])
         }
     }
     return 1;
+}
+
+timer TurnOnVehicleEngine[500](playerid)
+{
+	new vehicleid = GetPlayerVehicleID(playerid);
+	if(vehicleid > 0)
+	{
+		new Float:vh = Vehicle_GetHealth(vehicleid), vr = 0;
+		if(vh < 300.0) vr = 2;
+		else if(vh < 400) vr = 3;
+		else if(vh < 500) vr = 4;
+		else if(vh < 600) vr = 5;
+		else if(vh < 700) vr = 6;
+		else if(vh < 800) vr = 7;
+		else if(vh < 900) vr = 8;
+		else vr = 9;
+		vr *= 2;
+		new r = random(vr);
+		if(r == 0)
+		{
+			Character_Do(playerid, "Il motore non si accende");
+			Vehicle_SetEngineOff(vehicleid);
+		}
+		else
+		{
+			Character_Do(playerid, "Il motore si accende");
+			Vehicle_SetEngineOn(vehicleid);
+		}
+	}
+	Character_SetFreezed(playerid, false);
+	Character_SetTurningOnEngine(playerid, false);
 }
 
 Dialog:Dialog_VehicleList(playerid, response, listitem, inputtext[])
@@ -264,7 +300,7 @@ Dialog:Dialog_VehicleAction(playerid, response, listitem, inputtext[])
 		{
 			new Float:health;
 			GetVehicleHealth(vehicle_id, health);
-			SendFormattedMessage(playerid, -1, "ID Veicolo: {00FF00}%d{FFFFFF} - HP: {00FF00}%03f{FFFFFF}", vehicle_id, health);
+			SendFormattedMessage(playerid, -1, "ID Veicolo: {00FF00}%d{FFFFFF} - HP: {00FF00}%.2f{FFFFFF}", vehicle_id, health);
 		}
     }
     return 1;
@@ -278,13 +314,13 @@ Dialog:Dialog_SellToPlayer(playerid, response, listitem, inputtext[])
     if(sscanf(inputtext, "ud", otherPlayer, price))
         return Dialog_Show(playerid, Dialog_SellToPlayer, DIALOG_STYLE_INPUT, "Vendi a giocatore", "{FF0000}I dati inseriti non sono validi!\n{FFFFFF}Inserisci l'ID o il nome del giocatore\n a cui vuoi vendere il veicolo\nseguito dal prezzo.\nEsempio: {00FF00}Mario Rossi {FF0000}10000.", "Vendi", "Annulla");
     
-    if(!IsPlayerConnected(otherPlayer) || !gCharacterLogged[otherPlayer] || otherPlayer == playerid)
+    if(!IsPlayerConnected(otherPlayer) || !Character_IsLogged(otherPlayer) || otherPlayer == playerid)
         return Dialog_Show(playerid, Dialog_SellToPlayer, DIALOG_STYLE_INPUT, "{FFFFFF}Vendi a giocatore", "{FF0000}Il giocatore non è connesso!\n{FFFFFF}Inserisci l'ID o il nome del giocatore\n a cui vuoi vendere il veicolo\nseguito dal prezzo.\nEsempio: {00FF00}Mario Rossi {FF0000}10000.", "Vendi", "Annulla");
     
     if(price < 0)
         return Dialog_Show(playerid, Dialog_SellToPlayer, DIALOG_STYLE_INPUT, "{FFFFFF}Vendi a giocatore", "{FF0000}Il prezzo inserito non è valido!\nInserisci l'ID o il nome del giocatore\n a cui vuoi vendere il veicolo\nseguito dal prezzo.\nEsempio: {00FF00}Mario Rossi {FF0000}10000.", "Vendi", "Annulla");
     
-    if(AC_GetPlayerMoney(otherPlayer) < price)
+    if(Character_GetMoney(otherPlayer) < price)
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non ha abbastanza soldi!");
     
     if(!IsPlayerInRangeOfPlayer(playerid, otherPlayer, 6.0))

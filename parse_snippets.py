@@ -1,10 +1,12 @@
-import glob, os
+import glob
+import os
 import re
 
 startPath = os.path.dirname(__file__) + '\\scripts'
 base_pawn_snippets = open(os.path.dirname(__file__) + '\\base_snippets.txt')
 
-local_snippets_file = open("C:\\Users\\Ciro\\AppData\\Roaming\\Code\\User\\snippets\\pawn.json", "w") 
+local_snippets_file = open(
+    "C:\\Users\\Ciro\\AppData\\Roaming\\Code\\User\\snippets\\pawn.json", "w")
 print(os.listdir(startPath))
 local_snippets_file.write('{\n')
 
@@ -16,7 +18,8 @@ for root, dirs, files in os.walk(startPath):
         if file.endswith('.pwn') or file.endswith('.p'):
             file_name = root.replace('scripts\\', '')
             f = open(root + '/' + file)
-            local_snippets_file.write('\t// ==========[' + file_name + '/' + file + ']==========\n')
+            local_snippets_file.write(
+                '\t// ==========[' + file_name + '/' + file + ']==========\n')
             lastComments = []
             for line in f:
                 if(line.startswith('//')):
@@ -26,7 +29,7 @@ for root, dirs, files in os.walk(startPath):
                     func_name = ''
                     params = ''
                     description = ''
-                    
+
                     line = line.replace('stock', '')
                     line = line.replace('static', '')
                     line = line.replace('forward', '')
@@ -40,19 +43,23 @@ for root, dirs, files in os.walk(startPath):
 
                     if(len(T) > 1):
                         lastComments.append(T[1].replace('//', ''))
-                    params = line[line.find('(')+len('('):line.rfind(')')] # Porcamadonna? That should be faster than the previous 
-                    
-                    func_name = line.replace('(' + params + ')', '').replace('\n', '').strip() # Is strip enough? Should I strip the whole line before?
+                    # Porcamadonna? That should be faster than the previous
+                    params = line[line.find('(')+len('('):line.rfind(')')]
+
+                    # Is strip enough? Should I strip the whole line before?
+                    func_name = line.replace(
+                        '(' + params + ')', '').replace('\n', '').strip()
                     S = func_name.split(':')
                     if(len(S) > 1):
                         func_name = S[1]
                     split = params.split(',')
                     params = ''
-                    #print(func_name)
+                    # print(func_name)
                     # Params
                     index = 1
                     for s in split:
-                        params = params + '${' + str(index) + ':' + s.strip() + '}'
+                        params = params + \
+                            '${' + str(index) + ':' + s.strip() + '}'
                         if(index != len(split)):
                             params = params + ', '
                         index = index+1
@@ -60,12 +67,14 @@ for root, dirs, files in os.walk(startPath):
                     # Description
                     for v in lastComments:
                         description = description + v.strip() + '\\n'
-                    
+
                     # print('Name: ' + func_name + ' Params: ' + params + ' Desc: ' + description)
-                    local_snippets_file.write('\t"lsarp_' + func_name + '": {\n\t\t"scope": "pawn",\n\t\t"prefix": "'+func_name+'",\n\t\t"body": "'+func_name+'(' + params + ')$0",\n\t\t"description": "' + description + '"\n\t},\n')
+                    local_snippets_file.write('\t"lsarp_' + func_name + '": {\n\t\t"scope": "pawn",\n\t\t"prefix": "'+func_name +
+                                              '",\n\t\t"body": "'+func_name+'(' + params + ')$0",\n\t\t"description": "' + description + '"\n\t},\n')
                 else:
                     lastComments = []
-            local_snippets_file.write('\t// ==================================================\n')    
+            local_snippets_file.write(
+                '\t// ==================================================\n')
 local_snippets_file.write('}')
 
 #input("Press Enter to exit")

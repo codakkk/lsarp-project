@@ -4,14 +4,14 @@ flags:invmode(CMD_USER);
 CMD:invmode(playerid, params[])
 {
 	Bit_Set(gPlayerBitArray[e_pInvMode], playerid, !Bit_Get(gPlayerBitArray[e_pInvMode], playerid));
-    if(Bit_Get(gPlayerBitArray[e_pInvMode], playerid))
-    {
-        SendClientMessage(playerid, COLOR_GREEN, "Hai impostato l'inventario in chat mode.");
-    }
-    else
-    {
-        SendClientMessage(playerid, COLOR_GREEN, "Ora l'inventario è mostrato a dialogs!");
-    }
+	if(Bit_Get(gPlayerBitArray[e_pInvMode], playerid))
+	{
+		SendClientMessage(playerid, COLOR_GREEN, "Hai impostato l'inventario in chat mode.");
+	}
+	else
+	{
+		SendClientMessage(playerid, COLOR_GREEN, "Ora l'inventario è mostrato a dialogs!");
+	}
 	Dialog_Close(playerid);
 	return 1;
 }
@@ -22,50 +22,18 @@ CMD:inventario(playerid, params[])
 	if(Bit_Get(gPlayerBitArray[e_pInvMode], playerid))
 	{
 		new Inventory:playerInventory = Character_GetInventory(playerid);
-		SendFormattedMessage(playerid, COLOR_GREEN, "_______________[Inventario (%d/%d)]_______________", Inventory_GetUsedSpace(playerInventory), Inventory_GetSpace(playerInventory));
-
-		if(Inventory_IsEmpty(playerInventory))
-			return SendClientMessage(playerid, COLOR_GREEN, "L'inventario è vuoto!");
-
-		new tempItem[E_ITEM_DATA], slotid = -1;
-		for_inventory(i : playerInventory)
-		{
-			new String:s;
-			slotid++;
-			iter_get_arr(i, tempItem);
-			if(iter_sizeof(i) == 0 || tempItem[gInvItem] == 0) // If no item
-			{
-				s = str_format("Slot {0080FF}%d{FFFFFF} - Slot Libero", slotid);
-			}
-			else
-			{
-				new itemid = tempItem[gInvItem],
-					itemAmount = tempItem[gInvAmount],
-					extra = tempItem[gInvExtra];
-				
-				s = str_format("Slot {0080FF}%d{FFFFFF} - {FFFFFF}%s{FFFFFF} ({FFFFFF}%d{FFFFFF})", slotid, ServerItem_GetName(itemid), itemAmount);
-				
-				if(ServerItem_GetType(itemid) == ITEM_TYPE:ITEM_TYPE_WEAPON)
-				{
-					s += @(" - ");
-					if(extra <= 0)
-						s += @("Vuota");
-					else
-						s += str_val(extra);
-				}
-			}
-			SendClientMessageStr(playerid, -1, s);
-		}
-		SendClientMessage(playerid, COLOR_GREEN, "__________________________________________");
+		Inventory_ShowInChat(playerInventory, playerid, "Inventario");
 	}
-    else Character_ShowInventory(playerid, playerid);
-    return 1;
+	else Character_ShowInventory(playerid, playerid);
+	return 1;
 }
 alias:inventario("inv");
 
 flags:usa(CMD_USER);
 CMD:usa(playerid, params[])
 {
+	if(PendingRequestInfo[playerid][rdPending])
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva!");
 	new slotid;
 	if(sscanf(params, "d", slotid))
 		return SendClientMessage(playerid, COLOR_ERROR, "/usa <slotid>");
@@ -76,17 +44,65 @@ CMD:usa(playerid, params[])
 	return 1;
 }
 
+flags:passa(CMD_USER);
+CMD:passa(playerid, params[])
+{
+	if(PendingRequestInfo[playerid][rdPending])
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva!");
+	new slotid, id, amount;
+	if(sscanf(params, "udD(1)", id, slotid, amount))
+		return SendClientMessage(playerid, COLOR_ERROR, "/passa <playerid/partofname> <slotid> <quantità (default 1)>");
+	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso!");
+	if(!IsPlayerInRangeOfPlayer(playerid, id, 2.0))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore!");
+	new itemid = Character_GetSlotItem(playerid, slotid);
+	if(itemid == 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Slot non valida!");
+	new slotAmount = Character_GetSlotAmount(playerid, slotid);
+	if(amount < 1 || amount > slotAmount)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non hai la quantità necessaria!");
+	new result = Character_GiveItemToPlayer(playerid, id, slotid, amount);
+	if(!result)
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non ha abbastanza spazio nell'inventario!");
+	return 1;
+}
+
+flags:getta(CMD_USER);
+CMD:getta(playerid, params[])
+{
+	if(PendingRequestInfo[playerid][rdPending])
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva!");
+	if(IsPlayerInAnyVehicle(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando all'interno di un veicolo!");
+	new slotid, amount;
+	if(sscanf(params, "dD(1)", slotid, amount))
+		return SendClientMessage(playerid, COLOR_ERROR, "/getta <slotid> <quantità (default 1)>");
+	
+	if(!Character_DropItem(playerid, slotid, amount))
+		return SendClientMessage(playerid, COLOR_ERROR, "Slot non valida o quantità non valida!");
+	return 1;
+}
+
 flags:deposita(CMD_USER);
 CMD:deposita(playerid, params[])
 {
+	if(PendingRequestInfo[playerid][rdPending])
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva!");
 	new itemid = GetPlayerWeapon(playerid);
 	if(itemid == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma");
+	
+	if(PendingRequestInfo[playerid][rdPending])
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva!");
+
 	if(!Character_HasSpaceForItem(playerid, itemid, 1))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario!");
+	
 	Character_GiveItem(playerid, itemid, 1, AC_GetPlayerAmmo(playerid));
 	AC_RemovePlayerWeapon(playerid, itemid);
-	SendClientMessage(playerid, COLOR_GREEN, "Hai depositato la tua arma nell'inventario!");
+	Player_InfoStr(playerid, str_format("Hai depositato: ~g~%s~w~~n~nell'inventario.", Weapon_GetName(itemid)), true);
+	//SendClientMessage(playerid, COLOR_GREEN, "Hai depositato la tua arma nell'inventario!");
 	return 1;
 }
 alias:deposita("dep");
@@ -94,41 +110,63 @@ alias:deposita("dep");
 flags:disassembla(CMD_USER);
 CMD:disassembla(playerid, params[])
 {
-    new 
-        itemid = GetPlayerWeapon(playerid),
-        ammos = AC_GetPlayerAmmo(playerid);
-    if(itemid != 0)
-    {
-        if(!Character_HasSpaceForWeapon(playerid, itemid, ammos))
-        {
-            return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario!");
-        }
-        Character_GiveItem(playerid, itemid, 1);
-        Character_GiveItem(playerid, Weapon_GetAmmoType(itemid), ammos);
-        AC_RemovePlayerWeapon(playerid, itemid);
-        SendFormattedMessage(playerid, COLOR_GREEN, "Hai disassemblato la tua arma (%s). Munizioni: %d", ServerItem_GetName(itemid), ammos);
-    }
-    else
-    {
-        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma!");
-    }
-    return 1;
+	if(PendingRequestInfo[playerid][rdPending])
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva!");
+	new 
+		slotid, itemid, ammo;
+	if(sscanf(params, "d", slotid))
+	{
+		itemid = GetPlayerWeapon(playerid);
+		ammo = AC_GetPlayerAmmo(playerid);
+		if(itemid == 0 || ammo == 0)
+		{
+			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma.");
+			return SendClientMessage(playerid, COLOR_ERROR, "Altrimenti usa /disassembla <slotid> per disassemblare un'arma nell'inventario!");
+		}
+		if(!Character_HasSpaceForWeapon(playerid, itemid, ammo))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario!");
+		if(!Weapon_RequireAmmo(itemid))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi disassemblare quest'arma!");
+		AC_RemovePlayerWeapon(playerid, itemid);
+	}
+	else
+	{	
+		if(!Character_IsValidSlot(playerid, slotid))
+			return SendClientMessage(playerid, COLOR_ERROR, "Slot non valida!");
+		itemid = Character_GetSlotItem(playerid, slotid);
+		ammo = Character_GetSlotExtra(playerid, slotid);
+		if(ServerItem_GetType(itemid) != ITEM_TYPE_WEAPON)
+			return SendClientMessage(playerid, COLOR_ERROR, "L'oggetto selezionato non è un'arma!");
+		if(!Weapon_RequireAmmo(itemid))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi disassemblare quest'arma!");
+		if(ammo == 0)
+			return SendClientMessage(playerid, COLOR_ERROR, "L'arma selezionata è già disassemblata!");
+		if(!Character_HasSpaceForWeapon(playerid, itemid, ammo))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario!");
+		Character_DecreaseSlotAmount(playerid, slotid, 1);
+	}
+	Character_GiveItem(playerid, itemid, 1);
+	Character_GiveItem(playerid, Weapon_GetAmmoType(itemid), ammo);
+	SendFormattedMessage(playerid, COLOR_GREEN, "Hai disassemblato la tua arma (%s). Munizioni: %d", ServerItem_GetName(itemid), ammo);
+	return 1;
 }
 alias:disassembla("dis");
 
 flags:gettaarma(CMD_USER);
 CMD:gettaarma(playerid, params[])
 {
-    new 
-        weaponid = GetPlayerWeapon(playerid), 
-        ammo = GetPlayerAmmo(playerid);
-    if(weaponid == 0 || ammo == 0)
-        return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma da gettare.");
-    new Float:x, Float:y, Float:z;
-    GetPlayerPos(playerid, x, y, z);
-    Drop_Create(x, y, z - 0.9, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, ammo, Character_GetOOCNameStr(playerid));
-    RemovePlayerWeapon(playerid, weaponid);
-    SendClientMessage(playerid, COLOR_GREEN, "Hai gettato l'arma.");
-    ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 3.0, 0, 0, 0, 0, 0);
-    return 1;
+	if(PendingRequestInfo[playerid][rdPending])
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva!");
+	new 
+		weaponid = GetPlayerWeapon(playerid), 
+		ammo = GetPlayerAmmo(playerid);
+	if(weaponid == 0 || ammo == 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma da gettare.");
+	new Float:x, Float:y, Float:z;
+	GetPlayerPos(playerid, x, y, z);
+	Drop_Create(x, y, z - 0.9, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, ammo, Character_GetOOCNameStr(playerid));
+	AC_RemovePlayerWeapon(playerid, weaponid);
+	SendClientMessage(playerid, COLOR_GREEN, "Hai gettato l'arma.");
+	ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 3.0, 0, 0, 0, 0, 0);
+	return 1;
 }

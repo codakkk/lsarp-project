@@ -21,10 +21,10 @@ public OnPlayerInventoryItemUse(playerid, slot_id, item_id)
     printf("inventory_callbacks.pwn/OnPlayerInvItem", playerid);
     /*if(ServerItem_IsBag(item_id))
     {
-        //Character_EquipBag(playerid, slotid);
-        Character_AMe(playerid, "indossa lo zaino");
-        SendClientMessage(playerid, COLOR_GREEN, "Stai indossando uno zaino. Usa /rimuovi zaino per rimuoverlo.");
-        pInventoryBag[playerid] = item_id;
+	   //Character_EquipBag(playerid, slotid);
+	   Character_AMe(playerid, "indossa lo zaino");
+	   SendClientMessage(playerid, COLOR_GREEN, "Stai indossando uno zaino. Usa /rimuovi zaino per rimuoverlo.");
+	   pInventoryBag[playerid] = item_id;
     }*/
     return 1;
 }

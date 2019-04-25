@@ -1,4 +1,4 @@
-/*#define MAX_EVENTS      (10)
+/*#define MAX_EVENTS	 (10)
 
 enum Event
 {

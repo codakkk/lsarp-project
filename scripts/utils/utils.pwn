@@ -72,7 +72,7 @@ stock IsValidRPName(name[],ret_first[],ret_last[])
 	return 1;
 }
 
-stock set(dest[],source[]) 
+stock set(dest[], const source[]) 
 {
 	new count = strlen(source);
 	for (new i = 0; i < count; i++) 
@@ -87,16 +87,16 @@ stock set(dest[],source[])
     #pragma unused form
 
     static
-        tmp[145]
+	   tmp[145]
     ;
     new
-        t1 = playerid,
-        t2 = color
+	   t1 = playerid,
+	   t2 = color
     ;
     const
-        n4 = -4,
-        n16 = -16,
-        size = sizeof tmp
+	   n4 = -4,
+	   n16 = -16,
+	   size = sizeof tmp
     ;
     #emit stack 28
     #emit push.c size
@@ -112,22 +112,22 @@ stock SendFormattedMessage(playerid, color, form[], {AmxString, Float, _}: ...)
 {
     new String:string;
     if(isnull(form))
-        string = str_new(" ");
+	   string = str_new(" ");
     else
-        string = str_format(form, ___3);
+	   string = str_format(form, ___3);
     return SendClientMessageStr(playerid, color, string);
 }
 
 stock date( timestamp, _form=1 )
 {
     /*
-        ~ convert a Timestamp to a Date.
-        ~ 10.07.2009
+	   ~ convert a Timestamp to a Date.
+	   ~ 10.07.2009
 
-        date( 1247182451 )  will print >> 09.07.2009-23:34:11
-        date( 1247182451, 1) will print >> 09/07/2009, 23:34:11
-        date( 1247182451, 2) will print >> July 09, 2009, 23:34:11
-        date( 1247182451, 3) will print >> 9 Jul 2009, 23:34
+	   date( 1247182451 )  will print >> 09.07.2009-23:34:11
+	   date( 1247182451, 1) will print >> 09/07/2009, 23:34:11
+	   date( 1247182451, 2) will print >> July 09, 2009, 23:34:11
+	   date( 1247182451, 3) will print >> 9 Jul 2009, 23:34
     */
     
     timestamp += 3600 * TIME_ZONE_STAMP;
@@ -140,39 +140,39 @@ stock date( timestamp, _form=1 )
 
     while(timestamp>31622400)
 	{
-        timestamp -= 31536000;
-        if ( ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0) ) timestamp -= 86400;
-        year++;
+	   timestamp -= 31536000;
+	   if ( ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0) ) timestamp -= 86400;
+	   year++;
     }
 
     if ( ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0) )
-        days_of_month[1] = 29;
+	   days_of_month[1] = 29;
     else
-        days_of_month[1] = 28;
+	   days_of_month[1] = 28;
 
 
     while(timestamp>86400)
 	{
-        timestamp -= 86400, day++;
-        if(day==days_of_month[month]) day=0, month++;
+	   timestamp -= 86400, day++;
+	   if(day==days_of_month[month]) day=0, month++;
     }
 
     while(timestamp>60)
 	{
-        timestamp -= 60, mins++;
-        if( mins == 60) mins=0, hour++;
+	   timestamp -= 60, mins++;
+	   if( mins == 60) mins=0, hour++;
     }
 
     sec=timestamp;
 
     switch( _form )
 	{
-        case 1: format(returnstring, 31, "%02d/%02d/%d", day+1, month+1, year);
-        case 2: format(returnstring, 31, "%s %02d, %d, %02d:%02d:%02d", names_of_month[month],day+1,year, hour, mins, sec);
-        case 3: format(returnstring, 31, "%d %c%c%c %d, %02d:%02d", day+1,names_of_month[month][0],names_of_month[month][1],names_of_month[month][2], year,hour,mins);
-        case 4: {format(returnstring, 31, "%02d.%02d.%d-%02d:%02d", day+1, month+1, year, hour, mins); print("we");}
+	   case 1: format(returnstring, 31, "%02d/%02d/%d", day+1, month+1, year);
+	   case 2: format(returnstring, 31, "%s %02d, %d, %02d:%02d:%02d", names_of_month[month],day+1,year, hour, mins, sec);
+	   case 3: format(returnstring, 31, "%d %c%c%c %d, %02d:%02d", day+1,names_of_month[month][0],names_of_month[month][1],names_of_month[month][2], year,hour,mins);
+	   case 4: {format(returnstring, 31, "%02d.%02d.%d-%02d:%02d", day+1, month+1, year, hour, mins); print("we");}
 
-        default: format(returnstring, 31, "%02d.%02d.%d-%02d:%02d:%02d", day+1, month+1, year, hour, mins, sec);
+	   default: format(returnstring, 31, "%02d.%02d.%d-%02d:%02d:%02d", day+1, month+1, year, hour, mins, sec);
     }
 
     return returnstring;
@@ -181,7 +181,7 @@ stock date( timestamp, _form=1 )
 // Thanks to Slice (Samp)
 /*stock memset(aArray[], iValue, iSize = sizeof(aArray)) {
     new
-        iAddress
+	   iAddress
     ;
     
     // Store the address of the array
@@ -193,50 +193,50 @@ stock date( timestamp, _form=1 )
     
     // Loop until there is nothing more to fill
     while (iSize > 0) {
-        // I have to do this because the FILL instruction doesn't accept a dynamic number.
-        if (iSize >= 4096) {
-            #emit LOAD.S.alt iAddress
-            #emit LOAD.S.pri iValue
-            #emit FILL 4096
-        
-            iSize    -= 4096;
-            iAddress += 4096;
-        } else if (iSize >= 1024) {
-            #emit LOAD.S.alt iAddress
-            #emit LOAD.S.pri iValue
-            #emit FILL 1024
+	   // I have to do this because the FILL instruction doesn't accept a dynamic number.
+	   if (iSize >= 4096) {
+		  #emit LOAD.S.alt iAddress
+		  #emit LOAD.S.pri iValue
+		  #emit FILL 4096
+	   
+		  iSize    -= 4096;
+		  iAddress += 4096;
+	   } else if (iSize >= 1024) {
+		  #emit LOAD.S.alt iAddress
+		  #emit LOAD.S.pri iValue
+		  #emit FILL 1024
 
-            iSize    -= 1024;
-            iAddress += 1024;
-        } else if (iSize >= 256) {
-            #emit LOAD.S.alt iAddress
-            #emit LOAD.S.pri iValue
-            #emit FILL 256
+		  iSize    -= 1024;
+		  iAddress += 1024;
+	   } else if (iSize >= 256) {
+		  #emit LOAD.S.alt iAddress
+		  #emit LOAD.S.pri iValue
+		  #emit FILL 256
 
-            iSize    -= 256;
-            iAddress += 256;
-        } else if (iSize >= 64) {
-            #emit LOAD.S.alt iAddress
-            #emit LOAD.S.pri iValue
-            #emit FILL 64
+		  iSize    -= 256;
+		  iAddress += 256;
+	   } else if (iSize >= 64) {
+		  #emit LOAD.S.alt iAddress
+		  #emit LOAD.S.pri iValue
+		  #emit FILL 64
 
-            iSize    -= 64;
-            iAddress += 64;
-        } else if (iSize >= 16) {
-            #emit LOAD.S.alt iAddress
-            #emit LOAD.S.pri iValue
-            #emit FILL 16
+		  iSize    -= 64;
+		  iAddress += 64;
+	   } else if (iSize >= 16) {
+		  #emit LOAD.S.alt iAddress
+		  #emit LOAD.S.pri iValue
+		  #emit FILL 16
 
-            iSize    -= 16;
-            iAddress += 16;
-        } else {
-            #emit LOAD.S.alt iAddress
-            #emit LOAD.S.pri iValue
-            #emit FILL 4
+		  iSize    -= 16;
+		  iAddress += 16;
+	   } else {
+		  #emit LOAD.S.alt iAddress
+		  #emit LOAD.S.pri iValue
+		  #emit FILL 4
 
-            iSize    -= 4;
-            iAddress += 4;
-        }
+		  iSize    -= 4;
+		  iAddress += 4;
+	   }
     }
     
     // aArray is used, just not by its symbol name
@@ -289,7 +289,7 @@ stock GetVehicleName(vehicleid)
 stock GetVehicleNameFromModel(modelid)
 {
     new
-        string[32];
+	   string[32];
     format(string, sizeof(string), "%s", VehicleNames[modelid - 400]);
     return string;
 }
@@ -300,7 +300,7 @@ stock IsATruck(vehicleid)
     new model = GetVehicleModel(vehicleid);
     for(new i = 0; i < sizeof(Trucks); i++)
     {
-        if(model == Trucks[i]) return 1;
+	   if(model == Trucks[i]) return 1;
     }
     return 0;
 }
@@ -311,7 +311,7 @@ stock IsABus(vehicleid)
     new model = GetVehicleModel(vehicleid);
     for(new i = 0; i < sizeof(Bus); i++)
     {
-        if(model == Bus[i]) return 1;
+	   if(model == Bus[i]) return 1;
     }
     return 0;
 }
@@ -322,7 +322,7 @@ stock IsABike(carid)
     new model = GetVehicleModel(carid);
     for(new i = 0; i < sizeof(Bikes); i++)
     {
-        if(model == Bikes[i]) return 1;
+	   if(model == Bikes[i]) return 1;
     }
     return 0;
 }
@@ -370,62 +370,64 @@ stock IsABoat(vehicleid)
 stock ProxDetectorS(Float:radius, playerid, targetid)
 {
     if(!IsPlayerConnected(playerid) || !IsPlayerConnected(targetid) || GetPlayerState(targetid) == PLAYER_STATE_SPECTATING)
-        return 0;
+	   return 0;
     new Float:x, Float:y, Float:z;
     GetPlayerPos(targetid, x, y, z);
     if(GetPlayerVirtualWorld(playerid) == GetPlayerVirtualWorld(targetid) && IsPlayerInRangeOfPlayer(playerid, targetid, radius))
-        return 1;
+	   return 1;
     return 0;
 }
 
-stock ProxDetectorStr(playerid, Float:radius, String:string, col1, col2, col3, col4, col5)
+stock ProxDetectorStr(playerid, Float:radius, String:string, col1, col2, col3, col4, col5, ooc = false)
 {
     new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
     amx_to_ref(var, ptr);
     str_get(string, ptr[0], .size=size);
 
-    new result = ProxDetector(playerid, radius, ptr[0], col1, col2, col3, col4, col5);
+    new result = ProxDetector(playerid, radius, ptr[0], col1, col2, col3, col4, col5, ooc);
 
     amx_free(var);
     amx_delete(var);
     return result;
 }
 
-stock ProxDetector(playerid, Float:radius, const string[], col1, col2, col3, col4, col5)
+stock ProxDetector(playerid, Float:radius, const string[], col1, col2, col3, col4, col5, ooc = false)
 {
-    if(!IsPlayerConnected(playerid) || !gCharacterLogged[playerid])
-        return 0;
+    if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))
+	   return 0;
     new 
-        int = GetPlayerInterior(playerid), vw = GetPlayerVirtualWorld(playerid),
-        Float:x, Float:y, Float:z;/* Float:dist,
-        Float:ox, Float:oy, Float:oz,
-        Float:tx, Float:ty, Float:tz;*/
-    GetPlayerPos(playerid, x, y, z);
-    foreach(new i : Player)
-    {
-        if(GetPlayerInterior(i) != int || GetPlayerVirtualWorld(i) != vw)
-            continue;
-        /*GetPlayerPos(i, ox, oy, oz);
-        tx = (x - ox);
-        tz = (y - oy);
-        tz = (z - oz);
-        dist = (tx * tx) + (ty * ty) + (tz * tz);//GetPlayerDistanceFromPoint(i, x, y, z);
-        //printf("ID: %d - X: %f - Y: %f - Z: %f", playerid, x, y, z);
-        //printf("ID: %d - X: %f - Y: %f - Z: %f", i, ox, oy, oz);
-        //printf("ID: %d - Dist: %f - %f", i, dist, radius);
-        if(dist < (radius * radius) / (16 * 16)) SendTwoLinesMessage(i, col1, string);
-        else if(dist < (radius * radius) / (8 * 8)) SendTwoLinesMessage(i, col2, string);
-        else if(dist < (radius * radius) / (4 * 4)) SendTwoLinesMessage(i, col3, string);
-        else if(dist < (radius * radius) / (2 * 2)) SendTwoLinesMessage(i, col4, string);
-        else if(dist < (radius * radius)) SendTwoLinesMessage(i, col5, string);**/
+	   int = GetPlayerInterior(playerid), vw = GetPlayerVirtualWorld(playerid),
+	   Float:x, Float:y, Float:z;/* Float:dist,
+	   Float:ox, Float:oy, Float:oz,
+	   Float:tx, Float:ty, Float:tz;*/
+	GetPlayerPos(playerid, x, y, z);
+	foreach(new i : Player)
+	{
+		if(GetPlayerInterior(i) != int || GetPlayerVirtualWorld(i) != vw)
+			continue;
+		if( (!Player_HasOOCEnabled(i) || !Player_HasOOCEnabledForPlayer(i, playerid)) && ooc)
+			continue;
 		new Float:distance = GetPlayerDistanceFromPoint(i, x, y, z);
 		if(distance < radius/16) SendTwoLinesMessage(i, col1, string);
 		else if(distance < radius/8) SendTwoLinesMessage(i, col2, string);
 		else if(distance < radius/4) SendTwoLinesMessage(i, col3, string);
 		else if(distance < radius/2) SendTwoLinesMessage(i, col4, string);
 		else if(distance < radius) SendTwoLinesMessage(i, col5, string);
-    }
+	}
     return 1;
+}
+
+stock SendTwoLinesMessageStr(playerid, color, String:string)
+{
+	new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
+    amx_to_ref(var, ptr);
+    str_get(string, ptr[0], .size=size);
+
+    new result = SendTwoLinesMessage(playerid, color, ptr[0]);
+
+    amx_free(var);
+    amx_delete(var);
+	return result;
 }
 
 stock SendTwoLinesMessage(playerid, color, const message[], GLOBAL_TAG_TYPES:...)
@@ -433,20 +435,20 @@ stock SendTwoLinesMessage(playerid, color, const message[], GLOBAL_TAG_TYPES:...
     new string[256];
     format(string, sizeof(string), message, ___3);
     new len = strlen(string);
-    if(len > 90)
+    if(len > 84)
     {
-        new tmp1[85], tmp2[85];
-        
-        strmid(tmp2, string, 80, (len > 149 ? 149 : len));
-        strins(tmp2, ".. ", 0, 84);
-        strmid(tmp1, string, 0, 80);
-        strins(tmp1, " ..", 80, 83);
-        SendClientMessage(playerid, color, tmp1);
-        SendClientMessage(playerid, color, tmp2);
+	   new tmp1[85], tmp2[85];
+	   
+	   strmid(tmp2, string, 80, (len > 149 ? 149 : len));
+	   strins(tmp2, ".. ", 0, 84);
+	   strmid(tmp1, string, 0, 80);
+	   strins(tmp1, " ..", 80, 83);
+	   SendClientMessage(playerid, color, tmp1);
+	   SendClientMessage(playerid, color, tmp2);
     }
     else
     {
-        SendClientMessage(playerid, color, string);
+	   SendClientMessage(playerid, color, string);
     }
     return 1;
 }
@@ -458,18 +460,51 @@ stock SendTwoLinesMessageToAll(color, const message[], GLOBAL_TAG_TYPES:...)
     new len = strlen(string);
     if(len > 90)
     {
-        new tmp1[100], tmp2[100];
-        
-        strmid(tmp1, string, 0, 90);
-        strins(tmp1, " ..", 90, 93);
-        strmid(tmp2, string, 90, len);
-        strins(tmp2, ".. ", 0, 90);
-        SendClientMessageToAll(color, tmp1);
-        SendClientMessageToAll(color, tmp2);
+	   new tmp1[100], tmp2[100];
+	   
+	   strmid(tmp1, string, 0, 90);
+	   strins(tmp1, " ..", 90, 93);
+	   strmid(tmp2, string, 90, len);
+	   strins(tmp2, ".. ", 0, 90);
+	   SendClientMessageToAll(color, tmp1);
+	   SendClientMessageToAll(color, tmp2);
     }
     else
     {
-        SendClientMessageToAll(color, string);
+	   SendClientMessageToAll(color, string);
     }
 }
 
+
+stock IsValidEMail(email[]) 
+{
+	new len=strlen(email);
+	new cstate=0;
+	new i;
+	for(i=0;i<len;i++) {
+		if ((cstate==0 || cstate==1) && (email[i]>='A' && email[i]<='Z') || (email[i]>='a' && email[i]<='z') || (email[i]>='0' && email[i]<='9') || (email[i]=='.')  || (email[i]=='-')  || (email[i]=='_'))
+		{
+		} else {
+		// Ok no A..Z,a..z,0..9,_,.,-
+		if ((cstate==0) &&(email[i]=='@')) {
+			// its an @ after the name, ok state=1;
+			cstate=1;
+		} else {
+			// Its stuff which is not allowed
+			return false;
+		}
+		}
+	}
+	if (cstate<1) return false;
+	if (len<6) return false;
+	// A toplevel domain has only 3 to 4 signs :-)
+	if ((email[len-3]=='.') || (email[len-4]=='.') || (email[len-5]=='.')) return true;
+	return false;
+}
+
+/*stock DestroyDynamic3DTextLabelEx(&Text3D:labelid)
+{
+	DestroyDynamic3DTextLabelEx(labelid);
+	labelid = Text3D:INVALID_3DTEXT_ID; 
+	return 1;
+}*/

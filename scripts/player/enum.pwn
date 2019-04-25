@@ -1,6 +1,7 @@
 #include <YSI_Coding\y_hooks>
 
-#define MAX_VEHICLES_PER_PLAYER     5
+#define MAX_VEHICLES_PER_PLAYER			20
+#define PENDING_REQUEST_TIME			1
 
 enum E_PLAYER_DATA
 {
@@ -17,20 +18,26 @@ enum E_PLAYER_DATA
     Float:pArmour,
     pBuildingKey,
     pHouseKey,
-
+	pFaction,
+	pRank,
+	pPayCheck,
+	pJailTime,
+	pJailIC,
     pLootZone, // MUST REMOVE FROM HERE SOON
 };
 new 
-    PlayerInfo[MAX_PLAYERS][E_PLAYER_DATA],
-    // probably Iterators aren't worth for this.
-    Iterator:pTogglePM[MAX_PLAYERS]<MAX_PLAYERS>,
-    Iterator:pToggleOOC[MAX_PLAYERS]<MAX_PLAYERS>,
-    pVehicleListItem[MAX_PLAYERS][MAX_VEHICLES_PER_PLAYER],
-    pSelectedVehicleListItem[MAX_PLAYERS],
-	pAmmoSync[MAX_PLAYERS char]
-    ;
-
-
+	PlayerInfo[MAX_PLAYERS][E_PLAYER_DATA],
+	// probably Iterators aren't worth for this.
+	Iterator:pTogglePM[MAX_PLAYERS]<MAX_PLAYERS>,
+	Iterator:pToggleOOC[MAX_PLAYERS]<MAX_PLAYERS>,
+	pVehicleListItem[MAX_PLAYERS][MAX_VEHICLES_PER_PLAYER],
+	pSelectedVehicleListItem[MAX_PLAYERS],
+	pAmmoSync[MAX_PLAYERS char],
+	pTempSkin[MAX_PLAYERS],
+	pSelectedUniformSlot[MAX_PLAYERS char],
+	pDraggedBy[MAX_PLAYERS],
+	Timer:pDragTimer[MAX_PLAYERS]
+;
 
 enum E_PLAYER_RESTORE_DATA
 {
@@ -44,7 +51,6 @@ enum E_PLAYER_RESTORE_DATA
     Float:pLastArmour,
     pLastInterior,
     pLastVirtualWorld,
-	pWeaponsString[128]
 };
 new PlayerRestore[MAX_PLAYERS][E_PLAYER_RESTORE_DATA];
 
@@ -55,12 +61,19 @@ enum e_Bit1_Data
     e_pHotKeys,
     e_pFreezed,
 	e_pInvMode, // 0: Dialog - 1: Chat
+	e_pTryingEngine,
+	e_pFactionOOC,
+	e_pFactionDuty,
+	e_pSelectingUniform,
+	e_pCuffed,
+	e_pDragged,
+	e_pDragging
 };
 
 new 
     BitArray:gPlayerBitArray[e_Bit1_Data]<MAX_PLAYERS>;
 
-enum PendingType
+enum _:e_PendingType
 {
 	PENDING_TYPE_NONE,
 	PENDING_TYPE_WEAPON
@@ -76,19 +89,38 @@ enum e_RequestData
 	rdAmount,
 	rdExtra,
 	rdType,
+	rdSlot,
 };
 
 new 
-	pPendingRequest[MAX_PLAYERS][e_RequestData]
+	PendingRequestInfo[MAX_PLAYERS][e_RequestData]
 	;
 
 stock ResetPendingRequest(playerid)
 {
-	pPendingRequest[playerid][rdPending] = 0;
-	pPendingRequest[playerid][rdByPlayer] = -1;
-	pPendingRequest[playerid][rdTime] = 0;
-	pPendingRequest[playerid][rdItem] = 0;
-	pPendingRequest[playerid][rdAmount] = 0;
-	pPendingRequest[playerid][rdExtra] = 0;
-	pPendingRequest[playerid][rdType] = PENDING_TYPE_NONE;
+	PendingRequestInfo[playerid][rdPending] = 0;
+	PendingRequestInfo[playerid][rdByPlayer] = -1;
+	PendingRequestInfo[playerid][rdTime] = 0;
+	PendingRequestInfo[playerid][rdItem] = 0;
+	PendingRequestInfo[playerid][rdAmount] = 0;
+	PendingRequestInfo[playerid][rdExtra] = 0;
+	PendingRequestInfo[playerid][rdType] = PENDING_TYPE_NONE;
+	PendingRequestInfo[playerid][rdSlot] = 0;
 }
+
+enum e_DeathState
+{
+	pDeathTime,
+	Float:pDeathX,
+	Float:pDeathY,
+	Float:pDeathZ,
+	Float:pDeathA,
+	pDeathInt,
+	pDeathWorld,
+	Text3D:pDeathText
+};
+
+new 
+	PlayerDeathState[MAX_PLAYERS][e_DeathState],
+	pDeathState[MAX_PLAYERS char] // 0 = Not dead, 1 = Waiting for healing, 2 = Death
+;

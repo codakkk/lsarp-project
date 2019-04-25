@@ -12,7 +12,8 @@
 		"Southclaw/samp-whirlpool",
 		"maddinat0r/sscanf:v2.8.3",
 		"samp-incognito/samp-streamer-plugin:v2.9.4",
-		"oscar-broman/strlib"
+		"oscar-broman/strlib",
+		"Open-GTO/sa-mp-fixes"
 	],
 	"builds": [
 		{

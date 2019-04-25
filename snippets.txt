@@ -199,9 +199,9 @@
 	// ==========[admin/supporter_commands.pwn]==========
 	// ==================================================
 	// ==========[anticheat/core.pwn]==========
-	"lsarp_AC_GetPlayerMoney": {
-		"prefix": "AC_GetPlayerMoney",
-		"body": "AC_GetPlayerMoney(${1:playerid})",
+	"lsarp_Character_GetMoney": {
+		"prefix": "Character_GetMoney",
+		"body": "Character_GetMoney(${1:playerid})",
 		"description": ""
 	},
 	"lsarp_AC_SetPlayerSkin": {
@@ -209,9 +209,9 @@
 		"body": "AC_SetPlayerSkin(${1:playerid}, ${2:skinid}, ${3:reason[] = ""})",
 		"description": ""
 	},
-	"lsarp_AC_GivePlayerMoney": {
-		"prefix": "AC_GivePlayerMoney",
-		"body": "AC_GivePlayerMoney(${1:playerid}, ${2:money}, ${3:reason[] = ""})",
+	"lsarp_Character_GiveMoney": {
+		"prefix": "Character_GiveMoney",
+		"body": "Character_GiveMoney(${1:playerid}, ${2:money}, ${3:reason[] = ""})",
 		"description": ""
 	},
 	"lsarp_AC_ResetPlayerMoney": {
@@ -370,19 +370,19 @@
 	// ==========[building/enum.pwn]==========
 	// ==================================================
 	// ==========[building/player.pwn]==========
-	"lsarp_Player_Enter": {
-		"prefix": "Player_Enter",
-		"body": "Player_Enter(${1:playerid}, ${2:pickupid}, ${3:elementId}, ${4:E_ELEMENT_TYPE:type})",
+	"lsarp_Character_Enter": {
+		"prefix": "Character_Enter",
+		"body": "Character_Enter(${1:playerid}, ${2:pickupid}, ${3:elementId}, ${4:E_ELEMENT_TYPE:type})",
 		"description": ""
 	},
-	"lsarp_Player_Exit": {
-		"prefix": "Player_Exit",
-		"body": "Player_Exit(${1:playerid}, ${2:pickupid}, ${3:elementId}, ${4:E_ELEMENT_TYPE:type})",
+	"lsarp_Character_Exit": {
+		"prefix": "Character_Exit",
+		"body": "Character_Exit(${1:playerid}, ${2:pickupid}, ${3:elementId}, ${4:E_ELEMENT_TYPE:type})",
 		"description": ""
 	},
-	"lsarp_Player_BuyBuilding": {
-		"prefix": "Player_BuyBuilding",
-		"body": "Player_BuyBuilding(${1:playerid}, ${2:buildingid})",
+	"lsarp_Character_BuyBuilding": {
+		"prefix": "Character_BuyBuilding",
+		"body": "Character_BuyBuilding(${1:playerid}, ${2:buildingid})",
 		"description": ""
 	},
 	// ==================================================
@@ -951,64 +951,64 @@
 	// ==========[player\commands/vehicle_commands.pwn]==========
 	// ==================================================
 	// ==========[showroom/core.pwn]==========
-	"lsarp_ShowRoom_Create": {
-		"prefix": "ShowRoom_Create",
-		"body": "ShowRoom_Create(${1:Float:x}, ${2:Float:y}, ${3:Float:z})",
+	"lsarp_Dealership_Create": {
+		"prefix": "Dealership_Create",
+		"body": "Dealership_Create(${1:Float:x}, ${2:Float:y}, ${3:Float:z})",
 		"description": ""
 	},
-	"lsarp_ShowRoom_SetName": {
-		"prefix": "ShowRoom_SetName",
-		"body": "ShowRoom_SetName(${1:showroom_id}, ${2:name[]})",
+	"lsarp_Dealership_SetName": {
+		"prefix": "Dealership_SetName",
+		"body": "Dealership_SetName(${1:dealership_id}, ${2:name[]})",
 		"description": ""
 	},
-	"lsarp_ShowRoom_Delete": {
-		"prefix": "ShowRoom_Delete",
-		"body": "ShowRoom_Delete(${1:showroom_id})",
+	"lsarp_Dealership_Delete": {
+		"prefix": "Dealership_Delete",
+		"body": "Dealership_Delete(${1:dealership_id})",
 		"description": ""
 	},
-	"lsarp_ShowRoom_SetPosition": {
-		"prefix": "ShowRoom_SetPosition",
-		"body": "ShowRoom_SetPosition(${1:showroom_id}, ${2:Float:new_x}, ${3:Float:new_y}, ${4:Float:new_z})",
+	"lsarp_Dealership_SetPosition": {
+		"prefix": "Dealership_SetPosition",
+		"body": "Dealership_SetPosition(${1:dealership_id}, ${2:Float:new_x}, ${3:Float:new_y}, ${4:Float:new_z})",
 		"description": ""
 	},
-	"lsarp_ShowRoom_DeleteVehicle": {
-		"prefix": "ShowRoom_DeleteVehicle",
-		"body": "ShowRoom_DeleteVehicle(${1:showroom_id}, ${2:id})",
+	"lsarp_Dealership_DeleteVehicle": {
+		"prefix": "Dealership_DeleteVehicle",
+		"body": "Dealership_DeleteVehicle(${1:dealership_id}, ${2:id})",
 		"description": ""
 	},
-	"lsarp_ShowRoom_AddVehicle": {
-		"prefix": "ShowRoom_AddVehicle",
-		"body": "ShowRoom_AddVehicle(${1:showroom_id}, ${2:modelid}, ${3:price})",
+	"lsarp_Dealership_AddVehicle": {
+		"prefix": "Dealership_AddVehicle",
+		"body": "Dealership_AddVehicle(${1:dealership_id}, ${2:modelid}, ${3:price})",
 		"description": ""
 	},
-	"lsarp_ShowRoom_SetVehicleSpawnPos": {
-		"prefix": "ShowRoom_SetVehicleSpawnPos",
-		"body": "ShowRoom_SetVehicleSpawnPos(${1:showroom_id}, ${2:Float:x}, ${3:Float:y}, ${4:Float:z}, ${5:Float:a})",
+	"lsarp_Dealership_SetVehicleSpawnPos": {
+		"prefix": "Dealership_SetVehicleSpawnPos",
+		"body": "Dealership_SetVehicleSpawnPos(${1:dealership_id}, ${2:Float:x}, ${3:Float:y}, ${4:Float:z}, ${5:Float:a})",
 		"description": ""
 	},
-	"lsarp_ShowRoom_FreeVehicleSlot": {
-		"prefix": "ShowRoom_FreeVehicleSlot",
-		"body": "ShowRoom_FreeVehicleSlot(${1:showroom_id})",
+	"lsarp_Dealership_FreeVehicleSlot": {
+		"prefix": "Dealership_FreeVehicleSlot",
+		"body": "Dealership_FreeVehicleSlot(${1:dealership_id})",
 		"description": ""
 	},
-	"lsarp_ShowRoom_Save": {
-		"prefix": "ShowRoom_Save",
-		"body": "ShowRoom_Save(${1:showroom_id})",
+	"lsarp_Dealership_Save": {
+		"prefix": "Dealership_Save",
+		"body": "Dealership_Save(${1:dealership_id})",
 		"description": ""
 	},
-	"lsarp_ShowRoom_LoadAll": {
-		"prefix": "ShowRoom_LoadAll",
-		"body": "ShowRoom_LoadAll(${1:})",
+	"lsarp_Dealership_LoadAll": {
+		"prefix": "Dealership_LoadAll",
+		"body": "Dealership_LoadAll(${1:})",
 		"description": ""
 	},
-	"lsarp_ShowRoom_CreateElements": {
-		"prefix": "ShowRoom_CreateElements",
-		"body": "ShowRoom_CreateElements(${1:showroom_id})",
+	"lsarp_Dealership_CreateElements": {
+		"prefix": "Dealership_CreateElements",
+		"body": "Dealership_CreateElements(${1:dealership_id})",
 		"description": ""
 	},
-	"lsarp_ShowRoom_DestroyElements": {
-		"prefix": "ShowRoom_DestroyElements",
-		"body": "ShowRoom_DestroyElements(${1:showroom_id})",
+	"lsarp_Dealership_DestroyElements": {
+		"prefix": "Dealership_DestroyElements",
+		"body": "Dealership_DestroyElements(${1:dealership_id})",
 		"description": ""
 	},
 	// ==================================================
@@ -1020,31 +1020,31 @@
 		"body": "ClearBuyingVehicleData(${1:playerid})",
 		"description": ""
 	},
-	"lsarp_ShowRoom_PlayerConfirmBuy": {
-		"prefix": "ShowRoom_PlayerConfirmBuy",
-		"body": "ShowRoom_PlayerConfirmBuy(${1:playerid})",
+	"lsarp_Dealership_PlayerConfirmBuy": {
+		"prefix": "Dealership_PlayerConfirmBuy",
+		"body": "Dealership_PlayerConfirmBuy(${1:playerid})",
 		"description": ""
 	},
-	"lsarp_ShowRoom_PlayerCancelBuy": {
-		"prefix": "ShowRoom_PlayerCancelBuy",
-		"body": "ShowRoom_PlayerCancelBuy(${1:playerid})",
+	"lsarp_Dealership_PlayerCancelBuy": {
+		"prefix": "Dealership_PlayerCancelBuy",
+		"body": "Dealership_PlayerCancelBuy(${1:playerid})",
 		"description": ""
 	},
 	// ==================================================
 	// ==========[showroom/showroom_admin_commands.pwn]==========
-	"lsarp_ShowRoom_ShowInternalVehicles": {
-		"prefix": "ShowRoom_ShowInternalVehicles",
-		"body": "ShowRoom_ShowInternalVehicles(${1:showroom_id}, ${2:playerid})",
+	"lsarp_Dealership_ShowInternalVehicles": {
+		"prefix": "Dealership_ShowInternalVehicles",
+		"body": "Dealership_ShowInternalVehicles(${1:dealership_id}, ${2:playerid})",
 		"description": ""
 	},
-	"lsarp_ShowRoom_ShowAllShowroomsList": {
-		"prefix": "ShowRoom_ShowAllShowroomsList",
-		"body": "ShowRoom_ShowAllShowroomsList(${1:playerid}, ${2:params[]=""})",
+	"lsarp_Dealership_ShowList": {
+		"prefix": "Dealership_ShowList",
+		"body": "Dealership_ShowList(${1:playerid}, ${2:params[]=""})",
 		"description": ""
 	},
-	"lsarp_ShowRoom_ClearEditVars": {
-		"prefix": "ShowRoom_ClearEditVars",
-		"body": "ShowRoom_ClearEditVars(${1:playerid})",
+	"lsarp_Dealership_ClearEditVars": {
+		"prefix": "Dealership_ClearEditVars",
+		"body": "Dealership_ClearEditVars(${1:playerid})",
 		"description": ""
 	},
 	// ==================================================

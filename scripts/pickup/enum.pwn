@@ -4,7 +4,7 @@ enum E_PICKUP_DATA
     elementID,
     E_ELEMENT_TYPE:elementType
 };
-new     
+new	
     PickupInfo[4096 /* Max Pickups in SAMP */][E_PICKUP_DATA];
 
 // We call them "elements" to avoid problems with Pickups ID
@@ -18,4 +18,7 @@ enum E_ELEMENT_TYPE
     ELEMENT_TYPE_HOUSE_ENTRANCE,
     ELEMENT_TYPE_HOUSE_EXIT,
     ELEMENT_TYPE_LOOTZONE,
+	ELEMENT_TYPE_PAYCHECK,
+	ELEMENT_TYPE_ARREST,
+	ELEMENT_TYPE_JAIL_EXIT
 };

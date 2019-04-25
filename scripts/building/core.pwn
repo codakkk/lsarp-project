@@ -1,43 +1,37 @@
 #include <YSI_Coding\y_hooks>
 
 
-hook OnGameModeInit()
-{
-    Building_LoadAll();
-    return 1;
-}
-
 stock Building_Create(name[], Float:x, Float:y, Float:z, interior, world)
 {
     new freeid = Iter_Free(Buildings);
     if(freeid == -1)
-        return 0;
+	   return 0;
     inline OnInsert()
     {
-        BuildingInfo[freeid][bID] = cache_insert_id();
+	   BuildingInfo[freeid][bID] = cache_insert_id();
 
-        set(BuildingInfo[freeid][bName], name);
-        set(BuildingInfo[freeid][bWelcomeText], "");
-        set(BuildingInfo[freeid][bOwnerName], "");
-        
-        BuildingInfo[freeid][bEnterX] = x;
-        BuildingInfo[freeid][bEnterY] = y;
-        BuildingInfo[freeid][bEnterZ] = z;
-        BuildingInfo[freeid][bEnterInterior] = interior;
-        BuildingInfo[freeid][bEnterWorld] = world;
-        BuildingInfo[freeid][bOwnable] = 0;
-        BuildingInfo[freeid][bOwnerID] = 0;
-        BuildingInfo[freeid][bPrice] = 0;
-        BuildingInfo[freeid][bLocked] = 1;
-        BuildingInfo[freeid][bExists] = 1;
+	   set(BuildingInfo[freeid][bName], name);
+	   set(BuildingInfo[freeid][bWelcomeText], "");
+	   set(BuildingInfo[freeid][bOwnerName], "");
+	   
+	   BuildingInfo[freeid][bEnterX] = x;
+	   BuildingInfo[freeid][bEnterY] = y;
+	   BuildingInfo[freeid][bEnterZ] = z;
+	   BuildingInfo[freeid][bEnterInterior] = interior;
+	   BuildingInfo[freeid][bEnterWorld] = world;
+	   BuildingInfo[freeid][bOwnable] = 0;
+	   BuildingInfo[freeid][bOwnerID] = 0;
+	   BuildingInfo[freeid][bPrice] = 0;
+	   BuildingInfo[freeid][bLocked] = 1;
+	   BuildingInfo[freeid][bExists] = 1;
 
-        Building_CreateElements(freeid);
+	   Building_CreateElements(freeid);
 
-        Iter_Add(Buildings, freeid);
+	   Iter_Add(Buildings, freeid);
     }
     MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO buildings (Name, OwnerName, WelcomeText, EnterX, EnterY, EnterZ, EnterInterior, EnterWorld, ExitX, ExitY, ExitZ, ExitInterior, Ownable, OwnerID, Price, Locked) \
-                                 VALUES('%e', '', '', '%f', '%f', '%f', '%d', '%d', '0.0', '0.0', '0.0', '0', '0', '0', '0', '1')", 
-                                                    name, x, y, z, interior, world);
+						   VALUES('%e', '', '', '%f', '%f', '%f', '%d', '%d', '0.0', '0.0', '0.0', '0', '0', '0', '0', '1')", 
+										  name, x, y, z, interior, world);
     return freeid;
 }
 
@@ -45,35 +39,38 @@ stock Building_LoadAll()
 {
     inline OnLoad()
     {
-        new count = cache_num_rows();
-        if(count > MAX_BUILDINGS)
-            count = MAX_BUILDINGS;
-        for(new i = 0; i < count; ++i)
-        {
-            cache_get_value_index_int(i, 0, BuildingInfo[i][bID]);
-            cache_get_value_index(i, 1, BuildingInfo[i][bName]);
-            cache_get_value_index(i, 2, BuildingInfo[i][bOwnerName]);
-            cache_get_value_index(i, 3, BuildingInfo[i][bWelcomeText]);
-            cache_get_value_index_float(i, 4, BuildingInfo[i][bEnterX]);
-            cache_get_value_index_float(i, 5, BuildingInfo[i][bEnterY]);
-            cache_get_value_index_float(i, 6, BuildingInfo[i][bEnterZ]);
-            cache_get_value_index_int(i, 7, BuildingInfo[i][bEnterInterior]);
-            cache_get_value_index_int(i, 8, BuildingInfo[i][bEnterWorld]);
-            cache_get_value_index_float(i, 8, BuildingInfo[i][bExitX]);
-            cache_get_value_index_float(i, 10, BuildingInfo[i][bExitY]);
-            cache_get_value_index_float(i, 11, BuildingInfo[i][bExitZ]);
-            cache_get_value_index_int(i, 12, BuildingInfo[i][bExitInterior]);
-            cache_get_value_index_int(i, 13, BuildingInfo[i][bOwnable]);
-            cache_get_value_index_int(i, 14, BuildingInfo[i][bOwnerID]);
-            cache_get_value_index_int(i, 15, BuildingInfo[i][bPrice]);
-            cache_get_value_index_int(i, 16, BuildingInfo[i][bLocked]);
+	   	new count = cache_num_rows();
+		if(count > MAX_BUILDINGS)
+			count = MAX_BUILDINGS;
+		for(new i = 0; i < count; ++i)
+		{
+			cache_get_value_index_int(i, 0, BuildingInfo[i][bID]);
+			cache_get_value_index(i, 1, BuildingInfo[i][bName]);
+			cache_get_value_index(i, 2, BuildingInfo[i][bOwnerName]);
+			cache_get_value_index(i, 3, BuildingInfo[i][bWelcomeText]);
+			cache_get_value_index_float(i, 4, BuildingInfo[i][bEnterX]);
+			cache_get_value_index_float(i, 5, BuildingInfo[i][bEnterY]);
+			cache_get_value_index_float(i, 6, BuildingInfo[i][bEnterZ]);
+			cache_get_value_index_int(i, 7, BuildingInfo[i][bEnterInterior]);
+			cache_get_value_index_int(i, 8, BuildingInfo[i][bEnterWorld]);
+			cache_get_value_index_float(i, 9, BuildingInfo[i][bExitX]);
+			cache_get_value_index_float(i, 10, BuildingInfo[i][bExitY]);
+			cache_get_value_index_float(i, 11, BuildingInfo[i][bExitZ]);
+			cache_get_value_index_int(i, 12, BuildingInfo[i][bExitInterior]);
+			cache_get_value_index_int(i, 13, BuildingInfo[i][bOwnable]);
+			cache_get_value_index_int(i, 14, BuildingInfo[i][bOwnerID]);
+			cache_get_value_index_int(i, 15, BuildingInfo[i][bPrice]);
+			cache_get_value_index_int(i, 16, BuildingInfo[i][bLocked]);
+			cache_get_value_index_int(i, 17, BuildingInfo[i][bFaction]);
 
-            BuildingInfo[i][bExists] = 1;
+			BuildingInfo[i][bExitWorld] = BUILDING_START_WORLD + i;
 
-            Building_CreateElements(i);
-            
-            Iter_Add(Buildings, i);
-        }
+			BuildingInfo[i][bExists] = 1;
+
+			Building_CreateElements(i);
+			
+			Iter_Add(Buildings, i);
+		}
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `buildings` ORDER BY ID");
 }
@@ -81,7 +78,7 @@ stock Building_LoadAll()
 stock Building_SetPosition(buildingid, Float:x, Float:y, Float:z, vw, int)
 {
     if(!BuildingInfo[buildingid][bExists] || !BuildingInfo[buildingid][bID])
-        return 0;
+	   return 0;
     BuildingInfo[buildingid][bEnterX] = x;
     BuildingInfo[buildingid][bEnterY] = y;
     BuildingInfo[buildingid][bEnterZ] = z;
@@ -97,11 +94,11 @@ stock Building_SetPosition(buildingid, Float:x, Float:y, Float:z, vw, int)
 stock Building_SetName(buildingid, name[])
 {
     if(!BuildingInfo[buildingid][bExists] || !BuildingInfo[buildingid][bID])
-        return 0;
+	   return 0;
     set(BuildingInfo[buildingid][bName], name);
     Building_Save(buildingid);
     if(IsValidDynamic3DTextLabel(BuildingInfo[buildingid][bEnter3DText]))
-        DestroyDynamic3DTextLabel(BuildingInfo[buildingid][bEnter3DText]);
+	   DestroyDynamic3DTextLabelEx(BuildingInfo[buildingid][bEnter3DText]);
     BuildingInfo[buildingid][bEnter3DText] = CreateDynamic3DTextLabel(BuildingInfo[buildingid][bName], COLOR_LIGHTBLUE/*2*/, BuildingInfo[buildingid][bEnterX], BuildingInfo[buildingid][bEnterY], BuildingInfo[buildingid][bEnterZ] + 0.55, 20, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, BuildingInfo[buildingid][bEnterWorld]);
     return 1;
 }
@@ -109,22 +106,25 @@ stock Building_SetName(buildingid, name[])
 stock Building_SetInterior(buildingid, Float:x, Float:y, Float:z, interiorid)
 {
     if(!BuildingInfo[buildingid][bExists] || !BuildingInfo[buildingid][bID])
-        return 0;
-    BuildingInfo[buildingid][bExitInterior] = interiorid;
+	   return 0;
     BuildingInfo[buildingid][bExitX] = x;
     BuildingInfo[buildingid][bExitY] = y;
     BuildingInfo[buildingid][bExitZ] = z;
+    BuildingInfo[buildingid][bExitInterior] = interiorid;
+	BuildingInfo[buildingid][bExitWorld] = BUILDING_START_WORLD + buildingid;
     Building_Save(buildingid);
 
-    Pickup_Destroy(BuildingInfo[buildingid][bExitPickupID]);
-    BuildingInfo[buildingid][bExitPickupID] = Pickup_Create(1007, buildingid, BuildingInfo[buildingid][bExitX], BuildingInfo[buildingid][bExitY], BuildingInfo[buildingid][bExitZ], ELEMENT_TYPE_BUILDING_EXIT, buildingid, BuildingInfo[buildingid][bExitInterior]);
+	Building_DestroyElements(buildingid);
+	Building_CreateElements(buildingid);
+    //Pickup_Destroy(BuildingInfo[buildingid][bExitPickupID]);
+    //BuildingInfo[buildingid][bExitPickupID] = Pickup_Create(1007, buildingid, BuildingInfo[buildingid][bExitX], BuildingInfo[buildingid][bExitY], BuildingInfo[buildingid][bExitZ], ELEMENT_TYPE_BUILDING_EXIT, BuildingInfo[buildingid][bExitWorld], BuildingInfo[buildingid][bExitInterior]);
     return 1;
 }
 
 stock Building_SetOwnable(buildingid, ownable)
 {
     if(!BuildingInfo[buildingid][bExists] || !BuildingInfo[buildingid][bID])
-        return 0;
+	   return 0;
     BuildingInfo[buildingid][bOwnable] = ownable;
     Building_Save(buildingid);
     return 1;
@@ -133,7 +133,7 @@ stock Building_SetOwnable(buildingid, ownable)
 stock Building_SetPrice(buildingid, price)
 {
     if(!BuildingInfo[buildingid][bExists] || !BuildingInfo[buildingid][bID])
-        return 0;
+	   return 0;
     BuildingInfo[buildingid][bPrice] = price;
     Building_Save(buildingid);
     return 1;
@@ -141,13 +141,18 @@ stock Building_SetPrice(buildingid, price)
 
 stock Building_SetWelcomeText(buildingid, text[])
 {
-    set(BuildingInfo[buildingid])
+    set(BuildingInfo[buildingid][bWelcomeText], text);
+}
+
+stock String:Building_GetWelcomeTextStr(buildingid)
+{
+	return str_new(BuildingInfo[buildingid][bWelcomeText]);
 }
 
 stock Building_SetOwner(buildingid, playerid)
 {
-    if(!Building_IsValid(buildingid) || !Building_IsOwnable(buildingid) || !gCharacterLogged[playerid])
-        return 0;
+    if(!Building_IsValid(buildingid) || !Building_IsOwnable(buildingid) || !Character_IsLogged(playerid))
+	   return 0;
     BuildingInfo[buildingid][bOwnerID] = PlayerInfo[playerid][pID];
     set(BuildingInfo[buildingid][bOwnerName], Character_GetOOCName(playerid));
     Log(Character_GetOOCName(playerid), "", "Building_SetOwner", buildingid);
@@ -157,7 +162,7 @@ stock Building_SetOwner(buildingid, playerid)
 stock Building_ResetOwner(buildingid)
 {
     if(!Building_IsValid(buildingid))
-        return 0;
+	   return 0;
     BuildingInfo[buildingid][bOwnerID] = 0;
     set(BuildingInfo[buildingid][bOwnerName], "");
     Log("", "", "Building_ResetOwner", buildingid);
@@ -166,20 +171,24 @@ stock Building_ResetOwner(buildingid)
 
 stock Building_Delete(buildingid)
 {
-    // UPDATE OWNERID -> BUILDING_ID TO 0.
-    new reset[E_BUILDING_INFO];
-    BuildingInfo[buildingid] = reset;
-    new query[256];
+    new query[64];
     mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `buildings` WHERE ID = '%d'",
     BuildingInfo[buildingid][bID]);
     mysql_tquery(gMySQL, query);
+
+	Building_DestroyElements(buildingid);
+	
+	// UPDATE OWNERID -> BUILDING_ID TO 0.
+    
+	new reset[E_BUILDING_INFO];
+    BuildingInfo[buildingid] = reset;
     return 1;
 }
 
 stock Building_Save(buildingid)
 {
     if(!BuildingInfo[buildingid][bExists] || !BuildingInfo[buildingid][bID])
-        return 0;
+	   return 0;
 
     new query[512];
     mysql_format(gMySQL, query, sizeof(query), "UPDATE `buildings` SET \
@@ -190,8 +199,9 @@ stock Building_Save(buildingid)
     ExitX = '%f', ExitY = '%f', ExitZ = '%f', \
     ExitInterior = '%d', \
     Ownable = '%d', OwnerID = '%d', \
-    Price = '%d', Locked = '%d' \
-    WHERE = ID = '%d'", 
+    Price = '%d', Locked = '%d', \
+	Faction = '%d' \
+    WHERE ID = '%d'", 
     BuildingInfo[buildingid][bName], BuildingInfo[buildingid][bOwnerName], 
     BuildingInfo[buildingid][bWelcomeText],
     BuildingInfo[buildingid][bEnterX], BuildingInfo[buildingid][bEnterY], BuildingInfo[buildingid][bEnterZ],
@@ -200,7 +210,9 @@ stock Building_Save(buildingid)
     BuildingInfo[buildingid][bExitInterior],
     BuildingInfo[buildingid][bOwnable], BuildingInfo[buildingid][bOwnerID],
     BuildingInfo[buildingid][bPrice], BuildingInfo[buildingid][bLocked],
+	BuildingInfo[buildingid][bFaction],
     BuildingInfo[buildingid][bID]);
+	mysql_tquery(gMySQL, query);
     return 1;
 }
 
@@ -208,14 +220,16 @@ stock Building_CreateElements(buildingid)
 {
     BuildingInfo[buildingid][bEnterPickupID] = Pickup_Create(1239, buildingid, BuildingInfo[buildingid][bEnterX], BuildingInfo[buildingid][bEnterY], BuildingInfo[buildingid][bEnterZ], ELEMENT_TYPE_BUILDING_ENTRANCE, BuildingInfo[buildingid][bEnterWorld], BuildingInfo[buildingid][bEnterInterior]);
     BuildingInfo[buildingid][bEnter3DText] = CreateDynamic3DTextLabel(BuildingInfo[buildingid][bName], COLOR_LIGHTBLUE/*2*/, BuildingInfo[buildingid][bEnterX], BuildingInfo[buildingid][bEnterY], BuildingInfo[buildingid][bEnterZ] + 0.55, 20, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, BuildingInfo[buildingid][bEnterWorld]);
-    BuildingInfo[buildingid][bExitPickupID] = Pickup_Create(1007, buildingid, BuildingInfo[buildingid][bExitX], BuildingInfo[buildingid][bExitY], BuildingInfo[buildingid][bExitZ], ELEMENT_TYPE_BUILDING_EXIT, buildingid, BuildingInfo[buildingid][bExitInterior]);
+    BuildingInfo[buildingid][bExitPickupID] = Pickup_Create(1007, buildingid, BuildingInfo[buildingid][bExitX], BuildingInfo[buildingid][bExitY], BuildingInfo[buildingid][bExitZ], ELEMENT_TYPE_BUILDING_EXIT, BuildingInfo[buildingid][bExitWorld], BuildingInfo[buildingid][bExitInterior]);
+	BuildingInfo[buildingid][bExit3DText] = CreateDynamic3DTextLabel("Uscita", COLOR_LIGHTBLUE/*2*/, BuildingInfo[buildingid][bExitX], BuildingInfo[buildingid][bExitY], BuildingInfo[buildingid][bExitZ] + 0.55, 20, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, BuildingInfo[buildingid][bExitWorld], BuildingInfo[buildingid][bExitInterior]);
 }
 
 stock Building_DestroyElements(buildingid)
 {
     Pickup_Destroy(BuildingInfo[buildingid][bEnterPickupID]);
     Pickup_Destroy(BuildingInfo[buildingid][bExitPickupID]);
-    DestroyDynamic3DTextLabel(BuildingInfo[buildingid][bEnter3DText]);
+    DestroyDynamic3DTextLabelEx(BuildingInfo[buildingid][bEnter3DText]);
+	DestroyDynamic3DTextLabelEx(BuildingInfo[buildingid][bExit3DText]);
 }
 
 // GET/SET
@@ -257,4 +271,67 @@ stock Building_IsLocked(a)
 stock Building_GetPrice(a)
 {
     return BuildingInfo[a][bPrice];
+}
+
+stock Building_SetFaction(buildingid, factionid)
+{
+	BuildingInfo[buildingid][bFaction] = factionid;
+}
+
+stock Building_GetFaction(buildingid)
+{
+	return BuildingInfo[buildingid][bFaction];
+}
+
+stock Building_GetEnterInterior(buildingid)
+{
+	return BuildingInfo[buildingid][bEnterInterior];
+}
+
+stock Building_GetEnterWorld(buildingid)
+{
+	return BuildingInfo[buildingid][bEnterWorld];
+}
+
+stock Building_GetExitInterior(buildingid)
+{
+	return BuildingInfo[buildingid][bExitInterior];
+}
+
+stock Building_GetExitWorld(buildingid)
+{
+	return BuildingInfo[buildingid][bExitWorld];
+}
+
+stock Building_GetEnterPos(buildingid, &Float:x, &Float:y, &Float:z)
+{
+	if(!Building_IsValid(buildingid))
+		return 0;
+	x = BuildingInfo[buildingid][bEnterX];
+	y = BuildingInfo[buildingid][bEnterY];
+	z = BuildingInfo[buildingid][bEnterZ];
+	return 1;
+}
+
+stock Building_GetExitPos(buildingid, &Float:x, &Float:y, &Float:z)
+{
+	if(!Building_IsValid(buildingid))
+		return 0;
+	x = BuildingInfo[buildingid][bExitX];
+	y = BuildingInfo[buildingid][bExitY];
+	z = BuildingInfo[buildingid][bExitZ];
+	return 1;
+}
+
+stock Building_GetType(buildingid)
+{
+	return BuildingInfo[buildingid][bType];
+}
+
+stock Building_SetType(buildingid, type)
+{
+	if(type < 0 || type >= BUILDING_TYPE_LAST)
+		return 0;
+	BuildingInfo[buildingid][bType] = type;
+	return 1;
 }
