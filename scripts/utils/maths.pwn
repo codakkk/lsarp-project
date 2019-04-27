@@ -66,3 +66,14 @@ stock IsNumeric(const string[])
     }
     return 1;
 }
+
+stock GetPlayerSpeed(playerid,bool:kmh)
+{
+	new Float:Vx, Float:Vy, Float:Vz, Float:rtn;
+	if(IsPlayerInAnyVehicle(playerid)) 
+		GetVehicleVelocity(GetPlayerVehicleID(playerid),Vx,Vy,Vz); 
+	else
+		GetPlayerVelocity(playerid,Vx,Vy,Vz);
+	rtn = floatsqroot(Vx*Vx + Vy*Vy + Vz*Vz);
+	return kmh ? floatround(rtn * 100 * 1.61) : floatround(rtn * 100);
+}

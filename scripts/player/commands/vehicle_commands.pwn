@@ -60,7 +60,7 @@ CMD:vchiudi(playerid, params[])
     new vehicleid;
     if(sscanf(params, "d", vehicleid))
     {
-        vehicleid = GetClosestVehicle(playerid, 3.5);
+        vehicleid = Character_GetClosestVehicle(playerid, 3.5);
     }
     else
     {
@@ -97,7 +97,7 @@ CMD:vapri(playerid, params[])
     new vehicleid;
     if(sscanf(params, "d", vehicleid))
     {
-        vehicleid = GetClosestVehicle(playerid, 3.5);
+        vehicleid = Character_GetClosestVehicle(playerid, 3.5);
     }
     else
     {
@@ -132,7 +132,7 @@ CMD:vbagagliaio(playerid, params[])
     new vehicleid;
     if(sscanf(params, "d", vehicleid))
     {
-        vehicleid = GetClosestVehicle(playerid, 3.5);
+        vehicleid = Character_GetClosestVehicle(playerid, 3.5);
     }
     else
     {

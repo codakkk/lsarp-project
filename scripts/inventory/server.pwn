@@ -1,15 +1,22 @@
 hook OnGameModeInit()
 {
+	printf("2");
     printf("Loading items.");
 
     ServerItem_ManualInitializeItem(0, "Vuoto", ITEM_TYPE:ITEM_TYPE_NONE, 0, 1);
     // Setup weapons
     for(new i = 1; i <= 46; ++i)
     {
-	   if(i == 19 || i == 20 || i == 21) // Invalid items id
+	   if(i == 19 || i == 20 || i == 21 || Weapon_IsGrenade(i)) // Invalid items id
 		  continue;
 	   ServerItem_ManualInitializeItem(i, Weapon_GetName(i), ITEM_TYPE:ITEM_TYPE_WEAPON, Weapon_GetObjectModel(i), 1, 1);
     }
+
+	ServerItem_ManualInitializeItem(16, Weapon_GetName(16), ITEM_TYPE_WEAPON, Weapon_GetObjectModel(16), 2); // Grenades
+	ServerItem_ManualInitializeItem(17, Weapon_GetName(17), ITEM_TYPE_WEAPON, Weapon_GetObjectModel(17), 2); // Teargas
+	ServerItem_ManualInitializeItem(18, Weapon_GetName(18), ITEM_TYPE_WEAPON, Weapon_GetObjectModel(18), 2); // Molotov
+	ServerItem_ManualInitializeItem(39, Weapon_GetName(39), ITEM_TYPE_WEAPON, Weapon_GetObjectModel(39), 2); // Satchel
+
     gItem_Hamburger = ServerItem_ManualInitializeItem(47, "Hamburger Preconfezionato", ITEM_TYPE:ITEM_TYPE_FOOD, .modelId = 2804, .maxStack = 2);
 	gItem_Beans = ServerItem_ManualInitializeItem(48, "Fagioli in barattolo", ITEM_TYPE:ITEM_TYPE_FOOD, 19568, 	2, 10);
 	gItem_EnergyBar = ServerItem_ManualInitializeItem(49, "Barretta Energetica", ITEM_TYPE:ITEM_TYPE_FOOD, 2, 		2, 10);

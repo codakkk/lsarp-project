@@ -1181,8 +1181,8 @@
 	// ==================================================
 	// ==========[utils/vehicles.pwn]==========
 	"lsarp_GetClosestVehicle": {
-		"prefix": "GetClosestVehicle",
-		"body": "GetClosestVehicle(${1:playerid}, ${2:Float:radius})",
+		"prefix": "Character_GetClosestVehicle",
+		"body": "Character_GetClosestVehicle(${1:playerid}, ${2:Float:radius})",
 		"description": ""
 	},
 	// ==================================================

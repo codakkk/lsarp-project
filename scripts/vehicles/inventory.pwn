@@ -103,8 +103,6 @@ stock bool:Vehicle_HasSpaceForItem(vehicleid, itemid, amount)
     return Inventory_HasSpaceForItem(inventory, itemid, amount);
 }
 
-stock bool:Vehicle_HasSpaceForWeapon(vehicleid, weaponid, ammo) return Inventory_HasSpaceForWeapon(Vehicle_GetInventory(vehicleid), weaponid, ammo);
-
 stock bool:Vehicle_IsSlotUsed(vehicleid, slotid)
 {
     return Inventory_IsSlotUsed(Vehicle_GetInventory(vehicleid), slotid);

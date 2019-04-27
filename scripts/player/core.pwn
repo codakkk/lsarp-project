@@ -160,86 +160,6 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
     return 1;
 }
 
-hook OnPlayerInvItemUse(playerid, slot_id, item_id)
-{
-    new 
-	   bool:decrease = false,
-	   decreaseAmount = 1;
-    // printf("player_inventory.pwn/OnPlayerInvItemUse", playerid);
-    if(ServerItem_IsBag(item_id))
-    {
-		// If character has bag
-		if(Character_HasBag(playerid))
-		{
-			SendClientMessage(playerid, COLOR_ERROR, "Stai già indossando uno zaino! Usa '/rimuovi zaino' per rimuoverlo.");
-			return 1;
-		}
-		Character_AMe(playerid, "indossa lo zaino");
-		//SendFormattedMessage(playerid, COLOR_GREEN, "Stai indossando '%s'. Usa '/rimuovi zaino' per rimuoverlo.", ServerItem_GetName(item_id));
-		Character_SetBag(playerid, item_id);
-		Player_InfoStr(playerid, str_format("Stai indossando: ~g~%s", ServerItem_GetName(item_id)), false);
-		decrease = true;
-		decreaseAmount = 1;
-    }
-    else if(ServerItem_IsWeapon(item_id))
-    {
-	   new 
-		  weaponSlot = Weapon_GetSlot(item_id), 
-		  weapon, 
-		  ammo;
-	   if(GetPlayerWeaponData(playerid, weaponSlot, weapon, ammo))
-	   {
-			if(weapon != 0 && ammo > 0)
-				return SendClientMessage(playerid, COLOR_ERROR, "Hai già un arma equipaggiata per questa slot!");
-			if(!Weapon_RequireAmmo(item_id))
-			{
-				AC_GivePlayerWeapon(playerid, item_id, 1);
-				decrease = true;
-				decreaseAmount = 1;
-				Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~", Weapon_GetName(item_id)), true);
-			}
-			else
-			{
-				new extra = Character_GetSlotExtra(playerid, slot_id);
-				if(extra > 0)
-				{
-					AC_GivePlayerWeapon(playerid, item_id, extra);
-					decrease = true;
-					decreaseAmount = 1;
-					Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~", Weapon_GetName(item_id)), true);
-				}
-				else
-				{
-					if(Character_HasItem(playerid, Weapon_GetAmmoType(item_id), 1) == -1)
-						SendClientMessage(playerid, COLOR_ERROR, "Non hai i proiettili necessari!");
-					else
-					{
-						SetPVarInt(playerid, "InventorySelect_WeaponItem", item_id);
-						new ammos = Inventory_GetItemAmount(Character_GetInventory(playerid), Weapon_GetAmmoType(item_id));
-						Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "Immetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}.", "Usa", "Annulla", ammos);
-					}
-				}
-			}
-		}
-	}
-    else if(ServerItem_IsAmmo(item_id))
-    {
-		new currentWeapon = GetPlayerWeapon(playerid);
-		if(currentWeapon == 0)
-			return SendClientMessage(playerid, COLOR_ERROR, "Non hai armi equipaggiate!");
-		if(!Weapon_RequireAmmo(currentWeapon) || Weapon_GetAmmoType(currentWeapon) != item_id)
-			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare queste munizioni su quest'arma.");
-		new ammos = Inventory_GetItemAmount(Character_GetInventory(playerid), item_id);
-		SetPVarInt(playerid, "InventorySelect_CurrentWeaponItem", currentWeapon);
-		Dialog_Show(playerid, Dialog_InvSelectAddAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "Immetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}.", "Usa", "Annulla", ammos);
-    }
-    if(decrease)
-    {
-	   Character_DecreaseSlotAmount(playerid, slot_id, decreaseAmount);
-    }
-    return 1;
-}
-
 hook OnPlayerStateChange(playerid, newstate, oldstate)
 {
     if(newstate == PLAYER_STATE_DRIVER)
@@ -320,14 +240,14 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 	{
 		if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER && !gBuyingVehicle[playerid])
 		{
+			new vehicleid = GetPlayerVehicleID(playerid);
 			if( (PRESSED(KEY_YES) ) )
 			{
 				pc_cmd_motore(playerid, "");
 			}
-			else if( (PRESSED(KEY_LOOK_BEHIND)) )
+			else if( (PRESSED(KEY_LOOK_BEHIND)) && Vehicle_IsEngineOn(vehicleid))
 			{
-				new vehicleid = GetPlayerVehicleID(playerid);
-				Vehicle_SetLightState(vehicleid, !Vehicle_IsLightOff(vehicleid));
+				Vehicle_SetLightState(vehicleid, !Vehicle_IsLightOn(vehicleid));
 			}
 		}
 		else
@@ -364,7 +284,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 			{
 				new vehicleid = GetPlayerVehicleID(playerid);
 				if(vehicleid <= 0)
-					vehicleid = GetClosestVehicle(playerid, 3.5);
+					vehicleid = Character_GetClosestVehicle(playerid, 3.5);
 				if(Vehicle_GetOwnerID(vehicleid) == Character_GetID(playerid)) //We're owners
 				{
 					if((IsABike(vehicleid) || IsAMotorBike(vehicleid)) && Vehicle_IsEngineOn(vehicleid))
@@ -449,6 +369,10 @@ hook OnPlayerSpawn(playerid)
 	
 	SetPlayerSkin(playerid, PlayerInfo[playerid][pSkin]);
 
+	if(Character_GetFightingStyle(playerid) == 0)
+		Character_SetFightingStyle(playerid, FIGHT_STYLE_NORMAL);
+	
+	SetPlayerDrunkLevel(playerid, 0);
 	SetPlayerSkillLevel(playerid, WEAPONSKILL_PISTOL, 1);
 	SetPlayerSkillLevel(playerid, WEAPONSKILL_MICRO_UZI, 1);
 	SetPlayerSkillLevel(playerid, WEAPONSKILL_SAWNOFF_SHOTGUN, 1);
@@ -467,7 +391,7 @@ hook OnPlayerSpawn(playerid)
 		{
 			new Float:x, Float:y, Float:z, interior, world;
 
-			//DestroyDynamic3DTextLabelEx(PlayerDeathState[playerid][pDeathText]);
+			DestroyDynamic3DTextLabelEx(PlayerDeathState[playerid][pDeathText]);
 			PlayerDeathState[playerid][pDeathText] = CreateDynamic3DTextLabel("(( QUESTO GIOCATORE È IN SISTEMA MORTE ))", COLOR_ADMIN, 0, 0, 0.5, 30.0, playerid, INVALID_VEHICLE_ID, 1, -1, -1, -1, 100.0);
 			AC_SetPlayerHealth(playerid, 20.0);
 			AC_SetPlayerArmour(playerid, 0.0);
@@ -489,8 +413,9 @@ hook OnPlayerSpawn(playerid)
 		else if(deathState == 2)
 		{
 			AC_ResetPlayerWeapons(playerid, true);
-			//DestroyDynamic3DTextLabelEx(PlayerDeathState[playerid][pDeathText]);
+			DestroyDynamic3DTextLabelEx(PlayerDeathState[playerid][pDeathText]);
 			
+			PlayerDeathState[playerid][pDeathText] = Text3D:0;
 			Character_SetDeathState(playerid, 0);
 			Character_SetDeathTime(playerid, 0);
 
@@ -1309,4 +1234,60 @@ stock Character_HasWeaponInSlot(playerid, slotid)
 	new weapon, ammo;
 	GetPlayerWeaponData(playerid, slotid, weapon, ammo);
 	return weapon != 0 && ammo > 0 && AC_AntiWeaponCheck(playerid, weapon, ammo);
+}
+
+stock Player_Info(playerid, text[], bool:forced = false, time = 2500)
+{
+	if(pInfoBoxShown[playerid] == true && !forced)
+		return 1;
+
+	PlayerTextDrawHide(playerid, pInfoText[playerid]);
+	PlayerTextDrawSetString(playerid, pInfoText[playerid], text);
+	PlayerTextDrawShow(playerid, pInfoText[playerid]);
+
+	SetTimerEx("DeleteInfoBox", time, false, "d", playerid);
+	pInfoBoxShown[playerid] = true;
+
+	return 1;
+}
+
+stock Player_InfoStr(playerid, String:string, bool:forced = false, time = 2500)
+{
+	new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
+	amx_to_ref(var, ptr);
+	str_get(string, ptr[0], .size=size);
+
+	new result = Player_Info(playerid, ptr[0], forced, time);
+
+	amx_free(var);
+	amx_delete(var);
+	return result;
+}
+
+forward DeleteInfoBox(playerid); 
+public DeleteInfoBox(playerid)
+{
+	PlayerTextDrawHide(playerid, pInfoText[playerid]);
+
+	pInfoBoxShown[playerid] = false;
+
+	return 1;
+}
+
+stock Character_GetClosestVehicle(playerid, Float:radius)
+{
+	if(IsPlayerInAnyVehicle(playerid))
+		return GetPlayerVehicleID(playerid);
+
+	new 
+		Float:x, Float:y, Float:z;
+	foreach(new i : Vehicles)
+	{
+		GetVehiclePos(i, x, y, z);
+		if(IsPlayerInRangeOfPoint(playerid, radius, x, y, z))
+		{
+			return i;
+		}
+	}
+    return 0;
 }

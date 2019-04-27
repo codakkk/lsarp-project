@@ -82,7 +82,7 @@ flags:aiuto(CMD_USER);
 CMD:aiuto(playerid, params[])
 {
     SendClientMessage(playerid, -1, "[GENERALE]: /info - /dom - /compra - /annulla");
-    SendClientMessage(playerid, -1, "[GENERALE]: /rimuovi - /hotkeys - /arma - /id");
+    SendClientMessage(playerid, -1, "[GENERALE]: /rimuovi - /hotkeys - /arma - /id - /stilecombattimento");
     SendClientMessage(playerid, -1, "[CHAT]: /b - /me - /ame - /low - /melow - /do - /dolow - (/s)hout");
     SendClientMessage(playerid, -1, "[CHAT]: (/w)hisper - (/cw)hisper - /pm - /blockb - /blockpm");
     SendClientMessage(playerid, -1, "[ALTRO]: /animlist - /vehcmds - /invcmds");
@@ -164,5 +164,44 @@ CMD:lasciacarcere(playerid, params[])
 	//Character_Spawn(playerid);
 	SetPlayerPos(playerid, 1313.0187, -2063.6877, 57.1440);
 	SendClientMessage(playerid, COLOR_GREEN, "Hai lasciato il carcere.");
+	return 1;
+}
+
+flags:stilecombattimento(CMD_USER);
+CMD:stilecombattimento(playerid, params[])
+{
+	new id;
+	if(sscanf(params, "d", id) || id < 0 || id > 4)
+	{
+		// Show Dialog? nah
+		return SendClientMessage(playerid, COLOR_ERROR, "/stilecombattimento <id (0 - 4)");
+	}
+	else
+	{
+		switch(id)
+		{
+			case 0:
+			{
+				Character_SetFightingStyle(playerid, FIGHT_STYLE_NORMAL);
+			}
+			case 1:
+			{
+				Character_SetFightingStyle(playerid, FIGHT_STYLE_BOXING);
+			}
+			case 2:
+			{
+				Character_SetFightingStyle(playerid, FIGHT_STYLE_KUNGFU);
+			}
+			case 3:
+			{
+				Character_SetFightingStyle(playerid, FIGHT_STYLE_KNEEHEAD);
+			}
+			case 4:
+			{
+				Character_SetFightingStyle(playerid, FIGHT_STYLE_GRABKICK);
+			}
+		}
+		SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo stile di combattimento.");
+	}
 	return 1;
 }

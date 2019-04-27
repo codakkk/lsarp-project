@@ -40,7 +40,7 @@ CMD:usa(playerid, params[])
 	new itemid = Character_GetSlotItem(playerid, slotid);
 	if(itemid == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Slot non valida!");
-	Trigger_OnPlayerInvItemUse(playerid, slotid, itemid, ServerItem_GetType(itemid));
+	Character_UseInventoryItem(playerid, slotid);
 	return 1;
 }
 
@@ -95,14 +95,22 @@ CMD:deposita(playerid, params[])
 	
 	if(PendingRequestInfo[playerid][rdPending])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva!");
-
-	if(!Character_HasSpaceForItem(playerid, itemid, 1))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario!");
-	
-	Character_GiveItem(playerid, itemid, 1, AC_GetPlayerAmmo(playerid));
+	new ammo = AC_GetPlayerAmmo(playerid);
+	if(Weapon_IsGrenade(itemid))
+	{
+		if(!Character_HasSpaceForItem(playerid, itemid, ammo))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario!");
+		Character_GiveItem(playerid, itemid, ammo);
+		Player_InfoStr(playerid, str_format("Hai depositato: ~g~%d ~y~%s~w~~n~nell'inventario.", ammo, Weapon_GetName(itemid)), true);
+	}
+	else
+	{
+		if(!Character_HasSpaceForItem(playerid, itemid, 1))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario!");
+		Character_GiveItem(playerid, itemid, 1, ammo);
+		Player_InfoStr(playerid, str_format("Hai depositato: ~g~%s~w~~n~nell'inventario~n~con %d munizioni.", Weapon_GetName(itemid)), ammo, true);
+	}
 	AC_RemovePlayerWeapon(playerid, itemid);
-	Player_InfoStr(playerid, str_format("Hai depositato: ~g~%s~w~~n~nell'inventario.", Weapon_GetName(itemid)), true);
-	//SendClientMessage(playerid, COLOR_GREEN, "Hai depositato la tua arma nell'inventario!");
 	return 1;
 }
 alias:deposita("dep");
@@ -123,9 +131,9 @@ CMD:disassembla(playerid, params[])
 			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma.");
 			return SendClientMessage(playerid, COLOR_ERROR, "Altrimenti usa /disassembla <slotid> per disassemblare un'arma nell'inventario!");
 		}
-		if(!Character_HasSpaceForWeapon(playerid, itemid, ammo))
+		if(!Character_HasSpaceForItem(playerid, itemid, 1))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario!");
-		if(!Weapon_RequireAmmo(itemid))
+		if(!Weapon_CanBeDisassembled(itemid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi disassemblare quest'arma!");
 		AC_RemovePlayerWeapon(playerid, itemid);
 	}
@@ -137,11 +145,11 @@ CMD:disassembla(playerid, params[])
 		ammo = Character_GetSlotExtra(playerid, slotid);
 		if(ServerItem_GetType(itemid) != ITEM_TYPE_WEAPON)
 			return SendClientMessage(playerid, COLOR_ERROR, "L'oggetto selezionato non è un'arma!");
-		if(!Weapon_RequireAmmo(itemid))
+		if(!Weapon_CanBeDisassembled(itemid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi disassemblare quest'arma!");
 		if(ammo == 0)
 			return SendClientMessage(playerid, COLOR_ERROR, "L'arma selezionata è già disassemblata!");
-		if(!Character_HasSpaceForWeapon(playerid, itemid, ammo))
+		if(!Character_HasSpaceForItem(playerid, itemid, 1))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario!");
 		Character_DecreaseSlotAmount(playerid, slotid, 1);
 	}

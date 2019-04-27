@@ -35,7 +35,7 @@ CMD:blockb(playerid, params[])
     if(!strcmp(params, "all", true))
     {
 		Player_SetOOCEnabled(playerid, !Player_HasOOCEnabled(playerid));
-        SendClientMessage(playerid, COLOR_GREEN, Player_HasOOCEnabled(playerid) ? "Hai disabilitato la chat OOC da e verso tutti." : "Hai riabilitato la chat OOC da e verso tutti.");
+        SendClientMessage(playerid, COLOR_GREEN, Player_HasOOCEnabled(playerid) ? "Hai riabilitato la chat OOC da e verso tutti." : "Hai disabilitato la chat OOC da e verso tutti.");
         if(!Player_HasOOCEnabled(playerid))
             SendClientMessage(playerid, COLOR_GREEN, "Riutilizza '/blockb all' per riattivarli.");
     }

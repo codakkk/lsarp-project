@@ -8,11 +8,16 @@ Dialog:Dialog_InvSelectAmmo(playerid, response, listitem, inputtext[])
     if(ammo <= 0 || ammo > Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType))
 	   return Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "{FF0000}Munizioni non valide!{FFFFFF}\nImmetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}", "Usa", "Annulla", 
 				Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType));
-    AC_GivePlayerWeapon(playerid, itemid, ammo);
-    Character_DecreaseItemAmount(playerid, itemid, 1);
+    
+	AC_GivePlayerWeapon(playerid, itemid, ammo);
+    
+	Character_DecreaseItemAmount(playerid, itemid, 1);
     Character_DecreaseItemAmount(playerid, ammoType, ammo);
+
 	Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~", Weapon_GetName(itemid)), true);
-	//SendClientMessage(playerid, COLOR_GREEN, "Hai equipaggiato l'arma selezionata!");
+
+	Trigger_OnPlayerInvItemUse(playerid, itemid, 1, ITEM_TYPE_WEAPON);
+	Trigger_OnPlayerInvItemUse(playerid, ammoType, ammo, ITEM_TYPE_AMMO);
     return 1;
 }
 
@@ -162,7 +167,14 @@ Dialog:Dialog_InvSelectAddAmmo(playerid, response, listitem, inputtext[])
 					amount);
     AC_GivePlayerWeapon(playerid, weaponid, ammo);
     Character_DecreaseItemAmount(playerid, ammoType, ammo);
+	
 	Character_AMe(playerid, "prende delle munizioni e le inserisce nell'arma");
+	
+	Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~~n~con ~g~%d~w~ proiettili.", Weapon_GetName(weaponid), ammo), true);
+
+	Trigger_OnPlayerInvItemUse(playerid, weaponid, 1, ITEM_TYPE_WEAPON);
+	Trigger_OnPlayerInvItemUse(playerid, ammoType, ammo, ITEM_TYPE_AMMO);
+	
 	DeletePVar(playerid, "InventorySelect_CurrentWeaponItem");
     return 1;
 }

@@ -10,7 +10,7 @@ hook ClearData(playerid)
 hook OnPlayerPickUpDynPickup(playerid, pickupid)
 {
     if(!Character_IsLogged(playerid) || IsPlayerInRangeOfPoint(playerid, 5.0, 0.0, 0.0, 0.0))
-	   return 0;
+	   return Y_HOOKS_BREAK_RETURN_0;
     new 
 	   elementid = PickupInfo[pickupid][elementID],
 	   E_ELEMENT_TYPE:type = PickupInfo[pickupid][elementType];

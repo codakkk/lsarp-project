@@ -45,11 +45,11 @@ hook OnPlayerClearData(playerid)
 
 hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
-	printf("inventory.pwn/OnPlayerWeaponShot. State: %d", GetPlayerWeaponState(playerid));
+	// printf("inventory.pwn/OnPlayerWeaponShot. State: %d", GetPlayerWeaponState(playerid));
 	new ammo = GetPlayerAmmo(playerid);
 	if(( (GetPlayerWeaponState(playerid) == WEAPONSTATE_LAST_BULLET || IsPlayerInAnyVehicle(playerid)) && AC_AntiWeaponCheck(playerid, weaponid, ammo) && ammo <= 1))
 	{
-		if(Character_HasSpaceForWeapon(playerid, weaponid, 0))
+		if(Character_HasSpaceForItem(playerid, weaponid, 1))
 		{
 			SendClientMessage(playerid, COLOR_GREEN, "Proiettili esauriti. L'arma è stata rimessa nell'inventario.");
 			Character_GiveItem(playerid, weaponid, 1, 0, false);
@@ -168,6 +168,85 @@ stock Character_ShowInventory(playerid, targetid)
 	return 1;
 }
 
+stock Character_UseInventoryItem(playerid, slotid)
+{
+	new 
+		itemid = Character_GetSlotItem(playerid, slotid),
+		amount = Character_GetSlotAmount(playerid, slotid),
+		extra = Character_GetSlotExtra(playerid, slotid);
+	if(ServerItem_IsBag(itemid))
+    {
+		// If character has bag
+		if(Character_HasBag(playerid))
+		{
+			SendClientMessage(playerid, COLOR_ERROR, "Stai già indossando uno zaino! Usa '/rimuovi zaino' per rimuoverlo.");
+			return 0;
+		}
+		Character_AMe(playerid, "indossa lo zaino");
+		//SendFormattedMessage(playerid, COLOR_GREEN, "Stai indossando '%s'. Usa '/rimuovi zaino' per rimuoverlo.", ServerItem_GetName(item_id));
+		Character_SetBag(playerid, itemid);
+		Player_InfoStr(playerid, str_format("Stai indossando: ~g~%s", ServerItem_GetName(itemid)), false);
+		Character_DecreaseSlotAmount(playerid, slotid, 1);
+	}
+	else if(ServerItem_IsWeapon(itemid))
+	{
+		new 
+			weaponSlot = Weapon_GetSlot(itemid), 
+			weapon, 
+			ammo;
+		GetPlayerWeaponData(playerid, weaponSlot, weapon, ammo);
+		if(Character_HasWeaponInSlot(playerid, weaponSlot) && !Weapon_IsGrenade(weapon))
+		{
+			SendClientMessage(playerid, COLOR_ERROR, "Hai già un'arma equipaggiata in questa slot.");	
+			return 0;
+		}
+		if(Weapon_RequireAmmo(itemid))
+		{
+			if(extra > 0)
+			{
+				AC_GivePlayerWeapon(playerid, itemid, extra);
+				Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~~n~con ~g~%d~w~ proiettili.", Weapon_GetName(itemid), extra), true);
+			}
+			else
+			{
+				if(Character_HasItem(playerid, Weapon_GetAmmoType(itemid), 1) == -1)
+					SendClientMessage(playerid, COLOR_ERROR, "Non hai le munizioni necessarie.");
+				else
+				{
+					SetPVarInt(playerid, "InventorySelect_WeaponItem", itemid);
+					new ammos = Inventory_GetItemAmount(Character_GetInventory(playerid), Weapon_GetAmmoType(itemid));
+					Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "Immetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}.", "Usa", "Annulla", ammos);
+				}
+			}
+		}
+		else
+		{
+			AC_GivePlayerWeapon(playerid, itemid, amount);
+			Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~", Weapon_GetName(itemid)), true);
+			Character_DecreaseSlotAmount(playerid, slotid, 1);
+			Trigger_OnPlayerInvItemUse(playerid, itemid, 1, ITEM_TYPE_WEAPON);
+		}
+	}
+    else if(ServerItem_IsAmmo(itemid))
+    {
+		new currentWeapon = GetPlayerWeapon(playerid);
+		if(currentWeapon == 0)
+		{
+			SendClientMessage(playerid, COLOR_ERROR, "Non hai armi equipaggiate!");
+			return 0;
+		} 
+		if(!Weapon_RequireAmmo(currentWeapon) || Weapon_GetAmmoType(currentWeapon) != itemid)
+		{
+			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare queste munizioni su quest'arma.");
+			return 0;
+		}
+		new ammos = Inventory_GetItemAmount(Character_GetInventory(playerid), itemid);
+		SetPVarInt(playerid, "InventorySelect_CurrentWeaponItem", currentWeapon);
+		Dialog_Show(playerid, Dialog_InvSelectAddAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "Immetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}.", "Usa", "Annulla", ammos);
+    }
+	return 1;
+}
+
 Dialog:Dialog_InventoryItemList(playerid, response, listitem, inputtext[])
 {
 	if(!response)
@@ -230,7 +309,7 @@ Dialog:Dialog_InvItemAction(playerid, response, listitem, inputtext[])
 	{
 		case 0:
 		{
-			Trigger_OnPlayerInvItemUse(playerid, slotid, itemid, ServerItem_GetType(itemid));
+			Character_UseInventoryItem(playerid, slotid);
 			return 1;
 		}
 		case 1: 
@@ -373,7 +452,6 @@ stock Character_GetSlotAmount(playerid, slotid)
 stock Character_HasItem(playerid, itemid, min = 1) return Inventory_HasItem(Character_GetInventory(playerid), itemid, min);
 
 stock Character_HasSpaceForItem(playerid, itemid, amount) return Inventory_HasSpaceForItem(Character_GetInventory(playerid), itemid, amount);
-stock Character_HasSpaceForWeapon(playerid, weaponid, ammo) return Inventory_HasSpaceForWeapon(Character_GetInventory(playerid), weaponid, ammo);
 
 stock Character_HasBag(playerid) return pInventoryBag[playerid] != 0 && ServerItem_IsBag(pInventoryBag[playerid]);
 

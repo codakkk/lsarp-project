@@ -172,20 +172,18 @@ stock Vehicle_IsLightOn(vehicleid)
 {
     new engine, lights, alarm, doors, bonnet, boot, objective;
     GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
-    return !IsABike(vehicleid) && lights;
+    return lights;
 }
 
 stock Vehicle_IsLightOff(vehicleid)
 {
     new engine, lights, alarm, doors, bonnet, boot, objective;
     GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
-    return !IsABike(vehicleid) && !lights;
+    return !lights;
 }
 
 stock Vehicle_SetLightState(vehicleid, s)
 {
-    if(!IsABike(vehicleid))
-	   return 0;
     new engine, lights, alarm, doors, bonnet, boot, objective;
     GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
     SetVehicleParamsEx(vehicleid, engine, s ? VEHICLE_PARAMS_ON : VEHICLE_PARAMS_OFF, alarm, doors, bonnet, boot, objective);
@@ -196,14 +194,14 @@ stock Vehicle_IsEngineOff(vehicleid)
 {
     new engine, lights, alarm, doors, bonnet, boot, objective;
     GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
-    return !IsABike(vehicleid) && !engine;
+    return !engine;
 }
 
 stock Vehicle_IsEngineOn(vehicleid)
 {
     new engine, lights, alarm, doors, bonnet, boot, objective;
     GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
-    return !IsABike(vehicleid) && engine;
+    return engine;
 }
 
 stock Vehicle_SetEngineOn(vehicleid)

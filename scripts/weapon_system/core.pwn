@@ -3,23 +3,23 @@
 hook OnGameModeInit()
 {
 	printf("Initializing Weapons...");
-	Weapon_InitializeType(WEAPON_COLT45, gItem_LightAmmo, 25);
-	Weapon_InitializeType(WEAPON_SILENCED, gItem_LightAmmo, 30);
-	Weapon_InitializeType(WEAPON_DEAGLE, gItem_LightAmmo, 45);
+	Weapon_InitializeType(WEAPON_COLT45, gItem_LightAmmo, 25, true);
+	Weapon_InitializeType(WEAPON_SILENCED, gItem_LightAmmo, 30, true);
+	Weapon_InitializeType(WEAPON_DEAGLE, gItem_LightAmmo, 45, true);
 
-	Weapon_InitializeType(WEAPON_SHOTGUN, gItem_BuckShotAmmo, 50);
-	Weapon_InitializeType(WEAPON_SAWEDOFF, gItem_BuckShotAmmo, 15);
-	Weapon_InitializeType(WEAPON_SHOTGSPA, gItem_BuckShotAmmo, 15);
+	Weapon_InitializeType(WEAPON_SHOTGUN, gItem_BuckShotAmmo, 50, true);
+	Weapon_InitializeType(WEAPON_SAWEDOFF, gItem_BuckShotAmmo, 15, true);
+	Weapon_InitializeType(WEAPON_SHOTGSPA, gItem_BuckShotAmmo, 15, true);
 
-	Weapon_InitializeType(WEAPON_UZI, gItem_LightAmmo, 15);
-	Weapon_InitializeType(WEAPON_TEC9, gItem_LightAmmo, 15);
-	Weapon_InitializeType(WEAPON_MP5, gItem_LightAmmo, 25);
+	Weapon_InitializeType(WEAPON_UZI, gItem_LightAmmo, 15, true);
+	Weapon_InitializeType(WEAPON_TEC9, gItem_LightAmmo, 15, true);
+	Weapon_InitializeType(WEAPON_MP5, gItem_LightAmmo, 25, true);
 
-	Weapon_InitializeType(WEAPON_AK47, gItem_HeavyAmmo, 40);
-	Weapon_InitializeType(WEAPON_M4, gItem_HeavyAmmo, 35);
+	Weapon_InitializeType(WEAPON_AK47, gItem_HeavyAmmo, 40, true);
+	Weapon_InitializeType(WEAPON_M4, gItem_HeavyAmmo, 35, true);
 
-	Weapon_InitializeType(WEAPON_RIFLE, gItem_RifleAmmo, 70);
-	Weapon_InitializeType(WEAPON_SNIPER, gItem_RifleAmmo, 500);
+	Weapon_InitializeType(WEAPON_RIFLE, gItem_RifleAmmo, 70, true);
+	Weapon_InitializeType(WEAPON_SNIPER, gItem_RifleAmmo, 500, true);
 	printf("Weapons initialized");
 	return 1;
 }
@@ -48,24 +48,25 @@ hook OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
 	if(weaponDamage)
 	{
 		if(currentArmour >= weaponDamage) 
-		  AC_SetPlayerArmour(playerid, currentArmour - weaponDamage);
+			AC_SetPlayerArmour(playerid, currentArmour - weaponDamage);
 		else if(currentArmour && currentArmour < weaponDamage)
 		{
-		  AC_SetPlayerArmour(playerid, 0);
-		  AC_SetPlayerHealth(playerid, (weaponDamage - currentArmour) - currentHealth);
+			AC_SetPlayerArmour(playerid, 0);
+			AC_SetPlayerHealth(playerid, (weaponDamage - currentArmour) - currentHealth);
 		}
 		else 
-		  AC_SetPlayerHealth(playerid, currentHealth - weaponDamage);
+			AC_SetPlayerHealth(playerid, currentHealth - weaponDamage);
 	}
 	return 1;
 }
 
-stock Weapon_InitializeType(weaponid, ammoItem, damages, damageRatio = 1)
+stock Weapon_InitializeType(weaponid, ammoItem, damages, canBeDisassembled = false, damageRatio = 1)
 {
 	WeaponInfo[weaponid][wInitialized] = 1;
-	WeaponInfo[weaponid][wDamage] = damages;
-	WeaponInfo[weaponid][wDamageRatio] = damageRatio;
 	WeaponInfo[weaponid][wAmmoItem] = ammoItem;
+	WeaponInfo[weaponid][wDamage] = damages;
+	WeaponInfo[weaponid][wCanBeDisassembled] = canBeDisassembled;
+	WeaponInfo[weaponid][wDamageRatio] = damageRatio;
 }
 
 stock Weapon_GetDamage(weaponid)
@@ -73,6 +74,13 @@ stock Weapon_GetDamage(weaponid)
 	if(weaponid <= 0 || weaponid >= 47 || !WeaponInfo[weaponid][wInitialized])
 		return 0;
 	return WeaponInfo[weaponid][wDamage];
+}
+
+stock Weapon_CanBeDisassembled(weaponid)
+{
+	if(weaponid <= 0 || weaponid >= 47 || !WeaponInfo[weaponid][wInitialized])
+		return 0;
+	return WeaponInfo[weaponid][wCanBeDisassembled];
 }
 
 stock Weapon_GetAmmoType(weaponid)
@@ -88,11 +96,17 @@ stock bool:Weapon_RequireAmmo(weaponid)
 		Weapon_GetSlot(weaponid) == 0 || 
 		Weapon_GetSlot(weaponid) == 1 || 
 		Weapon_GetSlot(weaponid) == 10 ||
+		Weapon_IsGrenade(weaponid) ||
 		weaponid == 40 ||
 		weaponid == 44 || weaponid == 45 || weaponid == 46) 
 		return false;
 
 	return true;
+}
+
+stock bool:Weapon_IsGrenade(weaponid)
+{
+	return Weapon_GetSlot(weaponid) == 8;
 }
 
 stock Weapon_GetSlot(weaponid)
@@ -175,4 +189,24 @@ stock Weapon_GetMagSize(weaponid)
 		500 // 38 Minigun
 	};
 	return WeaponMagSizes[weaponid - 22];
+}
+
+stock Weapon_GetName(weaponid)
+{
+	static gsWeaponNames[][32] = {
+		"Pugni", "Tirapugni",
+		"Golf Club", "Nightstick", "Coltello", "Mazza da Baseball",
+		"Pala", "Mazza da Biliardo", "Katana", "Motosega",
+		"Dildo Viola", "Dildo", "Vibratore", "Vibratore Argento",
+		"Fiori", "Mazza", "Granata", "Fumogeno", "Molotov",
+		"INVALID", "INVALID", "INVALID",
+		"9MM", "9MM Silenziata", "D. Eagle", "Fucile a pompa",
+		"Fucile a Canne Mozze", "Fucile da Combattimento", 
+		"Micro SMG", "MP5", "AK-47", "M4", "TEC-9", "Fucile",
+		"Fucile da Cecchino", "Lanciamissili", "HS Rocket", 
+		"Lanciafiamme", "Minigun", "Carica C4", "Detonatore",
+		"Bomboletta Spray", "Estintore", "Fotocamera", 
+		"Visore Notturno", "Visore Termico", "Paracadute"
+	};
+    return gsWeaponNames[weaponid];
 }

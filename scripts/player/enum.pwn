@@ -23,6 +23,8 @@ enum E_PLAYER_DATA
 	pPayCheck,
 	pJailTime,
 	pJailIC,
+	pFightStyle,
+	
     pLootZone, // MUST REMOVE FROM HERE SOON
 };
 new 

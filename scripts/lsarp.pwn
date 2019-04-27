@@ -28,127 +28,60 @@
 		https://forum.sa-mp.com/showthread.php?t=558839 -> Walk anims etc
 
 */
-// #pragma warning disable 208 // actually just a good way to prevent warning: "function with tag result used before definition, forcing reparse".
+#pragma warning disable 208 // actually just a good way to prevent warning: "function with tag result used before definition, forcing reparse".
+#include <includes.pwn>
+#include <defines.pwn>
+#include <forwarded_functions.pwn>
 
-#include <a_samp>
-native IsValidVehicle(vehicleid);
-
-//#define Function:%0()			forward %0();public %0()
-//#define Function:%0(%1) 		forward %0(%1);public %0(%1)
-
-#define DestroyDynamic3DTextLabelEx DestroyDynamic3DTextLabel // Useful for the future
-//#define DEBUG 0
-
-#define E_MAIL_CHECK
-
-#undef MAX_PLAYERS
-#define MAX_PLAYERS	(200)
-
-#if defined CRASHDETECT
-	#include <crashdetect>
-#endif
-
-#define FIXES_Single
-// #define FIX_OnDialogResponse 1
-#define FIX_SetPlayerName 0
-#define FIX_ServerVarMsg 0
-#include <fixes>
-
-#define INFINITY (Float:0x7F800000)
-
-#define PRESSED(%0) \
-	(((newkeys & (%0)) == (%0)) && ((oldkeys & (%0)) != (%0)))
-
-// Includes
-#include <sscanf2>
-#include <a_mysql>
-#include <YSI_Coding\y_timers>
-#include <YSI_Coding\y_va>
-#include <YSI_Coding\y_inline>
-// For YSI and PawnPlus yield conflict.
-#undef yield
-#undef @@
-#include <Pawn.CMD>
-#include <whirlpool>
-#include <streamer>
-#include <strlib>
-#include <YSI_Data\y_bit>
-#define PP_SYNTAX 1
-//#define PP_SYNTAX_GENERIC 1
-#define PP_ADDITIONAL_TAGS E_ITEM_DATA
-
-#include <PawnPlus>
-//native print_s(AmxString:string) = print;
-#include <OPA>
-#include <miscellaneous\pp_wrappers.pwn>
-#include <easyDialogs.pwn>
-
-#define MAILER_URL "185.25.204.170/server_mailer/emailconfig.php" // This has to be defined BEFORE you include mailer.
-
-
-#define Inventory List@Inventory
-
-#include <YSI_Coding\y_hooks>
 DEFINE_HOOK_REPLACEMENT(ShowRoom, SR);
 DEFINE_HOOK_REPLACEMENT(Element, Elm);
 
-enum (<<= 1)
-{
-	CMD_USER = 1,
-	CMD_PREMIUM_BRONZE,
-	CMD_PREMIUM_SILVER,
-	CMD_PREMIUM_GOLD,
-	CMD_POLICE,
-	CMD_MEDICAL,
-	CMD_GOVERNMENT,
-	CMD_ILLEGAL,
-	CMD_SUPPORTER,
-	CMD_JR_MODERATOR,
-	CMD_MODERATOR,
-	CMD_ADMIN,
-	CMD_DEVELOPER,
-	CMD_RCON
-}
-
-
-#define IC_JAIL_X						(2638.6926)
-#define IC_JAIL_Y						(-1995.0134)
-#define IC_JAIL_Z 						(-59.7283)
-#define IC_JAIL_INT						(0)
-
-#define OOC_JAIL_X						(197.1209)
-#define OOC_JAIL_Y						(176.3204)
-#define OOC_JAIL_Z 						(1003.0234)
-#define OOC_JAIL_INT					(3)
-
-//
-// Others
-#include <forwarded_functions.pwn>
 #include <miscellaneous\globals.pwn>
 
-#include <utils/colors.pwn>
+// Exception. Must be on top of all others.
+#include <pickup\enum.pwn>
+
+#include <anticheat\enum.pwn>
+#include <account_system\enum.pwn>
+#include <drop_system\enum.pwn>
+#include <player\enum.pwn>
+#include <vehicles\enum.pwn>
+#include <admin\enum.pwn>
+#include <dealership\enum.pwn>
+#include <inventory\enum.pwn>
+#include <building\enum.pwn>
+#include <weapon_system\enum.pwn>
+#include <house_system\enum.pwn>
+#include <faction_system\enum.pwn>
+#include <weather_system\definitions.pwn>
+
+
+#include <database\core.pwn>
+
+// ===== [ ANTI-CHEAT SYSTEM ] =====
+#include <anticheat\core.pwn>
+
+// ===== [ PICKUP SYSTEM ] =====
+#include <pickup\core.pwn>
+
+// ===== [ INVENTORY SYSTEM ] =====
+#include <inventory\core.pwn>
+#include <inventory\server.pwn>
+
+// ===== [ WEAPON SYSTEM ] =====
+#include <weapon_system\core.pwn>
+
+
+
 #include <utils/utils.pwn>
-
-#include <database/database.pwn>
-
 #include <utils/maths.pwn>
-#include <sa_zones>
+
 
 #include <callbacks.pwn>
-#include <enums.pwn>
-#include <systems.pwn>
 
-#include <utils/weapons.pwn> 
-//
-
-
-#include <commands.pwn>
-
-#include <utils/vehicles.pwn>
 #include <miscellaneous\global_timers.pwn>
 
-#include <miscellaneous\anims.pwn>
-#include <miscellaneous\maps.pwn>
+#include <YSI_Coding\y_hooks> // Place hooks after this. Everything included before this, is hooked first.
 
 main()
 {
@@ -160,7 +93,7 @@ main()
 	HouseList = list_new();
 }
 
-public OnGameModeInit() 
+hook OnGameModeInit() 
 {
 	SetGameModeText("ApoC1");
 	
@@ -173,55 +106,40 @@ public OnGameModeInit()
 	SetWorldTime(0);
 
 	// /ritirastipendio
-	Pickup_Create(1239, 0, 292.3752, 180.7307, 1007.1790, E_ELEMENT_TYPE:ELEMENT_TYPE_PAYCHECK, -1, 3);
+	Pickup_Create(1239, 0, 292.3752, 180.7307, 1007.1790, ELEMENT_TYPE_PAYCHECK, -1, 3);
 	CreateDynamic3DTextLabel("/ritirastipendio", COLOR_BLUE, 292.3752, 180.7307, 1007.1790 + 0.55, 20.0, .worldid = -1, .interiorid = 3);
-	// /ritirastipendio
+	// /lasciacarcere
 	Pickup_Create(1239, 0, 2649.7790, -1948.9510, -58.7273, ELEMENT_TYPE_JAIL_EXIT, .worldid = -1, .interiorid = 0);
 	CreateDynamic3DTextLabel("/lasciacarcere", COLOR_BLUE, 2649.7790, -1948.9510, -58.7273 + 0.55, 20.0, .worldid = -1, .interiorid = 0);
 
 	Building_LoadAll();
 	House_LoadAll();
 
-	LoadTextDraws();
+	
 	return 1;
 }
 
-public OnGameModeExit()
-{
-	TextDrawDestroy(txtAnimHelper);
-	TextDrawDestroy(Clock);
-	return 1;
-}
-
-public OnPlayerUpdate(playerid)
+hook OnPlayerUpdate(playerid)
 {
 	if(IsPlayerNPC(playerid)) return Y_HOOKS_BREAK_RETURN_1;
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-public OnPlayerRequestClass(playerid, classid) return 1;
-public OnPlayerClearData(playerid) return 1;
-public OnVehicleDeath(vehicleid, killerid) return 1;
-public OnVehicleSpawn(vehicleid) return 1;
-public OnPlayerExitVehicle(playerid, vehicleid) return 1;
-public OnPlayerPickUpDynamicPickup(playerid, pickupid) return 1;
-public OnPlayerSpawn(playerid) return 1;
-public OnPlayerDeath(playerid, killerid, reason) 
+hook OnPlayerDeath(playerid, killerid, reason) 
 {
 	if(pAnimLoop{playerid})
 	{
 		pAnimLoop{playerid} = false;
 		TextDrawHideForPlayer(playerid, txtAnimHelper);
 	}
-	return 1;
+	return Y_HOOKS_CONTINUE_RETURN_1;
 }
-public OnPlayerRequestSpawn(playerid) return 1;
-public OnPlayerKeyStateChange(playerid, newkeys, oldkeys) return 1;
-public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ) 
+hook OnPlayerRequestSpawn(playerid) return 1;
+hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys) return 1;
+hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ) 
 {
 	if(IsPlayerNPC(playerid))
 		return Y_HOOKS_BREAK_RETURN_1;
-	printf("lsarp.pwn/OnPlayerWeaponShot");
 	//if( !( -1000.0 <= fX <= 1000.0 ) || !( -1000.0 <= fY <= 1000.0 ) || !( -1000.0 <= fZ <= 1000.0 ) )
 		//return 0;
 	// If the server isn't performing well, updates to this callback will be
@@ -240,7 +158,7 @@ hook OnAntiCheatDetected(playerid, code)
 	return 1;
 }
 
-public OnVehicleMod(playerid, vehicleid, componentid)
+hook OnVehicleMod(playerid, vehicleid, componentid)
 {
 	RemoveVehicleComponent(vehicleid, componentid);
 	return 0;
@@ -355,14 +273,12 @@ public OnPlayerCommandPerformed(playerid, cmd[], params[], result, flags)
 	return 1;
 }
 
-public OnPlayerText(playerid, text[])
+hook OnPlayerText(playerid, text[])
 {
-	if(isnull(text))
-		return 0;
+	if(!Character_IsLogged(playerid) || isnull(text))
+		return Y_HOOKS_BREAK_RETURN_0;
 	if(pAdminDuty[playerid])
 	{
-		//format(string, sizeof(string), "{FFFFFF}(( {FF6347}%s{FFFFFF} [%d]: %s ))", AccountInfo[playerid][aName], playerid, text);
-		//ProxDetector(playerid, 15.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
 		pc_cmd_b(playerid, text);
 	}
 	else
@@ -372,10 +288,10 @@ public OnPlayerText(playerid, text[])
 		new String:string = str_format("%s dice: %s", Character_GetOOCName(playerid), text);
 		ProxDetectorStr(playerid, 15.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
 	}
-	return 0;
+	return Y_HOOKS_CONTINUE_RETURN_0;
 }
 
-public OnPlayerDisconnect(playerid, reason)
+hook OnPlayerDisconnect(playerid, reason)
 {
 	new const reasonName[3][16] = {"Crash", "Uscito", "Kick/Ban"};
 	new String:string, name[MAX_PLAYER_NAME];
@@ -384,18 +300,19 @@ public OnPlayerDisconnect(playerid, reason)
 	string = str_format("%s è uscito dal server. [%s]", name, reasonName[reason]);
 	SendClientMessageToAllStr(COLOR_GREY, string);
 	TextDrawHideForPlayer(playerid, Clock);
-	if(!gAccountLogged[playerid] || !Character_IsLogged(playerid))
-		return 0;
+	if(Character_IsLogged(playerid))
+	{
+		CallLocalFunction(#OnCharacterDisconnected, "i", playerid);
+		CallLocalFunction(#OnPlayerClearData, "i", playerid);
+	}
 	
-	CallLocalFunction(#OnCharacterDisconnected, "i", playerid);
-	CallLocalFunction(#OnPlayerClearData, "i", playerid);
 	gAccountLogged[playerid] = 0;
 	gCharacterLogged[playerid] = 0;
 	return 1;
 }
 
 // This is the last callback called after the hooks.
-public OnPlayerConnect(playerid)
+hook OnPlayerConnect(playerid)
 {
 	wait_ticks(1);
 	
@@ -441,260 +358,63 @@ public OnPlayerConnect(playerid)
 	return 1;
 }
 
-public OnQueryError(errorid, const error[], const callback[], const query[], MySQL:handle)
-{
-	printf("ERROR: %s", error);
-	printf("QUERY ERROR: %s", query);
-	return 1;
-}
+#include <textdraws.pwn>
 
-stock PreloadAnimations(playerid)
-{
-	PreloadAnimLib(playerid,"DANCING");
-	PreloadAnimLib(playerid,"HEIST9");
-	PreloadAnimLib(playerid,"BOMBER");
-	PreloadAnimLib(playerid,"RAPPING");
-	PreloadAnimLib(playerid,"SHOP");
-	PreloadAnimLib(playerid,"BEACH");
-	PreloadAnimLib(playerid,"SMOKING");
-	PreloadAnimLib(playerid,"FOOD");
-	PreloadAnimLib(playerid,"ON_LOOKERS");
-	PreloadAnimLib(playerid,"DEALER");
-	PreloadAnimLib(playerid,"CRACK");
-	PreloadAnimLib(playerid,"CARRY");
-	PreloadAnimLib(playerid,"COP_AMBIENT");
-	PreloadAnimLib(playerid,"PARK");
-	PreloadAnimLib(playerid,"INT_HOUSE");
-	PreloadAnimLib(playerid,"FOOD" );
-	PreloadAnimLib(playerid,"ped" );
-	PreloadAnimLib(playerid,"MISC" );
-	PreloadAnimLib(playerid,"POLICE" );
-	PreloadAnimLib(playerid,"GRAVEYARD" );
-	PreloadAnimLib(playerid,"WUZI" );
-	PreloadAnimLib(playerid,"SUNBATHE" );
-	PreloadAnimLib(playerid,"PLAYIDLES" );
-	PreloadAnimLib(playerid,"CAMERA" );
-	PreloadAnimLib(playerid,"RIOT" );
-	PreloadAnimLib(playerid,"DAM_JUMP" );
-	PreloadAnimLib(playerid,"JST_BUISNESS" );
-	PreloadAnimLib(playerid,"KISSING" );
-	PreloadAnimLib(playerid,"GANGS" );
-	PreloadAnimLib(playerid,"GHANDS" );
-	PreloadAnimLib(playerid,"BLOWJOBZ" );
-	PreloadAnimLib(playerid,"SWEET" );
-	return 1;
-}
+// ========== [ INCLUDES THAT DOESN'T CARE ABOUT HOOKING ORDER ] ==========
+#include <mailer_system\core.pwn>
+#include <log_system\core.pwn>
 
-// Preload animations
-// Hehe Figo
-// Sono Forte
-stock PreloadAnimLib(playerid, animlib[])
-{
-	ApplyAnimation(playerid, animlib, "null", 0.0, 0, 0, 0, 0, 0, 0);
-}
+#include <account_system\core.pwn>
+#include <animation_system\core.pwn>
 
-stock Log(playerName[], giveplayerName[], text[], extravar = 0)
-{
-	mysql_tquery_f(gMySQL, "INSERT INTO `logs` \
-						  (PlayerID, GivePlayerID, Text, ExtraVar, Time) \
-						  VALUES('%s', '%s', '%e', '%d', '%d')", playerName, 
-										giveplayerName, 
-										text,
-										extravar,
-										gettime());
-}
+// ===== [ PLAYER ] =====
+#include <player\core.pwn>
+#include <player\inventory.pwn>
+#include <player\drop.pwn>
+#include <player\textdraws.pwn>
 
-stock mysql_tquery_f(MySQL:handle, const query[], GLOBAL_TAG_TYPES:...)
-{
-	new ret = mysql_format(handle, YSI_UNSAFE_HUGE_STRING, YSI_UNSAFE_HUGE_LENGTH, query, ___(2));
-	if(ret)
-	{
-		ret = mysql_tquery(handle, YSI_UNSAFE_HUGE_STRING);
-	}
-	return ret;
-}
-/**/
 
-stock GetPlayerSpeed(playerid,bool:kmh)
-{
-	new Float:Vx, Float:Vy, Float:Vz, Float:rtn;
-	if(IsPlayerInAnyVehicle(playerid)) 
-		GetVehicleVelocity(GetPlayerVehicleID(playerid),Vx,Vy,Vz); 
-	else
-		GetPlayerVelocity(playerid,Vx,Vy,Vz);
-	rtn = floatsqroot(Vx*Vx + Vy*Vy + Vz*Vz);
-	return kmh ? floatround(rtn * 100 * 1.61) : floatround(rtn * 100);
-}
+// ===== [ VEHICLE SYSTEM ] =====
+#include <vehicles\core.pwn>
+#include <vehicles\inventory.pwn>
 
-stock LoadTextDraws()
-{
-	txtAnimHelper = TextDrawCreate(610.0, 400.0, "~w~Usa ~b~~k~~CONVERSATION_NO~ ~w~per fermare l'animazione");
-    TextDrawUseBox(txtAnimHelper, 0);
-    TextDrawFont(txtAnimHelper, 2);
-    TextDrawSetShadow(txtAnimHelper,0);
-	TextDrawSetOutline(txtAnimHelper,1);
-	TextDrawBackgroundColor(txtAnimHelper,0x000000FF);
-	TextDrawColor(txtAnimHelper,0xFFFFFFFF);
-	TextDrawAlignment(txtAnimHelper,3);
+// ===== [ DEALERSHIP SYSTEM ] =====
+#include <dealership\core.pwn>
+#include <dealership\player.pwn>
 
-	Clock = TextDrawCreate(546.000000, 22.000000, "00:00:00");
-	TextDrawBackgroundColor(Clock, 255);
-	TextDrawFont(Clock, 3);
-	TextDrawLetterSize(Clock, 0.370000, 2.000000);
-	TextDrawColor(Clock, -17);
-	TextDrawSetOutline(Clock, 1);
-	TextDrawSetProportional(Clock, 0);
-}
+// ===== [ HOUSE SYSTEM ] =====
+#include <house_system\core.pwn>
 
-stock LoadPlayerTextDraws(playerid)
-{
-	pInfoText[playerid] = CreatePlayerTextDraw(playerid, 23.000000, 180.000000, "Testo");
-	PlayerTextDrawUseBox(playerid, pInfoText[playerid],1);
-	PlayerTextDrawBoxColor(playerid, pInfoText[playerid],0x00000033);
-	PlayerTextDrawTextSize(playerid, pInfoText[playerid],180.000000, 5.000000);
-	PlayerTextDrawAlignment(playerid, pInfoText[playerid],0);
-	PlayerTextDrawBackgroundColor(playerid, pInfoText[playerid],0x000000ff);
-	PlayerTextDrawFont(playerid, pInfoText[playerid],2);
-	PlayerTextDrawLetterSize(playerid, pInfoText[playerid],0.250000, 1.099999);
-	PlayerTextDrawColor(playerid, pInfoText[playerid],0xffffffff);
-	PlayerTextDrawSetOutline(playerid, pInfoText[playerid],1);
-	PlayerTextDrawSetProportional(playerid, pInfoText[playerid],1);
-	PlayerTextDrawSetShadow(playerid, pInfoText[playerid],1);
+// ===== [ BUILDING SYSTEM ] =====
+#include <building\core.pwn>
 
-	pMoneyTD[playerid] = CreatePlayerTextDraw(playerid, 608.000000, 101.000000, " "); // Money Changes Textdraw
-	PlayerTextDrawAlignment(playerid, pMoneyTD[playerid], 3);
-	PlayerTextDrawFont(playerid, pMoneyTD[playerid], 3);
-	PlayerTextDrawLetterSize(playerid, pMoneyTD[playerid], 0.519999, 2.100000);
-	PlayerTextDrawColor(playerid, pMoneyTD[playerid], 0xFFFFFFFF);
-	PlayerTextDrawSetOutline(playerid, pMoneyTD[playerid], 1);
 
-	pVehicleFuelText[playerid] = CreatePlayerTextDraw(playerid, 578.000000, 392.000000, "~y~000%");
-	PlayerTextDrawBackgroundColor(playerid, pVehicleFuelText[playerid], 255);
-	PlayerTextDrawFont(playerid, pVehicleFuelText[playerid], 2);
-	PlayerTextDrawLetterSize(playerid, pVehicleFuelText[playerid], 0.200000, 1.190000);
-	PlayerTextDrawColor(playerid, pVehicleFuelText[playerid], 16711935);
-	PlayerTextDrawSetOutline(playerid, pVehicleFuelText[playerid], 1);
-	PlayerTextDrawSetProportional(playerid, pVehicleFuelText[playerid], 1);
-	PlayerTextDrawSetSelectable(playerid, pVehicleFuelText[playerid], 0);
+// ===== [ ADMIN SYSTEM ] =====
+#include <admin\core.pwn>
 
- 	pJailTimeText[playerid] = CreatePlayerTextDraw(playerid, 499.000000, 101.000000, "~n~~n~~g~TEMPO RIMANENTE:~w~~n~ 0 secondi");
-	PlayerTextDrawBackgroundColor(playerid, pJailTimeText[playerid], 255);
-	PlayerTextDrawFont(playerid, pJailTimeText[playerid], 1);
-	PlayerTextDrawLetterSize(playerid, pJailTimeText[playerid], 0.270000, 1.000000);
-	PlayerTextDrawColor(playerid, pJailTimeText[playerid], -1);
-	PlayerTextDrawSetOutline(playerid, pJailTimeText[playerid], 1);
-	PlayerTextDrawSetProportional(playerid, pJailTimeText[playerid], 1);
-	PlayerTextDrawSetSelectable(playerid, pJailTimeText[playerid], 0);
-}
+// ===== [ DROP SYSTEM ] =====
+#include <drop_system\core.pwn>
 
-stock Player_Info(playerid, text[], bool:forced = false, time = 2500)
-{
-	if(pInfoBoxShown[playerid] == true && !forced)
-		return 1;
+// ===== [ FACTION SYSTEM ] =====
+#include <faction_system\core.pwn>
 
-	PlayerTextDrawHide(playerid, pInfoText[playerid]);
-	PlayerTextDrawSetString(playerid, pInfoText[playerid], text);
-	PlayerTextDrawShow(playerid, pInfoText[playerid]);
+// ===== [ WEATHER SYSTEM ] =====
+#include <weather_system\core.pwn>
 
-	SetTimerEx("DeleteInfoBox", time, false, "d", playerid);
-	pInfoBoxShown[playerid] = true;
+// ========== [ COMMANDS ] ==========
+#include <commands.pwn>
+#include <player\commands.pwn>
+#include <building\commands\admin.pwn>
+#include <house_system\commands.pwn>
+#include <admin\commands.pwn>
+#include <admin\supporter_commands.pwn>
+#include <dealership\commands.pwn>
+#include <faction_system\commands.pwn>
+#include <animation_system\commands.pwn>
+// ========== [ DIALOGS ] ==========
+#include <player\dialogs.pwn>
+#include <account_system\dialogs.pwn>
+#include <faction_system\dialogs.pwn>
 
-	return 1;
-}
-
-stock Player_InfoStr(playerid, String:string, bool:forced = false, time = 2500)
-{
-	new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
-	amx_to_ref(var, ptr);
-	str_get(string, ptr[0], .size=size);
-
-	new result = Player_Info(playerid, ptr[0], forced, time);
-
-	amx_free(var);
-	amx_delete(var);
-	return result;
-}
-
-forward DeleteInfoBox(playerid); 
-public DeleteInfoBox(playerid)
-{
-	PlayerTextDrawHide(playerid, pInfoText[playerid]);
-
-	pInfoBoxShown[playerid] = false;
-
-	return 1;
-}
-
-stock SendMail( const szReceiver[ ], const szSubject[ ], const szMessage[ ] )
-{
-	new rec[255], subject[255], mess[255];
-	set(rec, szReceiver);
-	set(subject, szSubject);
-	set(mess, szMessage);
-
-	StringURLEncode(rec);
-	StringURLEncode(subject);
-	StringURLEncode(mess);
-
-	new str[256];
-	format(str, sizeof(str), "%s?sendto=%s&subject=%s&body=%s",
-								MAILER_URL, rec, subject, mess);
-	printf("%s", str);
-	HTTP( 0xD00D, HTTP_GET , str, "", "OnMailScriptResponse" );
-}
-
-forward OnMailScriptResponse( iIndex, iResponseCode, const szData[ ] );
-public  OnMailScriptResponse( iIndex, iResponseCode, const szData[ ] )
-{
-	if ( szData[ 0 ] )
-		printf( "Mailer script says: %s", szData );
-}
-stock StringURLEncode( szString[ ], iSize = sizeof( szString ) )
-{
-	for ( new i = 0, l = strlen( szString ); i < l; i++ )
-	{
-		switch ( szString[ i ] )
-		{
-			case '!', '(', ')', '\'', '*',
-			     '0' .. '9',
-			     'A' .. 'Z',
-			     'a' .. 'z':
-			{
-				continue;
-			}
-			
-			case ' ':
-			{
-				szString[ i ] = '+';
-				
-				continue;
-			}
-		}
-		
-		new
-			s_szHex[ 8 ]
-		;
-		
-		if ( i + 3 >= iSize )
-		{
-			szString[ i ] = EOS;
-			
-			break;
-		}
-		
-		if ( l + 3 >= iSize )
-			szString[ iSize - 3 ] = EOS;
-		
-		format( s_szHex, sizeof( s_szHex ), "%02h", szString[ i ] );
-		
-		szString[ i ] = '%';
-		
-		strins( szString, s_szHex, i + 1, iSize );
-		
-		l += 2;
-		i += 2;
-		
-		if ( l > iSize - 1 )
-			l = iSize - 1;
-	}
-}
+// ========== [ MISCELLANEOUS ] ==========
+// #include <miscellaneous\maps.pwn>

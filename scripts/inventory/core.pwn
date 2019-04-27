@@ -209,24 +209,18 @@ stock Inventory_HasSpaceForItem(Inventory:inventory, itemid, amount)
     }
     new currentFreeSlotCount = (inv_size - usedSpace);
     if(tempAmount > 0 && currentFreeSlotCount == 0)
-	   return 0;
-    else
-    {
-	   new 
-		  occupiedSlots = 0;
-	   while(tempAmount > 0 && occupiedSlots < currentFreeSlotCount)
-	   {
-		  tempAmount -= ServerItem[itemid][sitemMaxStack];
-		  occupiedSlots++;
-	   }
-    }
-    return tempAmount <= 0;
-}
-
-// useful function, because weapons are stored in a specific way
-stock Inventory_HasSpaceForWeapon(Inventory:inventory, weaponid, ammo)
-{
-    return Inventory_HasSpaceForItem(inventory, weaponid, 1) && (ammo <= 0 || (ammo >= 0 && Inventory_HasSpaceForItem(inventory, Weapon_GetAmmoType(weaponid), ammo)));
+		return 0;
+	else
+	{
+		new 
+			occupiedSlots = 0;
+		while(tempAmount > 0 && occupiedSlots < currentFreeSlotCount)
+		{
+			tempAmount -= ServerItem[itemid][sitemMaxStack];
+			occupiedSlots++;
+		}
+	}
+	return tempAmount <= 0;
 }
 
 stock Inventory_HasItem(Inventory:inventory, itemid, min = 1)
@@ -350,10 +344,11 @@ stock Inventory_ShowInChatStr(Inventory:inventory, playerid, String:title = STRI
 {
 	if(!list_valid(inventory))
 		return 0;
-	if(title != STRING_NULL || str_len(title) > 0)
-		SendClientMessageStr(playerid, COLOR_GREEN, str_format("_______________[%S (%d/%d)]_______________", title, Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory)));
-	else
-		SendFormattedMessage(playerid, COLOR_GREEN, "_______________[Inventario (%d/%d)]_______________", Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory));
+	#pragma unused title
+	//if(title != STRING_NULL || str_len(title) > 0)
+		//SendClientMessageStr(playerid, COLOR_GREEN, str_format("_______________[%S (%d/%d)]_______________", title, Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory)));
+	//else
+	SendFormattedMessage(playerid, COLOR_GREEN, "_______________[Inventario (%d/%d)]_______________", Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory));
 	
 	if(Inventory_IsEmpty(inventory))
 		SendClientMessage(playerid, COLOR_GREEN, "L'inventario è vuoto.");
@@ -421,7 +416,7 @@ stock String:Inventory_ParseForDialog(Inventory:inventory)
 				extra = tempItem[gInvExtra];
 			
 			new String:s = str_format("{FFFFFF}%s\t{FFFFFF}%d\t{FFFFFF}%s\t", ServerItem_GetName(itemid), itemAmount, ServerItem_GetTypeName(itemid));
-			if(ServerItem_GetType(itemid) == ITEM_TYPE:ITEM_TYPE_WEAPON && Weapon_RequireAmmo(itemid))
+			if(ServerItem_GetType(itemid) == ITEM_TYPE:ITEM_TYPE_WEAPON && (Weapon_RequireAmmo(itemid) || Weapon_CanBeDisassembled(itemid)))
 			{
 				if(extra == 0)
 					s += @("Vuota");

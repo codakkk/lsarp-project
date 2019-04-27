@@ -14,3 +14,4 @@ forward String:House_GetOwnerNameStr(houseid);
 forward bool:Weapon_RequireAmmo(weaponid);
 forward String:Faction_GetNameStr(factionid);
 forward String:Faction_GetRankNameStr(factionid, rank);
+forward bool:Weapon_IsGrenade(weaponid);
