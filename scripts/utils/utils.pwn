@@ -117,7 +117,8 @@ stock SendFormattedMessage(playerid, color, form[], {AmxString, Float, _}: ...)
 	   string = str_format(form, ___3);
     return SendClientMessageStr(playerid, color, string);
 }
-
+#define TIME_ZONE (0)
+#define TIME_ZONE_STAMP (2)
 stock date( timestamp, _form=1 )
 {
     /*

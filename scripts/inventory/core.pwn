@@ -56,7 +56,6 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra)
 {
 	if(!list_valid(inventory))
 	{
-		//printf("Inventory_AddItem/list_valid = false");
 		return 0;
 	}
 	if(!ServerItem_IsValid(itemid))
@@ -101,7 +100,6 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra)
 
 			tempAmount -= (itemAmount - preAdd);
 
-			// printf("Sizeof: %d", list_sizeof(inventory, slotid));
 			list_set_cell(inventory, slotid, gInvAmount, itemAmount);
 			list_set_cell(inventory, slotid, gInvExtra, extra);
 		}
@@ -164,8 +162,6 @@ stock Inventory_DecreaseItemAmount(Inventory:inventory, itemid, amount = 1)
 		  //iter_set_value_arr(i, VAR_NULL);
 		  iter_set_var(i, VAR_NULL); // must be used for variadics
 		  tempDecreaseAmount = diff;
-
-		  printf("Size: %d", iter_sizeof(i));
 	   }
 	   else 
 	   {
@@ -179,32 +175,32 @@ stock Inventory_DecreaseItemAmount(Inventory:inventory, itemid, amount = 1)
 
 stock Inventory_HasSpaceForItem(Inventory:inventory, itemid, amount)
 {
-    new 
-	   inv_size = Inventory_GetSpace(inventory);
-    if(inv_size == 0)
-	   return 0;
-    if(itemid == 0 || amount <= 0)
-	   return 1;
-    new
-	   usedSpace = Inventory_GetUsedSpace(inventory),
-	   tempAmount = amount,
-	   tempCurrentQuantity = 0,
-	   item[E_ITEM_DATA]
-	   ;
+	new 
+		inv_size = Inventory_GetSpace(inventory);
+	if(inv_size == 0)
+		return 0;
+	if(itemid == 0 || amount <= 0)
+		return 1;
+	new
+		usedSpace = Inventory_GetUsedSpace(inventory),
+		tempAmount = amount,
+		tempCurrentQuantity = 0,
+		item[E_ITEM_DATA]
+		;
 		  
     if(!ServerItem_IsUnique(itemid))
     {
-	   for_list(i : inventory)
-	   {
-		  iter_get_arr_safe(i, item);
-		  tempCurrentQuantity = item[gInvAmount];
-		  while(item[gInvItem] == itemid && tempCurrentQuantity < ServerItem_GetMaxStack(itemid))
-		  {
-			 tempCurrentQuantity++;
-			 tempAmount--;
-		  }
-		  if(tempAmount <= 0)
-			 break;
+		for_list(i : inventory)
+		{
+			iter_get_arr_safe(i, item);
+			tempCurrentQuantity = item[gInvAmount];
+			while(item[gInvItem] == itemid && tempCurrentQuantity < ServerItem_GetMaxStack(itemid))
+			{
+				tempCurrentQuantity++;
+				tempAmount--;
+			}
+			if(tempAmount <= 0)
+				break;
 	   }
     }
     new currentFreeSlotCount = (inv_size - usedSpace);
@@ -218,6 +214,63 @@ stock Inventory_HasSpaceForItem(Inventory:inventory, itemid, amount)
 		{
 			tempAmount -= ServerItem[itemid][sitemMaxStack];
 			occupiedSlots++;
+		}
+	}
+	return tempAmount <= 0;
+}
+
+stock Inventory_HasSpaceForItems(Inventory:inventory, items[10], amounts[10])
+{
+	new 
+		inv_size = Inventory_GetSpace(inventory);
+	if(inv_size == 0)
+		return 0;
+	new
+		usedSpace = Inventory_GetUsedSpace(inventory),
+		tempAmount = 0,
+		tempCurrentQuantity = 0,
+		item[E_ITEM_DATA]
+	;
+	for(new i = 0, j = 10; i < j; ++i)
+		tempAmount += amounts[i];
+	
+	for(new x = 0, j = 10; x < j; ++x)
+	{
+		new itemid = items[x];
+		if(itemid == 0 || amounts[x] <= 0)
+			continue;
+		if(!ServerItem_IsUnique(itemid))
+		{
+			for_list(i : inventory)
+			{
+				iter_get_arr_safe(i, item);
+				tempCurrentQuantity = item[gInvAmount];
+				while(item[gInvItem] == itemid && tempCurrentQuantity < ServerItem_GetMaxStack(itemid))
+				{
+					tempCurrentQuantity++;
+					tempAmount--;
+				}
+				if(tempAmount <= 0)
+				{
+					break;
+				}
+			}
+		}
+		new currentFreeSlotCount = (inv_size - usedSpace);
+		if(tempAmount > 0 && currentFreeSlotCount == 0)
+		{
+			return 0;
+		}
+		else
+		{
+			new 
+				occupiedSlots = 0;
+			while(tempAmount > 0 && occupiedSlots < currentFreeSlotCount)
+			{
+				tempAmount -= ServerItem[itemid][sitemMaxStack];
+				occupiedSlots++;
+			}
+			usedSpace += occupiedSlots;
 		}
 	}
 	return tempAmount <= 0;
@@ -474,4 +527,60 @@ stock Inventory_Print(Inventory:inventory)
     printf("Space: %d - Space Used: %d", Inventory_GetSpace(inventory), Inventory_GetUsedSpace(inventory));
     printf("Total free space: %d", Inventory_GetSpace(inventory) - Inventory_GetUsedSpace(inventory));
     return 1;
+}
+
+stock Inventory_LoadFromDatabase(Inventory:inventory, const databaseName[], const entityKeyName[], id)
+{
+	if(!list_valid(inventory))
+		return false;
+	inline OnLoad()
+	{
+		new rows = cache_num_rows(), 
+			slotid, itemid, amount, extra;
+		for(new i = 0; i < rows; ++i)
+		{
+			cache_get_value_index_int(i, 0, slotid);
+			cache_get_value_index_int(i, 1, itemid);
+			cache_get_value_index_int(i, 2, amount);
+			cache_get_value_index_int(i, 3, extra);
+			if(itemid == 0 || amount == 0)
+				continue;
+			Inventory_SetItem(inventory, slotid, itemid, amount, extra);
+		}
+	}
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT SlotID, Item, Amount, Extra FROM `%e` WHERE %e = '%d' ORDER BY SlotID", databaseName, entityKeyName, id);
+	return true;
+}
+
+stock Inventory_SaveInDatabase(Inventory:inventory, const databaseName[], const entityKeyName[], entityId)
+{
+	new
+		itemid, amount, extra;
+	
+	mysql_tquery(gMySQL, "START TRANSACTION;");
+
+	for(new i = 0; i < Inventory_GetSpace(inventory); ++i)
+	{
+		itemid = Inventory_GetSlotItem(inventory, i);
+		amount = Inventory_GetSlotAmount(inventory, i);
+		extra = Inventory_GetSlotExtra(inventory, i);
+		if(itemid == 0 || amount == 0)
+		{
+			mysql_tquery_f(gMySQL, "DELETE FROM `%e` WHERE %e = '%d' AND SlotID = '%d';", databaseName, entityKeyName, entityId, i);
+		}
+		else
+		{
+			mysql_tquery_f(gMySQL, 
+			"INSERT INTO `%e` (%e, SlotID, Item, Amount, Extra) VALUES('%d', '%d', '%d', '%d', '%d') \
+			ON DUPLICATE KEY UPDATE \
+			Item = VALUES(Item), \
+			Amount = VALUES(Amount), \
+			Extra = VALUES(Extra);",
+			databaseName, entityKeyName,
+			entityId, i, itemid, amount, extra);
+		}
+	}
+	
+	mysql_tquery(gMySQL, "COMMIT;");
+	return 1;
 }

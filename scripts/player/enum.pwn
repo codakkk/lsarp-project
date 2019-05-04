@@ -14,20 +14,30 @@ enum E_PLAYER_DATA
     pSex,
     pSkin,
     pPayDay,
+
     Float:pHealth,
     Float:pArmour,
+
     pBuildingKey,
     pHouseKey,
+
 	pFaction,
 	pRank,
+
 	pPayCheck,
 	pJailTime,
 	pJailIC,
+
 	pFightStyle,
+	pChatStyle,
+	pWalkingStyle,
 	
+	pBanned,
+	pBanExpiry,
+
     pLootZone, // MUST REMOVE FROM HERE SOON
 };
-new 
+new stock
 	PlayerInfo[MAX_PLAYERS][E_PLAYER_DATA],
 	// probably Iterators aren't worth for this.
 	Iterator:pTogglePM[MAX_PLAYERS]<MAX_PLAYERS>,
@@ -38,7 +48,13 @@ new
 	pTempSkin[MAX_PLAYERS],
 	pSelectedUniformSlot[MAX_PLAYERS char],
 	pDraggedBy[MAX_PLAYERS],
-	Timer:pDragTimer[MAX_PLAYERS]
+	Timer:pDragTimer[MAX_PLAYERS],
+	Timer:pChatTimer[MAX_PLAYERS],
+	Timer:pWalkTimer[MAX_PLAYERS],
+	pLastPMTime[MAX_PLAYERS],
+	pCare[MAX_PLAYERS],
+	pInCare[MAX_PLAYERS char],
+	pCareTime[MAX_PLAYERS]
 ;
 
 enum E_PLAYER_RESTORE_DATA
@@ -58,6 +74,8 @@ new PlayerRestore[MAX_PLAYERS][E_PLAYER_RESTORE_DATA];
 
 enum e_Bit1_Data 
 {
+	e_pAccountLogged,
+	e_pCharacterLogged,
     e_pTogglePMAll,
     e_pToggleOOCAll,
     e_pHotKeys,
@@ -69,7 +87,8 @@ enum e_Bit1_Data
 	e_pSelectingUniform,
 	e_pCuffed,
 	e_pDragged,
-	e_pDragging
+	e_pDragging,
+	e_pMasked
 };
 
 new 
@@ -78,7 +97,8 @@ new
 enum _:e_PendingType
 {
 	PENDING_TYPE_NONE,
-	PENDING_TYPE_WEAPON
+	PENDING_TYPE_WEAPON,
+	PENDING_TYPE_ITEM
 }
 
 enum e_RequestData
@@ -98,6 +118,7 @@ new
 	PendingRequestInfo[MAX_PLAYERS][e_RequestData]
 	;
 
+
 stock ResetPendingRequest(playerid)
 {
 	PendingRequestInfo[playerid][rdPending] = 0;
@@ -110,6 +131,13 @@ stock ResetPendingRequest(playerid)
 	PendingRequestInfo[playerid][rdSlot] = 0;
 }
 
+enum // e_DeathStates
+{
+	DEATH_STATE_NONE = 0,
+	DEATH_STATE_INJURED = 1,
+	DEATH_STATE_DEAD = 2
+}
+
 enum e_DeathState
 {
 	pDeathTime,
@@ -119,6 +147,7 @@ enum e_DeathState
 	Float:pDeathA,
 	pDeathInt,
 	pDeathWorld,
+	pDeathKiller,
 	Text3D:pDeathText
 };
 

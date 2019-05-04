@@ -72,7 +72,7 @@ stock SendMessageToAdmins(forceAlert, color, str[], {Float,_}:...)
 
 	   foreach(new i : Player)
 	   {
-		  if(!gAccountLogged[i] || !Character_IsLogged(i) || AccountInfo[i][aAdmin] < 2 || (pDisableAdminAlerts[i] && !forceAlert))
+		  if(!Character_IsLogged(i) || AccountInfo[i][aAdmin] < 2 || (pDisableAdminAlerts[i] && !forceAlert))
 			 continue;
 		  SendTwoLinesMessage(i, color, string);
 	   }
@@ -81,7 +81,7 @@ stock SendMessageToAdmins(forceAlert, color, str[], {Float,_}:...)
     
     foreach(new i : Player)
     {
-	   if(!gAccountLogged[i] || !Character_IsLogged(i) || AccountInfo[i][aAdmin] < 2 || (pDisableAdminAlerts[i] && !forceAlert))
+	   if(!Character_IsLogged(i) || AccountInfo[i][aAdmin] < 2 || (pDisableAdminAlerts[i] && !forceAlert))
 		  continue;
 	   SendTwoLinesMessage(i, color, str);
     }

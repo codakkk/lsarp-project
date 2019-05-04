@@ -37,42 +37,46 @@ stock Building_Create(name[], Float:x, Float:y, Float:z, interior, world)
 
 stock Building_LoadAll()
 {
-    inline OnLoad()
-    {
-	   	new count = cache_num_rows();
-		if(count > MAX_BUILDINGS)
-			count = MAX_BUILDINGS;
-		for(new i = 0; i < count; ++i)
-		{
-			cache_get_value_index_int(i, 0, BuildingInfo[i][bID]);
-			cache_get_value_index(i, 1, BuildingInfo[i][bName]);
-			cache_get_value_index(i, 2, BuildingInfo[i][bOwnerName]);
-			cache_get_value_index(i, 3, BuildingInfo[i][bWelcomeText]);
-			cache_get_value_index_float(i, 4, BuildingInfo[i][bEnterX]);
-			cache_get_value_index_float(i, 5, BuildingInfo[i][bEnterY]);
-			cache_get_value_index_float(i, 6, BuildingInfo[i][bEnterZ]);
-			cache_get_value_index_int(i, 7, BuildingInfo[i][bEnterInterior]);
-			cache_get_value_index_int(i, 8, BuildingInfo[i][bEnterWorld]);
-			cache_get_value_index_float(i, 9, BuildingInfo[i][bExitX]);
-			cache_get_value_index_float(i, 10, BuildingInfo[i][bExitY]);
-			cache_get_value_index_float(i, 11, BuildingInfo[i][bExitZ]);
-			cache_get_value_index_int(i, 12, BuildingInfo[i][bExitInterior]);
-			cache_get_value_index_int(i, 13, BuildingInfo[i][bOwnable]);
-			cache_get_value_index_int(i, 14, BuildingInfo[i][bOwnerID]);
-			cache_get_value_index_int(i, 15, BuildingInfo[i][bPrice]);
-			cache_get_value_index_int(i, 16, BuildingInfo[i][bLocked]);
-			cache_get_value_index_int(i, 17, BuildingInfo[i][bFaction]);
+	printf("Building_LoadAll");
 
-			BuildingInfo[i][bExitWorld] = BUILDING_START_WORLD + i;
+	new Cache:result = mysql_query(gMySQL, "SELECT * FROM `buildings` ORDER BY ID", true);
 
-			BuildingInfo[i][bExists] = 1;
+	printf("\nLoading Buildings...");
+	new count = cache_num_rows();
+	if(count > MAX_BUILDINGS)
+		count = MAX_BUILDINGS;
+	for(new i = 0; i < count; ++i)
+	{
+		cache_get_value_index_int(i, 0, BuildingInfo[i][bID]);
+		cache_get_value_index(i, 1, BuildingInfo[i][bName]);
+		cache_get_value_index(i, 2, BuildingInfo[i][bOwnerName]);
+		cache_get_value_index(i, 3, BuildingInfo[i][bWelcomeText]);
+		cache_get_value_index_float(i, 4, BuildingInfo[i][bEnterX]);
+		cache_get_value_index_float(i, 5, BuildingInfo[i][bEnterY]);
+		cache_get_value_index_float(i, 6, BuildingInfo[i][bEnterZ]);
+		cache_get_value_index_int(i, 7, BuildingInfo[i][bEnterInterior]);
+		cache_get_value_index_int(i, 8, BuildingInfo[i][bEnterWorld]);
+		cache_get_value_index_float(i, 9, BuildingInfo[i][bExitX]);
+		cache_get_value_index_float(i, 10, BuildingInfo[i][bExitY]);
+		cache_get_value_index_float(i, 11, BuildingInfo[i][bExitZ]);
+		cache_get_value_index_int(i, 12, BuildingInfo[i][bExitInterior]);
+		cache_get_value_index_int(i, 13, BuildingInfo[i][bOwnable]);
+		cache_get_value_index_int(i, 14, BuildingInfo[i][bOwnerID]);
+		cache_get_value_index_int(i, 15, BuildingInfo[i][bPrice]);
+		cache_get_value_index_int(i, 16, BuildingInfo[i][bLocked]);
+		cache_get_value_index_int(i, 17, BuildingInfo[i][bFaction]);
 
-			Building_CreateElements(i);
-			
-			Iter_Add(Buildings, i);
-		}
-    }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `buildings` ORDER BY ID");
+		BuildingInfo[i][bExitWorld] = BUILDING_START_WORLD + i;
+
+		BuildingInfo[i][bExists] = 1;
+
+		Building_CreateElements(i);
+		
+		Iter_Add(Buildings, i);
+	}
+	printf("Loaded %d buildings.\n", count);
+	cache_delete(result);
+	return 1;
 }
 
 stock Building_SetPosition(buildingid, Float:x, Float:y, Float:z, vw, int)

@@ -135,7 +135,7 @@ stock Vehicle_GetInventorySize(vehicleid)
 
 stock bool:Vehicle_ShowInventory(vehicleid, playerid)
 {
-    if(!gAccountLogged[playerid] || !Character_IsLogged(playerid))
+    if(!Character_IsLogged(playerid))
 	   return false;
     new Inventory:inventory = Vehicle_GetInventory(vehicleid);
     if(!list_valid(inventory))
@@ -246,9 +246,9 @@ Dialog:D_VehInvItemAmount(playerid, response, listitem, inputtext[])
 	   new title[48];
 	   format(title, sizeof(title), "%s (%d)", ServerItem_GetName(itemid), slotAmount);
 	   if(!ServerItem_IsUnique(itemid))
-		  Dialog_Show(playerid, D_VehInvItemAmount, DIALOG_STYLE_INPUT, title, "{FF0000}Non hai abbastanza spazio nell'inventario!\n{FFFFFF}Inserisci la quantità da ritirare.", "Avanti", "Chiudi");
+		  Dialog_Show(playerid, D_VehInvItemAmount, DIALOG_STYLE_INPUT, title, "{FF0000}Non hai abbastanza spazio nell'inventario.\n{FFFFFF}Inserisci la quantità da ritirare.", "Avanti", "Chiudi");
 	   else
-		  SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario!");
+		  SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario.");
 	   return 1;
     }
     if(Vehicle_DecreaseSlotAmount(vehicleid, slotid, amount))
@@ -262,63 +262,16 @@ Dialog:D_VehInvItemAmount(playerid, response, listitem, inputtext[])
 
 stock Vehicle_SaveInventory(vehicleid)
 {
-    new Inventory:inventory = Vehicle_GetInventory(vehicleid);
-    if(inventory == Inventory:0 || !list_valid(inventory))
-	   return false;
-    new
-	   query[512],
-	   tempItems[128],
-	   tempAmounts[128],
-	   tempExtras[128]
-    ;
-
-    if(Inventory_ParseForSave(inventory, tempItems, tempAmounts, tempExtras))
-    {
-	   mysql_format(gMySQL, query, sizeof(query), "INSERT INTO `vehicle_inventory` \
-	   (VehicleID, Items, ItemsAmount, ItemsExtraData) VALUES('%d', '%e', '%e', '%e') \
-	   ON DUPLICATE KEY UPDATE \
-	   Items = VALUES(Items), ItemsAmount = VALUES(ItemsAmount), ItemsExtraData = VALUES(ItemsExtraData)",
-	   VehicleInfo[vehicleid][vID], tempItems, tempAmounts, tempExtras);
-	   mysql_tquery(gMySQL, query);
-    }
-
-    return true;
+	if(!Vehicle_GetID(vehicleid) || !list_valid(Vehicle_GetInventory(vehicleid)))
+		return 0;
+	Inventory_SaveInDatabase(Vehicle_GetInventory(vehicleid), "vehicle_inventory", "VehicleID", Vehicle_GetID(vehicleid));
+	return 1;
 }
 
 stock Vehicle_LoadInventory(vehicleid)
 {
-    inline OnLoad()
-    {
-	   if(cache_num_rows() > 0)
-	   {
-		  new 
-			 temp[256], 
-			 tempItems[MAX_ITEMS_PER_VEHICLE],
-			 tempAmounts[MAX_ITEMS_PER_VEHICLE],
-			 tempExtraData[MAX_ITEMS_PER_VEHICLE],
-			 sscanf_format[16];
-
-		  format(sscanf_format, sizeof(sscanf_format), "p<|>a<i>[%d]", MAX_ITEMS_PER_VEHICLE);
-
-		  // Load Items Ids
-		  cache_get_value_index(0, 0, temp, sizeof(temp));
-		  sscanf(temp, sscanf_format, tempItems);
-
-		  // Load Items Amounts
-		  cache_get_value_index(0, 1, temp, sizeof(temp));
-		  sscanf(temp, sscanf_format, tempAmounts);
-
-		  // Load Items Extra
-		  cache_get_value_index(0, 2, temp, sizeof(temp));
-		  sscanf(temp, sscanf_format, tempExtraData);
-
-		  new Inventory:inventory = Vehicle_GetInventory(vehicleid);
-		  for(new i = 0; i < Vehicle_GetInventorySize(vehicleid); ++i)
-		  {
-			 Inventory_SetItem(inventory, i, tempItems[i], tempAmounts[i], tempExtraData[i]);
-		  }
-		  // CallLocalFunction(#OnPlayerVehicleInventoryLoaded, "d", vehicleid);
-	   }
-    }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `vehicle_inventory` WHERE VehicleID = '%d'", VehicleInfo[vehicleid][vID]);
+	if(!Vehicle_GetID(vehicleid))
+		return 0;
+	Inventory_LoadFromDatabase(Vehicle_GetInventory(vehicleid), "vehicle_inventory", "VehicleID", Vehicle_GetID(vehicleid));
+	return 1;
 }

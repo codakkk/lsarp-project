@@ -1,6 +1,6 @@
 #include <YSI_Coding\y_hooks>
 
-flags:ritirastipendio(CMD_USER);
+flags:ritirastipendio(CMD_ALIVE_USER);
 CMD:ritirastipendio(playerid, params[])
 {
 	new pickupid = Character_GetLastPickup(playerid), id, E_ELEMENT_TYPE:eType;
@@ -17,7 +17,7 @@ CMD:ritirastipendio(playerid, params[])
 	return 1;
 }
 
-flags:entra(CMD_USER);
+flags:entra(CMD_ALIVE_USER);
 CMD:entra(playerid, params[])
 {
 	new pickupid = Character_GetLastPickup(playerid), id, E_ELEMENT_TYPE:type;
@@ -28,7 +28,7 @@ CMD:entra(playerid, params[])
     return 1;
 }
 
-flags:esci(CMD_USER);
+flags:esci(CMD_ALIVE_USER);
 CMD:esci(playerid, params[])
 {
 	new pickupid = Character_GetLastPickup(playerid), id, E_ELEMENT_TYPE:type;
@@ -39,7 +39,7 @@ CMD:esci(playerid, params[])
     return 1;
 }
 
-flags:dai(CMD_USER);
+flags:dai(CMD_ALIVE_USER);
 CMD:dai(playerid, params[])
 {
 	if(PendingRequestInfo[playerid][rdPending])
@@ -113,7 +113,7 @@ CMD:dai(playerid, params[])
     return 1;
 }
 
-flags:paga(CMD_USER);
+flags:paga(CMD_ALIVE_USER);
 CMD:paga(playerid, params[])
 {
 	new id, amount;
@@ -136,15 +136,15 @@ CMD:paga(playerid, params[])
 flags:accetta(CMD_USER);
 CMD:accetta(playerid, params[])
 {
-    new
-        text[128];
-    if(sscanf(params, "s[128]", text))
+    if(isnull(params) || strlen(params) > 30)
     {
         SendClientMessage(playerid, COLOR_ERROR, "/accetta <oggetto>");
-        SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma, morte, veicolo");
+        SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma, oggetto, morte, veicolo");
         return 1;
     }
-	if(!strcmp(text, "arma", true))
+	if( strcmp(params, "morte", true) && strcmp(params, "cure", true) && !Character_IsAlive(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+	if(!strcmp(params, "arma", true))
 	{
 		if(!PendingRequestInfo[playerid][rdPending] || PendingRequestInfo[playerid][rdType] != PENDING_TYPE_WEAPON)
 			return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta d'arma attiva.");
@@ -183,21 +183,14 @@ CMD:accetta(playerid, params[])
 			ResetPendingRequest(requestSender);
 		}
 		else
-			SendClientMessage(playerid, COLOR_ERROR, "Hai già un'arma e non hai abbastanza spazio nell'inventario!");
+			SendClientMessage(playerid, COLOR_ERROR, "Hai già un'arma e non hai abbastanza spazio nell'inventario.");
 
 	}
-	else if(!strcmp(text, "morte", true))
+	else if(!strcmp(params, "morte", true))
 	{
-		if(GetTickCount() - Character_GetDeathTime(playerid) < 120000)return
-			SendClientMessage(playerid, COLOR_ERROR, "Devi aspettare 120 secondi prima di poter digitare il comando.");
-		
-		if(Character_GetDeathState(playerid) != 1) return 1;
-
-  		UpdateDynamic3DTextLabelText(PlayerDeathState[playerid][pDeathText], COLOR_ADMIN, "(( QUESTO GIOCATORE È MORTO ))");
-		AC_SetPlayerHealth(playerid, 0.0);
-		Character_SetDeathTime(playerid, 0);
+		Character_AcceptDeathState(playerid);
 	}
-    else if(!strcmp(text, "veicolo", true))
+    else if(!strcmp(params, "veicolo", true))
     {
         // I must check if seller disconnected (must clear data too)
         if(! (pVehicleSeller[playerid] != -1 && pVehicleSellingTo[pVehicleSeller[playerid]] == playerid))
@@ -231,16 +224,17 @@ CMD:accetta(playerid, params[])
         pVehicleSeller[playerid] = -1;
         return 1;
     }
-	else return SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma, morte, veicolo");
-    /*if(!strcmp(text, "chiave", true))
+	else if(!strcmp(params, "cure", true))
     {
-        new 
-            reqPlayer = GetPVarInt(playerid, "GiveRequest_Player"),
-            vehicleKey = GetPVarInt(playerid, "GiveRequest_VehicleKey");
-        if(reqPlayer == 0 && vehicleKey == 0)
-            return 
-        
-    }*/
+		Character_AcceptCare(playerid);
+		//Log(Character_GetOOCName(playerid), Character_GetOOCName(senderid), "/accetta cure", senderid);
+    }
+	else if(!strcmp(params, "oggetto", true))
+	{
+		Character_AcceptItemRequest(playerid);
+	}
+	else
+		return SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma, oggetto, morte, veicolo");
     return 1;
 }
 
@@ -263,7 +257,7 @@ CMD:annulla(playerid, params[])
 	return 1;
 }
 
-flags:compra(CMD_USER);
+flags:compra(CMD_ALIVE_USER);
 CMD:compra(playerid, params[])
 {
 	if(gBuyingVehicle[playerid])
@@ -294,7 +288,7 @@ CMD:compra(playerid, params[])
     return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando qui!");
 }
 
-flags:rimuovi(CMD_USER);
+flags:rimuovi(CMD_ALIVE_USER);
 CMD:rimuovi(playerid, params[])
 {
     new

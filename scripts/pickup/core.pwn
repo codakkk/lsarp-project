@@ -2,11 +2,6 @@
 
 forward OnPlayerPickUpElementPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type);
 
-hook ClearData(playerid)
-{
-    printf("On CLear");
-}
-
 hook OnPlayerPickUpDynPickup(playerid, pickupid)
 {
     if(!Character_IsLogged(playerid) || IsPlayerInRangeOfPoint(playerid, 5.0, 0.0, 0.0, 0.0))

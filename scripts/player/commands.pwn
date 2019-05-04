@@ -81,14 +81,21 @@ CMD:dom(playerid, params[])
 flags:aiuto(CMD_USER);
 CMD:aiuto(playerid, params[])
 {
-    SendClientMessage(playerid, -1, "[GENERALE]: /info - /dom - /compra - /annulla");
-    SendClientMessage(playerid, -1, "[GENERALE]: /rimuovi - /hotkeys - /arma - /id - /stilecombattimento");
+    SendClientMessage(playerid, -1, "[GENERALE]: /info - /dom - /compra - /annulla - /sconosciuto");
+    SendClientMessage(playerid, -1, "[GENERALE]: /rimuovi - /hotkeys - /arma - /id - /dp");
+	SendClientMessage(playerid, -1, "[GENERALE]: /stilechat - /stilelotta - /stilecamminata");
     SendClientMessage(playerid, -1, "[CHAT]: /b - /me - /ame - /low - /melow - /do - /dolow - (/s)hout");
     SendClientMessage(playerid, -1, "[CHAT]: (/w)hisper - (/cw)hisper - /pm - /blockb - /blockpm");
-    SendClientMessage(playerid, -1, "[ALTRO]: /animlist - /vehcmds - /invcmds");
-	if(Character_GetFaction(playerid) != -1)
+    SendClientMessage(playerid, -1, "[ALTRO]: /animlist - /vehcmds - /invcmds - /zpoints");
+	new factionid = Character_GetFaction(playerid);
+	if(factionid != -1)
 	{
-		SendClientMessage(playerid, COLOR_SLATEBLUE, "[FAZIONE]: (/f)azione - /togf");
+		if(Faction_GetType(factionid) == FACTION_TYPE_POLICE || 
+			Faction_GetType(factionid) == FACTION_TYPE_MEDICAL ||
+			Faction_GetType(factionid) == FACTION_TYPE_GOVERNAMENT)
+		{
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "[FAZIONE]: (/f)azione - /togf - /faiuto");
+		}
 	}
 	if(AccountInfo[playerid][aAdmin] > 0)
 		SendClientMessage(playerid, COLOR_GREEN, "[SUPPORTER]: /asupportercmds");
@@ -98,14 +105,29 @@ CMD:aiuto(playerid, params[])
 }
 alias:aiuto("cmds", "help");
 
-flags:vehcmds(CMD_USER);
-CMD:vehcmds(playerid, params[])
+flags:faiuto(CMD_USER);
+CMD:faiuto(playerid, params[])
 {
-	SendClientMessage(playerid, -1, "[VEICOLI]: /motore - /vmenu - /vapri - /vchiudi - /vparcheggia - /vpark");
+	new factionid = Character_GetFaction(playerid);
+	if(factionid != -1)
+	{
+		if(Faction_GetType(factionid) == FACTION_TYPE_POLICE)
+		{
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "[GUARDIA NAZIONALE]: /ammanetta - /trascina - /arresta");
+		}
+	}
 	return 1;
 }
 
-flags:invcmds(CMD_USER);
+flags:vehcmds(CMD_ALIVE_USER);
+CMD:vehcmds(playerid, params[])
+{
+	SendClientMessage(playerid, -1, "[VEICOLI]: /motore - /vmenu - /vapri - /vchiudi");
+	SendClientMessage(playerid, -1, "[VEICOLI]: /vluci - /vparcheggia - /vpark - /vbagagliaio");
+	return 1;
+}
+
+flags:invcmds(CMD_ALIVE_USER);
 CMD:invcmds(playerid, params[])
 {
 	SendClientMessage(playerid, -1, "[INVENTARIO]: (/inv)entario - (/dep)osita - (/dis)assembla - /gettaarma");
@@ -113,7 +135,7 @@ CMD:invcmds(playerid, params[])
 	return 1;
 }
 
-flags:hotkeys(CMD_USER);
+flags:hotkeys(CMD_ALIVE_USER);
 CMD:hotkeys(playerid, params[])
 {
     Bit_Set(gPlayerBitArray[e_pHotKeys], playerid, !Bit_Get(gPlayerBitArray[e_pHotKeys], playerid));
@@ -136,7 +158,7 @@ CMD:hotkeys(playerid, params[])
 	return 1;
 }
 
-flags:id(CMD_USER);
+flags:id(CMD_ALIVE_USER);
 CMD:id(playerid, params[])
 {
 	new id;
@@ -148,7 +170,7 @@ CMD:id(playerid, params[])
 	return 1;
 }
 
-flags:lasciacarcere(CMD_USER);
+flags:lasciacarcere(CMD_ALIVE_USER);
 CMD:lasciacarcere(playerid, params[])
 {
 	if(!Character_IsJailed(playerid))
@@ -167,14 +189,14 @@ CMD:lasciacarcere(playerid, params[])
 	return 1;
 }
 
-flags:stilecombattimento(CMD_USER);
-CMD:stilecombattimento(playerid, params[])
+flags:stilelotta(CMD_ALIVE_USER);
+CMD:stilelotta(playerid, params[])
 {
 	new id;
-	if(sscanf(params, "d", id) || id < 0 || id > 4)
+	if(sscanf(params, "d", id) || id < 0 || id > 3)
 	{
 		// Show Dialog? nah
-		return SendClientMessage(playerid, COLOR_ERROR, "/stilecombattimento <id (0 - 4)");
+		return SendClientMessage(playerid, COLOR_ERROR, "/stilelotta <id (0 - 3)>");
 	}
 	else
 	{
@@ -194,14 +216,11 @@ CMD:stilecombattimento(playerid, params[])
 			}
 			case 3:
 			{
-				Character_SetFightingStyle(playerid, FIGHT_STYLE_KNEEHEAD);
-			}
-			case 4:
-			{
 				Character_SetFightingStyle(playerid, FIGHT_STYLE_GRABKICK);
 			}
 		}
 		SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo stile di combattimento.");
+		Character_Save(playerid);
 	}
 	return 1;
 }

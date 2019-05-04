@@ -23,20 +23,8 @@ public OnPlayerAirbreak(playerid)
 // probably yes, but still better than OnPlayerUpdate (called each tick)
 ptask AntiCheatTimer[250](playerid) 
 {
-	if(IsPlayerNPC(playerid) || !gAccountLogged[playerid] || !Character_IsLogged(playerid) /*|| AccountInfo[playerid][aAdmin] > 2*/)
-		return 0;
-
-	new 
-		Float:hp, 
-		Float:ac_hp,
-		Float:armour,
-		Float:ac_armour;
-	
-	GetPlayerHealth(playerid, hp);
-	GetPlayerArmour(playerid, armour);
-
-	AC_GetPlayerHealth(playerid, ac_hp);
-	AC_GetPlayerArmour(playerid, ac_armour);
+	if(IsPlayerNPC(playerid) || !Character_IsLogged(playerid) /*|| AccountInfo[playerid][aAdmin] > 2*/)
+		return Y_HOOKS_BREAK_RETURN_1;
 
 	if(GetPlayerMoney(playerid) != Character_GetMoney(playerid))
 	{
@@ -52,7 +40,6 @@ ptask AntiCheatTimer[250](playerid)
 		anticheatAmmo = ACInfo[playerid][acAmmo][slot];
 		if(currentWeapon != anticheatWeapon && slot != 0 && currentWeapon != 0 && currentWeapon != WEAPON_BOMB && currentWeapon != WEAPON_PARACHUTE)
 		{
-			//printf("%d - %d - %d", currentWeapon, anticheatWeapon, slot);
 			if(35 <= currentWeapon <= 39)
 			{
 				KickEx(playerid);
@@ -68,19 +55,15 @@ ptask AntiCheatTimer[250](playerid)
 		}
 		else if(currentWeapon == anticheatWeapon && currentWeapon != 0 && 2 <= slot <= 8 && !IsPlayerInAnyVehicle(playerid))
 		{
-			// printf("Same");
 			if(currentAmmo > anticheatAmmo)
 			{
-				// printf("currentAmmo > anticheatAmmo");
 				if(anticheatAmmo > 0)
 				{
-					// printf("> 0");
 					SetPlayerArmedWeapon(playerid, 0);
 					SetPlayerAmmo(playerid, currentWeapon, anticheatAmmo);
 				}
 				else
 				{
-					// printf("< 0");
 					SetPlayerAmmo(playerid, slot, 0);
 				}
 				AC_Detect(playerid, AC_AMMO_HACK);
@@ -111,13 +94,13 @@ ptask AntiCheatTimer[250](playerid)
 
 	// Anti-cheats we can pass-on if we're admins goes here.
 	if(AccountInfo[playerid][aAdmin] > 1)
-		return 1;
+		return Y_HOOKS_CONTINUE_RETURN_1;
 	
 	if(GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_USEJETPACK && !gPlayerJetpack[playerid])
 	{
 		SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
 	}
-	return 1;
+	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
 CMD:trigger(playerid, params[])

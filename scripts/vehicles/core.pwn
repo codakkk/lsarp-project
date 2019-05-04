@@ -143,10 +143,6 @@ stock Vehicle_GetOwnerID(vehicleid)
 
 stock Vehicle_Lock(vehicleid)
 {
-    //if(VehicleInfo[vehicleid][vOwnerID] != PlayerInfo[playerid][pID])
-	   //return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi le chiavi di questo veicolo");
-    if(Vehicle_IsLocked(vehicleid))
-	   return 0;
     VehicleInfo[vehicleid][vLocked] = 1;
     Vehicle_UpdateLockState(vehicleid);
     return 1;
@@ -154,10 +150,6 @@ stock Vehicle_Lock(vehicleid)
 
 stock Vehicle_UnLock(vehicleid)
 {
-    //if(VehicleInfo[vehicleid][vOwnerID] != PlayerInfo[playerid][pID])
-	   //return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi le chiavi di questo veicolo");
-    if(!Vehicle_IsLocked(vehicleid))
-	   return 0;
     VehicleInfo[vehicleid][vLocked] = 0;
     Vehicle_UpdateLockState(vehicleid);
     return 1;

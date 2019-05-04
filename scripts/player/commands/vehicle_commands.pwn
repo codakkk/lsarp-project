@@ -1,6 +1,6 @@
 #include <YSI_Coding\y_hooks>
 
-flags:vmenu(CMD_USER);
+flags:vmenu(CMD_ALIVE_USER);
 CMD:vmenu(playerid, params[])
 {
     if(gBuyingVehicle[playerid])
@@ -37,12 +37,26 @@ CMD:vmenu(playerid, params[])
     return 1;
 }
 
-flags:vparcheggia(CMD_USER);
+flags:vluci(CMD_ALIVE_USER);
+CMD:vluci(playerid, params[])
+{
+	new vehicleid = GetPlayerVehicleID(playerid);
+	if(vehicleid > 0)
+	{
+		if(!Vehicle_IsEngineOn(vehicleid))
+			return SendClientMessage(playerid, COLOR_ERROR, "Il veicolo è spento.");
+		Vehicle_SetLightState(vehicleid, !Vehicle_IsLightOn(vehicleid));
+	}
+	else return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un veicolo.");
+	return 1;
+}
+
+flags:vparcheggia(CMD_ALIVE_USER);
 CMD:vparcheggia(playerid, params[])
 {
 	new vehicleid = GetPlayerVehicleID(playerid);
 	if(vehicleid <= 0 || Vehicle_GetOwnerID(vehicleid) != Character_GetID(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un tuo veicolo!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un tuo veicolo.");
 
 	new 
 		Float:x, Float:y, Float:z, Float:a;
@@ -54,7 +68,7 @@ CMD:vparcheggia(playerid, params[])
 }
 alias:vparcheggia("vpark");
 
-flags:vchiudi(CMD_USER);
+flags:vchiudi(CMD_ALIVE_USER);
 CMD:vchiudi(playerid, params[])
 {
     new vehicleid;
@@ -65,17 +79,17 @@ CMD:vchiudi(playerid, params[])
     else
     {
         if(!IsPlayerInRangeOfVehicle(playerid, vehicleid, 3.5))
-            return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino a questo veicolo!");
+            return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino a questo veicolo.");
     }
     if(vehicleid == 0)
-        return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono veicoli nelle vicinanze!");
+        return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono veicoli nelle vicinanze.");
     if(VehicleInfo[vehicleid][vOwnerID] != PlayerInfo[playerid][pID])
-        return SendClientMessage(playerid, COLOR_ERROR, "Questo veicolo non è tuo!");
-    if(VehicleInfo[vehicleid][vLocked])
-        return SendClientMessage(playerid, -1, "Il veicolo è già chiuso!");
+        return SendClientMessage(playerid, COLOR_ERROR, "Questo veicolo non è tuo.");
+    if(Vehicle_IsLocked(vehicleid))
+        return SendClientMessage(playerid, -1, "Il veicolo è già chiuso.");
     if((IsABike(vehicleid) || IsAMotorBike(vehicleid)) && Vehicle_IsEngineOn(vehicleid))
     {
-        return SendClientMessage(playerid, -1, "Prima spegni il motore!");
+        return SendClientMessage(playerid, -1, "Prima spegni il motore.");
     }
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai chiuso il tuo veicolo (%s).", GetVehicleName(vehicleid));
     if(IsABike(vehicleid) || IsAMotorBike(vehicleid))
@@ -91,69 +105,69 @@ CMD:vchiudi(playerid, params[])
     return 1;
 }
 
-flags:vapri(CMD_USER);
+flags:vapri(CMD_ALIVE_USER);
 CMD:vapri(playerid, params[])
 {
-    new vehicleid;
-    if(sscanf(params, "d", vehicleid))
-    {
-        vehicleid = Character_GetClosestVehicle(playerid, 3.5);
-    }
-    else
-    {
-        new Float:x, Float:y, Float:z;
-        GetVehiclePos(vehicleid, x, y, z);
-        if(!IsPlayerInRangeOfPoint(playerid, 3.5, x, y, z))
-            return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino a questo veicolo!");
-    }
-    if(vehicleid == 0)
-        return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono veicoli nelle vicinanze!");
-    if(VehicleInfo[vehicleid][vOwnerID] != PlayerInfo[playerid][pID])
-        return SendClientMessage(playerid, COLOR_ERROR, "Questo veicolo non è tuo!");
-    if(!VehicleInfo[vehicleid][vLocked])
-        return SendClientMessage(playerid, -1, "Il veicolo è già aperto!");
-    SendFormattedMessage(playerid, COLOR_GREEN, "Hai aperto il tuo veicolo (%s).", GetVehicleName(vehicleid));
-    if(IsABike(vehicleid) || IsAMotorBike(vehicleid))
-    {
-        ApplyAnimation(playerid, "BOMBER", "BOM_Plant_Crouch_In", 4.1, 0, 0, 0, 0, 1000, 0);
-        Character_AMe(playerid, "toglie la catena dal suo veicolo");
-    }
-    else
-    {
-        Character_AMe(playerid, "prende le chiavi e apre il suo veicolo");
-    }
-    Vehicle_UnLock(vehicleid);
+	new vehicleid;
+	if(sscanf(params, "d", vehicleid))
+	{
+		vehicleid = Character_GetClosestVehicle(playerid, 3.5);
+	}
+	else
+	{
+		new Float:x, Float:y, Float:z;
+		GetVehiclePos(vehicleid, x, y, z);
+		if(!IsPlayerInRangeOfPoint(playerid, 3.5, x, y, z))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino a questo veicolo.");
+	}
+	if(vehicleid == 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono veicoli nelle vicinanze.");
+	if(VehicleInfo[vehicleid][vOwnerID] != PlayerInfo[playerid][pID])
+		return SendClientMessage(playerid, COLOR_ERROR, "Questo veicolo non è tuo.");
+	if(!VehicleInfo[vehicleid][vLocked])
+		return SendClientMessage(playerid, -1, "Il veicolo è già aperto.");
+	SendFormattedMessage(playerid, COLOR_GREEN, "Hai aperto il tuo veicolo (%s).", GetVehicleName(vehicleid));
+	if(IsABike(vehicleid) || IsAMotorBike(vehicleid))
+	{
+		//ApplyAnimation(playerid, "BOMBER", "BOM_Plant_Crouch_In", 4.1, 0, 0, 0, 0, 1000, 0);
+		Character_AMe(playerid, "toglie la catena dal suo veicolo");
+	}
+	else
+	{
+		Character_AMe(playerid, "prende le chiavi e apre il suo veicolo");
+	}
+	Vehicle_UnLock(vehicleid);
     return 1;
 }
 
-flags:vbagagliaio(CMD_USER);
+flags:vbagagliaio(CMD_ALIVE_USER);
 CMD:vbagagliaio(playerid, params[])
 {
-    new vehicleid;
-    if(sscanf(params, "d", vehicleid))
-    {
-        vehicleid = Character_GetClosestVehicle(playerid, 3.5);
-    }
-    else
-    {
-        if(!IsPlayerInRangeOfVehicle(playerid, vehicleid, 3.5))
-            return SendClientMessage(playerid, COLOR_GREEN, "Non sei vicino al veicolo!");
-    }
-    /*if(Vehicle_IsTrunkOpened(vehicleid))
-        Vehicle_CloseTrunk(vehicleid);
-    else
-        Vehicle_OpenTrunk(vehicleid);*/
-    Vehicle_ShowInventory(vehicleid, playerid);
-    return 1;
+	new vehicleid;
+	if(sscanf(params, "d", vehicleid))
+	{
+		vehicleid = Character_GetClosestVehicle(playerid, 3.5);
+	}
+	else
+	{
+		if(!IsPlayerInRangeOfVehicle(playerid, vehicleid, 3.5))
+			return SendClientMessage(playerid, COLOR_GREEN, "Non sei vicino al veicolo!");
+	}
+	/*if(Vehicle_IsTrunkOpened(vehicleid))
+		Vehicle_CloseTrunk(vehicleid);
+	else
+		Vehicle_OpenTrunk(vehicleid);*/
+	Vehicle_ShowInventory(vehicleid, playerid);
+	return 1;
 }
 alias:vbagagliaio("vtrunk");
 
-flags:motore(CMD_USER);
+flags:motore(CMD_ALIVE_USER);
 CMD:motore(playerid, params[])
 {
     new vehicleid = GetPlayerVehicleID(playerid);
     if(vehicleid == 0 || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un veicolo!");
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un veicolo.");
     if(Vehicle_IsEngineOn(vehicleid))
     {
         Vehicle_SetEngineOff(vehicleid);
@@ -162,22 +176,24 @@ CMD:motore(playerid, params[])
     else
     {
 		if(Vehicle_GetFuel(vehicleid) < 0.5)
-			return SendClientMessage(playerid, COLOR_ERROR, "Non c'è benzina nel veicolo!");
+			return SendClientMessage(playerid, COLOR_ERROR, "Non c'è benzina nel veicolo.");
 		if(Vehicle_GetHealth(vehicleid) <= 350.0)
-			return SendClientMessage(playerid, COLOR_ERROR, "Il motore del veicolo non funziona!");
-        if(VehicleInfo[vehicleid][vOwnerID] == PlayerInfo[playerid][pID])
+			return SendClientMessage(playerid, COLOR_ERROR, "Il motore del veicolo non funziona.");
+        if(VehicleInfo[vehicleid][vOwnerID] == PlayerInfo[playerid][pID] || pAdminDuty[playerid])
         {
             if((IsABike(vehicleid) || IsAMotorBike(vehicleid)) && VehicleInfo[vehicleid][vLocked])
             {
-                return SendClientMessage(playerid, COLOR_ERROR, "Il veicolo ha la catena!");
+                return SendClientMessage(playerid, COLOR_ERROR, "Il veicolo ha la catena.");
             }
             Character_AMe(playerid, "inserisce la chiave e la gira");
-			Character_SetFreezed(playerid, true);
-			defer TurnOnVehicleEngine(playerid);
+			Character_Do(playerid, "Il motore si accende");
+			Vehicle_SetEngineOn(vehicleid);
+			//Character_SetFreezed(playerid, true);
+			//defer TurnOnVehicleEngine(playerid);
         }
         else
         {
-            SendClientMessage(playerid, COLOR_ERROR, "Non hai le chiavi di questo veicolo!");
+            SendClientMessage(playerid, COLOR_ERROR, "Non hai le chiavi di questo veicolo.");
         }
     }
     return 1;
@@ -242,7 +258,7 @@ Dialog:Dialog_VehicleAction(playerid, response, listitem, inputtext[])
                 return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo!");
             if(Vehicle_IsLocked(vehicle_id))
             {
-                if(IsABike(vehicle_id) || IsAMotorBike(vehicle_id))
+                /*if(IsABike(vehicle_id) || IsAMotorBike(vehicle_id))
                 {
                     Character_AMe(playerid, "toglie la catena dal suo veicolo");
                 }
@@ -251,11 +267,14 @@ Dialog:Dialog_VehicleAction(playerid, response, listitem, inputtext[])
                     Character_AMe(playerid, "prende le chiavi e apre il suo veicolo");
                 }
                 SendClientMessage(playerid, COLOR_GREEN, "Hai aperto il tuo veicolo!");
-                Vehicle_UnLock(vehicle_id);
+                Vehicle_UnLock(vehicle_id);*/
+				new dst[8];
+				valstr(dst, vehicle_id);
+				pc_cmd_vapri(playerid, dst);
             }
             else
             {
-                if(IsABike(vehicle_id) || IsAMotorBike(vehicle_id))
+                /*if(IsABike(vehicle_id) || IsAMotorBike(vehicle_id))
                 {
                     Character_AMe(playerid, "prende la catena e l'attacca al veicolo");
                 }
@@ -264,14 +283,19 @@ Dialog:Dialog_VehicleAction(playerid, response, listitem, inputtext[])
                     Character_AMe(playerid, "prende le chiavi e chiude il suo veicolo");
                 }
                 SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso il tuo veicolo!");
-                Vehicle_UnLock(vehicle_id);
+                Vehicle_UnLock(vehicle_id);*/
+				new dst[8];
+				valstr(dst, vehicle_id);
+				pc_cmd_vchiudi(playerid, dst);
             }
             
         }
         case 1: // Park
         {
             if(GetPlayerVehicleID(playerid) != vehicle_id)
-                return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo del veicolo!");
+                return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo del veicolo.");
+			if(Character_GetDeathState(playerid) > 0)
+				return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
             new 
                 Float:x, Float:y, Float:z, Float:a;
             GetVehiclePos(vehicle_id, x, y, z);
@@ -318,13 +342,17 @@ Dialog:Dialog_SellToPlayer(playerid, response, listitem, inputtext[])
         return Dialog_Show(playerid, Dialog_SellToPlayer, DIALOG_STYLE_INPUT, "{FFFFFF}Vendi a giocatore", "{FF0000}Il giocatore non è connesso!\n{FFFFFF}Inserisci l'ID o il nome del giocatore\n a cui vuoi vendere il veicolo\nseguito dal prezzo.\nEsempio: {00FF00}Mario Rossi {FF0000}10000.", "Vendi", "Annulla");
     
     if(price < 0)
-        return Dialog_Show(playerid, Dialog_SellToPlayer, DIALOG_STYLE_INPUT, "{FFFFFF}Vendi a giocatore", "{FF0000}Il prezzo inserito non è valido!\nInserisci l'ID o il nome del giocatore\n a cui vuoi vendere il veicolo\nseguito dal prezzo.\nEsempio: {00FF00}Mario Rossi {FF0000}10000.", "Vendi", "Annulla");
-    
-    if(Character_GetMoney(otherPlayer) < price)
-        return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non ha abbastanza soldi!");
+        return Dialog_Show(playerid, Dialog_SellToPlayer, DIALOG_STYLE_INPUT, "{FFFFFF}Vendi a giocatore", "{FF0000}Il prezzo inserito non è valido!\n{FFFFFF}Inserisci l'ID o il nome del giocatore\n a cui vuoi vendere il veicolo\nseguito dal prezzo.\nEsempio: {00FF00}Mario Rossi {FF0000}10000.", "Vendi", "Annulla");
     
     if(!IsPlayerInRangeOfPlayer(playerid, otherPlayer, 6.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore!");
+    
+	if(Character_GetDeathState(otherPlayer) > 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi vendere il veicolo a questo giocatore ora.");
+
+	if(Character_GetMoney(otherPlayer) < price)
+		return Dialog_Show(playerid, Dialog_SellToPlayer, DIALOG_STYLE_INPUT, "{FFFFFF}Vendi a giocatore", "{FF0000}Il giocatore non ha abbastanza soldi!\n{FFFFFF}Inserisci l'ID o il nome del giocatore\n a cui vuoi vendere il veicolo\nseguito dal prezzo.\nEsempio: {00FF00}Mario Rossi {FF0000}10000.", "Vendi", "Annulla");
+    
     
     new vehicle_id = pSelectedVehicleListItem[playerid];
     pVehicleSellingTo[playerid] = otherPlayer;

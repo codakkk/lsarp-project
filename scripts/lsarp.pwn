@@ -29,15 +29,23 @@
 
 */
 #pragma warning disable 208 // actually just a good way to prevent warning: "function with tag result used before definition, forcing reparse".
+#define ENABLE_MAPS
+//#define LSARP_DEBUG
+
+#if defined LSARP_DEBUG
+	#warning LSARP_DEBUG is enabled. Care!!
+#endif
+
 #include <includes.pwn>
 #include <defines.pwn>
 #include <forwarded_functions.pwn>
+#include <miscellaneous\timestamp_to_date.pwn>
 
 DEFINE_HOOK_REPLACEMENT(ShowRoom, SR);
 DEFINE_HOOK_REPLACEMENT(Element, Elm);
 
 #include <miscellaneous\globals.pwn>
-
+// https://github.com/emmet-jones/New-SA-MP-callbacks/blob/master/README.md
 // Exception. Must be on top of all others.
 #include <pickup\enum.pwn>
 
@@ -54,7 +62,7 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 #include <house_system\enum.pwn>
 #include <faction_system\enum.pwn>
 #include <weather_system\definitions.pwn>
-
+#include <dp_system\enum.pwn>
 
 #include <database\core.pwn>
 
@@ -71,7 +79,8 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 // ===== [ WEAPON SYSTEM ] =====
 #include <weapon_system\core.pwn>
 
-
+// ===== [ DP SYSTEM ] =====
+#include <dp_system\core.pwn>
 
 #include <utils/utils.pwn>
 #include <utils/maths.pwn>
@@ -91,6 +100,9 @@ main()
 	PlayerInventory = map_new();
 	VehicleInventory = map_new();
 	HouseList = list_new();
+	HouseInventory = map_new();
+
+	printf("Valid: %d", list_valid(Inventory:0));
 }
 
 hook OnGameModeInit() 
@@ -112,11 +124,33 @@ hook OnGameModeInit()
 	Pickup_Create(1239, 0, 2649.7790, -1948.9510, -58.7273, ELEMENT_TYPE_JAIL_EXIT, .worldid = -1, .interiorid = 0);
 	CreateDynamic3DTextLabel("/lasciacarcere", COLOR_BLUE, 2649.7790, -1948.9510, -58.7273 + 0.55, 20.0, .worldid = -1, .interiorid = 0);
 
+	printf("BUilding Load ALl");
 	Building_LoadAll();
 	House_LoadAll();
 
 	
 	return 1;
+}
+
+hook OnPlayerSpawn(playerid)
+{
+	if(IsPlayerNPC(playerid))
+		return Y_HOOKS_BREAK_RETURN_1;
+	if(!Account_IsLogged(playerid) || !Character_IsLogged(playerid))
+	{
+		KickEx(playerid);
+		return Y_HOOKS_BREAK_RETURN_1;
+	}
+
+	SetPlayerDrunkLevel(playerid, 0);
+
+	SetPlayerSkillLevel(playerid, WEAPONSKILL_PISTOL, 1);
+	SetPlayerSkillLevel(playerid, WEAPONSKILL_MICRO_UZI, 1);
+	SetPlayerSkillLevel(playerid, WEAPONSKILL_SAWNOFF_SHOTGUN, 1);
+
+	TextDrawShowForPlayer(playerid, Clock);
+
+	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
 hook OnPlayerUpdate(playerid)
@@ -127,6 +161,12 @@ hook OnPlayerUpdate(playerid)
 
 hook OnPlayerDeath(playerid, killerid, reason) 
 {
+	if(IsPlayerNPC(playerid)) return Y_HOOKS_BREAK_RETURN_1;
+
+	if(killerid != INVALID_PLAYER_ID)
+		Log(Character_GetOOCName(playerid), Character_GetOOCName(killerid), "OnPlayerDeath", reason);
+	
+	SetPlayerDrunkLevel(playerid, 0);
 	if(pAnimLoop{playerid})
 	{
 		pAnimLoop{playerid} = false;
@@ -134,12 +174,26 @@ hook OnPlayerDeath(playerid, killerid, reason)
 	}
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
-hook OnPlayerRequestSpawn(playerid) return 1;
-hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys) return 1;
+
+hook OnPlayerRequestSpawn(playerid)
+{
+    if(!Character_IsLogged(playerid))
+	   return 0;
+    return 1;
+}
+
+hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys) return Y_HOOKS_CONTINUE_RETURN_1;
 hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ) 
 {
 	if(IsPlayerNPC(playerid))
 		return Y_HOOKS_BREAK_RETURN_1;
+	if( !( -1000.0 <= fX <= 1000.0 ) || !( -1000.0 <= fY <= 1000.0 ) || !( -1000.0 <= fZ <= 1000.0 ) )
+    {
+		#if defined DEBUG
+			printf("Not in range");
+		#endif
+		return 0;
+	}
 	//if( !( -1000.0 <= fX <= 1000.0 ) || !( -1000.0 <= fY <= 1000.0 ) || !( -1000.0 <= fZ <= 1000.0 ) )
 		//return 0;
 	// If the server isn't performing well, updates to this callback will be
@@ -149,8 +203,15 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 	// possibly a ping check or packet loss check would work.
 	
 	
-	return 1;
+	return Y_HOOKS_CONTINUE_RETURN_1;
 }
+
+// Not Hooking it makes the OnPlayerWeaponShot not called.
+hook OnPlayerShootDynObject(playerid, weaponid, objectid, Float:x, Float:y, Float:z)
+{
+	return Y_HOOKS_CONTINUE_RETURN_1;
+}
+
 
 hook OnAntiCheatDetected(playerid, code)
 {
@@ -167,11 +228,11 @@ hook OnVehicleMod(playerid, vehicleid, componentid)
 
 public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 {
-	if(!gAccountLogged[playerid] || !Character_IsLogged(playerid))
+	if(!Character_IsLogged(playerid))
 		return 0;
-	if(flags & CMD_USER)
+	if(flags & CMD_ALIVE_USER)
 	{
-		if( (Character_IsJailed(playerid) && !Character_IsICJailed(playerid)) || Character_IsDead(playerid))
+		if( (Character_IsJailed(playerid) && !Character_IsICJailed(playerid)) || !Character_IsAlive(playerid))
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando.");
 			return 0;
@@ -199,7 +260,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 	new factionid = Character_GetFaction(playerid);
 	if(flags & CMD_POLICE)
 	{
-		if(factionid == -1 || Faction_GetType(factionid) != FACTION_TYPE_POLICE || Character_IsDead(playerid))
+		if(factionid == -1 || Faction_GetType(factionid) != FACTION_TYPE_POLICE || !Character_IsAlive(playerid))
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Devi essere un membro della Guardia Nazionale in servizio per utilizzare questo comando.");
 			return 0;
@@ -207,7 +268,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 	}
 	else if(flags & CMD_MEDICAL)
 	{
-		if(factionid == -1 || Faction_GetType(factionid) != FACTION_TYPE_MEDICAL || Character_IsDead(playerid))
+		if(factionid == -1 || Faction_GetType(factionid) != FACTION_TYPE_MEDICAL || !Character_IsAlive(playerid))
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Devi essere un medico in servizio per poter utilizzare questo comando!");
 			return 0;
@@ -215,7 +276,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 	}
 	else if(flags & CMD_GOVERNMENT)
 	{
-		if(factionid == -1 || Faction_GetType(factionid) != FACTION_TYPE_GOVERNAMENT || Character_IsDead(playerid))
+		if(factionid == -1 || Faction_GetType(factionid) != FACTION_TYPE_GOVERNAMENT || !Character_IsAlive(playerid))
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Devi essere un membro del Governo in servizio per utilizzare questo comando.");
 			return 0;
@@ -223,7 +284,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 	}
 	else if(flags & CMD_ILLEGAL)
 	{
-		if(factionid == -1 || (Faction_GetType(factionid) != FACTION_TYPE_IMPORT_WEAPONS && Faction_GetType(factionid) != FACTION_TYPE_IMPORT_DRUGS) || Character_IsDead(playerid))
+		if(factionid == -1 || (Faction_GetType(factionid) != FACTION_TYPE_IMPORT_WEAPONS && Faction_GetType(factionid) != FACTION_TYPE_IMPORT_DRUGS) || !Character_IsAlive(playerid))
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando!");
 			return 0;
@@ -267,7 +328,7 @@ public OnPlayerCommandPerformed(playerid, cmd[], params[], result, flags)
 {
 	if(result == -1)
 	{
-		SendClientMessage(playerid, -1, "Il comando inserito non esiste. Digita \"{00FF00}/aiuto{FFFFFF}\" per una lista di comandi.");
+		SendClientMessage(playerid, -1, "Il comando inserito non esiste. Digita \"/aiuto\" per una lista di comandi.");
 		return 0;
 	}
 	return 1;
@@ -277,17 +338,6 @@ hook OnPlayerText(playerid, text[])
 {
 	if(!Character_IsLogged(playerid) || isnull(text))
 		return Y_HOOKS_BREAK_RETURN_0;
-	if(pAdminDuty[playerid])
-	{
-		pc_cmd_b(playerid, text);
-	}
-	else
-	{
-		if(Character_IsDead(playerid))
-			return 0;
-		new String:string = str_format("%s dice: %s", Character_GetOOCName(playerid), text);
-		ProxDetectorStr(playerid, 15.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
-	}
 	return Y_HOOKS_CONTINUE_RETURN_0;
 }
 
@@ -306,8 +356,8 @@ hook OnPlayerDisconnect(playerid, reason)
 		CallLocalFunction(#OnPlayerClearData, "i", playerid);
 	}
 	
-	gAccountLogged[playerid] = 0;
-	gCharacterLogged[playerid] = 0;
+	Account_SetLogged(playerid, false);
+	Character_SetLogged(playerid, false);
 	return 1;
 }
 
@@ -318,11 +368,22 @@ hook OnPlayerConnect(playerid)
 	
 	SetPlayerColor(playerid, 0xFFFFFFFF);
 
-	gAccountLogged[playerid] = 0;
-	gCharacterLogged[playerid] = 0;
+	// Remove Vending Machines
+	RemoveBuildingForPlayer(playerid, 1302, 0.0, 0.0, 0.0, 6000.0);
+    RemoveBuildingForPlayer(playerid, 1209, 0.0, 0.0, 0.0, 6000.0);
+    RemoveBuildingForPlayer(playerid, 955, 0.0, 0.0, 0.0, 6000.0);
+    RemoveBuildingForPlayer(playerid, 956, 0.0, 0.0, 0.0, 6000.0);
+    RemoveBuildingForPlayer(playerid, 1775, 0.0, 0.0, 0.0, 6000.0);
+    RemoveBuildingForPlayer(playerid, 1776, 0.0, 0.0, 0.0, 6000.0);
+    RemoveBuildingForPlayer(playerid, 1977, 0.0, 0.0, 0.0, 6000.0);
+	
+	Account_SetLogged(playerid, false);
+	Character_SetLogged(playerid, false);
 	gLoginAttempts[playerid] = 0;
+	
+	CallLocalFunction(#OnPlayerClearData, "d", playerid);
 
-	for(new i = 0; i < 30; ++i)
+	for(new i = 0; i < 60; ++i)
 	{
 		SendClientMessage(playerid, -1, " ");
 	}
@@ -346,17 +407,23 @@ hook OnPlayerConnect(playerid)
 			count ++;
 	}
 
-	if(count > 10)
+	if(count >= 4)
 	{
 		Ban(playerid);
 		format(cmd, sizeof cmd, "banip %s", ip);
 		SendRconCommand(cmd);
 	}
+	else if(count > 3)
+	{
+		KickEx(playerid);
+		return 0;
+	}
 	LoadPlayerTextDraws(playerid);
-	SendClientMessage(playerid, -1, "Hai 60 secondi per effettuare registrarti o effettuare il login prima di essere kickato.");
+	SendClientMessage(playerid, -1, "Hai 60 secondi per registrarti o effettuare il login prima di essere kickato.");
 	//OnPlayerRequestClass(playerid, 0);
 	return 1;
 }
+
 
 #include <textdraws.pwn>
 
@@ -369,10 +436,6 @@ hook OnPlayerConnect(playerid)
 
 // ===== [ PLAYER ] =====
 #include <player\core.pwn>
-#include <player\inventory.pwn>
-#include <player\drop.pwn>
-#include <player\textdraws.pwn>
-
 
 // ===== [ VEHICLE SYSTEM ] =====
 #include <vehicles\core.pwn>
@@ -384,7 +447,7 @@ hook OnPlayerConnect(playerid)
 
 // ===== [ HOUSE SYSTEM ] =====
 #include <house_system\core.pwn>
-
+#include <house_system\inventory.pwn>
 // ===== [ BUILDING SYSTEM ] =====
 #include <building\core.pwn>
 
@@ -417,4 +480,6 @@ hook OnPlayerConnect(playerid)
 #include <faction_system\dialogs.pwn>
 
 // ========== [ MISCELLANEOUS ] ==========
-// #include <miscellaneous\maps.pwn>
+#if defined ENABLE_MAPS
+	#include <server\maps\maps.pwn>
+#endif

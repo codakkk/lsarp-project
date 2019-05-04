@@ -76,6 +76,8 @@ new stock
 	Map:VehicleInventory, // <Key: vehicle_id, Value: List:Items>
 	Iterator:VehicleItemsSlot[MAX_VEHICLES]<MAX_ITEMS_PER_VEHICLE>;
 
+new stock 
+	Map:HouseInventory;
 // GLOBAL ITEMS ID
 new stock
 	gItem_Hamburger,

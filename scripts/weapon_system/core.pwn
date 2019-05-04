@@ -200,7 +200,7 @@ stock Weapon_GetName(weaponid)
 		"Dildo Viola", "Dildo", "Vibratore", "Vibratore Argento",
 		"Fiori", "Mazza", "Granata", "Fumogeno", "Molotov",
 		"INVALID", "INVALID", "INVALID",
-		"9MM", "9MM Silenziata", "D. Eagle", "Fucile a pompa",
+		"9MM", "9MM Silenziata", "Desert Eagle", "Fucile a pompa",
 		"Fucile a Canne Mozze", "Fucile da Combattimento", 
 		"Micro SMG", "MP5", "AK-47", "M4", "TEC-9", "Fucile",
 		"Fucile da Cecchino", "Lanciamissili", "HS Rocket", 

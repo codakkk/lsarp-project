@@ -3,7 +3,7 @@
 #define MAX_DROPS					100
 #define for_drops(%0) for_list(%0 : DropList)
 
-enum _:E_DROP_INFO // _: for tag mismatch thing
+enum E_DROP_INFO // _: for tag mismatch thing
 {
 	dCreated,
     Float:dX,

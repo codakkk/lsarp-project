@@ -26,4 +26,3 @@
 #define COLOR_SLATEBLUE	    		(0x6A5ACDFF)
 #define COLOR_ADMINDUTY			  	(0x0000FFFF)
 #define COLOR_BLUE 					(0x3366FFFF)
-#define COLOR_SENDPM 				(0xE5C43EFF)
