@@ -19,7 +19,7 @@ flags:givezpoints(CMD_RCON);
 CMD:givezpoints(playerid, params[])
 {
 	new id, points;
-	if(sscanf(params, "ud", id, points))	
+	if(sscanf(params, "k<u>d", id, points))	
 		return SendClientMessage(playerid, COLOR_ERROR, "/givezpoints <playerid/partofname> <points>");
 	
 	Account_AddPoints(id, points);
@@ -184,20 +184,20 @@ Dialog:Dialog_ZPointsBuyRewards(playerid, response, listitem, inputtext[])
 flags:blockpm(CMD_USER);
 CMD:blockpm(playerid, params[])
 {
-	if(Account_GetPremiumLevel(playerid) < 1 && !PlayerRewardData[playerid][rBlockPM] && Account_GetAdminLevel(playerid) < 2)
+	if(Account_GetPremiumLevel(playerid) < 1 && !PlayerRewardData[playerid][rBlockPM] && Account_GetAdminLevel(playerid) < 3)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei un premium di almeno livello Bronzo o non hai acquistato il blocco PM.");
 	
     if(!strcmp(params, "all", true))
     {
-        Bit_Set(gPlayerBitArray[e_pTogglePMAll], playerid, !Bit_Get(gPlayerBitArray[e_pTogglePMAll], playerid));
-        SendClientMessage(playerid, COLOR_GREEN, Bit_Get(gPlayerBitArray[e_pTogglePMAll], playerid) ? "Hai disabilitato i PM da e verso tutti." : "Hai riabilitato i PM da e verso tutti.");
-        if(Bit_Get(gPlayerBitArray[e_pTogglePMAll], playerid))
-            SendClientMessage(playerid, COLOR_GREEN, "Riutilizza '/blockpm all' per riattivarli.");
+        Account_SetPMAllEnabled(playerid, !Account_HasPMAllEnabled(playerid));
+        SendClientMessage(playerid, COLOR_GREEN, Account_HasPMAllEnabled(playerid) ? ("Hai riabilitato i PM da e verso tutti.") : ("Hai disabilitato i PM da e verso tutti."));
+        if(!Account_HasPMAllEnabled(playerid))
+            SendClientMessage(playerid, COLOR_GREEN, "Riutilizza '/blockpm all' o \"/tog pm\" per riattivarli.");
     }   
     else
     {
         new id;
-        if(sscanf(params, "u", id))
+        if(sscanf(params, "k<u>", id))
             return SendClientMessage(playerid, COLOR_ERROR, "/blockpm <all o playerid/partofname>");
         if(id == playerid || !IsPlayerConnected(id) || !Character_IsLogged(id))
             return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
@@ -218,19 +218,19 @@ CMD:blockpm(playerid, params[])
 flags:blockb(CMD_USER);
 CMD:blockb(playerid, params[])
 {
-	if(Account_GetPremiumLevel(playerid) < 1 && !PlayerRewardData[playerid][rBlockOOC] && Account_GetAdminLevel(playerid) < 2)
+	if(Account_GetPremiumLevel(playerid) < 1 && !PlayerRewardData[playerid][rBlockOOC] && Account_GetAdminLevel(playerid) < 3)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei un premium di almeno livello Bronzo o non hai acquistato il blocco PM.");
     if(!strcmp(params, "all", true))
     {
-		Player_SetOOCEnabled(playerid, !Player_HasOOCEnabled(playerid));
-        SendClientMessage(playerid, COLOR_GREEN, Player_HasOOCEnabled(playerid) ? "Hai riabilitato la chat OOC da e verso tutti." : "Hai disabilitato la chat OOC da e verso tutti.");
-        if(!Player_HasOOCEnabled(playerid))
+		Account_SetOOCEnabled(playerid, !Account_HasOOCEnabled(playerid));
+        SendClientMessage(playerid, COLOR_GREEN, Account_HasOOCEnabled(playerid) ? "Hai riabilitato la chat OOC da e verso tutti." : "Hai disabilitato la chat OOC da e verso tutti.");
+        if(!Account_HasOOCEnabled(playerid))
             SendClientMessage(playerid, COLOR_GREEN, "Riutilizza '/blockb all' per riattivarli.");
     }
     else
     {
         new id;
-        if(sscanf(params, "u", id))
+        if(sscanf(params, "k<u>", id))
             return SendClientMessage(playerid, COLOR_ERROR, "/blockb <all o playerid/partofname>");
         if(id == playerid || !IsPlayerConnected(id) || !Character_IsLogged(id))
             return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
@@ -252,7 +252,7 @@ flags:setpremium(CMD_RCON);
 CMD:setpremium(playerid, params[])
 {
 	new id, premiumid, time;
-	if(sscanf(params, "udd", id, premiumid, time))
+	if(sscanf(params, "k<u>dd", id, premiumid, time))
 		return SendClientMessage(playerid, COLOR_ERROR, "/setpremium <playerid/partofname> <premium (0 - 3)> <giorni>");
 	if(!IsPlayerConnected(id) || IsPlayerNPC(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido");

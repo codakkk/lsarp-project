@@ -18,15 +18,15 @@ CMD:vmenu(playerid, params[])
         GetVehiclePos(v, x , y, z);
         if(v == current_vehicle)
         {
-            format(string, sizeof(string), "%s%s (Attuale)\n", string, GetVehicleName(v));
+            format(string, sizeof(string), "%s%s (Attuale)\n", string, Vehicle_GetName(v));
         }
         else if(IsPlayerInRangeOfPoint(playerid, 5.0, x, y, z))
         {
-            format(string, sizeof(string), "%s%s (Vicino)\n", string, GetVehicleName(v));
+            format(string, sizeof(string), "%s%s (Vicino)\n", string, Vehicle_GetName(v));
         }
         else
         {
-            format(string, sizeof(string), "%s%s\n", string, GetVehicleName(v));
+            format(string, sizeof(string), "%s%s\n", string, Vehicle_GetName(v));
         }
         pVehicleListItem[playerid][count] = v;
         count++;
@@ -63,7 +63,7 @@ CMD:vparcheggia(playerid, params[])
 	GetVehiclePos(vehicleid, x, y, z);
 	GetVehicleZAngle(vehicleid, a);
 	Vehicle_Park(vehicleid, x, y, z, a);
-	SendFormattedMessage(playerid, COLOR_GREEN, "Hai parcheggiato qui la tua %s.", GetVehicleName(vehicleid));
+	SendFormattedMessage(playerid, COLOR_GREEN, "Hai parcheggiato qui la tua %s.", Vehicle_GetName(vehicleid));
 	return 1;
 }
 alias:vparcheggia("vpark");
@@ -83,26 +83,28 @@ CMD:vchiudi(playerid, params[])
     }
     if(vehicleid == 0)
         return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono veicoli nelle vicinanze.");
-    if(VehicleInfo[vehicleid][vOwnerID] != PlayerInfo[playerid][pID])
-        return SendClientMessage(playerid, COLOR_ERROR, "Questo veicolo non è tuo.");
-    if(Vehicle_IsLocked(vehicleid))
-        return SendClientMessage(playerid, -1, "Il veicolo è già chiuso.");
-    if((IsABike(vehicleid) || IsAMotorBike(vehicleid)) && Vehicle_IsEngineOn(vehicleid))
+    /*if((IsABike(vehicleid) || IsAMotorBike(vehicleid)) && Vehicle_IsEngineOn(vehicleid))
     {
         return SendClientMessage(playerid, -1, "Prima spegni il motore.");
-    }
-    SendFormattedMessage(playerid, COLOR_GREEN, "Hai chiuso il tuo veicolo (%s).", GetVehicleName(vehicleid));
-    if(IsABike(vehicleid) || IsAMotorBike(vehicleid))
-    {
-        //ApplyAnimation(playerid, "BOMBER", "BOM_Plant_Crouch_In", 4.1, 0, 0, 0, 0, 1000, 0);
-        Character_AMe(playerid, "prende la catena e l'attacca al veicolo");
-    }
-    else
-    {
-        Character_AMe(playerid, "prende le chiavi e chiude il suo veicolo");
-    }
-    Vehicle_Lock(vehicleid);
-    return 1;
+    }*/
+	if(VehicleInfo[vehicleid][vOwnerID] == PlayerInfo[playerid][pID] || (Vehicle_HasFaction(vehicleid) && Vehicle_GetFaction(vehicleid) == Character_GetFaction(playerid)))
+	{
+		if(Vehicle_IsLocked(vehicleid))
+			return SendClientMessage(playerid, -1, "Il veicolo è già chiuso.");
+		/*if(IsABike(vehicleid) || IsAMotorBike(vehicleid))
+		{
+			//ApplyAnimation(playerid, "BOMBER", "BOM_Plant_Crouch_In", 4.1, 0, 0, 0, 0, 1000, 0);
+			Character_AMe(playerid, "prende la catena e l'attacca al veicolo");
+		}
+		else
+		{
+			Character_AMe(playerid, "prende le chiavi e chiude il suo veicolo");
+		}*/
+		Character_AMe(playerid, "prende le chiavi e chiude il suo veicolo");
+		Vehicle_Lock(vehicleid);
+		return SendFormattedMessage(playerid, COLOR_GREEN, "Hai chiuso il tuo veicolo (%s).", Vehicle_GetName(vehicleid));
+	}
+	else return SendClientMessage(playerid, COLOR_ERROR, "Questo veicolo non è tuo.");
 }
 
 flags:vapri(CMD_ALIVE_USER);
@@ -122,22 +124,27 @@ CMD:vapri(playerid, params[])
 	}
 	if(vehicleid == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono veicoli nelle vicinanze.");
-	if(VehicleInfo[vehicleid][vOwnerID] != PlayerInfo[playerid][pID])
-		return SendClientMessage(playerid, COLOR_ERROR, "Questo veicolo non è tuo.");
-	if(!VehicleInfo[vehicleid][vLocked])
-		return SendClientMessage(playerid, -1, "Il veicolo è già aperto.");
-	SendFormattedMessage(playerid, COLOR_GREEN, "Hai aperto il tuo veicolo (%s).", GetVehicleName(vehicleid));
-	if(IsABike(vehicleid) || IsAMotorBike(vehicleid))
+	
+	if(VehicleInfo[vehicleid][vOwnerID] == PlayerInfo[playerid][pID] || (Vehicle_HasFaction(vehicleid) && Vehicle_GetFaction(vehicleid) == Character_GetFaction(playerid)))
 	{
-		//ApplyAnimation(playerid, "BOMBER", "BOM_Plant_Crouch_In", 4.1, 0, 0, 0, 0, 1000, 0);
-		Character_AMe(playerid, "toglie la catena dal suo veicolo");
-	}
-	else
-	{
+		if(!VehicleInfo[vehicleid][vLocked])
+			return SendClientMessage(playerid, -1, "Il veicolo è già aperto.");
+		
+		/*if(IsABike(vehicleid) || IsAMotorBike(vehicleid))
+		{
+			//ApplyAnimation(playerid, "BOMBER", "BOM_Plant_Crouch_In", 4.1, 0, 0, 0, 0, 1000, 0);
+			Character_AMe(playerid, "toglie la catena dal suo veicolo");
+		}
+		else
+		{
+			Character_AMe(playerid, "prende le chiavi e apre il suo veicolo");
+		}*/
 		Character_AMe(playerid, "prende le chiavi e apre il suo veicolo");
+		Vehicle_UnLock(vehicleid);
+
+		return SendFormattedMessage(playerid, COLOR_GREEN, "Hai aperto il tuo veicolo (%s).", Vehicle_GetName(vehicleid));
 	}
-	Vehicle_UnLock(vehicleid);
-    return 1;
+	return SendClientMessage(playerid, COLOR_ERROR, "Questo veicolo non è tuo.");
 }
 
 flags:vbagagliaio(CMD_ALIVE_USER);
@@ -160,7 +167,118 @@ CMD:vbagagliaio(playerid, params[])
 	Vehicle_ShowInventory(vehicleid, playerid);
 	return 1;
 }
-alias:vbagagliaio("vtrunk");
+alias:vbagagliaio("vtrunk", "vinventario", "vinv");
+
+flags:vdeposita(CMD_ALIVE_USER);
+CMD:vdeposita(playerid, params[])
+{
+	if(PendingRequestInfo[playerid][rdPending])
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
+	
+	new vehicleid;
+	if(sscanf(params, "d", vehicleid))
+	{
+		vehicleid = Character_GetClosestVehicle(playerid, 3.5);
+	}
+	else
+	{
+		if(!IsPlayerInRangeOfVehicle(playerid, vehicleid, 3.5))
+			return SendClientMessage(playerid, COLOR_GREEN, "Non sei vicino al veicolo.");
+	}
+
+	new itemid = GetPlayerWeapon(playerid);
+	if(itemid == 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma.");
+	
+	new ammo = AC_GetPlayerAmmo(playerid);
+	if(Weapon_IsGrenade(itemid))
+	{
+		if(!Vehicle_HasSpaceForItem(vehicleid, itemid, ammo))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nel veicolo.");
+		Character_GiveItem(playerid, itemid, ammo);
+		Vehicle_GiveItem(vehicleid, itemid, ammo);
+		Player_InfoStr(playerid, str_format("Hai depositato ~g~%d ~y~%s~w~~n~nel veicolo.", ammo, Weapon_GetName(itemid)), true);
+	}
+	else
+	{
+		if(!Vehicle_HasSpaceForItem(vehicleid, itemid, 1))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nel veicolo.");
+		Vehicle_GiveItem(vehicleid, itemid, 1, ammo);
+		Player_InfoStr(playerid, str_format("Hai depositato ~g~%s~w~~n~nel veicolo~n~con %d munizioni.", Weapon_GetName(itemid), ammo), true);
+	}
+	Character_AMe(playerid, "deposita qualcosa all'interno del veicolo");
+	AC_RemovePlayerWeapon(playerid, itemid);
+	return 1;
+}
+alias:vdeposita("vdep");
+
+flags:vdisassembla(CMD_ALIVE_USER);
+CMD:vdisassembla(playerid, params[])
+{
+	if(PendingRequestInfo[playerid][rdPending])
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
+	new 
+		slotid, itemid, ammo;
+	new vehicleid = Character_GetClosestVehicle(playerid, 3.0);
+	if(vehicleid == 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino ad un veicolo.");
+	if(sscanf(params, "d", slotid))
+	{
+		itemid = GetPlayerWeapon(playerid);
+		ammo = AC_GetPlayerAmmo(playerid);
+		if(itemid == 0 || ammo == 0)
+		{
+			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma.");
+			return SendClientMessage(playerid, COLOR_ERROR, "Altrimenti usa (/vdis)assembla <slotid> per disassemblare un'arma che hai nell'inventario.");
+		}
+		if(!Weapon_CanBeDisassembled(itemid))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi disassemblare quest'arma.");
+		new data[10], amounts[10];
+		data[0] = itemid;
+		data[1] = Weapon_GetAmmoType(itemid);
+		amounts[0] = 1;
+		amounts[1] = ammo;
+		if(!Inventory_HasSpaceForItems(Vehicle_GetInventory(vehicleid), data, amounts))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario.");
+		AC_RemovePlayerWeapon(playerid, itemid);
+	}
+	else
+	{	
+		if(!Character_IsValidSlot(playerid, slotid))
+			return SendClientMessage(playerid, COLOR_ERROR, "Slot non valida.");
+		itemid = Character_GetSlotItem(playerid, slotid);
+		ammo = Character_GetSlotExtra(playerid, slotid);
+		if(ServerItem_GetType(itemid) != ITEM_TYPE_WEAPON)
+			return SendClientMessage(playerid, COLOR_ERROR, "L'oggetto selezionato non è un'arma.");
+		if(!Weapon_CanBeDisassembled(itemid))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi disassemblare quest'arma.");
+		if(ammo == 0)
+			return SendClientMessage(playerid, COLOR_ERROR, "L'arma selezionata è già disassemblata.");
+		new data[10], amounts[10];
+		data[0] = itemid;
+		data[1] = Weapon_GetAmmoType(itemid);
+		amounts[0] = 1;
+		amounts[1] = ammo;
+		if(!Inventory_HasSpaceForItems(Vehicle_GetInventory(vehicleid), data, amounts))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario.");
+		Character_DecreaseSlotAmount(playerid, slotid, 1);
+	}
+	Vehicle_GiveItem(vehicleid, itemid, 1);
+	Vehicle_GiveItem(vehicleid, Weapon_GetAmmoType(itemid), ammo);
+	SendFormattedMessage(playerid, COLOR_GREEN, "Hai disassemblato la tua arma (%s) all'interno del veicolo. Munizioni: %d", ServerItem_GetName(itemid), ammo);
+	Character_AMe(playerid, "disassembla un'arma e la deposita nel veicolo");
+	return 1;
+}
+alias:vdisassembla("vdis");
+
+flags:vusa(CMD_ALIVE_USER);
+CMD:vusa(playerid, params[])
+{
+	new slotid;
+	if(sscanf(params, "d", slotid))
+		return SendClientMessage(playerid, COLOR_ERROR, "/vusa <slotid>");
+	return 1;
+}
 
 flags:motore(CMD_ALIVE_USER);
 CMD:motore(playerid, params[])
@@ -199,7 +317,7 @@ CMD:motore(playerid, params[])
     return 1;
 }
 
-timer TurnOnVehicleEngine[500](playerid)
+/*timer TurnOnVehicleEngine[500](playerid)
 {
 	new vehicleid = GetPlayerVehicleID(playerid);
 	if(vehicleid > 0)
@@ -228,7 +346,7 @@ timer TurnOnVehicleEngine[500](playerid)
 	}
 	Character_SetFreezed(playerid, false);
 	Character_SetTurningOnEngine(playerid, false);
-}
+}*/
 
 Dialog:Dialog_VehicleList(playerid, response, listitem, inputtext[])
 {
@@ -240,7 +358,7 @@ Dialog:Dialog_VehicleList(playerid, response, listitem, inputtext[])
         return 0;
     pSelectedVehicleListItem[playerid] = vehicle_id;
     new string[64];
-    format(string, sizeof(string), "%s", GetVehicleName(vehicle_id));
+    format(string, sizeof(string), "%s", Vehicle_GetName(vehicle_id));
     Dialog_Show(playerid, Dialog_VehicleAction, DIALOG_STYLE_LIST, string, "Apri/Chiudi\nParcheggia\nBagagliaio\nVendi a giocatore\nVendi\nInfo", "Avanti", "Annulla");
     return 1;
 }
@@ -301,7 +419,7 @@ Dialog:Dialog_VehicleAction(playerid, response, listitem, inputtext[])
             GetVehiclePos(vehicle_id, x, y, z);
             GetVehicleZAngle(vehicle_id, a);
             Vehicle_Park(vehicle_id, x, y, z, a);
-            SendFormattedMessage(playerid, COLOR_GREEN, "Hai parcheggiato qui la tua %s.", GetVehicleName(vehicle_id));
+            SendFormattedMessage(playerid, COLOR_GREEN, "Hai parcheggiato qui la tua %s.", Vehicle_GetName(vehicle_id));
         }
         case 2: // Trunk
         {
@@ -360,7 +478,7 @@ Dialog:Dialog_SellToPlayer(playerid, response, listitem, inputtext[])
     pSellingVehicleID[playerid] = pSellingVehicleID[otherPlayer] = vehicle_id;
     pVehicleSellingPrice[playerid] = pVehicleSellingPrice[otherPlayer] = price;
 
-    SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto a %s (%d) il tuo veicolo (%s) per $%d.", Character_GetOOCName(otherPlayer), otherPlayer, GetVehicleName(vehicle_id), price);
-    SendFormattedMessage(otherPlayer, COLOR_GREEN, "%s (%d) vuole venderti il suo veicolo (%s) per $%d. Digita /accetta veicolo per accettare.", Character_GetOOCName(playerid), playerid, GetVehicleName(vehicle_id), price);
+    SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto a %s il tuo veicolo (%s) per $%d.", Character_GetOOCName(otherPlayer), Vehicle_GetName(vehicle_id), price);
+    SendFormattedMessage(otherPlayer, COLOR_GREEN, "%s vuole venderti il suo veicolo (%s) per $%d. Digita /accetta veicolo per accettare.", Character_GetOOCName(playerid), Vehicle_GetName(vehicle_id), price);
     return 1;
 }

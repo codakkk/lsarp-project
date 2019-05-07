@@ -35,6 +35,8 @@ enum E_PLAYER_DATA
 	pBanned,
 	pBanExpiry,
 
+	pLastChopShopTime,
+	
     pLootZone, // MUST REMOVE FROM HERE SOON
 };
 new stock
@@ -54,9 +56,14 @@ new stock
 	pLastPMTime[MAX_PLAYERS],
 	pCare[MAX_PLAYERS],
 	pInCare[MAX_PLAYERS char],
-	pCareTime[MAX_PLAYERS]
+	pCareTime[MAX_PLAYERS],
+	pAFKTime[MAX_PLAYERS]
 ;
 
+// Text3D
+new
+	Text3D:pMaskText3D[MAX_PLAYERS]
+;
 enum E_PLAYER_RESTORE_DATA
 {
     pSpawned,
@@ -74,15 +81,9 @@ new PlayerRestore[MAX_PLAYERS][E_PLAYER_RESTORE_DATA];
 
 enum e_Bit1_Data 
 {
-	e_pAccountLogged,
 	e_pCharacterLogged,
-    e_pTogglePMAll,
-    e_pToggleOOCAll,
-    e_pHotKeys,
     e_pFreezed,
-	e_pInvMode, // 0: Dialog - 1: Chat
-	e_pTryingEngine,
-	e_pFactionOOC,
+	e_pToggleFactionOOC,
 	e_pFactionDuty,
 	e_pSelectingUniform,
 	e_pCuffed,
@@ -92,7 +93,7 @@ enum e_Bit1_Data
 };
 
 new 
-    BitArray:gPlayerBitArray[e_Bit1_Data]<MAX_PLAYERS>;
+    BitArray:gCharacterBitState[e_Bit1_Data]<MAX_PLAYERS>;
 
 enum _:e_PendingType
 {

@@ -280,14 +280,14 @@ new VehicleNames[][] =
     "Tiller", "Utility Trailer"
 };
 
-stock GetVehicleName(vehicleid)
+stock Vehicle_GetName(vehicleid)
 {
     new string[32];
     format(string,sizeof(string),"%s", VehicleNames[GetVehicleModel(vehicleid) - 400]);
     return string;
 }
 
-stock GetVehicleNameFromModel(modelid)
+stock Vehicle_GetNameFromModel(modelid)
 {
     new
 	   string[32];
@@ -406,7 +406,7 @@ stock ProxDetector(playerid, Float:radius, const string[], col1, col2, col3, col
 	{
 		if(GetPlayerInterior(i) != int || GetPlayerVirtualWorld(i) != vw)
 			continue;
-		if( (!Player_HasOOCEnabled(i) || !Player_HasOOCEnabledForPlayer(i, playerid)) && ooc)
+		if( (!Account_HasOOCEnabled(i) || !Account_HasOOCEnabledForPlayer(i, playerid)) && ooc)
 			continue;
 		new Float:distance = GetPlayerDistanceFromPoint(i, x, y, z);
 		if(distance < radius/16) SendTwoLinesMessage(i, col1, string);
@@ -433,49 +433,49 @@ stock SendTwoLinesMessageStr(playerid, color, String:string)
 
 stock SendTwoLinesMessage(playerid, color, const message[], GLOBAL_TAG_TYPES:...)
 {
-    new string[256];
-    format(string, sizeof(string), message, ___3);
-    new len = strlen(string);
-    if(len > 84)
-    {
-	   new tmp1[85], tmp2[85];
-	   
-	   strmid(tmp2, string, 80, (len > 149 ? 149 : len));
-	   strins(tmp2, ".. ", 0, 84);
-	   strmid(tmp1, string, 0, 80);
-	   strins(tmp1, " ..", 80, 83);
-	   SendClientMessage(playerid, color, tmp1);
-	   SendClientMessage(playerid, color, tmp2);
-    }
-    else
-    {
-	   SendClientMessage(playerid, color, string);
-    }
+	new string[256];
+	format(string, sizeof(string), message, ___3);
+	new len = strlen(string);
+	if(len > 84)
+	{
+		new tmp1[85], tmp2[85];
+		
+		strmid(tmp2, string, 80, (len > 149 ? 149 : len));
+		strins(tmp2, ".. ", 0, 84);
+		strmid(tmp1, string, 0, 80);
+		strins(tmp1, " ..", 80, 83);
+		SendClientMessage(playerid, color, tmp1);
+		SendClientMessage(playerid, color, tmp2);
+	}
+	else
+	{
+		SendClientMessage(playerid, color, string);
+	}
     return 1;
 }
 
-stock SendTwoLinesMessageToAll(color, const message[], GLOBAL_TAG_TYPES:...)
+stock SendTwoLinesMessageToAll(color, const text[])
 {
-    new string[256];
-    format(string, sizeof(string), message, ___2);
-    new len = strlen(string);
-    if(len > 90)
-    {
-	   new tmp1[100], tmp2[100];
-	   
-	   strmid(tmp1, string, 0, 90);
-	   strins(tmp1, " ..", 90, 93);
-	   strmid(tmp2, string, 90, len);
-	   strins(tmp2, ".. ", 0, 90);
-	   SendClientMessageToAll(color, tmp1);
-	   SendClientMessageToAll(color, tmp2);
-    }
-    else
-    {
-	   SendClientMessageToAll(color, string);
-    }
+	new string[256];
+    format(string, sizeof(string), text, ___1);
+    new
+	    len = strlen(string);
+	if(len > 84)
+	{
+	    new
+	        tmp1[85],
+			tmp2[85];
+		strmid(tmp2, string, 80, (len > 149 ? 149 : len));
+		strins(tmp2, ".. ", 0, 84);
+		strmid(tmp1, string, 0, 80);
+		strins(tmp1, " ..", 80, 83);
+		SendClientMessageToAll(color, tmp1);
+		SendClientMessageToAll(color, tmp2);
+		return 1;
+	}
+	else
+		return SendClientMessageToAll(color, string);
 }
-
 
 stock IsValidEMail(email[]) 
 {

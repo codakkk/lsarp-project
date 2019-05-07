@@ -3,8 +3,8 @@
 flags:invmode(CMD_USER);
 CMD:invmode(playerid, params[])
 {
-	Player_SetInvModeEnabled(playerid, !Player_HasInvModeEnabled(playerid));
-	if(Player_HasInvModeEnabled(playerid))
+	Account_SetInvModeEnabled(playerid, !Account_HasInvModeEnabled(playerid));
+	if(Account_HasInvModeEnabled(playerid))
 	{
 		SendClientMessage(playerid, COLOR_GREEN, "Hai impostato l'inventario in chat mode.");
 	}
@@ -19,7 +19,7 @@ CMD:invmode(playerid, params[])
 flags:inventario(CMD_USER);
 CMD:inventario(playerid, params[])
 {
-	if(Player_HasInvModeEnabled(playerid))
+	if(Account_HasInvModeEnabled(playerid))
 	{
 		new Inventory:playerInventory = Character_GetInventory(playerid);
 		Inventory_ShowInChat(playerInventory, playerid, "Inventario");
@@ -52,7 +52,7 @@ CMD:passa(playerid, params[])
 	if(PendingRequestInfo[playerid][rdPending])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
 	new slotid, id, amount;
-	if(sscanf(params, "udD(1)", id, slotid, amount))
+	if(sscanf(params, "k<u>dD(1)", id, slotid, amount))
 		return SendClientMessage(playerid, COLOR_ERROR, "/passa <playerid/partofname> <slotid> <quantità (default 1)>");
 
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
@@ -73,10 +73,13 @@ CMD:passa(playerid, params[])
 	if(Character_HasRequest(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta attiva.");
 
+	if(!Character_IsAlive(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
+	
 	Character_SetRequest(playerid, id, PENDING_TYPE_ITEM, itemid, amount, slotid);
 	
-	SendFormattedMessage(id, COLOR_GREEN, "%s (%d) vuole darti %d %s. Digita \"/accetta oggetto\" per accettare.", Character_GetOOCName(playerid), playerid, amount, ServerItem_GetName(itemid));
-	SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto di dare %d %s a %s (%d).", amount, ServerItem_GetName(itemid), Character_GetOOCName(id), id);
+	SendFormattedMessage(id, COLOR_GREEN, "%s vuole darti %d %s. Digita \"/accetta oggetto\" per accettare.", Character_GetOOCName(playerid), amount, ServerItem_GetName(itemid));
+	SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto di dare %d %s a %s.", amount, ServerItem_GetName(itemid), Character_GetOOCName(id));
 	return 1;
 }
 
@@ -109,8 +112,6 @@ CMD:deposita(playerid, params[])
 	if(itemid == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma");
 	
-	if(PendingRequestInfo[playerid][rdPending])
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva!");
 	new ammo = AC_GetPlayerAmmo(playerid);
 	if(Weapon_IsGrenade(itemid))
 	{
@@ -147,28 +148,31 @@ CMD:disassembla(playerid, params[])
 		if(itemid == 0 || ammo == 0)
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma.");
-			return SendClientMessage(playerid, COLOR_ERROR, "Altrimenti usa /disassembla <slotid> per disassemblare un'arma nell'inventario.");
+			return SendClientMessage(playerid, COLOR_ERROR, "Altrimenti usa (/dis)assembla <slotid> per disassemblare un'arma nell'inventario.");
 		}
 		if(!Weapon_CanBeDisassembled(itemid))
-			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi disassemblare quest'arma!");
-		if(!Character_HasSpaceForItem(playerid, itemid, 1) || !Character_HasSpaceForItem(playerid, Weapon_GetAmmoType(itemid), ammo))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi disassemblare quest'arma.");
+		new data[10], amounts[10];
+		data[0] = itemid;
+		data[1] = Weapon_GetAmmoType(itemid);
+		amounts[0] = 1;
+		amounts[1] = ammo;
+		if(!Inventory_HasSpaceForItems(Character_GetInventory(playerid), data, amounts))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario.");
 		AC_RemovePlayerWeapon(playerid, itemid);
 	}
 	else
 	{	
 		if(!Character_IsValidSlot(playerid, slotid))
-			return SendClientMessage(playerid, COLOR_ERROR, "Slot non valida!");
+			return SendClientMessage(playerid, COLOR_ERROR, "Slot non valida.");
 		itemid = Character_GetSlotItem(playerid, slotid);
 		ammo = Character_GetSlotExtra(playerid, slotid);
 		if(ServerItem_GetType(itemid) != ITEM_TYPE_WEAPON)
-			return SendClientMessage(playerid, COLOR_ERROR, "L'oggetto selezionato non è un'arma!");
+			return SendClientMessage(playerid, COLOR_ERROR, "L'oggetto selezionato non è un'arma.");
 		if(!Weapon_CanBeDisassembled(itemid))
-			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi disassemblare quest'arma!");
+			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi disassemblare quest'arma.");
 		if(ammo == 0)
-			return SendClientMessage(playerid, COLOR_ERROR, "L'arma selezionata è già disassemblata!");
-		//if(!Character_HasSpaceForItem(playerid, itemid, 1) || !Character_HasSpaceForItem(playerid, Weapon_GetAmmoType(itemid), ammo))
-			//return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario.");
+			return SendClientMessage(playerid, COLOR_ERROR, "L'arma selezionata è già disassemblata.");
 		new data[10], amounts[10];
 		data[0] = itemid;
 		data[1] = Weapon_GetAmmoType(itemid);
@@ -181,6 +185,7 @@ CMD:disassembla(playerid, params[])
 	Character_GiveItem(playerid, itemid, 1);
 	Character_GiveItem(playerid, Weapon_GetAmmoType(itemid), ammo);
 	SendFormattedMessage(playerid, COLOR_GREEN, "Hai disassemblato la tua arma (%s). Munizioni: %d", ServerItem_GetName(itemid), ammo);
+	Character_AMe(playerid, "disassembla un'arma.");
 	return 1;
 }
 alias:disassembla("dis");
@@ -199,9 +204,12 @@ CMD:gettaarma(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma da gettare.");
 	new Float:x, Float:y, Float:z;
 	GetPlayerPos(playerid, x, y, z);
-	Drop_Create(x, y, z - 0.9, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, ammo, Character_GetOOCNameStr(playerid));
-	AC_RemovePlayerWeapon(playerid, weaponid);
-	SendClientMessage(playerid, COLOR_GREEN, "Hai gettato l'arma.");
-	ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 3.0, 0, 0, 0, 0, 0);
+	new result = Drop_Create(x, y, z - 0.9, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, ammo, Character_GetOOCNameStr(playerid));
+	if(result != -1)
+	{
+		AC_RemovePlayerWeapon(playerid, weaponid);
+		SendClientMessage(playerid, COLOR_GREEN, "Hai gettato l'arma.");
+		ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 3.0, 0, 0, 0, 0, 0);
+	}
 	return 1;
 }

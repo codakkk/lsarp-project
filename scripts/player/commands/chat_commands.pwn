@@ -15,12 +15,12 @@ CMD:pm(playerid, params[])
 {
 	if(Account_GetAdminLevel(playerid) < 2 && Account_GetPremiumLevel(playerid) < 3)
 	{
-		new seconds = (Account_GetPremiumLevel(playerid) == 1 ? 20 : (Account_GetPremiumLevel(playerid) == 2 ? 10 : 30));
+		new seconds = 5;
 		if(GetTickCount() - pLastPMTime[playerid] < 1000 * seconds)
 			return SendFormattedMessage(playerid, COLOR_ERROR, "Puoi inviare un PM ogni %d secondi!", seconds);
 	}
     new id, s[128];
-    if(sscanf(params, "us[128]", id, s) || isnull(s) || strlen(s) > 128)
+    if(sscanf(params, "k<u>s[128]", id, s) || isnull(s) || strlen(s) > 128)
         return SendClientMessage(playerid, COLOR_ERROR, "/pm <playerid/partofname> <testo>");
     if(id < 0 || id >= MAX_PLAYERS  || !Character_IsLogged(id))
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
@@ -29,15 +29,22 @@ CMD:pm(playerid, params[])
     if(Iter_Contains(pTogglePM[playerid], id))
         return SendClientMessage(playerid, COLOR_ERROR, "Hai disabilitato i PM verso e da questo giocatore.");
 
-    if(Bit_Get(gPlayerBitArray[e_pTogglePMAll], playerid))
+    if(!Account_HasPMAllEnabled(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Hai disabilitato i PM verso e da tutti i giocatori."); 
 
-    if( ((Iter_Contains(pTogglePM[id], playerid) || Bit_Get(gPlayerBitArray[e_pTogglePMAll], id)) && AccountInfo[playerid][aAdmin] < 1))
-        return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha disabilitato i PM.");
+	if(Account_GetAdminLevel(playerid) < 1)
+	{
+		if(Iter_Contains(pTogglePM[id], playerid) || !Account_HasPMAllEnabled(playerid))
+			return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha disabilitato i PM.");
+	}
     
     PlayerPlaySound(id, 1085, 0.0, 0.0, 0.0);
     SendTwoLinesMessage(id, COLOR_RECEIVEPM, "PM da %s (%d): %s", Character_GetOOCName(playerid), playerid, s);
 	SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a %s (%d): %s", Character_GetOOCName(id), id, s);
+	
+	if(Character_IsAFK(id))
+		Player_Info(playerid, "Il giocatore a cui hai inviato il PM risulta AFK.");
+	
 	pLastPMTime[playerid] = GetTickCount();
     return 1;
 }
@@ -47,7 +54,7 @@ CMD:shout(playerid, params[])
 {
     if(isnull(params) || strlen(params) > 128) 
         return SendClientMessage(playerid, COLOR_ERROR, "/s(hout) <testo>");
-    new String:string = str_format("%s grida: %s!", Character_GetOOCName(playerid), params);
+    new String:string = str_format("%s grida: %s", Character_GetOOCName(playerid), params);
     ProxDetectorStr(playerid, 40.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
     return 1;
 }
@@ -113,15 +120,16 @@ CMD:ame(playerid, params[])
 flags:b(CMD_USER);
 CMD:b(playerid, params[])
 {
-	if(!Player_HasOOCEnabled(playerid))
+	if(!Account_HasOOCEnabled(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Hai disabilitato la chat OOC. Usa \"/blockb all\" per riattivarla.");
     if(isnull(params) || strlen(params) > 128) 
         return SendClientMessage(playerid, COLOR_ERROR, "/b <testo>");
     new String:string;
     if(pAdminDuty[playerid])
     {
-        string = str_format("(( Admin %s [%d]: %s ))", AccountInfo[playerid][aName], playerid, params);
-        ProxDetectorStr(playerid, 15.0, string, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, true);
+        string = str_format("(( {FF4500}%s{FFFFFF} [%d]: %s ))", AccountInfo[playerid][aName], playerid, params);
+        //ProxDetectorStr(playerid, 15.0, string, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, true);
+		ProxDetectorStr(playerid, 15.0, string, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, true);
     }
     else
     {
@@ -137,7 +145,7 @@ CMD:whisper(playerid, params[])
 	if(Character_IsDead(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
     new id, text[128];
-    if(sscanf(params, "us[128]", id, text) || strlen(text) > 128)
+    if(sscanf(params, "k<u>s[128]", id, text) || strlen(text) > 128)
         return SendClientMessage(playerid, COLOR_ERROR, "/w(hisper) <playerid/partofname> <testo>");
     if(!IsPlayerConnected(id) || !Character_IsLogged(id))
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");

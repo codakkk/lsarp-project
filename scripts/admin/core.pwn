@@ -14,7 +14,7 @@ stock GetAdminLevelName(level)
     switch(level)
     {
 	   case 1: l = "Supporter";
-	   case 2: l = "Junior Mod.";
+	   case 2: l = "Junior Mod";
 	   case 3: l = "Moderatore";
 	   case 4: l = "Amministratore"; // del condominio
 	   case 5: l = "Sviluppatore";

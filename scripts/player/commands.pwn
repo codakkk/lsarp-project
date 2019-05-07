@@ -30,20 +30,6 @@ hook OnPlayerClearData(playerid)
     pSellingVehicleID[playerid] = 0;
     pVehicleSellingTo[playerid] = -1;
     pVehicleSeller[playerid] = -1;
-
-    // before everything, make sure to reset ToggleOOC and PM from players to this playerid
-    foreach(new i : Player)
-    {
-	   if(Iter_Contains(pTogglePM[i], playerid))
-		  Iter_Remove(pTogglePM[i], playerid);
-	   if(Iter_Contains(pToggleOOC[i], playerid))
-		  Iter_Remove(pToggleOOC[i], playerid);
-    }
-    Iter_Clear(pTogglePM[playerid]);
-    Iter_Clear(pToggleOOC[playerid]);
-    Bit_Set(gPlayerBitArray[e_pTogglePMAll], playerid, false);
-    Bit_Set(gPlayerBitArray[e_pToggleOOCAll], playerid, false);
-
     return 1;
 }
 
@@ -55,35 +41,84 @@ CMD:info(playerid, params[])
 }
 alias:info("stats");
 
+flags:tog(CMD_USER);
+CMD:tog(playerid, params[])
+{
+	if(isnull(params) || strlen(params) > 16)
+		return SendClientMessage(playerid, COLOR_ERROR, "/tog <f - OOC - HUD - PM>");
+	if(!strcmp(params, "f", true))
+	{
+		if(Character_GetFaction(playerid) == -1)
+			return SendClientMessage(playerid, COLOR_ERROR, "Non fai parte di una fazione!");
+		Character_SetFactionOOCEnabled(playerid, !Character_IsFactionOOCEnabled(playerid));
+		if(Character_IsFactionOOCEnabled(playerid))
+			SendClientMessage(playerid, COLOR_GREEN, "Hai attivato la chat fazione OOC!");
+		else
+			SendClientMessage(playerid, COLOR_GREEN, "Hai disattivato la chat fazione OOC!");
+	}
+	else if(!strcmp(params, "hud", true))
+	{
+		Account_SetHUDEnabled(playerid, !Account_HasHUDEnabled(playerid));
+		if(Account_HasHUDEnabled(playerid))
+			TextDrawShowForPlayer(playerid, Clock);
+		else
+			TextDrawHideForPlayer(playerid, Clock);
+	}
+	else if(!strcmp(params, "pm", true))
+	{
+		pc_cmd_blockpm(playerid, "all");
+	}
+	else
+	{
+		return SendClientMessage(playerid, COLOR_ERROR, "/tog <f - OOC - HUD - PM>");
+	}
+	return 1;
+}
+
 flags:dom(CMD_USER);
 CMD:dom(playerid, params[])
 {
     if(isnull(params))
 	   return SendClientMessage(playerid, COLOR_ERROR, "/dom <testo>");
-    new seconds = (AccountInfo[playerid][aPremium] > 0) ? 15 : 30;
+    new seconds = (AccountInfo[playerid][aPremium] > 0) ? 10 : 30;
     if(GetTickCount() - pLastAdminQuestionTime[playerid] < 1000 * seconds)
 	   return SendFormattedMessage(playerid, COLOR_ERROR, "Puoi inviare una domanda ogni %d secondi!", seconds);
     if(AccountInfo[playerid][aPremium])
     {
-	   SendMessageToAdmins(0, COLOR_GREEN, "(( [PREMIUM] %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);
-	   SendClientMessage(playerid, -1, "La domanda è stata inviata agli amministratori online. Attendi.");
+	   SendMessageToAdmins(0, 0xEA7500FF, "(( [PREMIUM] %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);
+	   SendClientMessage(playerid, -1, "La domanda è stata inviata ai moderatori online. Attendi.");
 	   SendClientMessage(playerid, -1, "Essendo un utente Premium, la tua domanda avrà maggiore priorità.");
     }
     else
     {
-	   SendMessageToAdmins(0, COLOR_ERROR, "(( %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);
-	   SendClientMessage(playerid, -1, "La domanda è stata inviata agli amministratori online. Attendi.");
+	   SendMessageToAdmins(0, 0xEA7500FF, "(( %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);
+	   SendClientMessage(playerid, -1, "La domanda è stata inviata ai moderatori online. Attendi.");
     }
     pLastAdminQuestionTime[playerid] = GetTickCount();
     return 1;
+}
+
+flags:afk(CMD_USER);
+CMD:afk(playerid, params[])
+{
+	new id;
+	if(sscanf(params, "k<u>", id))
+		return SendClientMessage(playerid, COLOR_ERROR, "/afk <playerid/partofname>");
+	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "ID Non valido.");
+	if(Account_GetAdminLevel(playerid) < 1 && Account_GetAdminLevel(id) > 1)
+		SendFormattedMessage(playerid, -1, (Character_IsAFK(id)) ? ("%s è AFK.") : ("%s non è AFK."), Character_GetOOCName(id));
+	else
+		SendFormattedMessage(playerid, -1, (Character_IsAFK(id)) ? ("%s è AFK da %d minuti (%d secondi).") : ("%s non è AFK."), Character_GetOOCName(id), Character_GetAFKTime(id)/60, Character_GetAFKTime(id));
+	return 1;
 }
 
 flags:aiuto(CMD_USER);
 CMD:aiuto(playerid, params[])
 {
     SendClientMessage(playerid, -1, "[GENERALE]: /info - /dom - /compra - /annulla - /sconosciuto");
-    SendClientMessage(playerid, -1, "[GENERALE]: /rimuovi - /hotkeys - /arma - /id - /dp");
-	SendClientMessage(playerid, -1, "[GENERALE]: /stilechat - /stilelotta - /stilecamminata");
+    SendClientMessage(playerid, -1, "[GENERALE]: /rimuovi - /hotkeys - /arma - /id - /dp - /invmode");
+	SendClientMessage(playerid, -1, "[GENERALE]: /afk - /stilechat - /stilelotta - /stilecamminata");
     SendClientMessage(playerid, -1, "[CHAT]: /b - /me - /ame - /low - /melow - /do - /dolow - (/s)hout");
     SendClientMessage(playerid, -1, "[CHAT]: (/w)hisper - (/cw)hisper - /pm - /blockb - /blockpm");
     SendClientMessage(playerid, -1, "[ALTRO]: /animlist - /vehcmds - /invcmds - /zpoints");
@@ -124,6 +159,7 @@ CMD:vehcmds(playerid, params[])
 {
 	SendClientMessage(playerid, -1, "[VEICOLI]: /motore - /vmenu - /vapri - /vchiudi");
 	SendClientMessage(playerid, -1, "[VEICOLI]: /vluci - /vparcheggia - /vpark - /vbagagliaio");
+	SendClientMessage(playerid, -1, "[VEICOLI]: (/vdis)assembla - (/vdep)osita");
 	return 1;
 }
 
@@ -138,8 +174,8 @@ CMD:invcmds(playerid, params[])
 flags:hotkeys(CMD_ALIVE_USER);
 CMD:hotkeys(playerid, params[])
 {
-    Bit_Set(gPlayerBitArray[e_pHotKeys], playerid, !Bit_Get(gPlayerBitArray[e_pHotKeys], playerid));
-    if(Bit_Get(gPlayerBitArray[e_pHotKeys], playerid))
+	Account_SetHotKeysEnabled(playerid, !Account_HasHotKeysEnabled(playerid));
+    if(Account_HasHotKeysEnabled(playerid))
     {
 		SendClientMessage(playerid, COLOR_GREEN, "Hai abilitato le HotKeys.");
 		SendClientMessage(playerid, -1, "Ora puoi utilizzare anche:");
@@ -162,10 +198,12 @@ flags:id(CMD_ALIVE_USER);
 CMD:id(playerid, params[])
 {
 	new id;
-	if(sscanf(params, "u", id))
+	if(sscanf(params, "k<u>", id))
 		return SendClientMessage(playerid, COLOR_ERROR, "/id <playerid/partofname>");
-	if(!Character_IsLogged(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso!");
+	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
+	if(Character_IsMasked(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
 	SendFormattedMessage(playerid, COLOR_GREEN, "%s (%d) - Livello: %d.", Character_GetOOCName(id), id, Character_GetLevel(id));
 	return 1;
 }

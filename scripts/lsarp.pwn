@@ -194,15 +194,10 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 		#endif
 		return 0;
 	}
-	//if( !( -1000.0 <= fX <= 1000.0 ) || !( -1000.0 <= fY <= 1000.0 ) || !( -1000.0 <= fZ <= 1000.0 ) )
-		//return 0;
-	// If the server isn't performing well, updates to this callback will be
-	// delayed and could stack up resulting in a sudden mass-call of this
-	// callback which can cause false positives.
-	// More research needed into this though as player lag can also cause this,
-	// possibly a ping check or packet loss check would work.
-	
-	
+	if(hittype == BULLET_HIT_TYPE_PLAYER && hitid != INVALID_PLAYER_ID && pAdminDuty[hitid])
+	{
+		return Y_HOOKS_BREAK_RETURN_0;
+	}
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
@@ -343,7 +338,7 @@ hook OnPlayerText(playerid, text[])
 
 hook OnPlayerDisconnect(playerid, reason)
 {
-	new const reasonName[3][16] = {"Crash", "Uscito", "Kick/Ban"};
+	new const reasonName[3][16] = {"Crash", "Quit", "Kick/Ban"};
 	new String:string, name[MAX_PLAYER_NAME];
 
 	GetPlayerName(playerid, name, sizeof(name));
@@ -424,6 +419,110 @@ hook OnPlayerConnect(playerid)
 	return 1;
 }
 
+hook OnRconLoginAttempt(ip[], password[], success )
+{
+	new ip2[16];
+	foreach(new i : Player)
+	{
+		GetPlayerIp(i, ip2, 16);
+		if(!strcmp(ip, ip2, true))
+		{
+			if(success)
+			{
+				SendMessageToAdmins(true, COLOR_ADMIN, "%s (%d) è entrato in RCON.", Character_GetOOCName(i), i);
+			}
+			else
+			{
+				SendMessageToAdmins(true, COLOR_ADMIN, "%s (%d) ha tentato di entrare in RCON.", Character_GetOOCName(i), i);
+			}
+		}
+	}
+	return 1;
+}
+
+SSCANF:u(const string[])
+{
+	new userid;
+	if(string[0] == '#')
+	{
+		for(new i = strlen(string) - 1, d = 1; i > 0; --i)
+		{
+			if('0' <= string[i] <= '9')
+			{
+				userid += d * (string[i] - '0');
+				d *= 10;
+			}
+			else 
+			{
+				userid = 0;
+				break;
+			}
+		}
+		if(userid)
+		{
+			foreach(new i : Player)
+			{
+				if(Character_GetID(i) == userid)
+					return i;
+			}
+		}
+	}
+	else
+	{
+		if(IsNumeric(string))
+		{
+			userid = strval(string);
+			if(IsPlayerConnected(userid))
+				return userid;
+		}
+		new name[MAX_PLAYER_NAME];
+		foreach(new i : Player)
+		{
+			GetPlayerName(i, name, MAX_PLAYER_NAME);
+			if(strfind(name, string, true) == 0)
+		        return i;
+		}
+	}
+	return INVALID_PLAYER_ID;
+}
+
+SSCANF:item(string[])
+{
+	// probably an ID
+	if('0' <= string[0] <= '9')
+	{
+		new ret = strval(string);
+		if(0 <= ret <= MAX_ITEMS_IN_SERVER)
+		{
+			return ret;
+		}
+	}
+	else
+	{
+		foreach(new item : ServerItems)
+		{
+			if(!strcmp(ServerItem[item][sitemName], string, true) || strfind(ServerItem[item][sitemName], string, true) > -1)
+				return item;
+		}
+	}
+    return INVALID_ITEM_ID;
+}
+
+new stock shifthour;
+stock FixHour(hour)
+{
+	hour = 2+hour;
+	if (hour < 0)
+	{
+		hour = hour+24;
+	}
+	else if (hour > 23)
+	{
+		hour = hour-24;
+	}
+	shifthour = hour;
+	return 1;
+}
 
 #include <textdraws.pwn>
 
@@ -463,6 +562,10 @@ hook OnPlayerConnect(playerid)
 
 // ===== [ WEATHER SYSTEM ] =====
 #include <weather_system\core.pwn>
+
+// ===== [ CHOPSHOP SYSTEM ] =====
+#include <chopshop_system\core.pwn>
+#include <chopshop_system\commands.pwn>
 
 // ========== [ COMMANDS ] ==========
 #include <commands.pwn>

@@ -1442,6 +1442,16 @@
 		"body": "Weapon_GetObjectModel(${1:weaponid})",
 		"description": ""
 	},
+	"lsarp_Inventory_Show": {
+		"prefix": "Inventory_Show",
+		"body": "Inventory_Show(${1:Inventory:inventory}, ${2:playerid}, ${3:const title[]}, ${4:const dialog[] = ""}, ${5:const button1[] = ""}, ${6:const button2[] = ""})",
+		"description": ""
+	},
+	"lsarp_Inventory_ShowStr": {
+		"prefix": "Inventory_ShowStr",
+		"body": "Inventory_ShowStr(${1:Inventory:inventory}, ${2:playerid}, ${3:String:title}, ${4:const dialog[] = ""}, ${5:const button1[] = ""}, ${6:const button2[] = ""})",
+		"description": ""
+	},
 	// ==================================================
 	// ==========[weapon_system/enum.pwn]==========
 	// ==================================================

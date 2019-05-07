@@ -47,7 +47,7 @@ CMD:dai(playerid, params[])
     new
         id,
         text[128];
-    if(sscanf(params, "us[128]", id, text))
+    if(sscanf(params, "k<u>s[128]", id, text))
     {
         SendClientMessage(playerid, COLOR_ERROR, "/dai <playerid/partofname> <oggetto>");
         SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma");
@@ -65,6 +65,9 @@ CMD:dai(playerid, params[])
     
 	if(PendingRequestInfo[id][rdPending])
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta attiva!");
+	
+	if(!Character_IsAlive(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
 
 	if(!strcmp(text, "arma", true))
 	{
@@ -72,9 +75,9 @@ CMD:dai(playerid, params[])
 		new ammo = GetPlayerAmmo(playerid);
 		if(weapon == 0 || ammo <= 0)
 			return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma in mano!");
-		SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto di dare l'arma (%s) con %d proiettili a %s (%d).", Weapon_GetName(weapon), ammo, Character_GetOOCName(id), id);
+		SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto di dare l'arma (%s) con %d proiettili a %s.", Weapon_GetName(weapon), ammo, Character_GetOOCName(id));
 		SendClientMessage(playerid, -1, "Digita '{FF0000}/annulla arma{FFFFFF}'' per annullare.");
-		SendFormattedMessage(id, COLOR_GREEN, "%s (%d) vuole darti un'arma (%s) con %d proiettili.", Character_GetOOCName(playerid), playerid, Weapon_GetName(weapon), ammo);
+		SendFormattedMessage(id, COLOR_GREEN, "%s vuole darti un'arma (%s) con %d proiettili.", Character_GetOOCName(playerid), Weapon_GetName(weapon), ammo);
 		SendClientMessage(id, -1, "Digita '{00FF00}/accetta arma{FFFFFF}' per accettare.");
 
 		PendingRequestInfo[playerid][rdPending] = 1;
@@ -105,8 +108,8 @@ CMD:dai(playerid, params[])
         if(pGiveRequest[id] != -1)
             return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta attiva.");
         
-        SendFormattedMessage(id, COLOR_GREEN, "%s [%d] vuole darti la chiave del suo veicolo (%s).", Character_GetOOCName(playerid), playerid, GetVehicleName(vehicleid));
-        SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto a %s [%d] la chiave del tuo veicolo (%s).", Character_GetOOCName(id), id, GetVehicleName(vehicleid));
+        SendFormattedMessage(id, COLOR_GREEN, "%s [%d] vuole darti la chiave del suo veicolo (%s).", Character_GetOOCName(playerid), playerid, Vehicle_GetName(vehicleid));
+        SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto a %s [%d] la chiave del tuo veicolo (%s).", Character_GetOOCName(id), id, Vehicle_GetName(vehicleid));
 
         
     }*/
@@ -117,7 +120,7 @@ flags:paga(CMD_ALIVE_USER);
 CMD:paga(playerid, params[])
 {
 	new id, amount;
-	if(sscanf(params, "ud", id, amount))
+	if(sscanf(params, "k<u>d", id, amount))
 		return SendClientMessage(playerid, COLOR_ERROR, "/paga <playerid/partofname> <ammontare>");
 	if(id == playerid || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
@@ -125,11 +128,13 @@ CMD:paga(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai tutti questi soldi!");
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 2.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore!");
+	if(!Character_IsAlive(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
 	Character_GiveMoney(playerid, -amount);
 	Character_GiveMoney(id, amount);
 	Character_AMe(playerid, "prende dei soldi e li da a %s", Character_GetOOCName(id));
-	SendFormattedMessage(id, COLOR_GREEN, "%s (%d) ti ha dato $%d.", Character_GetOOCName(playerid), playerid, amount);
-	SendFormattedMessage(playerid, COLOR_GREEN, "Hai dato $%d a %s (%d)", amount, Character_GetOOCName(id), id);
+	SendFormattedMessage(id, COLOR_GREEN, "%s ti ha dato $%d.", Character_GetOOCName(playerid), amount);
+	SendFormattedMessage(playerid, COLOR_GREEN, "Hai dato $%d a %s.", amount, Character_GetOOCName(id));
 	return 1;
 }
 
@@ -167,7 +172,7 @@ CMD:accetta(playerid, params[])
 		{
 			AC_RemovePlayerWeapon(requestSender, weaponid);
 			AC_GivePlayerWeapon(playerid, weaponid, ammo);
-			SendFormattedMessage(playerid, COLOR_GREEN, "Hai accettato l'arma (%s) con %d proiettili da %s (%d).", Weapon_GetName(weaponid), ammo, Character_GetOOCName(requestSender), requestSender);
+			SendFormattedMessage(playerid, COLOR_GREEN, "Hai accettato l'arma (%s) con %d proiettili da %s.", Weapon_GetName(weaponid), ammo, Character_GetOOCName(requestSender));
 			
 			ResetPendingRequest(playerid);
 			ResetPendingRequest(requestSender);
@@ -176,7 +181,7 @@ CMD:accetta(playerid, params[])
 		{
 			AC_RemovePlayerWeapon(requestSender, weaponid);
 			Character_GiveItem(playerid, weaponid, 1, ammo);
-			SendFormattedMessage(playerid, COLOR_GREEN, "Hai accettato l'arma (%s) con %d proiettili da %s (%d).", Weapon_GetName(weaponid), ammo, Character_GetOOCName(requestSender), requestSender);
+			SendFormattedMessage(playerid, COLOR_GREEN, "Hai accettato l'arma (%s) con %d proiettili da %s.", Weapon_GetName(weaponid), ammo, Character_GetOOCName(requestSender));
 			SendClientMessage(playerid, COLOR_GREEN, "L'arma è stata messa nell'inventario poiché lo slot è occupato.");
 
 			ResetPendingRequest(playerid);
@@ -200,8 +205,8 @@ CMD:accetta(playerid, params[])
         if(!IsPlayerInRangeOfPlayer(playerid, pVehicleSeller[playerid], 10.0))
             return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore!");
 
-        SendFormattedMessage(pVehicleSeller[playerid], COLOR_GREEN, "%s (%d) ha accettato il tuo veicolo per $%d.", Character_GetOOCName(playerid), playerid, pVehicleSellingPrice[playerid]);
-        SendFormattedMessage(playerid, COLOR_GREEN, "Hai comprato il veicolo di %s (%d) per $%d.", Character_GetOOCName(pVehicleSeller[playerid]), pVehicleSeller[playerid], pVehicleSellingPrice[playerid]);
+        SendFormattedMessage(pVehicleSeller[playerid], COLOR_GREEN, "%s ha accettato il tuo veicolo per $%d.", Character_GetOOCName(playerid), pVehicleSellingPrice[playerid]);
+        SendFormattedMessage(playerid, COLOR_GREEN, "Hai comprato il veicolo di %s per $%d.", Character_GetOOCName(pVehicleSeller[playerid]), pVehicleSellingPrice[playerid]);
 
         Character_GiveMoney(playerid, -pVehicleSellingPrice[playerid]);
         Character_GiveMoney(pVehicleSeller[playerid], pVehicleSellingPrice[playerid]);
@@ -211,7 +216,7 @@ CMD:accetta(playerid, params[])
             sellerid = pVehicleSeller[playerid];
 
         new query[256];
-        mysql_format(gMySQL, query, sizeof(query), "UPDATE `player_vehicles` SET OwnerID = '%d' WHERE ID = '%d'", PlayerInfo[playerid][pID], VehicleInfo[vehicleid][vID]);
+        mysql_format(gMySQL, query, sizeof(query), "UPDATE `vehicles` SET OwnerID = '%d' WHERE ID = '%d'", PlayerInfo[playerid][pID], VehicleInfo[vehicleid][vID]);
         mysql_tquery(gMySQL, query);
 
         VehicleInfo[vehicleid][vOwnerID] = PlayerInfo[playerid][pID];
@@ -249,7 +254,7 @@ CMD:annulla(playerid, params[])
 	new toPlayer = PendingRequestInfo[playerid][rdToPlayer];
 	if(PendingRequestInfo[toPlayer][rdPending] && PendingRequestInfo[toPlayer][rdByPlayer] == playerid)
 	{
-		SendFormattedMessage(toPlayer, COLOR_ERROR, "%s (%d) ha annullato la richiesta.", Character_GetOOCName(playerid), playerid);
+		SendFormattedMessage(toPlayer, COLOR_ERROR, "%s ha annullato la richiesta.", Character_GetOOCName(playerid));
 		ResetPendingRequest(toPlayer);
 	}
 	SendClientMessage(playerid, COLOR_GREEN, "Hai annullato la richiesta attiva!");
