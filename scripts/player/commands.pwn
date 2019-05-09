@@ -45,10 +45,10 @@ flags:tog(CMD_USER);
 CMD:tog(playerid, params[])
 {
 	if(isnull(params) || strlen(params) > 16)
-		return SendClientMessage(playerid, COLOR_ERROR, "/tog <f - OOC - HUD - PM>");
-	if(!strcmp(params, "f", true))
+		return SendClientMessage(playerid, COLOR_ERROR, "/tog <fchat - hud - pm - ooc>");
+	if(!strcmp(params, "fchat", true))
 	{
-		if(Character_GetFaction(playerid) == -1)
+		if(Character_GetFaction(playerid) == INVALID_FACTION_ID)
 			return SendClientMessage(playerid, COLOR_ERROR, "Non fai parte di una fazione!");
 		Character_SetFactionOOCEnabled(playerid, !Character_IsFactionOOCEnabled(playerid));
 		if(Character_IsFactionOOCEnabled(playerid))
@@ -68,9 +68,13 @@ CMD:tog(playerid, params[])
 	{
 		pc_cmd_blockpm(playerid, "all");
 	}
+	else if(!strcmp(params, "ooc", true))
+	{
+		pc_cmd_blockb(playerid, "all");
+	}
 	else
 	{
-		return SendClientMessage(playerid, COLOR_ERROR, "/tog <f - OOC - HUD - PM>");
+		return SendClientMessage(playerid, COLOR_ERROR, "/tog <fchat - hud - pm - ooc>");
 	}
 	return 1;
 }
@@ -82,7 +86,7 @@ CMD:dom(playerid, params[])
 	   return SendClientMessage(playerid, COLOR_ERROR, "/dom <testo>");
     new seconds = (AccountInfo[playerid][aPremium] > 0) ? 10 : 30;
     if(GetTickCount() - pLastAdminQuestionTime[playerid] < 1000 * seconds)
-	   return SendFormattedMessage(playerid, COLOR_ERROR, "Puoi inviare una domanda ogni %d secondi!", seconds);
+	   return SendFormattedMessage(playerid, COLOR_ERROR, "Puoi inviare una domanda ogni %d secondi.", seconds);
     if(AccountInfo[playerid][aPremium])
     {
 	   SendMessageToAdmins(0, 0xEA7500FF, "(( [PREMIUM] %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);

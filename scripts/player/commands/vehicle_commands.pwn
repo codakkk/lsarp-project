@@ -271,14 +271,14 @@ CMD:vdisassembla(playerid, params[])
 }
 alias:vdisassembla("vdis");
 
-flags:vusa(CMD_ALIVE_USER);
+/*flags:vusa(CMD_ALIVE_USER);
 CMD:vusa(playerid, params[])
 {
 	new slotid;
 	if(sscanf(params, "d", slotid))
 		return SendClientMessage(playerid, COLOR_ERROR, "/vusa <slotid>");
 	return 1;
-}
+}*/
 
 flags:motore(CMD_ALIVE_USER);
 CMD:motore(playerid, params[])
@@ -297,12 +297,8 @@ CMD:motore(playerid, params[])
 			return SendClientMessage(playerid, COLOR_ERROR, "Non c'è benzina nel veicolo.");
 		if(Vehicle_GetHealth(vehicleid) <= 350.0)
 			return SendClientMessage(playerid, COLOR_ERROR, "Il motore del veicolo non funziona.");
-        if(VehicleInfo[vehicleid][vOwnerID] == PlayerInfo[playerid][pID] || pAdminDuty[playerid])
+        if(Vehicle_IsOwner(vehicleid, playerid, false))
         {
-            if((IsABike(vehicleid) || IsAMotorBike(vehicleid)) && VehicleInfo[vehicleid][vLocked])
-            {
-                return SendClientMessage(playerid, COLOR_ERROR, "Il veicolo ha la catena.");
-            }
             Character_AMe(playerid, "inserisce la chiave e la gira");
 			Character_Do(playerid, "Il motore si accende");
 			Vehicle_SetEngineOn(vehicleid);

@@ -26,58 +26,58 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
 {
     if(!response)
 	   return 0;
-    new pickupid = pLastPickup[playerid];
+    new pickupid = Character_GetLastPickup(playerid);
     if(pickupid == -1 || !IsPlayerInRangeOfPickup(playerid, pickupid, 2.0))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita della tua casa.");
 
 	new houseid = Character_GetNearHouseIDMenu(playerid);
 	if(houseid == -1)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita della tua casa.");
-    switch(listitem)
-    {
-	   case 0: // Apri/Chiudi Porta
-	   {
-		  House_SetLocked(houseid, !House_IsLocked(houseid));
-		  if(House_IsLocked(houseid))
-			 SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso la porta della casa!");
-		  else
-			 SendClientMessage(playerid, COLOR_GREEN, "Hai aperto la porta della casa!");
-		  House_Save(houseid);
-	   }
-	   case 1: // Show Inv
-	   {
-		  House_ShowInventory(houseid, playerid);
-	   }
-	   case 2: // Deposita Soldi
-	   {
-		  return Dialog_Show(playerid, Dialog_HouseDeposit, DIALOG_STYLE_INPUT, "Deposita soldi", "Inserisci l'ammontare di soldi che vuoi depositare in casa.", "Deposita", "Annulla");
-	   }
-	   case 3: // Ritira Soldi
-	   {
-		  return Dialog_Show(playerid, Dialog_HouseWithdraw, DIALOG_STYLE_INPUT, "Ritira soldi", "Inserisci l'ammontare di soldi che vuoi ritirare dalla casa.\n{00FF00}Cassa: $%d{FFFFFF}", "Ritira", "Annulla", House_GetMoney(houseid));
-	   }
-	   case 4: // Vendi 
-	   {
-		  return Dialog_Show(playerid, Dialog_HouseSell, DIALOG_STYLE_MSGBOX, "Vendi", "Sei sicuro di voler vendere la tua casa per {00FF00}$%d{FFFFFF}", "Vendi", "Annulla", House_GetPrice(houseid)/2);
-	   }
-	   case 5: // Vendi a giocatore
-	   {
-		  SendClientMessage(playerid, COLOR_ERROR, "Non ancora disponibile!");
-		  return 1;
-	   }
-	   case 6: // Cambia interior
-	   {
-		  new String:string, interiorid = House_GetInteriorID(houseid);
-		  for(new i = 0, sz = sizeof(allHouseInteriors); i < sz; ++i)
-		  {
+	switch(listitem)
+	{
+		case 0: // Apri/Chiudi Porta
+		{
+			House_SetLocked(houseid, !House_IsLocked(houseid));
+			if(House_IsLocked(houseid))
+				SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso la porta della casa!");
+			else
+				SendClientMessage(playerid, COLOR_GREEN, "Hai aperto la porta della casa!");
+			House_Save(houseid);
+		}
+		case 1: // Show Inv
+		{
+			House_ShowInventory(houseid, playerid);
+		}
+		case 2: // Deposita Soldi
+		{
+			return Dialog_Show(playerid, Dialog_HouseDeposit, DIALOG_STYLE_INPUT, "Deposita soldi", "Inserisci l'ammontare di soldi che vuoi depositare in casa.", "Deposita", "Annulla");
+		}
+		case 3: // Ritira Soldi
+		{
+			return Dialog_Show(playerid, Dialog_HouseWithdraw, DIALOG_STYLE_INPUT, "Ritira soldi", "Inserisci l'ammontare di soldi che vuoi ritirare dalla casa.\n{00FF00}Cassa: $%d{FFFFFF}", "Ritira", "Annulla", House_GetMoney(houseid));
+		}
+		case 4: // Vendi 
+		{
+			return Dialog_Show(playerid, Dialog_HouseSell, DIALOG_STYLE_MSGBOX, "Vendi", "Sei sicuro di voler vendere la tua casa per {00FF00}$%d{FFFFFF}", "Vendi", "Annulla", House_GetPrice(houseid)/2);
+		}
+		case 5: // Vendi a giocatore
+		{
+			SendClientMessage(playerid, COLOR_ERROR, "Non ancora disponibile!");
+			return 1;
+		}
+		case 6: // Cambia interior
+		{
+			new String:string, interiorid = House_GetInteriorID(houseid);
+			for(new i = 0, sz = sizeof(allHouseInteriors); i < sz; ++i)
+			{
 				if(allHouseInteriors[interiorid][iType] != allHouseInteriors[i][iType])
-			 	string += @("{FF0000}");
+				string += @("{FF0000}");
 				string += str_format("Interno %d", i);
 				string += @("{FFFFFF}\n");
-		  }
-		  return Dialog_Show_s(playerid, Dialog_HouseInterior, DIALOG_STYLE_LIST, @("Cambio Interior"), string, "Vendi", "Annulla");
-	   }
-    }
+			}
+			return Dialog_Show_s(playerid, Dialog_HouseInterior, DIALOG_STYLE_LIST, @("Cambio Interior"), string, "Vendi", "Annulla");
+		}
+	}
     return 1;
 }
 

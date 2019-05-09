@@ -51,19 +51,19 @@ stock bool:Vehicle_HasInventory(vehicleid)
     return list_valid(Vehicle_GetInventory(vehicleid));
 }
 
-hook OnPlayerVehicleSaved(vehicleid)
+hook OnVehicleSaved(vehicleid)
 {
     Vehicle_SaveInventory(vehicleid);
     return 1;
 }
 
-hook OnPlayerVehicleUnLoaded(vehicleid)
+hook OnVehicleUnloaded(vehicleid)
 {
     Vehicle_UnloadInventory(vehicleid);
     return 1;
 }
 
-hook OnPlayerVehicleLoaded(vehicleid)
+hook OnVehicleLoaded(vehicleid)
 {
     Vehicle_InitializeInventory(vehicleid);
     Vehicle_LoadInventory(vehicleid);

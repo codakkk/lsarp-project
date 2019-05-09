@@ -26,7 +26,7 @@
 		https://forum.sa-mp.com/showthread.php?t=489897 -> Bit 
 		https://forum.sa-mp.com/showthread.php?t=655688 -> Loot Zones
 		https://forum.sa-mp.com/showthread.php?t=558839 -> Walk anims etc
-
+		https://www.burgershot.gg/showthread.php?tid=314 -> PawnPlus extension MySQL CHECK IT OUT
 */
 #pragma warning disable 208 // actually just a good way to prevent warning: "function with tag result used before definition, forcing reparse".
 #define ENABLE_MAPS
@@ -255,7 +255,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 	new factionid = Character_GetFaction(playerid);
 	if(flags & CMD_POLICE)
 	{
-		if(factionid == -1 || Faction_GetType(factionid) != FACTION_TYPE_POLICE || !Character_IsAlive(playerid))
+		if(factionid == INVALID_FACTION_ID || Faction_GetType(factionid) != FACTION_TYPE_POLICE || !Character_IsAlive(playerid))
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Devi essere un membro della Guardia Nazionale in servizio per utilizzare questo comando.");
 			return 0;
@@ -263,7 +263,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 	}
 	else if(flags & CMD_MEDICAL)
 	{
-		if(factionid == -1 || Faction_GetType(factionid) != FACTION_TYPE_MEDICAL || !Character_IsAlive(playerid))
+		if(factionid == INVALID_FACTION_ID || Faction_GetType(factionid) != FACTION_TYPE_MEDICAL || !Character_IsAlive(playerid))
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Devi essere un medico in servizio per poter utilizzare questo comando!");
 			return 0;
@@ -271,7 +271,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 	}
 	else if(flags & CMD_GOVERNMENT)
 	{
-		if(factionid == -1 || Faction_GetType(factionid) != FACTION_TYPE_GOVERNAMENT || !Character_IsAlive(playerid))
+		if(factionid == INVALID_FACTION_ID || Faction_GetType(factionid) != FACTION_TYPE_GOVERNAMENT || !Character_IsAlive(playerid))
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Devi essere un membro del Governo in servizio per utilizzare questo comando.");
 			return 0;
@@ -279,7 +279,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 	}
 	else if(flags & CMD_ILLEGAL)
 	{
-		if(factionid == -1 || (Faction_GetType(factionid) != FACTION_TYPE_IMPORT_WEAPONS && Faction_GetType(factionid) != FACTION_TYPE_IMPORT_DRUGS) || !Character_IsAlive(playerid))
+		if(factionid == INVALID_FACTION_ID || (Faction_GetType(factionid) != FACTION_TYPE_IMPORT_WEAPONS && Faction_GetType(factionid) != FACTION_TYPE_IMPORT_DRUGS) || !Character_IsAlive(playerid))
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando!");
 			return 0;
@@ -522,6 +522,16 @@ stock FixHour(hour)
 	}
 	shifthour = hour;
 	return 1;
+}
+
+stock IsPlayerIDConnected(dbid)
+{
+	foreach(new i : Player)
+	{
+		if(Character_GetID(i) == dbid)
+			return i;
+	}
+	return INVALID_PLAYER_ID;
 }
 
 #include <textdraws.pwn>

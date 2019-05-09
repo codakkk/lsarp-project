@@ -49,11 +49,11 @@ CMD:abuildingfaction(playerid, params[])
 	}
 	if(!Building_IsValid(bid))
 		return SendClientMessage(playerid, COLOR_ERROR, "L'edificio inserito non è valdio!");
-	if(fid != -1 && !Faction_IsValid(fid))
+	if(fid != INVALID_FACTION_ID && !Faction_IsValid(fid))
 		return SendClientMessage(playerid, COLOR_ERROR, "La fazione inserita non è valida. Usa /afactionslist per una lista!");	
 	Building_SetFaction(bid, fid);
 	Building_Save(bid);
-	if(fid == -1)
+	if(fid == INVALID_FACTION_ID)
 		SendFormattedMessage(playerid, COLOR_GREEN, "L'edificio %d non appartiene più alla fazione ID %d.", bid, fid);
 	else
 		SendClientMessageStr(playerid, COLOR_GREEN, str_format("Hai settato l'edificio %d appartenente alla fazione %S (%d).", bid, Faction_GetNameStr(fid), fid));

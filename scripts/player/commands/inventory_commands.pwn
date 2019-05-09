@@ -125,7 +125,7 @@ CMD:deposita(playerid, params[])
 		if(!Character_HasSpaceForItem(playerid, itemid, 1))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario.");
 		Character_GiveItem(playerid, itemid, 1, ammo);
-		Player_InfoStr(playerid, str_format("Hai depositato: ~g~%s~w~~n~nell'inventario~n~con %d munizioni.", Weapon_GetName(itemid), ammo), true);
+		Player_InfoStr(playerid, str_format("Hai depositato: ~g~%s~w~~n~nell'inventario~n~con ~y~%d~w~ munizioni.", Weapon_GetName(itemid), ammo), true);
 	}
 	AC_RemovePlayerWeapon(playerid, itemid);
 	return 1;

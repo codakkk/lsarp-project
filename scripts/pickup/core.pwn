@@ -10,9 +10,9 @@ hook OnPlayerPickUpDynPickup(playerid, pickupid)
 	   elementid = PickupInfo[pickupid][elementID],
 	   E_ELEMENT_TYPE:type = PickupInfo[pickupid][elementType];
 
-    CallLocalFunction("OnPlayerPickUpElementPickup", "iiii", playerid, pickupid, elementid, _:type);
-
-    pLastPickup[playerid] = pickupid;
+	Character_SetLastPickup(playerid, pickupid);
+    
+	CallLocalFunction("OnPlayerPickUpElementPickup", "iiii", playerid, pickupid, elementid, _:type);
     return 1;
 }
 

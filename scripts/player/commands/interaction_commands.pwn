@@ -75,9 +75,9 @@ CMD:dai(playerid, params[])
 		new ammo = GetPlayerAmmo(playerid);
 		if(weapon == 0 || ammo <= 0)
 			return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma in mano!");
-		SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto di dare l'arma (%s) con %d proiettili a %s.", Weapon_GetName(weapon), ammo, Character_GetOOCName(id));
+		SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto di dare l'arma (%s) con %d proiettili a %s.", Weapon_GetName(weapon), ammo, Character_GetRolePlayName(id));
 		SendClientMessage(playerid, -1, "Digita '{FF0000}/annulla arma{FFFFFF}'' per annullare.");
-		SendFormattedMessage(id, COLOR_GREEN, "%s vuole darti un'arma (%s) con %d proiettili.", Character_GetOOCName(playerid), Weapon_GetName(weapon), ammo);
+		SendFormattedMessage(id, COLOR_GREEN, "%s vuole darti un'arma (%s) con %d proiettili.", Character_GetRolePlayName(playerid), Weapon_GetName(weapon), ammo);
 		SendClientMessage(id, -1, "Digita '{00FF00}/accetta arma{FFFFFF}' per accettare.");
 
 		PendingRequestInfo[playerid][rdPending] = 1;
@@ -132,9 +132,9 @@ CMD:paga(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
 	Character_GiveMoney(playerid, -amount);
 	Character_GiveMoney(id, amount);
-	Character_AMe(playerid, "prende dei soldi e li da a %s", Character_GetOOCName(id));
-	SendFormattedMessage(id, COLOR_GREEN, "%s ti ha dato $%d.", Character_GetOOCName(playerid), amount);
-	SendFormattedMessage(playerid, COLOR_GREEN, "Hai dato $%d a %s.", amount, Character_GetOOCName(id));
+	Character_AMe(playerid, "prende dei soldi e li da a %s", Character_GetRolePlayName(id));
+	SendFormattedMessage(id, COLOR_GREEN, "%s ti ha dato $%d.", Character_GetRolePlayName(playerid), amount);
+	SendFormattedMessage(playerid, COLOR_GREEN, "Hai dato $%d a %s.", amount, Character_GetRolePlayName(id));
 	return 1;
 }
 
@@ -221,7 +221,6 @@ CMD:accetta(playerid, params[])
 
         VehicleInfo[vehicleid][vOwnerID] = PlayerInfo[playerid][pID];
         set(VehicleInfo[vehicleid][vOwnerName], PlayerInfo[playerid][pName]);
-        gVehicleDestroyTime[vehicleid] = -1;
 
         pVehicleSellingPrice[playerid] = pVehicleSellingPrice[sellerid] = 0;
         pSellingVehicleID[playerid] = pSellingVehicleID[sellerid] = 0;

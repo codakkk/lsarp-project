@@ -5,7 +5,7 @@ CMD:low(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
     if(isnull(params) || strlen(params) > 128) 
         return SendClientMessage(playerid, COLOR_ERROR, "/low <testo>");
-    new String:string = str_format("%s dice a bassa voce: %s", Character_GetOOCName(playerid), params);
+    new String:string = str_format("%s dice a bassa voce: %s", Character_GetRolePlayName(playerid), params);
     ProxDetectorStr(playerid, 5.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
     return 1;
 }
@@ -13,12 +13,12 @@ CMD:low(playerid, params[])
 flags:pm(CMD_USER);
 CMD:pm(playerid, params[])
 {
-	if(Account_GetAdminLevel(playerid) < 2 && Account_GetPremiumLevel(playerid) < 3)
+	/*if(Account_GetAdminLevel(playerid) < 2 && Account_GetPremiumLevel(playerid) < 3)
 	{
 		new seconds = 5;
 		if(GetTickCount() - pLastPMTime[playerid] < 1000 * seconds)
 			return SendFormattedMessage(playerid, COLOR_ERROR, "Puoi inviare un PM ogni %d secondi!", seconds);
-	}
+	}*/
     new id, s[128];
     if(sscanf(params, "k<u>s[128]", id, s) || isnull(s) || strlen(s) > 128)
         return SendClientMessage(playerid, COLOR_ERROR, "/pm <playerid/partofname> <testo>");
@@ -43,7 +43,9 @@ CMD:pm(playerid, params[])
 	SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a %s (%d): %s", Character_GetOOCName(id), id, s);
 	
 	if(Character_IsAFK(id))
-		Player_Info(playerid, "Il giocatore a cui hai inviato il PM risulta AFK.");
+	{
+		Player_Info(playerid, "Il giocatore a cui hai inviato il ~y~PM~w~ risulta ~r~AFK~w~.");
+	}
 	
 	pLastPMTime[playerid] = GetTickCount();
     return 1;
@@ -54,7 +56,7 @@ CMD:shout(playerid, params[])
 {
     if(isnull(params) || strlen(params) > 128) 
         return SendClientMessage(playerid, COLOR_ERROR, "/s(hout) <testo>");
-    new String:string = str_format("%s grida: %s", Character_GetOOCName(playerid), params);
+    new String:string = str_format("%s grida: %s", Character_GetRolePlayName(playerid), params);
     ProxDetectorStr(playerid, 40.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
     return 1;
 }
@@ -127,7 +129,7 @@ CMD:b(playerid, params[])
     new String:string;
     if(pAdminDuty[playerid])
     {
-        string = str_format("(( {FF4500}%s{FFFFFF} [%d]: %s ))", AccountInfo[playerid][aName], playerid, params);
+        string = str_format("{FFFFFF}(( {FF4500}%s{FFFFFF} [%d]: %s ))", AccountInfo[playerid][aName], playerid, params);
         //ProxDetectorStr(playerid, 15.0, string, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, true);
 		ProxDetectorStr(playerid, 15.0, string, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, true);
     }
@@ -154,11 +156,11 @@ CMD:whisper(playerid, params[])
     if(!ProxDetectorS(3.0, playerid, id))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
     
-    SendTwoLinesMessage(playerid, COLOR_YELLOW, "%s sussurra: %s", Character_GetOOCName(playerid), text);
-    SendTwoLinesMessage(id, COLOR_YELLOW, "%s sussurra: %s", Character_GetOOCName(playerid), text);
+    SendTwoLinesMessage(playerid, COLOR_YELLOW, "%s sussurra: %s", Character_GetRolePlayName(playerid), text);
+    SendTwoLinesMessage(id, COLOR_YELLOW, "%s sussurra: %s", Character_GetRolePlayName(playerid), text);
 
 	Character_CharacterAMe(playerid, id, "sussurra qualcosa a");
-    // Character_AMe(playerid, "sussurra qualcosa a %s", Character_GetOOCName(id));
+    // Character_AMe(playerid, "sussurra qualcosa a %s", Character_GetRolePlayName(id));
     return 1;
 }
 alias:whisper("w", "sussurra");
@@ -179,7 +181,7 @@ CMD:cwhisper(playerid, params[])
     {
         if(!Character_IsLogged(p) || !IsPlayerInVehicle(p, vehicleid))
             continue;
-        SendTwoLinesMessage(p, COLOR_YELLOW, "[Veicolo] %s dice: %s", Character_GetOOCName(playerid), params);
+        SendTwoLinesMessage(p, COLOR_YELLOW, "[Veicolo] %s dice: %s", Character_GetRolePlayName(playerid), params);
     }
     return 1;
 }
