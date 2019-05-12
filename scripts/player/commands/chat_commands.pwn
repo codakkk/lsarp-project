@@ -34,7 +34,7 @@ CMD:pm(playerid, params[])
 
 	if(Account_GetAdminLevel(playerid) < 1)
 	{
-		if(Iter_Contains(pTogglePM[id], playerid) || !Account_HasPMAllEnabled(playerid))
+		if(Iter_Contains(pTogglePM[id], playerid) || !Account_HasPMAllEnabled(id))
 			return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha disabilitato i PM.");
 	}
     

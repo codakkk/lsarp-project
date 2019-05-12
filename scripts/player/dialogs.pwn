@@ -168,7 +168,7 @@ Dialog:Dialog_InvSelectAddAmmo(playerid, response, listitem, inputtext[])
     AC_GivePlayerWeapon(playerid, weaponid, ammo);
     Character_DecreaseItemAmount(playerid, ammoType, ammo);
 	
-	Character_AMe(playerid, "prende delle munizioni e le inserisce nell'arma");
+	Character_AMe(playerid, "prende delle munizioni e le inserisce nell'arma.");
 	
 	Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~~n~con ~g~%d~w~ proiettili.", Weapon_GetName(weaponid), ammo), true);
 

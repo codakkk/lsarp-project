@@ -199,6 +199,8 @@ CMD:blockpm(playerid, params[])
         new id;
         if(sscanf(params, "k<u>", id))
             return SendClientMessage(playerid, COLOR_ERROR, "/blockpm <all o playerid/partofname>");
+		if(Account_HasPMAllEnabled(playerid))
+			return SendClientMessage(playerid, COLOR_ERROR, "Hai già disabilitato i PM da e verso tutti.");
         if(id == playerid || !IsPlayerConnected(id) || !Character_IsLogged(id))
             return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
         if(Iter_Contains(pTogglePM[playerid], id))
@@ -232,6 +234,8 @@ CMD:blockb(playerid, params[])
         new id;
         if(sscanf(params, "k<u>", id))
             return SendClientMessage(playerid, COLOR_ERROR, "/blockb <all o playerid/partofname>");
+		if(!Account_HasOOCEnabled(playerid))
+			return SendClientMessage(playerid, COLOR_ERROR, "Hai già disabilitato la chat OOC da e verso tutti.");
         if(id == playerid || !IsPlayerConnected(id) || !Character_IsLogged(id))
             return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
         if(Iter_Contains(pToggleOOC[playerid], id))

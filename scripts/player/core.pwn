@@ -19,6 +19,7 @@
 #include <player\components\care.pwn>
 #include <player\components\options.pwn>
 #include <player\components\afk.pwn>
+#include <player\components\damage_system.pwn>
 #include <YSI_Coding\y_hooks>
 
 

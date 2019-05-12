@@ -10,6 +10,11 @@ stock Inventory:Vehicle_InitializeInventory(vehicleid)
 {
     //if(VehicleInfo[vehicleid][vModel] == 0)
 	   //return 0;
+	if(bool:map_has_key(VehicleInventory, vehicleid))
+	{
+		printf("Unable to initialize vehicle id %d inventory.", vehicleid);
+		return Inventory:0;	
+	}
     new Inventory:inv = Inventory_New(2);
     map_add(VehicleInventory, vehicleid, List:inv);
     printf("Vehicle %d Inventory initialized", vehicleid);
@@ -18,8 +23,11 @@ stock Inventory:Vehicle_InitializeInventory(vehicleid)
 
 stock Vehicle_UnloadInventory(vehicleid)
 {
-    map_remove_deep(VehicleInventory, vehicleid);
-    printf("Vehicle %d Inventory unloaded", vehicleid);
+	if(map_has_key(VehicleInventory, vehicleid))
+	{
+    	map_remove_deep(VehicleInventory, vehicleid);
+    	printf("Vehicle %d Inventory unloaded", vehicleid);
+	}
     return 1;
 }
 
@@ -239,8 +247,8 @@ Dialog:Dialog_VehicleInvAction(playerid, response, listitem, inputtext[])
 				return SendClientMessage(playerid, COLOR_ERROR, "Hai già un'arma equipaggiata.");
 			new ammoType = Weapon_GetAmmoType(itemid),
 				extra = Vehicle_GetSlotExtra(vehicleid, pSelectedListItem[playerid]),
-				ammo = 0,
-				invAmmo = Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType);
+				ammo = 0;
+				//invAmmo = Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType);
 			
 			if(Weapon_RequireAmmo(itemid))
 			{
@@ -255,7 +263,7 @@ Dialog:Dialog_VehicleInvAction(playerid, response, listitem, inputtext[])
 			if(ammo > 0)
 			{
 				SendFormattedMessage(playerid, COLOR_GREEN, "Hai preso %s (Munizioni: %d) dal veicolo.", ServerItem_GetName(itemid), ammo);
-				Character_AMe(playerid, "prende un'arma dal veicolo");
+				Character_AMe(playerid, "prende un'arma dal veicolo.");
 				AC_GivePlayerWeapon(playerid, itemid, ammo);
 				if(Weapon_IsGrenade(itemid))
 					Vehicle_DecreaseSlotAmount(vehicleid, pSelectedListItem[playerid], ammo);

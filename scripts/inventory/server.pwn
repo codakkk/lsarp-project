@@ -116,6 +116,7 @@ stock ServerItem_IsFood(itemid) return ServerItem[itemid][sitemType] == ITEM_TYP
 stock ServerItem_IsDrink(itemid) return ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_DRINK;
 stock ServerItem_IsMedik(itemid) return ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_MEDIK;
 stock ServerItem_IsBag(itemid) return ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_BAG;
+stock ServerItem_IsDrug(itemid) return ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_DRUG;
 
 stock ServerItem_GetMaxStack(itemid) return ServerItem[itemid][sitemMaxStack];
 

@@ -1,6 +1,7 @@
 #include <YSI_Coding\y_hooks>
 
 #define MAX_VEHICLES_PER_PLAYER			20
+#define MAX_DAMAGES_PER_PLAYER			(24)
 #define PENDING_REQUEST_TIME			1
 
 enum E_PLAYER_DATA
@@ -61,7 +62,7 @@ new stock
 ;
 
 // Text3D
-new
+new stock
 	Text3D:pMaskText3D[MAX_PLAYERS]
 ;
 enum E_PLAYER_RESTORE_DATA
@@ -156,3 +157,21 @@ new
 	PlayerDeathState[MAX_PLAYERS][e_DeathState],
 	pDeathState[MAX_PLAYERS char] // 0 = Not dead, 1 = Waiting for healing, 2 = Death
 ;
+
+enum e_PlayerDrugAddictionInfo
+{
+	pLastUsedDrug,
+	pLastUsedDrugTime,
+};
+new PlayerDrugAddictionInfo[MAX_PLAYERS][e_PlayerDrugAddictionInfo];
+
+enum e_CharacterDamageInfo
+{
+	damageUsed,
+	damageIssuerName[MAX_PLAYER_NAME],
+	damageWeapon,
+	Float:damageAmount,
+	damageBodyPart,
+};
+new 
+	CharacterDamageInfo[MAX_PLAYERS][MAX_DAMAGES_PER_PLAYER][e_CharacterDamageInfo];

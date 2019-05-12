@@ -125,7 +125,7 @@ CMD:aiuto(playerid, params[])
 	SendClientMessage(playerid, -1, "[GENERALE]: /afk - /stilechat - /stilelotta - /stilecamminata");
     SendClientMessage(playerid, -1, "[CHAT]: /b - /me - /ame - /low - /melow - /do - /dolow - (/s)hout");
     SendClientMessage(playerid, -1, "[CHAT]: (/w)hisper - (/cw)hisper - /pm - /blockb - /blockpm");
-    SendClientMessage(playerid, -1, "[ALTRO]: /animlist - /vehcmds - /invcmds - /zpoints");
+    SendClientMessage(playerid, -1, "[ALTRO]: /animlist - /vcmds - /invcmds - /zpoints");
 	new factionid = Character_GetFaction(playerid);
 	if(factionid != -1)
 	{
@@ -158,10 +158,10 @@ CMD:faiuto(playerid, params[])
 	return 1;
 }
 
-flags:vehcmds(CMD_ALIVE_USER);
-CMD:vehcmds(playerid, params[])
+flags:vcmds(CMD_ALIVE_USER);
+CMD:vcmds(playerid, params[])
 {
-	SendClientMessage(playerid, -1, "[VEICOLI]: /motore - /vmenu - /vapri - /vchiudi");
+	SendClientMessage(playerid, -1, "[VEICOLI]: /motore - (/fin)estrino - /vmenu - /vapri - /vchiudi");
 	SendClientMessage(playerid, -1, "[VEICOLI]: /vluci - /vparcheggia - /vpark - /vbagagliaio");
 	SendClientMessage(playerid, -1, "[VEICOLI]: (/vdis)assembla - (/vdep)osita");
 	return 1;
@@ -202,13 +202,31 @@ flags:id(CMD_ALIVE_USER);
 CMD:id(playerid, params[])
 {
 	new id;
-	if(sscanf(params, "k<u>", id))
+	if(isnull(params))
 		return SendClientMessage(playerid, COLOR_ERROR, "/id <playerid/partofname>");
-	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
-	if(Character_IsMasked(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
-	SendFormattedMessage(playerid, COLOR_GREEN, "%s (%d) - Livello: %d.", Character_GetOOCName(id), id, Character_GetLevel(id));
+	if(IsNumeric(params))
+	{
+		id = strval(params);
+		if(!IsPlayerConnected(id) || !Character_IsLogged(id))
+			return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
+		SendFormattedMessage(playerid, -1, "%s (%d) - Livello: %d", Character_GetOOCName(id), id, Character_GetLevel(id));
+	}
+	else
+	{
+		new c = 0;
+		foreach(new i : Player)
+		{
+			if(!Character_IsLogged(i))
+				continue;
+			if(strfind(Character_GetOOCName(i), params, true) != -1)
+			{
+				SendFormattedMessage(playerid, -1, "%s (%d) - Livello: %d", Character_GetOOCName(i), i, Character_GetLevel(i));
+				c++;
+			}
+		}
+		if(c == 0)
+			SendClientMessage(playerid, COLOR_ERROR, "Giocatore non collegato.");
+	}
 	return 1;
 }
 

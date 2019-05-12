@@ -37,6 +37,36 @@ CMD:vmenu(playerid, params[])
     return 1;
 }
 
+flags:finestrino(CMD_ALIVE_USER);
+CMD:finestrino(playerid, params[])
+{
+	new vehicleid = GetPlayerVehicleID(playerid);
+	if(vehicleid <= 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei in un veicolo.");
+	if(IsABike(vehicleid) || IsAMotorBike(vehicleid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questa tipologia di veicolo.");
+	
+	new w[4];
+	new window = GetPlayerVehicleSeat(playerid);
+	
+	GetVehicleParamsCarWindows(vehicleid, w[0], w[1], w[2], w[3]);
+
+	if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
+	{
+		if(strlen(params) > 0)
+			window = strval(params);
+		else
+			return SendClientMessage(playerid, COLOR_ERROR, "(/fin)estrino <0 - 3>");
+	} 
+
+	if(window < 0 || window > 3)return
+	    SendClientMessage(playerid, COLOR_ERROR, "Finestrino inesistente. (0 - 3)");
+	w[window] = !w[window];
+	SetVehicleParamsCarWindows(vehicleid, w[0], w[1], w[2], w[3]);
+	Character_AMe(playerid, w[window] ? ("chiude il finestrino") : ("apre il finestrino"));
+	return 1;
+}
+
 flags:vluci(CMD_ALIVE_USER);
 CMD:vluci(playerid, params[])
 {
@@ -55,7 +85,7 @@ flags:vparcheggia(CMD_ALIVE_USER);
 CMD:vparcheggia(playerid, params[])
 {
 	new vehicleid = GetPlayerVehicleID(playerid);
-	if(vehicleid <= 0 || Vehicle_GetOwnerID(vehicleid) != Character_GetID(playerid))
+	if(vehicleid <= 0 || Vehicle_IsOwner(vehicleid, playerid, true))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un tuo veicolo.");
 
 	new 
@@ -87,7 +117,7 @@ CMD:vchiudi(playerid, params[])
     {
         return SendClientMessage(playerid, -1, "Prima spegni il motore.");
     }*/
-	if(VehicleInfo[vehicleid][vOwnerID] == PlayerInfo[playerid][pID] || (Vehicle_HasFaction(vehicleid) && Vehicle_GetFaction(vehicleid) == Character_GetFaction(playerid)))
+	if(Vehicle_IsOwner(vehicleid, playerid, false))
 	{
 		if(Vehicle_IsLocked(vehicleid))
 			return SendClientMessage(playerid, -1, "Il veicolo è già chiuso.");
@@ -125,9 +155,9 @@ CMD:vapri(playerid, params[])
 	if(vehicleid == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono veicoli nelle vicinanze.");
 	
-	if(VehicleInfo[vehicleid][vOwnerID] == PlayerInfo[playerid][pID] || (Vehicle_HasFaction(vehicleid) && Vehicle_GetFaction(vehicleid) == Character_GetFaction(playerid)))
+	if(Vehicle_IsOwner(vehicleid, playerid, false))
 	{
-		if(!VehicleInfo[vehicleid][vLocked])
+		if(!Vehicle_IsLocked(vehicleid))
 			return SendClientMessage(playerid, -1, "Il veicolo è già aperto.");
 		
 		/*if(IsABike(vehicleid) || IsAMotorBike(vehicleid))
@@ -160,6 +190,8 @@ CMD:vbagagliaio(playerid, params[])
 		if(!IsPlayerInRangeOfVehicle(playerid, vehicleid, 3.5))
 			return SendClientMessage(playerid, COLOR_GREEN, "Non sei vicino al veicolo!");
 	}
+	if(!Vehicle_IsOwner(vehicleid, playerid, false))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei il proprietario di questo veicolo.");
 	/*if(Vehicle_IsTrunkOpened(vehicleid))
 		Vehicle_CloseTrunk(vehicleid);
 	else
@@ -182,9 +214,15 @@ CMD:vdeposita(playerid, params[])
 	}
 	else
 	{
+		if(!Vehicle_IsValid(vehicleid))
+			return SendClientMessage(playerid, COLOR_ERROR, "Veicolo");
+
 		if(!IsPlayerInRangeOfVehicle(playerid, vehicleid, 3.5))
 			return SendClientMessage(playerid, COLOR_GREEN, "Non sei vicino al veicolo.");
 	}
+
+	if(!Vehicle_IsOwner(vehicleid, playerid, false))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei il proprietario di questo veicolo.");
 
 	new itemid = GetPlayerWeapon(playerid);
 	if(itemid == 0)
@@ -222,6 +260,8 @@ CMD:vdisassembla(playerid, params[])
 	new vehicleid = Character_GetClosestVehicle(playerid, 3.0);
 	if(vehicleid == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino ad un veicolo.");
+	if(!Vehicle_IsOwner(vehicleid, playerid, false))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei il proprietario di questo veicolo.");
 	if(sscanf(params, "d", slotid))
 	{
 		itemid = GetPlayerWeapon(playerid);

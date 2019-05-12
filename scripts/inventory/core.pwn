@@ -465,7 +465,8 @@ stock Inventory_InternalShow(Inventory:inventory, playerid, const title[], const
 		return 0;
 	if(Account_HasInvModeEnabled(playerid))
 	{
-		SendClientMessage(playerid, COLOR_GREEN, "Should show text inventory");
+		return Inventory_ShowInChat(inventory, playerid, title);
+		//SendClientMessage(playerid, COLOR_GREEN, "Should show text inventory");
 	}
 	else
 	{

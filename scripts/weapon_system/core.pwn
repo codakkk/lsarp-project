@@ -26,11 +26,17 @@ hook OnGameModeInit()
 
 hook OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
 {
+	printf("Weapon System");
 	if(pAdminDuty[playerid] && AccountInfo[playerid][aAdmin] > 1)
-		return 1;
+		return Y_HOOKS_BREAK_RETURN_1;
+
+	//Uncomment if we wanna hide Fall damages from /danni
+	//if(weaponid == 51 || weaponid == 49 || weaponid == 54)
+		//return 1;
+	
 	new ammo;
 	if(issuerid != INVALID_PLAYER_ID && !AC_AntiWeaponCheck(issuerid, weaponid, ammo) && AccountInfo[playerid][aAdmin] < 1)
-		return 1;
+		return Y_HOOKS_BREAK_RETURN_1;
 
 	new 
 		Float:weaponDamage,
@@ -206,7 +212,9 @@ stock Weapon_GetName(weaponid)
 		"Fucile da Cecchino", "Lanciamissili", "HS Rocket", 
 		"Lanciafiamme", "Minigun", "Carica C4", "Detonatore",
 		"Bomboletta Spray", "Estintore", "Fotocamera", 
-		"Visore Notturno", "Visore Termico", "Paracadute"
+		"Visore Notturno", "Visore Termico", "Paracadute",
+		"Invalid", "Invalid", "Veicolo", "Eliche Elicottero", 
+		"Esplosione", "Invalid", "Annegamento", "Caduta"
 	};
     return gsWeaponNames[weaponid];
 }

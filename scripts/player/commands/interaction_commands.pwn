@@ -132,7 +132,7 @@ CMD:paga(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
 	Character_GiveMoney(playerid, -amount);
 	Character_GiveMoney(id, amount);
-	Character_AMe(playerid, "prende dei soldi e li da a %s", Character_GetRolePlayName(id));
+	Character_AMe(playerid, "prende dei soldi e li da a %s.", Character_GetRolePlayName(id));
 	SendFormattedMessage(id, COLOR_GREEN, "%s ti ha dato $%d.", Character_GetRolePlayName(playerid), amount);
 	SendFormattedMessage(playerid, COLOR_GREEN, "Hai dato $%d a %s.", amount, Character_GetRolePlayName(id));
 	return 1;
@@ -313,9 +313,11 @@ CMD:rimuovi(playerid, params[])
         Character_GiveItem(playerid, pInventoryBag[playerid], 1);
         Character_SetBag(playerid, 0);
         SendClientMessage(playerid, COLOR_GREEN, "Lo zaino è stato rimesso nel tuo inventario!");
-        Character_AMe(playerid, "si toglie lo zaino");
+        Character_AMe(playerid, "si toglie lo zaino.");
         return 1;
     }
+	else
+		SendClientMessage(playerid, COLOR_ERROR, "Oggetti: zaino");
     return 1;
 }
 
