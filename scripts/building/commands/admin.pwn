@@ -14,7 +14,7 @@ CMD:gotobuilding(playerid, params[])
 	if(sscanf(params, "d", id))
 		return SendClientMessage(playerid, COLOR_ERROR, "/gotobuilding <buildingid>");
 	if(!Building_IsValid(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "L'edificio inserito non è valido!");
+		return SendClientMessage(playerid, COLOR_ERROR, "L'edificio inserito non è valido.");
 	new Float:x, Float:y, Float:z;
 	Building_GetEnterPos(id, x, y, z);
 	SetPlayerPos(playerid, x, y, z);
@@ -28,7 +28,7 @@ CMD:abcreate(playerid, params[])
 {
     new freeid = Iter_Free(Buildings);
     if(freeid < 0)
-	   return SendClientMessage(playerid, COLOR_ERROR, "Sono stati creati troppi edifici!");
+	   return SendClientMessage(playerid, COLOR_ERROR, "Sono stati creati troppi edifici.");
     
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
@@ -48,9 +48,9 @@ CMD:abuildingfaction(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Utilizza -1 come factionid per rimuoverla.");
 	}
 	if(!Building_IsValid(bid))
-		return SendClientMessage(playerid, COLOR_ERROR, "L'edificio inserito non è valdio!");
+		return SendClientMessage(playerid, COLOR_ERROR, "L'edificio inserito non è valdio.");
 	if(fid != INVALID_FACTION_ID && !Faction_IsValid(fid))
-		return SendClientMessage(playerid, COLOR_ERROR, "La fazione inserita non è valida. Usa /afactionslist per una lista!");	
+		return SendClientMessage(playerid, COLOR_ERROR, "La fazione inserita non è valida. Usa /afactionslist per una lista.");	
 	Building_SetFaction(bid, fid);
 	Building_Save(bid);
 	if(fid == INVALID_FACTION_ID)
@@ -124,7 +124,7 @@ CMD:abuildingname(playerid, params[])
 	   return SendClientMessage(playerid, COLOR_ERROR, "Invalid Building ID");
     
     if(strlen(name) > MAX_BUILDING_NAME)
-	   return SendClientMessage(playerid, COLOR_ERROR, "Nome troppo lungo!");
+	   return SendClientMessage(playerid, COLOR_ERROR, "Nome troppo lungo.");
 
 	if(Building_SetName(id, name))
 	{
@@ -153,9 +153,9 @@ CMD:abuildingownable(playerid, params[])
     {
 		Building_Save(id);
 		if(ownable)
-			SendFormattedMessage(playerid, COLOR_GREEN, "Il building %d è ora acquistabile!", id);
+			SendFormattedMessage(playerid, COLOR_GREEN, "Il building %d è ora acquistabile.", id);
 		else
-			SendFormattedMessage(playerid, COLOR_GREEN, "Il building %d non è più acquistabile!", id);
+			SendFormattedMessage(playerid, COLOR_GREEN, "Il building %d non è più acquistabile.", id);
 		Log(AccountInfo[playerid][aName], "", "/abuildingownable", id);
     }
     else
@@ -262,7 +262,7 @@ CMD:abuildingtype(playerid, params[])
 	   return SendClientMessage(playerid, COLOR_ERROR, "Invalid Building ID");
 
 	if(!Building_SetType(id, type))
-		return SendClientMessage(playerid, COLOR_ERROR, "Tipo di edificio non valido!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Tipo di edificio non valido.");
 
 	Building_Save(id);
 

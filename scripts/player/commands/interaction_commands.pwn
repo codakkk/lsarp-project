@@ -5,10 +5,10 @@ CMD:ritirastipendio(playerid, params[])
 {
 	new pickupid = Character_GetLastPickup(playerid), id, E_ELEMENT_TYPE:eType;
 	if(!Pickup_GetInfo(pickupid, id, eType) || eType != ELEMENT_TYPE_PAYCHECK)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei al punto esatto per ritirare lo stipendio!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei al punto esatto per ritirare lo stipendio.");
 	new paycheck = Character_GetPayCheck(playerid);
 	if(paycheck <= 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non hai uno stipendio da ritirare!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non hai uno stipendio da ritirare.");
 	
 	Character_GiveMoney(playerid, paycheck, "paycheck");
 	Character_SetPayCheck(playerid, 0);
@@ -24,7 +24,7 @@ CMD:entra(playerid, params[])
     if(Pickup_GetInfo(pickupid, id, type))
     	Character_Enter(playerid, pickupid, id, type);
     else 
-		SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata di un edificio!");
+		SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata di un edificio.");
     return 1;
 }
 
@@ -35,7 +35,7 @@ CMD:esci(playerid, params[])
     if(Pickup_GetInfo(pickupid, id, type))
     	Character_Exit(playerid, pickupid, id, type);
     else
-		SendClientMessage(playerid, COLOR_ERROR, "Non sei all'uscita di un edificio!");
+		SendClientMessage(playerid, COLOR_ERROR, "Non sei all'uscita di un edificio.");
     return 1;
 }
 
@@ -43,7 +43,7 @@ flags:dai(CMD_ALIVE_USER);
 CMD:dai(playerid, params[])
 {
 	if(PendingRequestInfo[playerid][rdPending])
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
     new
         id,
         text[128];
@@ -55,16 +55,16 @@ CMD:dai(playerid, params[])
     }
     
     if(id < 0 || id >= MAX_PLAYERS || !Character_IsLogged(id))
-        return SendClientMessage(playerid, COLOR_ERROR, "Giocatore non connesso!");
+        return SendClientMessage(playerid, COLOR_ERROR, "Giocatore non connesso.");
     
 	if(id == playerid)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi usare questo comando su te stesso!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi usare questo comando su te stesso.");
 
     if(!IsPlayerInRangeOfPlayer(playerid, id, 3.0))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore!");
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
     
 	if(PendingRequestInfo[id][rdPending])
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta attiva!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta attiva.");
 	
 	if(!Character_IsAlive(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
@@ -74,7 +74,7 @@ CMD:dai(playerid, params[])
 		new weapon = GetPlayerWeapon(playerid);
 		new ammo = GetPlayerAmmo(playerid);
 		if(weapon == 0 || ammo <= 0)
-			return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma in mano!");
+			return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma in mano.");
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto di dare l'arma (%s) con %d proiettili a %s.", Weapon_GetName(weapon), ammo, Character_GetRolePlayName(id));
 		SendClientMessage(playerid, -1, "Digita '{FF0000}/annulla arma{FFFFFF}'' per annullare.");
 		SendFormattedMessage(id, COLOR_GREEN, "%s vuole darti un'arma (%s) con %d proiettili.", Character_GetRolePlayName(playerid), Weapon_GetName(weapon), ammo);
@@ -86,7 +86,7 @@ CMD:dai(playerid, params[])
 		PendingRequestInfo[playerid][rdItem] = weapon;
 		PendingRequestInfo[playerid][rdSlot] = Weapon_GetSlot(weapon);
 		PendingRequestInfo[playerid][rdAmount] = 1;
-		PendingRequestInfo[playerid][rdType] = PENDING_TYPE_WEAPON;
+		PendingRequestInfo[playerid][rdType] = REQUEST_TYPE_WEAPON;
 		
 		PendingRequestInfo[id][rdPending] = 1;
 		PendingRequestInfo[id][rdByPlayer] = playerid;
@@ -94,7 +94,7 @@ CMD:dai(playerid, params[])
 		PendingRequestInfo[id][rdItem] = weapon;
 		PendingRequestInfo[id][rdSlot] = Weapon_GetSlot(weapon);
 		PendingRequestInfo[id][rdAmount] = 1;
-		PendingRequestInfo[id][rdType] = PENDING_TYPE_WEAPON;
+		PendingRequestInfo[id][rdType] = REQUEST_TYPE_WEAPON;
 	}
 	else
 	{
@@ -125,9 +125,9 @@ CMD:paga(playerid, params[])
 	if(id == playerid || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 	if(amount < 0 || amount > Character_GetMoney(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non hai tutti questi soldi!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non hai tutti questi soldi.");
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 2.0))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
 	if(!Character_IsAlive(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
 	Character_GiveMoney(playerid, -amount);
@@ -141,20 +141,20 @@ CMD:paga(playerid, params[])
 flags:accetta(CMD_USER);
 CMD:accetta(playerid, params[])
 {
-    if(isnull(params) || strlen(params) > 30)
-    {
-        SendClientMessage(playerid, COLOR_ERROR, "/accetta <oggetto>");
-        SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma, oggetto, morte, veicolo");
-        return 1;
-    }
+	if(isnull(params) || strlen(params) > 30)
+	{
+		SendClientMessage(playerid, COLOR_ERROR, "/accetta <oggetto>");
+		SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma, oggetto, morte, veicolo");
+		return 1;
+	}
 	if( strcmp(params, "morte", true) && strcmp(params, "cure", true) && !Character_IsAlive(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	if(!strcmp(params, "arma", true))
 	{
-		if(!PendingRequestInfo[playerid][rdPending] || PendingRequestInfo[playerid][rdType] != PENDING_TYPE_WEAPON)
+		if(!PendingRequestInfo[playerid][rdPending] || PendingRequestInfo[playerid][rdType] != REQUEST_TYPE_WEAPON)
 			return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta d'arma attiva.");
 		if(!IsPlayerInRangeOfPlayer(playerid, PendingRequestInfo[playerid][rdByPlayer], 5.0))
-			return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore!");
+			return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
 		new slotid = PendingRequestInfo[playerid][rdSlot],
 			weaponid = PendingRequestInfo[playerid][rdItem],
 			tempWeapon = 0,
@@ -199,11 +199,11 @@ CMD:accetta(playerid, params[])
     {
         // I must check if seller disconnected (must clear data too)
         if(! (pVehicleSeller[playerid] != -1 && pVehicleSellingTo[pVehicleSeller[playerid]] == playerid))
-            return SendClientMessage(playerid, COLOR_ERROR, "Il venditore si è disconnesso o non esiste!");
+            return SendClientMessage(playerid, COLOR_ERROR, "Il venditore si è disconnesso o non esiste.");
         if(Character_GetMoney(playerid) < pVehicleSellingPrice[playerid])
-            return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi!");
+            return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi.");
         if(!IsPlayerInRangeOfPlayer(playerid, pVehicleSeller[playerid], 10.0))
-            return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore!");
+            return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
 
         SendFormattedMessage(pVehicleSeller[playerid], COLOR_GREEN, "%s ha accettato il tuo veicolo per $%d.", Character_GetOOCName(playerid), pVehicleSellingPrice[playerid]);
         SendFormattedMessage(playerid, COLOR_GREEN, "Hai comprato il veicolo di %s per $%d.", Character_GetOOCName(pVehicleSeller[playerid]), pVehicleSellingPrice[playerid]);
@@ -249,14 +249,14 @@ CMD:annulla(playerid, params[])
         return Dealership_PlayerCancelBuy(playerid);
     }
 	if(!PendingRequestInfo[playerid][rdPending])
-		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta attiva!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta attiva.");
 	new toPlayer = PendingRequestInfo[playerid][rdToPlayer];
 	if(PendingRequestInfo[toPlayer][rdPending] && PendingRequestInfo[toPlayer][rdByPlayer] == playerid)
 	{
 		SendFormattedMessage(toPlayer, COLOR_ERROR, "%s ha annullato la richiesta.", Character_GetOOCName(playerid));
 		ResetPendingRequest(toPlayer);
 	}
-	SendClientMessage(playerid, COLOR_GREEN, "Hai annullato la richiesta attiva!");
+	SendClientMessage(playerid, COLOR_GREEN, "Hai annullato la richiesta attiva.");
 	ResetPendingRequest(playerid);
 	return 1;
 }
@@ -289,7 +289,7 @@ CMD:compra(playerid, params[])
 			return Character_BuyHouse(playerid, eID);
 		}
 	}
-    return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando qui!");
+    return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando qui.");
 }
 
 flags:rimuovi(CMD_ALIVE_USER);
@@ -307,12 +307,12 @@ CMD:rimuovi(playerid, params[])
     {
         new Inventory:playerInv = Character_GetInventory(playerid);
         if(!Character_HasBag(playerid))
-            return SendClientMessage(playerid, COLOR_ERROR, "Non stai indossando uno zaino!");
+            return SendClientMessage(playerid, COLOR_ERROR, "Non stai indossando uno zaino.");
         if(Inventory_GetUsedSpace(playerInv) > PLAYER_INVENTORY_START_SIZE-1)
-            return SendClientMessage(playerid, COLOR_ERROR, "Non puoi toglierti lo zaino se hai piu' di 9 oggetti!");
+            return SendClientMessage(playerid, COLOR_ERROR, "Non puoi toglierti lo zaino se hai piu' di 9 oggetti.");
         Character_GiveItem(playerid, pInventoryBag[playerid], 1);
         Character_SetBag(playerid, 0);
-        SendClientMessage(playerid, COLOR_GREEN, "Lo zaino è stato rimesso nel tuo inventario!");
+        SendClientMessage(playerid, COLOR_GREEN, "Lo zaino è stato rimesso nel tuo inventario.");
         Character_AMe(playerid, "si toglie lo zaino.");
         return 1;
     }
@@ -324,7 +324,7 @@ CMD:rimuovi(playerid, params[])
 CMD:arma(playerid, params[])
 {
 	if(!IsPlayerInAnyVehicle(playerid) || GetPlayerState(playerid) != PLAYER_STATE_PASSENGER)
-		return SendClientMessage(playerid, COLOR_ERROR, "Devi essere passeggero di un veicolo per utilizzare questo comando!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Devi essere passeggero di un veicolo per utilizzare questo comando.");
 	new slotid;
 	if(sscanf(params, "d", slotid))
 	{

@@ -52,6 +52,14 @@ stock bool:Inventory_SetItem(Inventory:inventory, slotid, itemid, amount, extra)
     return true;
 }
 
+stock Inventory_Reset(Inventory:inventory)
+{
+	for(new i = 0, j = Inventory_GetSpace(inventory); i < j; ++i)
+	{
+		Inventory_SetItem(inventory, i, 0, 0, 0);
+	}
+}
+
 stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra)
 {
 	if(!list_valid(inventory))
@@ -280,7 +288,7 @@ stock Inventory_HasSpaceForItems(Inventory:inventory, items[10], amounts[10])
 stock Inventory_HasItem(Inventory:inventory, itemid, min = 1)
 {
 	new item[E_ITEM_DATA];
-	for(new i = 0; i < list_size(inventory); ++i)
+	for(new i = 0, j = list_size(inventory); i < j; ++i)
 	{
 		list_get_arr_safe(inventory, i, item);
 		if(item[gInvItem] == itemid && item[gInvAmount] >= min)
@@ -293,7 +301,7 @@ stock Inventory_HasItem(Inventory:inventory, itemid, min = 1)
 stock List:Inventory_HasItemBySlots(Inventory:inventory, itemid)
 {
 	new List:list = list_new(), item[E_ITEM_DATA];
-	for(new i = 0; i < list_size(inventory); ++i)
+	for(new i = 0, j = list_size(inventory); i < j; ++i)
 	{
 		if(list_sizeof(inventory, i) == 0)
 			continue;
@@ -509,7 +517,7 @@ stock Inventory_InternalShow(Inventory:inventory, playerid, const title[], const
 stock Inventory_Print(Inventory:inventory)
 {
     if(!list_valid(inventory))
-	   return printf("Invalid inventory!");
+	   return printf("Invalid inventory.");
     new item[E_ITEM_DATA];
     for_inventory(i : inventory)
     {
@@ -553,7 +561,7 @@ stock Inventory_SaveInDatabase(Inventory:inventory, const databaseName[], const 
 	
 	mysql_tquery(gMySQL, "START TRANSACTION;");
 
-	for(new i = 0; i < Inventory_GetSpace(inventory); ++i)
+	for(new i = 0, j = Inventory_GetSpace(inventory); i < j; ++i)
 	{
 		itemid = Inventory_GetSlotItem(inventory, i);
 		amount = Inventory_GetSlotAmount(inventory, i);

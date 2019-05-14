@@ -13,7 +13,7 @@ hook OnPlayerClearData(playerid)
     if(pVehicleSeller[playerid] != -1 && pVehicleSellingTo[pVehicleSeller[playerid]] == playerid)
     {
 	   new seller = pVehicleSeller[playerid];
-	   SendClientMessage(seller, COLOR_ERROR, "Il giocatore a cui volevi vendere il veicolo si è disconnesso!");
+	   SendClientMessage(seller, COLOR_ERROR, "Il giocatore a cui volevi vendere il veicolo si è disconnesso.");
 	   pVehicleSellingTo[seller] = -1;
 	   pVehicleSellingPrice[seller] = 0;
 	   pSellingVehicleID[seller] = 0;
@@ -21,7 +21,7 @@ hook OnPlayerClearData(playerid)
     else if(pVehicleSellingTo[playerid] != -1 && pVehicleSeller[pVehicleSellingTo[playerid]] == playerid)
     {
 	   new customer = pVehicleSellingTo[playerid];
-	   SendClientMessage(customer, COLOR_ERROR, "Il giocatore che voleva venderti il veicolo si è disconnesso!");
+	   SendClientMessage(customer, COLOR_ERROR, "Il giocatore che voleva venderti il veicolo si è disconnesso.");
 	   pVehicleSeller[customer] = -1;
 	   pVehicleSellingPrice[customer] = 0;
 	   pSellingVehicleID[customer] = 0;
@@ -49,12 +49,12 @@ CMD:tog(playerid, params[])
 	if(!strcmp(params, "fchat", true))
 	{
 		if(Character_GetFaction(playerid) == INVALID_FACTION_ID)
-			return SendClientMessage(playerid, COLOR_ERROR, "Non fai parte di una fazione!");
+			return SendClientMessage(playerid, COLOR_ERROR, "Non fai parte di una fazione.");
 		Character_SetFactionOOCEnabled(playerid, !Character_IsFactionOOCEnabled(playerid));
 		if(Character_IsFactionOOCEnabled(playerid))
-			SendClientMessage(playerid, COLOR_GREEN, "Hai attivato la chat fazione OOC!");
+			SendClientMessage(playerid, COLOR_GREEN, "Hai attivato la chat fazione OOC.");
 		else
-			SendClientMessage(playerid, COLOR_GREEN, "Hai disattivato la chat fazione OOC!");
+			SendClientMessage(playerid, COLOR_GREEN, "Hai disattivato la chat fazione OOC.");
 	}
 	else if(!strcmp(params, "hud", true))
 	{
@@ -183,8 +183,8 @@ CMD:hotkeys(playerid, params[])
     {
 		SendClientMessage(playerid, COLOR_GREEN, "Hai abilitato le HotKeys.");
 		SendClientMessage(playerid, -1, "Ora puoi utilizzare anche:");
-		SendClientMessage(playerid, -1, "{00FF00}ENTER/INVIO{FFFFFF}: Entrare/Uscire da un edificio.");
-		SendClientMessage(playerid, -1, "{00FF00}Y{FFFFFF}: Accendi/Spegni veicolo.");
+		//SendClientMessage(playerid, -1, "{00FF00}ENTER/INVIO{FFFFFF}: Entrare/Uscire da un edificio.");
+		SendClientMessage(playerid, -1, "{00FF00}Y{FFFFFF}: Entrare/uscire da un edificio e per accendere/spegnere un veicolo.");
 		SendClientMessage(playerid, -1, "{00FF00}N{FFFFFF}: Apri/Chiudi veicolo.");
 		SendClientMessage(playerid, -1, "{00FF00}2{FFFFFF}: Accendi/Spegni fari.");
 		SendClientMessage(playerid, -1, "{00FF00}LALT{FFFFFF}: Gestire la propria casa.");
@@ -193,7 +193,11 @@ CMD:hotkeys(playerid, params[])
 	}
 	else
 	{
-		SendClientMessage(playerid, COLOR_GREEN, "Hai disabilitato le HotKeys.");
+		SendClientMessage(playerid, COLOR_GREEN, "Hai disabilitato le HotKeys. Ora puoi utilizzare soltanto i comandi.");
+		SendClientMessage(playerid, COLOR_GREEN, "/entra: entrare/uscire da un edificio.");
+		SendClientMessage(playerid, COLOR_GREEN, "/motore: accendere/spegnere un veicolo.");
+		SendClientMessage(playerid, COLOR_GREEN, "/luci: accendere/spegnere li fari del veicolo.");
+		SendClientMessage(playerid, COLOR_GREEN, "/raccogli: raccogliere un oggetto da terra.");
 	}
 	return 1;
 }
@@ -239,7 +243,7 @@ CMD:lasciacarcere(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai ancora scontato la tua pena.");
 	new pickupid = Character_GetLastPickup(playerid), id, E_ELEMENT_TYPE:type;
 	if(!Pickup_GetInfo(pickupid, id, type) || type != ELEMENT_TYPE_JAIL_EXIT || !IsPlayerInRangeOfPickup(playerid, pickupid, 5.0))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino all'uscita della prigione!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino all'uscita della prigione.");
 	
 	Character_SetJailTime(playerid, 0);
 	Character_SetICJailed(playerid, 0);

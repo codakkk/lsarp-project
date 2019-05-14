@@ -10,7 +10,7 @@ CMD:vmenu(playerid, params[])
         string[1024],
         count = 0;
     memset(pVehicleListItem[playerid], 0);
-    foreach(new v : Vehicles)
+    foreach(new v : Vehicle)
     {
         if(VehicleInfo[v][vOwnerID] != PlayerInfo[playerid][pID])
             continue;
@@ -32,7 +32,7 @@ CMD:vmenu(playerid, params[])
         count++;
     }
     if(count == 0)
-        return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi veicoli!");
+        return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi veicoli.");
     Dialog_Show(playerid, Dialog_VehicleList, DIALOG_STYLE_LIST, "I miei veicoli", string, "Avanti", "Chiudi");
     return 1;
 }
@@ -188,8 +188,10 @@ CMD:vbagagliaio(playerid, params[])
 	else
 	{
 		if(!IsPlayerInRangeOfVehicle(playerid, vehicleid, 3.5))
-			return SendClientMessage(playerid, COLOR_GREEN, "Non sei vicino al veicolo!");
+			return SendClientMessage(playerid, COLOR_GREEN, "Non sei vicino al veicolo.");
 	}
+	if(vehicleid == 0 || !Vehicle_IsValid(vehicleid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino ad un veicolo.");
 	if(!Vehicle_IsOwner(vehicleid, playerid, false))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei il proprietario di questo veicolo.");
 	/*if(Vehicle_IsTrunkOpened(vehicleid))
@@ -409,7 +411,7 @@ Dialog:Dialog_VehicleAction(playerid, response, listitem, inputtext[])
         case 0: // Open/Close
         {
             if(!IsPlayerInRangeOfVehicle(playerid, vehicle_id, 5.0))
-                return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo!");
+                return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo.");
             if(Vehicle_IsLocked(vehicle_id))
             {
                 /*if(IsABike(vehicle_id) || IsAMotorBike(vehicle_id))
@@ -420,7 +422,7 @@ Dialog:Dialog_VehicleAction(playerid, response, listitem, inputtext[])
                 {
                     Character_AMe(playerid, "prende le chiavi e apre il suo veicolo");
                 }
-                SendClientMessage(playerid, COLOR_GREEN, "Hai aperto il tuo veicolo!");
+                SendClientMessage(playerid, COLOR_GREEN, "Hai aperto il tuo veicolo.");
                 Vehicle_UnLock(vehicle_id);*/
 				new dst[8];
 				valstr(dst, vehicle_id);
@@ -436,7 +438,7 @@ Dialog:Dialog_VehicleAction(playerid, response, listitem, inputtext[])
                 {
                     Character_AMe(playerid, "prende le chiavi e chiude il suo veicolo");
                 }
-                SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso il tuo veicolo!");
+                SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso il tuo veicolo.");
                 Vehicle_UnLock(vehicle_id);*/
 				new dst[8];
 				valstr(dst, vehicle_id);
@@ -460,19 +462,19 @@ Dialog:Dialog_VehicleAction(playerid, response, listitem, inputtext[])
         case 2: // Trunk
         {
             if(!IsPlayerInRangeOfVehicle(playerid, vehicle_id, 5.0))
-                return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo!");
+                return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo.");
             Vehicle_ShowInventory(vehicle_id, playerid);
         }
         case 3: // Sell to player
         {
             if(!IsPlayerInRangeOfVehicle(playerid, vehicle_id, 5.0))
-                return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo!");
+                return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo.");
             Dialog_Show(playerid, Dialog_SellToPlayer, DIALOG_STYLE_INPUT, "Vendi a giocatore", "Inserisci l'ID o il nome del giocatore\n a cui vuoi vendere il veicolo\nseguito dal prezzo.\nEsempio: {00FF00}Mario Rossi {FF0000}10000.", "Vendi", "Annulla");
         }
         case 4: // Sell
         {
             if(!IsPlayerInRangeOfVehicle(playerid, vehicle_id, 5.0))
-                return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo!");
+                return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo.");
         }
 		case 5: // Info
 		{
@@ -499,7 +501,7 @@ Dialog:Dialog_SellToPlayer(playerid, response, listitem, inputtext[])
         return Dialog_Show(playerid, Dialog_SellToPlayer, DIALOG_STYLE_INPUT, "{FFFFFF}Vendi a giocatore", "{FF0000}Il prezzo inserito non è valido!\n{FFFFFF}Inserisci l'ID o il nome del giocatore\n a cui vuoi vendere il veicolo\nseguito dal prezzo.\nEsempio: {00FF00}Mario Rossi {FF0000}10000.", "Vendi", "Annulla");
     
     if(!IsPlayerInRangeOfPlayer(playerid, otherPlayer, 6.0))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore!");
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
     
 	if(Character_GetDeathState(otherPlayer) > 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi vendere il veicolo a questo giocatore ora.");

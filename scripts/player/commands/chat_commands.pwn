@@ -17,7 +17,7 @@ CMD:pm(playerid, params[])
 	{
 		new seconds = 5;
 		if(GetTickCount() - pLastPMTime[playerid] < 1000 * seconds)
-			return SendFormattedMessage(playerid, COLOR_ERROR, "Puoi inviare un PM ogni %d secondi!", seconds);
+			return SendFormattedMessage(playerid, COLOR_ERROR, "Puoi inviare un PM ogni %d secondi.", seconds);
 	}*/
     new id, s[128];
     if(sscanf(params, "k<u>s[128]", id, s) || isnull(s) || strlen(s) > 128)

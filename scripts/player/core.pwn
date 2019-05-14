@@ -20,6 +20,8 @@
 #include <player\components\options.pwn>
 #include <player\components\afk.pwn>
 #include <player\components\damage_system.pwn>
+#include <player\components\customanims.pwn>
+#include <player\components\drugs.pwn>
 #include <YSI_Coding\y_hooks>
 
 
@@ -49,7 +51,7 @@ hook OnCharacterDisconnected(playerid)
     return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-hook OnPlayerSpawn(playerid)
+hook OnCharacterSpawn(playerid)
 {
 	SetPlayerSkin(playerid, PlayerInfo[playerid][pSkin]);
 

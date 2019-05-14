@@ -38,6 +38,7 @@
 
 #include <includes.pwn>
 #include <defines.pwn>
+#include <utils\iterators.pwn>
 #include <forwarded_functions.pwn>
 #include <miscellaneous\timestamp_to_date.pwn>
 
@@ -61,7 +62,6 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 #include <weapon_system\enum.pwn>
 #include <house_system\enum.pwn>
 #include <faction_system\enum.pwn>
-#include <weather_system\definitions.pwn>
 #include <dp_system\enum.pwn>
 
 #include <database\core.pwn>
@@ -128,7 +128,8 @@ hook OnGameModeInit()
 	Building_LoadAll();
 	House_LoadAll();
 
-	
+	Streamer_TickRate(30);
+	//Streamer_SetVisibleItems(STREAMER_TYPE_OBJECT, 900);
 	return 1;
 }
 
@@ -182,15 +183,19 @@ hook OnPlayerRequestSpawn(playerid)
     return 1;
 }
 
-hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys) return Y_HOOKS_CONTINUE_RETURN_1;
+hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
+{
+	return Y_HOOKS_CONTINUE_RETURN_1;
+}
 hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ) 
 {
 	if(IsPlayerNPC(playerid))
 		return Y_HOOKS_BREAK_RETURN_1;
+	
 	if( !( -1000.0 <= fX <= 1000.0 ) || !( -1000.0 <= fY <= 1000.0 ) || !( -1000.0 <= fZ <= 1000.0 ) )
     {
 		#if defined DEBUG
-			printf("Not in range");
+			//printf("Not in range");
 		#endif
 		return 0;
 	}
@@ -237,17 +242,17 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 	{
 		if(flags & CMD_PREMIUM_BRONZE && AccountInfo[playerid][aPremium] < 1)
 		{
-			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando!");
+			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando.");
 			return 0;
 		}
 		else if(flags & CMD_PREMIUM_SILVER && AccountInfo[playerid][aPremium] < 2)
 		{
-			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando!");
+			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando.");
 			return 0;
 		}
 		else if(flags & CMD_PREMIUM_SILVER && AccountInfo[playerid][aPremium] < 3)
 		{
-			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando!");
+			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando.");
 			return 0;
 		}
 	}
@@ -265,7 +270,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 	{
 		if(factionid == INVALID_FACTION_ID || Faction_GetType(factionid) != FACTION_TYPE_MEDICAL || !Character_IsAlive(playerid))
 		{
-			SendClientMessage(playerid, COLOR_ERROR, "Devi essere un medico in servizio per poter utilizzare questo comando!");
+			SendClientMessage(playerid, COLOR_ERROR, "Devi essere un medico in servizio per poter utilizzare questo comando.");
 			return 0;
 		}
 	}
@@ -281,7 +286,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 	{
 		if(factionid == INVALID_FACTION_ID || (Faction_GetType(factionid) != FACTION_TYPE_IMPORT_WEAPONS && Faction_GetType(factionid) != FACTION_TYPE_IMPORT_DRUGS) || !Character_IsAlive(playerid))
 		{
-			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando!");
+			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando.");
 			return 0;
 		}
 	}
@@ -383,7 +388,7 @@ hook OnPlayerConnect(playerid)
 		SendClientMessage(playerid, -1, " ");
 	}
 	SendClientMessage(playerid, COLOR_YELLOW, "________________________________________________________________");
-	SendClientMessage(playerid, COLOR_YELLOW, "Benvenuto su Los Santos Apocalypse Roleplay [www.lsarp.it]!");
+	SendClientMessage(playerid, COLOR_YELLOW, "Benvenuto su Los Santos Apocalypse Roleplay [www.lsarp.it].");
 	SendClientMessage(playerid, COLOR_YELLOW, "Alpha v0.1 - Righe GameMode: 25159");
 	SendClientMessage(playerid, COLOR_YELLOW, "________________________________________________________________");
 	

@@ -17,26 +17,26 @@ hook OnGameModeInit()
 	ServerItem_ManualInitializeItem(18, Weapon_GetName(18), ITEM_TYPE_WEAPON, Weapon_GetObjectModel(18), 2); // Molotov
 	ServerItem_ManualInitializeItem(39, Weapon_GetName(39), ITEM_TYPE_WEAPON, Weapon_GetObjectModel(39), 2); // Satchel
 
-    gItem_Hamburger = ServerItem_ManualInitializeItem(47, "Hamburger Preconfezionato", ITEM_TYPE:ITEM_TYPE_FOOD, .modelId = 2804, .maxStack = 2);
-	gItem_Beans = ServerItem_ManualInitializeItem(48, "Fagioli in barattolo", ITEM_TYPE:ITEM_TYPE_FOOD, 19568, 	2, 10);
-	gItem_EnergyBar = ServerItem_ManualInitializeItem(49, "Barretta Energetica", ITEM_TYPE:ITEM_TYPE_FOOD, 2, 		2, 10);
-	gItem_DriedMeat = ServerItem_ManualInitializeItem(50, "Carne Essiccata", ITEM_TYPE:ITEM_TYPE_FOOD, 		2, 		2, 10);
-	gItem_PeanutButter = ServerItem_ManualInitializeItem(51, "Burro di arachidi", ITEM_TYPE:ITEM_TYPE_FOOD, 	2,		2, 10);
-	gItem_CannedTuna = ServerItem_ManualInitializeItem(52, "Tonno in scatola", ITEM_TYPE:ITEM_TYPE_FOOD, 	2, 		2, 10);
-	gItem_RawMeat = ServerItem_ManualInitializeItem(53, "Carne cruda", ITEM_TYPE:ITEM_TYPE_FOOD, 			2804,	2, 10);
-	gItem_RawFish = ServerItem_ManualInitializeItem(54, "Pesce crudo", ITEM_TYPE:ITEM_TYPE_FOOD, 			19630, 	2, 10);
+    gItem_Hamburger = ServerItem_InitializeFoodItem(47, "Hamburger Preconfezionato", 2804, 10);
+	gItem_Beans = ServerItem_InitializeFoodItem(48, "Fagioli in barattolo", 19567,	10);
+	gItem_EnergyBar = ServerItem_InitializeFoodItem(49, "Barretta Energetica", 11748, 10);
+	gItem_DriedMeat = ServerItem_InitializeFoodItem(50, "Carne Essiccata", 19568, 10);
+	gItem_PeanutButter = ServerItem_InitializeFoodItem(51, "Burro di arachidi", 1455, 10);
+	gItem_CannedTuna = ServerItem_InitializeFoodItem(52, "Tonno in scatola", 19567, 10);
+	gItem_RawMeat = ServerItem_InitializeFoodItem(53, "Carne cruda", 2804,	10);
+	gItem_RawFish = ServerItem_InitializeFoodItem(54, "Pesce crudo", 19630, 10);
 
 	// Drinks
-    gItem_BottleOfWater = ServerItem_ManualInitializeItem(55, "Bottiglia d'acqua (33oz)", ITEM_TYPE:ITEM_TYPE_DRINK, 		.modelId = 1486, .maxStack = 1);
-    gItem_SmallBottleOfWater = ServerItem_ManualInitializeItem(56, "Bottiglia d'acqua (16oz)", ITEM_TYPE:ITEM_TYPE_DRINK, 	.modelId = 1486, .maxStack = 1);
-    gItem_Milk = ServerItem_ManualInitializeItem(57, "Latte in polvere", ITEM_TYPE:ITEM_TYPE_DRINK, 						.modelId = 19569, .maxStack = 1);
-	gItem_RainWater = ServerItem_ManualInitializeItem(58, "Barattolo d'acqua piovana", ITEM_TYPE:ITEM_TYPE_DRINK, 			.modelId = 2, .maxStack = 1); 
+    gItem_BottleOfWater = ServerItem_InitializeDrinkItem(55, "Bottiglia d'acqua (33oz)", 19570, 10);
+    gItem_SmallBottleOfWater = ServerItem_InitializeDrinkItem(56, "Bottiglia d'acqua (16oz)", 19570, 10);
+    gItem_Milk = ServerItem_InitializeDrinkItem(57, "Latte in polvere", 19569, 10);
+	gItem_RainWater = ServerItem_InitializeDrinkItem(58, "Barattolo d'acqua piovana", 19570, 10); 
 
 	// Medical Objects
-	gItem_RationK = ServerItem_ManualInitializeItem(59, "Razione K", ITEM_TYPE:ITEM_TYPE_MEDIK, 11748, 1);
-	gItem_Morfine = ServerItem_ManualInitializeItem(60, "Siringa di Morfina", ITEM_TYPE:ITEM_TYPE_MEDIK, 1, 1);
-	gItem_Bandages = ServerItem_ManualInitializeItem(61, "Bende", ITEM_TYPE:ITEM_TYPE_MEDIK, 11747, 1);
-	gItem_Medikit = ServerItem_ManualInitializeItem(62, "Kit Pronto Soccorso", ITEM_TYPE:ITEM_TYPE_MEDIK, 11738, 1);
+	gItem_RationK = ServerItem_InitializeMedikItem(59, "Razione K", 1575, 100);
+	gItem_Morfine = ServerItem_InitializeMedikItem(60, "Siringa di Morfina", 2902, 30);
+	gItem_Bandages = ServerItem_InitializeMedikItem(61, "Bende", 11747, 15);
+	gItem_Medikit = ServerItem_InitializeMedikItem(62, "Kit Pronto Soccorso", 11738, 50);
 
 	gItem_SmallBackPack = ServerItem_ManualInitializeItem(63, "Zainetto", ITEM_TYPE:ITEM_TYPE_BAG, 		3026, 1, 1, 5);
     gItem_BigBackPack = ServerItem_ManualInitializeItem(64, "Zaino Grande", ITEM_TYPE:ITEM_TYPE_BAG, 	19559, 1, 1, 2);
@@ -51,18 +51,66 @@ hook OnGameModeInit()
 	gItem_MediumFuelTank = ServerItem_ManualInitializeItem(70, 	"Tanica Media", ITEM_TYPE:ITEM_TYPE_FUEL, 	1650, 1, 70);
 	gItem_BigFuelTank = ServerItem_ManualInitializeItem(71, 	"Tanica Grande", ITEM_TYPE:ITEM_TYPE_FUEL, 		1650, 1, 100);
 
+	// Remember to change MAX_PLAYER_DRUGS inside player/components/drugs.pwn when added/removed drugs.
+	gItem_PCP = ServerItem_InitializeDrugItem(72, "PCP", 1650, 3, 100, 30, 0);
+	gItem_Xanax = ServerItem_InitializeDrugItem(73, "Xanax",1650, 3, 120, 5, 4);
+	gItem_MDMA = ServerItem_InitializeDrugItem(74, "MDMA", 1650, 3, 100, 20, 0);
+	gItem_Crack = ServerItem_InitializeDrugItem(75, "Crack", 1650, 3, 100, 40, 0);
+	gItem_Oxycodone = ServerItem_InitializeDrugItem(76, "Ossicodone", 1650, 3, 100, 20, 0);
+	gItem_Marijuana = ServerItem_InitializeDrugItem(77, "Marijuana", 1650, 3, 100, 5, 0);
+	gItem_Hashish = ServerItem_InitializeDrugItem(78, "Hashish", 1650, 3, 100, 5, 0);
+	gItem_Eroine = ServerItem_InitializeDrugItem(79, "Eroina", 1650, 3, 100, 50, 0);
+	gItem_Coke = ServerItem_InitializeDrugItem(80, "Cocaina", 1650, 3, 100, 40, 0);
+	gItem_Meth = ServerItem_InitializeDrugItem(81, "Metanfetamina", 1650, 3, 100, 50, 0);
+	gItem_LSD = ServerItem_InitializeDrugItem(82, "LSD", 1650, 3, 100, 30, 0);
+
+	gItem_Bread = ServerItem_InitializeFoodItem(83, "Pane", 19579, 20);
+	gItem_BreadPiece = ServerItem_InitializeFoodItem(84, "Fetta di pane", 19883, 10);
+	gItem_PackedMeat = ServerItem_InitializeFoodItem(85, "Carne Confezionata", 19560, 10);
+	gItem_Cerelas = ServerItem_InitializeFoodItem(86, "Scatola di cereali", 19562, 10);
+	gItem_IceCream = ServerItem_InitializeFoodItem(87, "Vaschetta di gelato", 19567, 10);
+
+	gItem_Tomato = ServerItem_InitializeFoodItem(88, "Pomodoro", 19577, 10);
+	gItem_RedApple = ServerItem_InitializeFoodItem(89, "Mela Rossa", 19575, 10);
+	gItem_GreenApple = ServerItem_InitializeFoodItem(90, "Mela Verde", 19576, 10);
+	gItem_Orange = ServerItem_InitializeFoodItem(91, "Arancia", 19574, 10);
+	gItem_Banana = ServerItem_InitializeFoodItem(92, "Banana", 19578, 10);
+
+	gItem_OrangeJuice = ServerItem_InitializeDrinkItem(93, "Succo d'Arancia", 19563, 10);
+	gItem_AppleJuice = ServerItem_InitializeDrinkItem(94, "Succo di mela", 19564, 10);
+
     printf("Items loaded. N: %d\n", Iter_Count(ServerItems));
     return 1;
 }
 
 // Useful for automatic items id
-stock ServerItem_InitializeItem(name[], ITEM_TYPE:type, modelId = 0, maxStack = 1, ...)
+stock ServerItem_InitializeItem(const name[], ITEM_TYPE:type, modelId = 0, maxStack = 1, ...)
 {
     return ServerItem_ManualInitializeItem(Iter_Free(ServerItems), name, type, modelId, maxStack, ___5);
 }
 
+stock ServerItem_InitializeDrugItem(id, const name[], modelid = 0, amountForAddiction = 0, maxHealth = 100, healthGain = 0, effectTime = 0)
+{
+	return ServerItem_ManualInitializeItem(id, name, ITEM_TYPE_DRUG, modelid, 100, amountForAddiction, maxHealth, healthGain, effectTime);
+}
+
+stock ServerItem_InitializeFoodItem(id, const name[], modelId, foodAmount)
+{
+	return ServerItem_ManualInitializeItem(id, name, ITEM_TYPE_FOOD, modelId, 2, foodAmount);
+}
+
+stock ServerItem_InitializeMedikItem(id, const name[], modelId, healthAmount)
+{
+	return ServerItem_ManualInitializeItem(id, name, ITEM_TYPE:ITEM_TYPE_MEDIK, modelId, healthAmount);
+}
+
+stock ServerItem_InitializeDrinkItem(id, const name[], modelId, foodAmount)
+{
+	return ServerItem_ManualInitializeItem(id, name, ITEM_TYPE_DRINK, modelId, 2, foodAmount);
+}
+
 // Useful for setting item_ids manually (example: weapons)
-stock ServerItem_ManualInitializeItem(itemid, name[], ITEM_TYPE:type, modelId = 0, maxStack = 1, ...)
+stock ServerItem_ManualInitializeItem(itemid, const name[], ITEM_TYPE:type, modelId = 0, maxStack = 1, GLOBAL_TAG_TYPES:...)
 {
     if(itemid < 0 || itemid >= MAX_ITEMS_IN_SERVER || Iter_Contains(ServerItems, itemid))
 	   return -1;
@@ -77,10 +125,11 @@ stock ServerItem_ManualInitializeItem(itemid, name[], ITEM_TYPE:type, modelId = 
     {
 	   if(!strcmp(ServerItem[item][sitemName], name, true))
 	   {
-		  printf("Error initializing item %s. Already exists!", ServerItem[item][sitemName]);
+		  printf("Error initializing item %s. Already exists.", ServerItem[item][sitemName]);
 		  return -1;
 	   }
     }
+	ServerItem[itemid][sitemInitialized] = 1;
     ServerItem[itemid][sitemID] = itemid; // Redundant?
     format(ServerItem[itemid][sitemName], MAX_ITEM_NAME, "%s", name);
     ServerItem[itemid][sitemType] = type;
@@ -110,19 +159,19 @@ stock ServerItem_ManualInitializeItem(itemid, name[], ITEM_TYPE:type, modelId = 
 }
 
 stock ITEM_TYPE:ServerItem_GetType(itemid) return ServerItem[itemid][sitemType];
-stock ServerItem_IsWeapon(itemid) return ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_WEAPON;
-stock ServerItem_IsAmmo(itemid) return ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_AMMO;
-stock ServerItem_IsFood(itemid) return ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_FOOD;
-stock ServerItem_IsDrink(itemid) return ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_DRINK;
-stock ServerItem_IsMedik(itemid) return ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_MEDIK;
-stock ServerItem_IsBag(itemid) return ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_BAG;
-stock ServerItem_IsDrug(itemid) return ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_DRUG;
+stock ServerItem_IsWeapon(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_WEAPON;
+stock ServerItem_IsAmmo(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_AMMO;
+stock ServerItem_IsFood(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_FOOD;
+stock ServerItem_IsDrink(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_DRINK;
+stock ServerItem_IsMedik(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_MEDIK;
+stock ServerItem_IsBag(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_BAG;
+stock ServerItem_IsDrug(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_DRUG;
 
 stock ServerItem_GetMaxStack(itemid) return ServerItem[itemid][sitemMaxStack];
 
 stock ServerItem_IsValid(itemid)
 {
-    return !(itemid < 0 || itemid >= MAX_ITEMS_IN_SERVER) && Iter_Contains(ServerItems, itemid);
+    return (0 <= itemid < MAX_ITEMS_IN_SERVER) && ServerItem[itemid][sitemInitialized] && Iter_Contains(ServerItems, itemid);
 }
 
 stock ServerItem_IsUnique(itemid)
@@ -130,9 +179,9 @@ stock ServerItem_IsUnique(itemid)
     return ServerItem[itemid][sitemUnique];
 }
 
-stock ServerItem_GetExtra(itemid, EXTRA_TYPE_ID:extraid)
+stock ServerItem_GetExtra(itemid, extraid)
 {
-    return ServerItem[item][sitemExtraData][extraid];
+    return ServerItem[itemid][sitemExtraData][extraid];
 }
 
 stock ServerItem_GetTypeName(item_id)
@@ -151,6 +200,7 @@ stock ServerItem_GetTypeName(item_id)
 		  case ITEM_TYPE_DRINK: string = "Bevanda";
 		  case ITEM_TYPE_MEDIK: string = "Medico";
 		  case ITEM_TYPE_BAG: string = "Zaino";
+		  case ITEM_TYPE_DRUG: string = "Droga";
 	   }
     }
     return string;
@@ -177,4 +227,29 @@ stock ServerItem_GetTankCapacity(itemid)
 stock ServerItem_GetFoodValue(itemid)
 {
 	return ServerItem[itemid][sitemExtraData][0];
+}
+
+stock DrugItem_CanGetDependent(itemid)
+{
+	return DrugItem_GetAddictionAmount(itemid) > 0;
+}
+
+stock DrugItem_GetAddictionAmount(itemid)
+{
+	return ServerItem_GetExtra(itemid, 0) > 0;
+}
+
+stock DrugItem_GetMaxHealth(itemid)
+{
+	return ServerItem_GetExtra(itemid, 1);
+}
+
+stock DrugItem_GetHealthGain(itemid)
+{
+	return ServerItem_GetExtra(itemid, 2);
+}
+
+stock DrugItem_GetEffectTime(itemid)
+{
+	return ServerItem_GetExtra(itemid, 3);
 }

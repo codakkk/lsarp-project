@@ -26,7 +26,7 @@ hook OnGameModeInit()
 
 hook OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
 {
-	printf("Weapon System");
+	//printf("Weapon System");
 	if(pAdminDuty[playerid] && AccountInfo[playerid][aAdmin] > 1)
 		return Y_HOOKS_BREAK_RETURN_1;
 
@@ -37,6 +37,8 @@ hook OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
 	new ammo;
 	if(issuerid != INVALID_PLAYER_ID && !AC_AntiWeaponCheck(issuerid, weaponid, ammo) && AccountInfo[playerid][aAdmin] < 1)
 		return Y_HOOKS_BREAK_RETURN_1;
+
+
 
 	new 
 		Float:weaponDamage,

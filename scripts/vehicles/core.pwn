@@ -12,14 +12,17 @@ hook OnGameModeInit()
 
 task OnVehicleCheck[120000]() 
 {
-	foreach(new v : Vehicles)
+	foreach(new v : Vehicle)
 	{
 		if(!Vehicle_IsValid(v) || Vehicle_GetFaction(v) != INVALID_FACTION_ID)
 			continue;
-		
+		//printf("V: %d", v);
 		if(Vehicle_IsDespawn(v) && gettime() > Vehicle_GetSpawnExpiry(v))
 		{
-			Vehicle_Despawn(v);
+			ITER_SAFE_REMOVE(Vehicle, v)
+			{
+				Vehicle_Despawn(v);
+			}
 			continue;
 		}
 	}
@@ -29,15 +32,14 @@ task OnVehicleCheck[120000]()
 
 hook OnCharacterDisconnected(playerid)
 {
-	foreach(new v : Vehicles)
+	foreach(new v : Vehicle)
 	{
 		if(!Vehicle_GetID(v) || Vehicle_GetOwnerID(v) == 0 || Vehicle_GetModel(v) == 0 || Vehicle_GetFaction(v) != INVALID_FACTION_ID)
 			continue;
-		Vehicle_SetToDespawn(v, 2);
+		Vehicle_SetToDespawn(v, 60);
 	}
 	return 1;
 }
-
 
 hook OnVehicleSpawn(vehicleid)
 {
@@ -119,7 +121,6 @@ stock Vehicle_Create(modelid, Float:x, Float:y, Float:z, Float:rotation, color1,
 	Vehicle_SetFaction(vehicleid, INVALID_FACTION_ID);
 	Vehicle_SetFuel(vehicleid, 100.0);
 	Vehicle_UpdateLockState(vehicleid);
-    Iter_Add(Vehicles, vehicleid);
 	return vehicleid;
 }
 
@@ -160,7 +161,6 @@ stock Vehicle_Destroy(vehicleid)
 		return 0;
     Vehicle_Reset(vehicleid);
 	DestroyVehicle(vehicleid);
-	Iter_SafeRemove(Vehicles, vehicleid, vehicleid);
 	return 1;
 }
 
@@ -455,9 +455,9 @@ stock Vehicle_Despawn(vehicleid)
 
 	Vehicle_Save(vehicleid);
 
-	Vehicle_Destroy(vehicleid);
-	
 	CallLocalFunction(#OnVehicleUnloaded, "d", vehicleid);
+	
+	Vehicle_Destroy(vehicleid);
 	return 1;
 }
 

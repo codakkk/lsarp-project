@@ -15,7 +15,7 @@ Dialog:Dialog_InvSelectAmmo(playerid, response, listitem, inputtext[])
     Character_DecreaseItemAmount(playerid, ammoType, ammo);
 
 	Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~", Weapon_GetName(itemid)), true);
-
+	Character_AMe(playerid, "prende un'arma dall'inventario.");
 	Trigger_OnPlayerInvItemUse(playerid, itemid, 1, ITEM_TYPE_WEAPON);
 	Trigger_OnPlayerInvItemUse(playerid, ammoType, ammo, ITEM_TYPE_AMMO);
     return 1;
@@ -39,9 +39,9 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
 		{
 			House_SetLocked(houseid, !House_IsLocked(houseid));
 			if(House_IsLocked(houseid))
-				SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso la porta della casa!");
+				SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso la porta della casa.");
 			else
-				SendClientMessage(playerid, COLOR_GREEN, "Hai aperto la porta della casa!");
+				SendClientMessage(playerid, COLOR_GREEN, "Hai aperto la porta della casa.");
 			House_Save(houseid);
 		}
 		case 1: // Show Inv
@@ -62,7 +62,7 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
 		}
 		case 5: // Vendi a giocatore
 		{
-			SendClientMessage(playerid, COLOR_ERROR, "Non ancora disponibile!");
+			SendClientMessage(playerid, COLOR_ERROR, "Non ancora disponibile.");
 			return 1;
 		}
 		case 6: // Cambia interior
@@ -140,9 +140,9 @@ Dialog:Dialog_HouseInterior(playerid, response, listitem, inputtext[])
 	if(houseid == -1)
 		return 0;
 	if(!IsPlayerInRangeOfHouseEntrance(playerid, houseid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata della tua casa!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata della tua casa.");
 	if(allHouseInteriors[House_GetInteriorID(houseid)][iType] != allHouseInteriors[listitem][iType])
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi selezionare questo interno per questa casa!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi selezionare questo interno per questa casa.");
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato l'interno della tua casa. Nuovo interno: %d.", listitem);
     House_SetInterior(houseid, listitem);
     House_Save(houseid);

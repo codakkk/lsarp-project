@@ -98,9 +98,9 @@ new
 
 enum _:e_PendingType
 {
-	PENDING_TYPE_NONE,
-	PENDING_TYPE_WEAPON,
-	PENDING_TYPE_ITEM
+	REQUEST_TYPE_NONE,
+	REQUEST_TYPE_WEAPON,
+	REQUEST_TYPE_ITEM
 }
 
 enum e_RequestData
@@ -129,7 +129,7 @@ stock ResetPendingRequest(playerid)
 	PendingRequestInfo[playerid][rdItem] = 0;
 	PendingRequestInfo[playerid][rdAmount] = 0;
 	PendingRequestInfo[playerid][rdExtra] = 0;
-	PendingRequestInfo[playerid][rdType] = PENDING_TYPE_NONE;
+	PendingRequestInfo[playerid][rdType] = REQUEST_TYPE_NONE;
 	PendingRequestInfo[playerid][rdSlot] = 0;
 }
 
@@ -157,13 +157,6 @@ new
 	PlayerDeathState[MAX_PLAYERS][e_DeathState],
 	pDeathState[MAX_PLAYERS char] // 0 = Not dead, 1 = Waiting for healing, 2 = Death
 ;
-
-enum e_PlayerDrugAddictionInfo
-{
-	pLastUsedDrug,
-	pLastUsedDrugTime,
-};
-new PlayerDrugAddictionInfo[MAX_PLAYERS][e_PlayerDrugAddictionInfo];
 
 enum e_CharacterDamageInfo
 {

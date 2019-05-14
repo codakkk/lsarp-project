@@ -10,7 +10,7 @@ CMD:invmode(playerid, params[])
 	}
 	else
 	{
-		SendClientMessage(playerid, COLOR_GREEN, "Ora l'inventario è mostrato a dialogs!");
+		SendClientMessage(playerid, COLOR_GREEN, "Ora l'inventario è mostrato a dialogs.");
 	}
 	Dialog_Close(playerid);
 	return 1;
@@ -35,13 +35,13 @@ CMD:usa(playerid, params[])
 	if(!Character_IsAlive(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	if(PendingRequestInfo[playerid][rdPending])
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
 	new slotid;
 	if(sscanf(params, "d", slotid))
 		return SendClientMessage(playerid, COLOR_ERROR, "/usa <slotid>");
 	new itemid = Character_GetSlotItem(playerid, slotid);
 	if(itemid == 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "Slot non valida!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Slot non valida.");
 	Character_UseInventoryItem(playerid, slotid);
 	return 1;
 }
@@ -55,49 +55,18 @@ CMD:passa(playerid, params[])
 	if(sscanf(params, "k<u>dD(1)", id, slotid, amount))
 		return SendClientMessage(playerid, COLOR_ERROR, "/passa <playerid/partofname> <slotid> <quantità (default 1)>");
 
-	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
-
-	if(!IsPlayerInRangeOfPlayer(playerid, id, 2.0))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
-
-	new itemid = Character_GetSlotItem(playerid, slotid);
-
-	if(itemid == 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "Slot non valida.");
-
-	new slotAmount = Character_GetSlotAmount(playerid, slotid);
-
-	if(amount < 1 || amount > slotAmount)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non hai la quantità necessaria.");
-	if(Character_HasRequest(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta attiva.");
-
-	if(!Character_IsAlive(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
-	
-	Character_SetRequest(playerid, id, PENDING_TYPE_ITEM, itemid, amount, slotid);
-	
-	SendFormattedMessage(id, COLOR_GREEN, "%s vuole darti %d %s. Digita \"/accetta oggetto\" per accettare.", Character_GetOOCName(playerid), amount, ServerItem_GetName(itemid));
-	SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto di dare %d %s a %s.", amount, ServerItem_GetName(itemid), Character_GetOOCName(id));
+	Character_SendItemRequest(playerid, id, slotid, amount);
 	return 1;
 }
 
 flags:getta(CMD_ALIVE_USER);
 CMD:getta(playerid, params[])
 {
-	if(!Character_IsAlive(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
-	if(PendingRequestInfo[playerid][rdPending])
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva!");
-	if(IsPlayerInAnyVehicle(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando all'interno di un veicolo!");
 	new slotid, amount;
 	if(sscanf(params, "dD(1)", slotid, amount))
 		return SendClientMessage(playerid, COLOR_ERROR, "/getta <slotid> <quantità (default 1)>");
 	
-	if(!Character_DropItem(playerid, slotid, amount))
-		return SendClientMessage(playerid, COLOR_ERROR, "Slot non valida o quantità non valida!");
+	Character_DropItem(playerid, slotid, amount);
 	return 1;
 }
 
@@ -107,10 +76,10 @@ CMD:deposita(playerid, params[])
 	if(!Character_IsAlive(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	if(PendingRequestInfo[playerid][rdPending])
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
 	new itemid = GetPlayerWeapon(playerid);
 	if(itemid == 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma.");
 	
 	new ammo = AC_GetPlayerAmmo(playerid);
 	if(Weapon_IsGrenade(itemid))
@@ -138,7 +107,7 @@ CMD:disassembla(playerid, params[])
 	if(!Character_IsAlive(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	if(PendingRequestInfo[playerid][rdPending])
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
 	new 
 		slotid, itemid, ammo;
 	if(sscanf(params, "d", slotid))
@@ -196,7 +165,7 @@ CMD:gettaarma(playerid, params[])
 	if(!Character_IsAlive(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	if(PendingRequestInfo[playerid][rdPending])
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
 	new 
 		weaponid = GetPlayerWeapon(playerid), 
 		ammo = GetPlayerAmmo(playerid);

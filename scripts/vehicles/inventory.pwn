@@ -23,7 +23,7 @@ stock Inventory:Vehicle_InitializeInventory(vehicleid)
 
 stock Vehicle_UnloadInventory(vehicleid)
 {
-	if(map_has_key(VehicleInventory, vehicleid))
+	if(Vehicle_IsValid(vehicleid) && map_has_key(VehicleInventory, vehicleid))
 	{
     	map_remove_deep(VehicleInventory, vehicleid);
     	printf("Vehicle %d Inventory unloaded", vehicleid);
@@ -389,7 +389,7 @@ Dialog:D_VehInvItemAmount(playerid, response, listitem, inputtext[])
 		extra = Vehicle_GetSlotExtra(vehicleid, slotid),
 		slotAmount = Vehicle_GetSlotAmount(vehicleid, slotid);
 	if(!IsPlayerInRangeOfVehicle(playerid, vehicleid, 5.0))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo!");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo.");
 	if(!ServerItem_IsUnique(itemid) && (sscanf(inputtext, "d", amount) || amount < 1 || amount > slotAmount))
 	{
 		new title[48];

@@ -46,6 +46,7 @@ enum EXTRA_TYPE_ID
 
 enum E_SERVER_ITEM_DATA
 {
+	sitemInitialized,
 	sitemID,
 	sitemName[MAX_ITEM_NAME],
 	ITEM_TYPE:sitemType,
@@ -112,5 +113,32 @@ new stock
 	// Fuel
 	gItem_SmallFuelTank,
 	gItem_MediumFuelTank,
-	gItem_BigFuelTank
+	gItem_BigFuelTank,
+
+	// Drugs
+	gItem_PCP,
+	gItem_Xanax,
+	gItem_MDMA,
+	gItem_Crack,
+	gItem_Steroids,
+	gItem_Oxycodone,
+	gItem_Marijuana,
+	gItem_Hashish,
+	gItem_Coke,
+	gItem_Eroine,
+	gItem_Meth,
+	gItem_LSD,
+
+	gItem_Bread,
+	gItem_BreadPiece,
+	gItem_PackedMeat,
+	gItem_Cerelas,
+	gItem_IceCream,
+	gItem_Tomato,
+	gItem_RedApple,
+	gItem_GreenApple,
+	gItem_Orange,
+	gItem_Banana,
+	gItem_OrangeJuice,
+	gItem_AppleJuice
 ;
