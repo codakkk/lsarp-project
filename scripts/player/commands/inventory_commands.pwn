@@ -34,7 +34,7 @@ CMD:usa(playerid, params[])
 {
 	if(!Character_IsAlive(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
-	if(PendingRequestInfo[playerid][rdPending])
+	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
 	new slotid;
 	if(sscanf(params, "d", slotid))
@@ -49,7 +49,7 @@ CMD:usa(playerid, params[])
 flags:passa(CMD_ALIVE_USER);
 CMD:passa(playerid, params[])
 {
-	if(PendingRequestInfo[playerid][rdPending])
+	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
 	new slotid, id, amount;
 	if(sscanf(params, "k<u>dD(1)", id, slotid, amount))
@@ -75,7 +75,7 @@ CMD:deposita(playerid, params[])
 {
 	if(!Character_IsAlive(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
-	if(PendingRequestInfo[playerid][rdPending])
+	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
 	new itemid = GetPlayerWeapon(playerid);
 	if(itemid == 0)
@@ -106,7 +106,7 @@ CMD:disassembla(playerid, params[])
 {
 	if(!Character_IsAlive(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
-	if(PendingRequestInfo[playerid][rdPending])
+	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
 	new 
 		slotid, itemid, ammo;
@@ -164,7 +164,7 @@ CMD:gettaarma(playerid, params[])
 {
 	if(!Character_IsAlive(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
-	if(PendingRequestInfo[playerid][rdPending])
+	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
 	new 
 		weaponid = GetPlayerWeapon(playerid), 

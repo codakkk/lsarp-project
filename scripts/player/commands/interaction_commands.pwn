@@ -42,7 +42,7 @@ CMD:esci(playerid, params[])
 flags:dai(CMD_ALIVE_USER);
 CMD:dai(playerid, params[])
 {
-	if(PendingRequestInfo[playerid][rdPending])
+	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
     new
         id,
@@ -63,7 +63,7 @@ CMD:dai(playerid, params[])
     if(!IsPlayerInRangeOfPlayer(playerid, id, 3.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
     
-	if(PendingRequestInfo[id][rdPending])
+	if(Request_IsPending(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta attiva.");
 	
 	if(!Character_IsAlive(id))
@@ -80,21 +80,7 @@ CMD:dai(playerid, params[])
 		SendFormattedMessage(id, COLOR_GREEN, "%s vuole darti un'arma (%s) con %d proiettili.", Character_GetRolePlayName(playerid), Weapon_GetName(weapon), ammo);
 		SendClientMessage(id, -1, "Digita '{00FF00}/accetta arma{FFFFFF}' per accettare.");
 
-		PendingRequestInfo[playerid][rdPending] = 1;
-		PendingRequestInfo[playerid][rdToPlayer] = id;
-		PendingRequestInfo[playerid][rdTime] = GetTickCount();
-		PendingRequestInfo[playerid][rdItem] = weapon;
-		PendingRequestInfo[playerid][rdSlot] = Weapon_GetSlot(weapon);
-		PendingRequestInfo[playerid][rdAmount] = 1;
-		PendingRequestInfo[playerid][rdType] = REQUEST_TYPE_WEAPON;
-		
-		PendingRequestInfo[id][rdPending] = 1;
-		PendingRequestInfo[id][rdByPlayer] = playerid;
-		PendingRequestInfo[id][rdTime] = GetTickCount();
-		PendingRequestInfo[id][rdItem] = weapon;
-		PendingRequestInfo[id][rdSlot] = Weapon_GetSlot(weapon);
-		PendingRequestInfo[id][rdAmount] = 1;
-		PendingRequestInfo[id][rdType] = REQUEST_TYPE_WEAPON;
+		Character_SetRequest(playerid, id, REQUEST_TYPE_WEAPON, weapon, 1, Weapon_GetSlot(weapon));
 	}
 	else
 	{
@@ -151,15 +137,15 @@ CMD:accetta(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	if(!strcmp(params, "arma", true))
 	{
-		if(!PendingRequestInfo[playerid][rdPending] || PendingRequestInfo[playerid][rdType] != REQUEST_TYPE_WEAPON)
+		if(!Request_IsPending(playerid) || Request_GetType(playerid) != REQUEST_TYPE_WEAPON)
 			return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta d'arma attiva.");
-		if(!IsPlayerInRangeOfPlayer(playerid, PendingRequestInfo[playerid][rdByPlayer], 5.0))
+		if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid), 5.0))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
-		new slotid = PendingRequestInfo[playerid][rdSlot],
-			weaponid = PendingRequestInfo[playerid][rdItem],
+		new slotid = Request_GetSlot(playerid),
+			weaponid = Request_GetItem(playerid),
 			tempWeapon = 0,
 			ammo = 0,
-			requestSender = PendingRequestInfo[playerid][rdByPlayer];
+			requestSender = Request_GetSender(playerid);
 		GetPlayerWeaponData(requestSender, slotid, tempWeapon, ammo);
 		if(weaponid != tempWeapon || ammo == 0)
 		{
@@ -248,10 +234,10 @@ CMD:annulla(playerid, params[])
     {
         return Dealership_PlayerCancelBuy(playerid);
     }
-	if(!PendingRequestInfo[playerid][rdPending])
+	if(!Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta attiva.");
-	new toPlayer = PendingRequestInfo[playerid][rdToPlayer];
-	if(PendingRequestInfo[toPlayer][rdPending] && PendingRequestInfo[toPlayer][rdByPlayer] == playerid)
+	new toPlayer = Request_GetReceiver(playerid);
+	if(Request_IsPending(toPlayer) && Request_GetSender(playerid) == playerid) // PendingRequestInfo[toPlayer][rdByPlayer] == playerid)
 	{
 		SendFormattedMessage(toPlayer, COLOR_ERROR, "%s ha annullato la richiesta.", Character_GetOOCName(playerid));
 		ResetPendingRequest(toPlayer);

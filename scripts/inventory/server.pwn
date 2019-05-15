@@ -57,8 +57,8 @@ hook OnGameModeInit()
 	gItem_MDMA = ServerItem_InitializeDrugItem(74, "MDMA", 1650, 3, 100, 20, 0);
 	gItem_Crack = ServerItem_InitializeDrugItem(75, "Crack", 1650, 3, 100, 40, 0);
 	gItem_Oxycodone = ServerItem_InitializeDrugItem(76, "Ossicodone", 1650, 3, 100, 20, 0);
-	gItem_Marijuana = ServerItem_InitializeDrugItem(77, "Marijuana", 1650, 3, 100, 5, 0);
-	gItem_Hashish = ServerItem_InitializeDrugItem(78, "Hashish", 1650, 3, 100, 5, 0);
+	gItem_Marijuana = ServerItem_InitializeDrugItem(77, "Marijuana", 1650, 0, 100, 5, 0);
+	gItem_Hashish = ServerItem_InitializeDrugItem(78, "Hashish", 1650, 0, 100, 5, 0);
 	gItem_Eroine = ServerItem_InitializeDrugItem(79, "Eroina", 1650, 3, 100, 50, 0);
 	gItem_Coke = ServerItem_InitializeDrugItem(80, "Cocaina", 1650, 3, 100, 40, 0);
 	gItem_Meth = ServerItem_InitializeDrugItem(81, "Metanfetamina", 1650, 3, 100, 50, 0);

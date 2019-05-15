@@ -206,7 +206,7 @@ alias:vbagagliaio("vtrunk", "vinventario", "vinv");
 flags:vdeposita(CMD_ALIVE_USER);
 CMD:vdeposita(playerid, params[])
 {
-	if(PendingRequestInfo[playerid][rdPending])
+	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
 	
 	new vehicleid;
@@ -217,7 +217,7 @@ CMD:vdeposita(playerid, params[])
 	else
 	{
 		if(!Vehicle_IsValid(vehicleid))
-			return SendClientMessage(playerid, COLOR_ERROR, "Veicolo");
+			return SendClientMessage(playerid, COLOR_ERROR, "Veicolo non valido.");
 
 		if(!IsPlayerInRangeOfVehicle(playerid, vehicleid, 3.5))
 			return SendClientMessage(playerid, COLOR_GREEN, "Non sei vicino al veicolo.");
@@ -255,7 +255,7 @@ alias:vdeposita("vdep");
 flags:vdisassembla(CMD_ALIVE_USER);
 CMD:vdisassembla(playerid, params[])
 {
-	if(PendingRequestInfo[playerid][rdPending])
+	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
 	new 
 		slotid, itemid, ammo;
@@ -331,6 +331,7 @@ CMD:motore(playerid, params[])
     if(Vehicle_IsEngineOn(vehicleid))
     {
         Vehicle_SetEngineOff(vehicleid);
+		Vehicle_SetLightState(vehicleid, false);
         Character_AMe(playerid, "gira la chiave e spegne il motore");
     }
     else

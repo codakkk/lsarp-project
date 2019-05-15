@@ -38,6 +38,8 @@ enum E_PLAYER_DATA
 
 	pLastChopShopTime,
 	
+	pHungry,
+
     pLootZone, // MUST REMOVE FROM HERE SOON
 };
 new stock
@@ -90,48 +92,12 @@ enum e_Bit1_Data
 	e_pCuffed,
 	e_pDragged,
 	e_pDragging,
-	e_pMasked
+	e_pMasked,
+	e_pLegHit
 };
 
 new 
     BitArray:gCharacterBitState[e_Bit1_Data]<MAX_PLAYERS>;
-
-enum _:e_PendingType
-{
-	REQUEST_TYPE_NONE,
-	REQUEST_TYPE_WEAPON,
-	REQUEST_TYPE_ITEM
-}
-
-enum e_RequestData
-{
-	rdPending,
-	rdByPlayer,
-	rdToPlayer,
-	rdTime,
-	rdItem,
-	rdAmount,
-	rdExtra,
-	rdType,
-	rdSlot,
-};
-
-new 
-	PendingRequestInfo[MAX_PLAYERS][e_RequestData]
-	;
-
-
-stock ResetPendingRequest(playerid)
-{
-	PendingRequestInfo[playerid][rdPending] = 0;
-	PendingRequestInfo[playerid][rdByPlayer] = -1;
-	PendingRequestInfo[playerid][rdTime] = 0;
-	PendingRequestInfo[playerid][rdItem] = 0;
-	PendingRequestInfo[playerid][rdAmount] = 0;
-	PendingRequestInfo[playerid][rdExtra] = 0;
-	PendingRequestInfo[playerid][rdType] = REQUEST_TYPE_NONE;
-	PendingRequestInfo[playerid][rdSlot] = 0;
-}
 
 enum // e_DeathStates
 {
@@ -158,13 +124,9 @@ new
 	pDeathState[MAX_PLAYERS char] // 0 = Not dead, 1 = Waiting for healing, 2 = Death
 ;
 
-enum e_CharacterDamageInfo
+enum _:e_PendingType
 {
-	damageUsed,
-	damageIssuerName[MAX_PLAYER_NAME],
-	damageWeapon,
-	Float:damageAmount,
-	damageBodyPart,
-};
-new 
-	CharacterDamageInfo[MAX_PLAYERS][MAX_DAMAGES_PER_PLAYER][e_CharacterDamageInfo];
+	REQUEST_TYPE_NONE,
+	REQUEST_TYPE_WEAPON,
+	REQUEST_TYPE_ITEM
+}

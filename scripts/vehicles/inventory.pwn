@@ -249,7 +249,7 @@ Dialog:Dialog_VehicleInvAction(playerid, response, listitem, inputtext[])
 				extra = Vehicle_GetSlotExtra(vehicleid, pSelectedListItem[playerid]),
 				ammo = 0;
 				//invAmmo = Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType);
-			
+			#pragma unused ammoType
 			if(Weapon_RequireAmmo(itemid))
 			{
 				if(extra <= 0)
@@ -260,6 +260,8 @@ Dialog:Dialog_VehicleInvAction(playerid, response, listitem, inputtext[])
 			{
 				ammo = Vehicle_GetSlotAmount(vehicleid, pSelectedListItem[playerid]);
 			}
+			else 
+				ammo = 1;
 			if(ammo > 0)
 			{
 				SendFormattedMessage(playerid, COLOR_GREEN, "Hai preso %s (Munizioni: %d) dal veicolo.", ServerItem_GetName(itemid), ammo);

@@ -30,17 +30,6 @@ task OnVehicleCheck[120000]()
 
 // TODO: Write a Vehicle_LoadAll that loads factions vehicles
 
-hook OnCharacterDisconnected(playerid)
-{
-	foreach(new v : Vehicle)
-	{
-		if(!Vehicle_GetID(v) || Vehicle_GetOwnerID(v) == 0 || Vehicle_GetModel(v) == 0 || Vehicle_GetFaction(v) != INVALID_FACTION_ID)
-			continue;
-		Vehicle_SetToDespawn(v, 60);
-	}
-	return 1;
-}
-
 hook OnVehicleSpawn(vehicleid)
 {
 	printf("Hook OnVehicleSpawn %d", vehicleid);
@@ -280,7 +269,7 @@ stock Vehicle_UpdateLockState(vehicleid)
 	   return 1;
     new engine, lights, alarm, doors, bonnet, boot, objective;
     GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
-    SetVehicleParamsEx(vehicleid, engine, lights, alarm, Vehicle_IsLocked(vehicleid), bonnet, boot, objective);
+    SetVehicleParamsEx(vehicleid, engine, lights, alarm, Vehicle_IsLocked(vehicleid) ? VEHICLE_PARAMS_ON : VEHICLE_PARAMS_OFF, bonnet, boot, objective);
     if(Vehicle_IsLocked(vehicleid))
 	   Vehicle_SetDoorStatus(vehicleid, 0, 0, 0, 0);
     return 1;

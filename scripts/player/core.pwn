@@ -22,21 +22,9 @@
 #include <player\components\damage_system.pwn>
 #include <player\components\customanims.pwn>
 #include <player\components\drugs.pwn>
+#include <player\components\hungry.pwn>
 #include <YSI_Coding\y_hooks>
 
-
-hook OnCharacterPreSaveData(playerid, disconnect)
-{
-	if(disconnect)
-	{
-		if(pAdminDuty[playerid])
-		{
-			AC_SetPlayerHealth(playerid, 100.0);
-			AC_SetPlayerArmour(playerid, 0.0);
-		}
-	}
-	return Y_HOOKS_CONTINUE_RETURN_1;
-}
 
 hook OnPlayerClearData(playerid)
 {
