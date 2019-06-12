@@ -71,7 +71,7 @@ CMD:dai(playerid, params[])
 
 	if(!strcmp(text, "arma", true))
 	{
-		new weapon = GetPlayerWeapon(playerid);
+		new weapon = AC_GetPlayerWeapon(playerid);
 		new ammo = GetPlayerAmmo(playerid);
 		if(weapon == 0 || ammo <= 0)
 			return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma in mano.");
@@ -154,7 +154,9 @@ CMD:accetta(playerid, params[])
 			SendClientMessage(playerid, COLOR_ERROR, "Non possiedi più l'arma. La richiesta è stata annullata.");
 			return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non possiede più l'arma, pertanto non puoi più accettare.");	
 		}
-		if(ACInfo[playerid][acWeapons][Weapon_GetSlot(weaponid)] == 0)
+		new w, a;
+		AC_GetPlayerWeaponData(playerid, Weapon_GetSlot(weaponid), w, a);
+		if(w == 0 || a == 0)
 		{
 			AC_RemovePlayerWeapon(requestSender, weaponid);
 			AC_GivePlayerWeapon(playerid, weaponid, ammo);
@@ -236,13 +238,22 @@ CMD:annulla(playerid, params[])
     }
 	if(!Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta attiva.");
-	new toPlayer = Request_GetReceiver(playerid);
-	if(Request_IsPending(toPlayer) && Request_GetSender(playerid) == playerid) // PendingRequestInfo[toPlayer][rdByPlayer] == playerid)
+
+	new 
+		toPlayer = Request_GetReceiver(playerid), 
+		byPlayer = Request_GetSender(playerid);
+	if(toPlayer == playerid)
 	{
-		SendFormattedMessage(toPlayer, COLOR_ERROR, "%s ha annullato la richiesta.", Character_GetOOCName(playerid));
+		SendFormattedMessage(byPlayer, COLOR_ERROR, "%s ha rifiutato la tua richiesta.", Character_GetRolePlayName(playerid));
+		SendFormattedMessage(playerid, COLOR_GREEN, "Hai rifiutato la richiesta di %s.", Character_GetRolePlayName(byPlayer));
+		ResetPendingRequest(byPlayer);
+	}
+	else if(byPlayer == playerid)
+	{
+		SendFormattedMessage(toPlayer, COLOR_ERROR, "%s ha annullato la richiesta.", Character_GetRolePlayName(playerid));
+		SendFormattedMessage(playerid, COLOR_GREEN, "Hai annullato la richiesta inviata a %s.", Character_GetRolePlayName(toPlayer));
 		ResetPendingRequest(toPlayer);
 	}
-	SendClientMessage(playerid, COLOR_GREEN, "Hai annullato la richiesta attiva.");
 	ResetPendingRequest(playerid);
 	return 1;
 }

@@ -77,7 +77,7 @@ CMD:deposita(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
-	new itemid = GetPlayerWeapon(playerid);
+	new itemid = AC_GetPlayerWeapon(playerid);
 	if(itemid == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma.");
 	
@@ -112,7 +112,7 @@ CMD:disassembla(playerid, params[])
 		slotid, itemid, ammo;
 	if(sscanf(params, "d", slotid))
 	{
-		itemid = GetPlayerWeapon(playerid);
+		itemid = AC_GetPlayerWeapon(playerid);
 		ammo = AC_GetPlayerAmmo(playerid);
 		if(itemid == 0 || ammo == 0)
 		{
@@ -167,7 +167,7 @@ CMD:gettaarma(playerid, params[])
 	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
 	new 
-		weaponid = GetPlayerWeapon(playerid), 
+		weaponid = AC_GetPlayerWeapon(playerid), 
 		ammo = GetPlayerAmmo(playerid);
 	if(weaponid == 0 || ammo == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma da gettare.");

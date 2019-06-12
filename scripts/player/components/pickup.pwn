@@ -1,0 +1,79 @@
+#include <YSI_Coding\y_hooks>
+
+new pLastPickup[MAX_PLAYERS];
+
+hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
+{
+    if(type == ELEMENT_TYPE_BUILDING_ENTRANCE)
+    {
+		new buildingid = elementid,
+			String:string;
+		if(AccountInfo[playerid][aAdmin] > 1)
+		{
+			string += str_format("~r~ID:~w~ %d~n~", elementid);
+		}
+		if(Building_IsOwnable(buildingid))
+		{
+			if(Building_GetOwnerID(buildingid) != 0)
+			{
+				new bname[MAX_BUILDING_NAME], ownerName[MAX_PLAYER_NAME];
+				Building_GetName(buildingid, bname);
+				Building_GetOwnerName(buildingid, ownerName);
+				string += str_format("~y~%s~n~~w~Proprietario: ~y~%s~w~.~n~", bname, ownerName);
+			}
+			else
+			{
+				new bname[MAX_BUILDING_NAME];
+				Building_GetName(buildingid, bname);
+				string += str_format("~y~%s~n~~g~Prezzo:~w~$%d~n~", bname, Building_GetPrice(buildingid));
+			}
+		}
+		else
+		{
+			new bname[MAX_BUILDING_NAME];
+			Building_GetName(buildingid, bname);
+			string += str_format("~y~%s~n~", bname);
+		}
+		GameTextForPlayerStr(playerid, string, 2000, 5);
+	}
+	else if(type == ELEMENT_TYPE_HOUSE_ENTRANCE)
+	{
+		new houseid = elementid, String:string;
+		if(AccountInfo[playerid][aAdmin] > 1)
+		{
+			string += str_format("~r~ID:~w~ %d~n~", houseid);
+		}
+		if(House_IsOwned(houseid))
+		{
+			string += str_format("~y~Proprietario: ~w~%S~n~", House_GetOwnerNameStr(houseid));
+			if(House_GetOwnerID(houseid) == PlayerInfo[playerid][pID])
+			{
+				if(Account_HasHotKeysEnabled(playerid))
+					string += @("Premi ~b~~k~~SNEAK_ABOUT~~w~ (/casa) per il menu.~n~");
+				else
+					string += @("Digita ~b~/casa~w~ per il menu.~n~");
+			}
+		}
+		else
+		{
+			string += str_format("~g~In vendita!~n~~g~Prezzo: ~w~$%d~n~", House_GetPrice(houseid));
+		}
+		string += str_format("~r~Interno:~w~ %d~n~", House_GetInteriorID(houseid));
+		GameTextForPlayerStr(playerid, string, 2000, 5);
+	}
+	else if(type == ELEMENT_TYPE_DROP)
+	{
+		Player_Info(playerid, "Premi ~y~~k~~PED_DUCK~~w~ per interagire", false);
+	}
+    return 1;
+}
+
+stock Character_SetLastPickup(playerid, id)
+{
+	pLastPickup[playerid] = id;
+}
+
+stock Character_GetLastPickup(playerid)
+{
+	return pLastPickup[playerid];
+}

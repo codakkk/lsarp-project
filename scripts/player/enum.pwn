@@ -37,8 +37,6 @@ enum E_PLAYER_DATA
 	pBanExpiry,
 
 	pLastChopShopTime,
-	
-	pHungry,
 
     pLootZone, // MUST REMOVE FROM HERE SOON
 };
@@ -47,26 +45,13 @@ new stock
 	// probably Iterators aren't worth for this.
 	Iterator:pTogglePM[MAX_PLAYERS]<MAX_PLAYERS>,
 	Iterator:pToggleOOC[MAX_PLAYERS]<MAX_PLAYERS>,
-	pVehicleListItem[MAX_PLAYERS][MAX_VEHICLES_PER_PLAYER],
-	pSelectedVehicleListItem[MAX_PLAYERS],
-	pAmmoSync[MAX_PLAYERS char],
 	pTempSkin[MAX_PLAYERS],
 	pSelectedUniformSlot[MAX_PLAYERS char],
-	pDraggedBy[MAX_PLAYERS],
-	Timer:pDragTimer[MAX_PLAYERS],
-	Timer:pChatTimer[MAX_PLAYERS],
-	Timer:pWalkTimer[MAX_PLAYERS],
-	pLastPMTime[MAX_PLAYERS],
-	pCare[MAX_PLAYERS],
-	pInCare[MAX_PLAYERS char],
-	pCareTime[MAX_PLAYERS],
-	pAFKTime[MAX_PLAYERS]
+	pLastPMTime[MAX_PLAYERS], 
+	pTempWeapons[MAX_PLAYERS][13],
+	pTempAmmo[MAX_PLAYERS][13]
 ;
 
-// Text3D
-new stock
-	Text3D:pMaskText3D[MAX_PLAYERS]
-;
 enum E_PLAYER_RESTORE_DATA
 {
     pSpawned,
@@ -105,24 +90,6 @@ enum // e_DeathStates
 	DEATH_STATE_INJURED = 1,
 	DEATH_STATE_DEAD = 2
 }
-
-enum e_DeathState
-{
-	pDeathTime,
-	Float:pDeathX,
-	Float:pDeathY,
-	Float:pDeathZ,
-	Float:pDeathA,
-	pDeathInt,
-	pDeathWorld,
-	pDeathKiller,
-	Text3D:pDeathText
-};
-
-new 
-	PlayerDeathState[MAX_PLAYERS][e_DeathState],
-	pDeathState[MAX_PLAYERS char] // 0 = Not dead, 1 = Waiting for healing, 2 = Death
-;
 
 enum _:e_PendingType
 {

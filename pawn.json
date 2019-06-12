@@ -14,7 +14,8 @@
 		"samp-incognito/samp-streamer-plugin:v2.9.4",
 		"oscar-broman/strlib",
 		"Open-GTO/sa-mp-fixes",
-		"AGraber/pawn-plus-mysql"
+		"AGraber/pawn-plus-mysql",
+		"NexiusTailer/Nex-AC"
 	],
 	"builds": [
 		{

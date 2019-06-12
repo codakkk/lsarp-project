@@ -22,7 +22,8 @@
 #include <player\components\damage_system.pwn>
 #include <player\components\customanims.pwn>
 #include <player\components\drugs.pwn>
-#include <player\components\hungry.pwn>
+#include <player\components\hunger.pwn>
+#include <player\components\drag.pwn>
 #include <YSI_Coding\y_hooks>
 
 

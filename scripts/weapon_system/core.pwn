@@ -31,14 +31,11 @@ hook OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
 		return Y_HOOKS_BREAK_RETURN_1;
 
 	//Uncomment if we wanna hide Fall damages from /danni
-	//if(weaponid == 51 || weaponid == 49 || weaponid == 54)
-		//return 1;
-	
-	new ammo;
-	if(issuerid != INVALID_PLAYER_ID && !AC_AntiWeaponCheck(issuerid, weaponid, ammo) && AccountInfo[playerid][aAdmin] < 1)
+	if(weaponid == 51 || weaponid == 49 || weaponid == 54)
 		return Y_HOOKS_BREAK_RETURN_1;
-
-
+	
+	if(issuerid != INVALID_PLAYER_ID && /*!AC_AntiWeaponCheck(issuerid, weaponid, ammo) &&*/ AccountInfo[playerid][aAdmin] < 1)
+		return Y_HOOKS_BREAK_RETURN_1;
 
 	new 
 		Float:weaponDamage,

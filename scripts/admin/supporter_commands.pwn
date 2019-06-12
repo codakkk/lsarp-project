@@ -2,6 +2,8 @@
 flags:sduty(CMD_SUPPORTER);
 CMD:sduty(playerid, params[])
 {
+	if(pAdminDuty[playerid])
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio admin.");
     pSupporterDuty[playerid] = !pSupporterDuty[playerid];
     if(pSupporterDuty[playerid])
 	{

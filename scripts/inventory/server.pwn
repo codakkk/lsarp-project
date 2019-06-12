@@ -32,8 +32,9 @@ hook OnGameModeInit()
     gItem_Milk = ServerItem_InitializeDrinkItem(57, "Latte in polvere", 19569, 10);
 	gItem_RainWater = ServerItem_InitializeDrinkItem(58, "Barattolo d'acqua piovana", 19570, 10); 
 
+	gItem_RationK = ServerItem_InitializeFoodItem(59, "Razione K", 1575, 100, 100);
+
 	// Medical Objects
-	gItem_RationK = ServerItem_InitializeMedikItem(59, "Razione K", 1575, 100);
 	gItem_Morfine = ServerItem_InitializeMedikItem(60, "Siringa di Morfina", 2902, 30);
 	gItem_Bandages = ServerItem_InitializeMedikItem(61, "Bende", 11747, 15);
 	gItem_Medikit = ServerItem_InitializeMedikItem(62, "Kit Pronto Soccorso", 11738, 50);
@@ -94,9 +95,9 @@ stock ServerItem_InitializeDrugItem(id, const name[], modelid = 0, amountForAddi
 	return ServerItem_ManualInitializeItem(id, name, ITEM_TYPE_DRUG, modelid, 100, amountForAddiction, maxHealth, healthGain, effectTime);
 }
 
-stock ServerItem_InitializeFoodItem(id, const name[], modelId, foodAmount)
+stock ServerItem_InitializeFoodItem(id, const name[], modelId, foodAmount, health = 0)
 {
-	return ServerItem_ManualInitializeItem(id, name, ITEM_TYPE_FOOD, modelId, 2, foodAmount);
+	return ServerItem_ManualInitializeItem(id, name, ITEM_TYPE_FOOD, modelId, 2, foodAmount, health);
 }
 
 stock ServerItem_InitializeMedikItem(id, const name[], modelId, healthAmount)
@@ -224,9 +225,14 @@ stock ServerItem_GetTankCapacity(itemid)
 	return ServerItem[itemid][sitemExtraData][0];
 }
 
-stock ServerItem_GetFoodValue(itemid)
+stock FoodItem_GetFoodValue(itemid)
 {
 	return ServerItem[itemid][sitemExtraData][0];
+}
+
+stock FoodItem_GetHealthValue(itemid)
+{
+	return ServerItem[itemid][sitemExtraData][1];
 }
 
 stock DrugItem_CanGetDependent(itemid)

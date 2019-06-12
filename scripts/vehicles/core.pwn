@@ -109,6 +109,7 @@ stock Vehicle_Create(modelid, Float:x, Float:y, Float:z, Float:rotation, color1,
 	Vehicle_SetEngineStatus(vehicleid, false);
 	Vehicle_SetFaction(vehicleid, INVALID_FACTION_ID);
 	Vehicle_SetFuel(vehicleid, 100.0);
+	SetVehicleParamsEx(vehicleid, 0, 0, 0, 0, 0, 0, 0);
 	Vehicle_UpdateLockState(vehicleid);
 	return vehicleid;
 }
@@ -196,14 +197,14 @@ stock Vehicle_Park(vehicleid, Float:nx, Float:ny, Float:nz, Float:na)
 stock Vehicle_Lock(vehicleid)
 {
     Vehicle_SetLocked(vehicleid, true);
-    Vehicle_UpdateLockState(vehicleid);
+    //Vehicle_UpdateLockState(vehicleid);
     return 1;
 }
 
 stock Vehicle_UnLock(vehicleid)
 {
     Vehicle_SetLocked(vehicleid, false);
-    Vehicle_UpdateLockState(vehicleid);
+    //Vehicle_UpdateLockState(vehicleid);
     return 1;
 }
 

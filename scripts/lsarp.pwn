@@ -37,6 +37,7 @@
 #endif
 
 #include <includes.pwn>
+
 #include <defines.pwn>
 #include <utils\iterators.pwn>
 #include <forwarded_functions.pwn>
@@ -50,7 +51,7 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 // Exception. Must be on top of all others.
 #include <pickup\enum.pwn>
 
-#include <anticheat\enum.pwn>
+//#include <anticheat\enum.pwn>
 #include <account_system\enum.pwn>
 #include <drop_system\enum.pwn>
 #include <player\enum.pwn>
@@ -67,7 +68,7 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 #include <database\core.pwn>
 
 // ===== [ ANTI-CHEAT SYSTEM ] =====
-#include <anticheat\core.pwn>
+//#include <anticheat\core.pwn>
 
 // ===== [ PICKUP SYSTEM ] =====
 #include <pickup\core.pwn>
@@ -90,6 +91,7 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 
 #include <miscellaneous\global_timers.pwn>
 
+#include <YSI_Coding\y_remote>
 #include <YSI_Coding\y_hooks> // Place hooks after this. Everything included before this, is hooked first.
 
 main()
@@ -101,9 +103,8 @@ main()
 	VehicleInventory = map_new();
 	HouseList = list_new();
 	HouseInventory = map_new();
-
-	printf("Valid: %d", list_valid(Inventory:0));
 }
+
 
 hook OnGameModeInit() 
 {
@@ -213,12 +214,12 @@ hook OnPlayerShootDynObject(playerid, weaponid, objectid, Float:x, Float:y, Floa
 }
 
 
-hook OnAntiCheatDetected(playerid, code)
+/*hook OnAntiCheatDetected(playerid, code)
 {
 	SendMessageToAdmins(true, COLOR_ERROR, "[ADMIN-ALERT]: %s (%d) è sospetto di hack. (%s)", Character_GetOOCName(playerid), playerid, AC_Name[code]);
 	return 1;
 }
-
+*/
 hook OnVehicleMod(playerid, vehicleid, componentid)
 {
 	RemoveVehicleComponent(vehicleid, componentid);
@@ -230,6 +231,30 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 {
 	if(!Character_IsLogged(playerid))
 		return 0;
+	/*printf("%s", cmd);
+	static const banned_commands[] = {
+		"/.spam","/r2info","/pos","/placebomb","/detonate","/fakenick", "/fakeskin","/ro","/follow","/safk","/bcinfo","/tpc","/skr","/be_chat","/be_anon","/be_id","/be_name","/name","/connect",
+		"/servers","/ct.slap","/ct.up","/ct.down","/ct.ray","/ct.gh","/vert","/reaper","/training","/troff","/tr","/fr","/.shotrepeater","/.pos","/.flip","/ecol","/tb.cmds","/cfake","/usm","/gjp",
+		"/tc","/find","/cbug","/tb.killall","/tb.slag","/tb.fire","/tb.panic","/tb.flip","/tb.fly","/tb.load","/tb.pop","/tb.color","/tb.ocean","/tb.jack","/tb.tpto","/tb.heaven","/tb.kick",
+		"/tb.ground","/tb.kill","/tb.magnet","/tb.random","/cc","/stopfind","/master","/hmo","/setampl","/kill","/ton","/off","/non","/noff","/spy","/incar","/weap","/sc","/so","/react","/fd","/fb",
+		"/go","/coords","/note","/line","/get","/set","/top","/dgun","/.slp","/.slpv","/.tel","/slapall","/eject","/st","/kc","/rel","/target","/rfast","/rind","/aim","/.addfriend","/.delfriend","/.friends","/tinfo","/trollinfo","/dpos","/r2","/fw","/ccars","/hp","/hpu","/tp","/sm","/showid","/showcarid","/s1","/sswitch","/lag","/col","/fwh","/bm","/reu","/tpall","/hpall","/thr","/small","/smallc","/safe","/ohelp","/oy","/or","/ob","/ov","/og","/ow","/oreset","/opos","/osize","/oalign","/oshowid","/.rec","/.stoprec","/.play","/.stop","/fstop","/sd","/sdpos","/sdsize","/sdalign","/sdflags","/sdzone","/sdping","/sdfps","/aoff","/aafk","/.silentaim","/copdetect","/vhfinder","/vb","/vehiclebugger","/akb","/fdeagle","/wpinfo","/spec","/cardance","/vhinfo","/spinfo","/skin_hack","/ts.troll","/ts.me","/ts.pin","/invis","/rpc","/pkt","/ppoint","/ptracers","/schat","/clearc","/pskin","/csk","/wc","/set_chat","/set_time","/vers","/.e","/visionhelp","/vision1","/vision2","/.cl","/invdon","/.bot_say","/.bot_anim","/.bot_fanim","/gbc","/ak","/.ra","/.range","/.allowwep","/myfind","/matrunbot",
+		"/matrunbothelp","/refresh","/vehiclerecordingloop","/rpay","/kcmds","/hme","/kme","/ufme","/spme","/team","/act","/up","/down","/irun","/fx","/fp","/mynrg","/antibf","/ccolor","/scars","/pcars","/cwater","/spack","/fpack","/ppack","/getw","/ammo","/rw","/rwall","/.ls","/.sf","/.lv","/market","/sl","/lp","/cash","/pinfo","/noint","/fdeath","/fdamage","/.time","/.weather","/rejoin","/be","/nametag","/splayers","/.cc","/ntp","/dnt","/dhp","/awr","/trollskin","/whack","/.w1","/sp","/carc","/carcontrol","/gcc","/cboom","/js","/sfucker","/wh","/afix","/mini","/checkcon","/cp","/setcarhp","/si","/sipos","/sisize","/simax","/uc","/cg","/cgpos","/cgsize","/cgline","/vape","/bcm","/chp","/spc","/coordz","/chelp","/cfind","/cfind2","/creset","/cpos","/csize","/calign","/togptb","/nodrive","/nodrive_looplength","/cn","/cnt","/cnd","/csload","/.comandos","/.mark","/.tp","/.jack","/.up","/.down","/.hme","/.ame","/.gint","/.sint","/.fix","/.getw","/lockstatus","/ireload","/infobar","/iset","/k","/aimka","/df","/witch","/ms","/qq","/tcp","/ggun","/ttp","/setclass","/scar","/sskin","/fkill","/nick","/bs_func","/bs_cmd","/akill","/br","/fskin","/warm","/whelp","/setwep","/slp","/lagon","/lagoff","/adeath","/dstop","/plines","/bc","/bcc","/ctp","/crp","/mrp","/cinfo","/pid",
+		"/cid","/kicker","/attack","/chudpos","/pz_radius","/pz","/gravon","/gravoff","/cgrav","/dgrav","/gravhelp","/hud","/sk","/take","/troll","/write","/co","/.sp","/.w","/rs","/.420","/.fz","/gkick","/nospread","/checkcode","/getmats","/oncemats","/massmatson","/massmatsoff","/goback","/matsmasterhelp","/.goto","/ck","/mow","/kp","/4find","/carhelp","/vr","/ah","/chase","/gun","/ph","/vh","/gc","/cb","/jack","/pjack","/mondie","/x","/autosay","/autosaystop","/autosayreset","/setdelay","/setpoint","/antiafk","/dk","/gh","/sob","/reconnect","/spawncars","/fastspawn","/fuckcars","/ftext","/bubble","/.setcolor","/controlcar","/raininfo","/rain","/rainfew","/count","/rainpos","/carpos","/delpos","/.godmodeon","/.godmodeoff","/clearchate","/editpi","/editpic","/pimod","/.spec","/commander","/getplayerid","/getcarid","/getcoord","/autoshot","/frieze","/stan","/load","/tf","/mp3on","/sgm","/cartp","/carclear","/relog","/fcord","/ncmd","/c1save","/c2save","/c3save","/c4save","/c5save","/c1load","/c2load","/c3load","/c4load","/c5load","/crasher","/mq","/pickup","/rem","/maprecord","/vehiclerecording","/gping",
+		"/c.showcmds","/c.changeserver","/c.currentserver","/c.pickup","/c.skin","/c.name","/c.warp","/c.fakekill","/c.infotr","/c.pos","/c.rs","/c.gskin","/c.uncar","/.cmds","/.friend","/.delfriends","/.ik","/.ib","/.cr","/.c","/.troll","/.pmall","/.fps","/.sd","/.sd2","/.crash","/.bot_ping","/.fake_fps","/.ol_cmds","/.find_chat","/.stop_find","/.bot_nick","/.bot_steal_nick","/.add_friend","/.stick","//stick","//warp","//adm","//friend","//rename","//slap","//skin","//bot_connect","//bot_disconnect","/.addm","/.addf","/cserv","/sendpic","/fakekill","/warp","/vadd","/fpay","/dkick","/gcheck","/boom","/tpm","/vhadd","/retime","/dialoghide","/del","/paint","/getcar","/sendcheck","/shp","/gguns","/gotocheck","/fcuff","/bbiz","/.nick","/.rnick","/.sortmoney","/.search","/.warp","/.pmcrash","/.aimfriend","/.delaimfriend","/.delaimfriends","/.derpcar","/.minigun","/.sendcars","/.incar","/.vsearch","/.vssearch","/.cc_all","/.del_all","/.onfire_all","/.connectbot","/.removebot","/.bot_add","/.bot_remove","/.bot_removeall","/.npc","/.exploit","/clmrad","/ptroll","/carslap","/toggle","/nigger","/fakebulletsync","/syncinvi","/invi","/crashdebug","/crash","/agm","/recfg","/loading","/afakedamage","/togpl","/acheats.ru","/rend","/topic","/toobj","/toveh","/spawncar","/airb","/airp","/pr","/spam","/fkick","/flood","/cm_help","/cm_tp","/cm_tcar","/spectate","/hdialog","/shot","/stazer","/fcheck","/paintjob","/fpick","/ghere","/vehadd","/ghp","/svhp","/ccw","/ucw","/parsenicks","/coordcw","/takecar","/stcar","/lagtroll"
+		};
+	if(strlen(cmd) >= 3)
+	{
+		new f_cmd[32];
+		format(f_cmd, sizeof(f_cmd), "/%s", cmd);
+		for(new i = 0, j = sizeof(banned_commands); i < j; ++i)
+		{
+			if(!strcmp(f_cmd, banned_commands[i]))
+			{
+				SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-ALERT] Il giocatore %s (%d) ha utilizzato un comando proibito. Comando: %s.", Character_GetOOCName(playerid), playerid, cmd);
+				return 0;
+			}
+		}
+	}*/
 	if(flags & CMD_ALIVE_USER)
 	{
 		if( (Character_IsJailed(playerid) && !Character_IsICJailed(playerid)) || !Character_IsAlive(playerid))
@@ -379,7 +404,7 @@ hook OnPlayerConnect(playerid)
 	
 	Account_SetLogged(playerid, false);
 	Character_SetLogged(playerid, false);
-	gLoginAttempts[playerid] = 0;
+	gLoginAttempts{playerid} = 0;
 	
 	CallLocalFunction(#OnPlayerClearData, "d", playerid);
 
@@ -550,6 +575,7 @@ stock IsPlayerIDConnected(dbid)
 
 // ===== [ PLAYER ] =====
 #include <player\core.pwn>
+#include <anticheat\cheats\money.pwn>
 
 // ===== [ VEHICLE SYSTEM ] =====
 #include <vehicles\core.pwn>
@@ -601,3 +627,45 @@ stock IsPlayerIDConnected(dbid)
 #if defined ENABLE_MAPS
 	#include <server\maps\maps.pwn>
 #endif
+
+stock AC_RemovePlayerWeapon(playerid, weaponid)
+{
+	new plyWeapons[12] = 0;
+	new plyAmmo[12] = 0;
+	for(new slot = 0; slot != 12; slot++)
+	{
+		new wep, ammo;
+		AC_GetPlayerWeaponData(playerid, slot, wep, ammo);
+
+		if(wep != weaponid && ammo != 0)
+		{
+			AC_GetPlayerWeaponData(playerid, slot, plyWeapons[slot], plyAmmo[slot]);
+		}
+		else if(wep == weaponid)
+		{
+			//ACInfo[playerid][acWeapons][slot] = 0; // AntiCheat
+			//ACInfo[playerid][acAmmo][slot] = 0; // AntiCheat
+		}
+	}
+	new query[128];
+	format(query, sizeof(query), "DELETE FROM `player_weapons` WHERE CharacterID = '%d' AND WeaponID = '%d'", Character_GetID(playerid), weaponid);
+	mysql_pquery(gMySQL, query);
+
+	ResetPlayerWeapons(playerid);
+	for(new slot = 0; slot != 12; slot++)
+	{
+		if(plyAmmo[slot] != 0)
+		{
+			GivePlayerWeapon(playerid, plyWeapons[slot], plyAmmo[slot]);
+		}
+	}
+	return 1;
+}
+
+stock AC_ResetPlayerWeapons(playerid, bool:deleteFromDatabase = false)
+{
+	ResetPlayerWeapons(playerid);
+	if(deleteFromDatabase)
+		Character_DeleteAllWeapons(playerid);
+	return 1;
+}

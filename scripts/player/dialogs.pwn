@@ -15,7 +15,7 @@ Dialog:Dialog_InvSelectAmmo(playerid, response, listitem, inputtext[])
     Character_DecreaseItemAmount(playerid, ammoType, ammo);
 
 	Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~", Weapon_GetName(itemid)), true);
-	Character_AMe(playerid, "prende un'arma dall'inventario.");
+	//Character_AMe(playerid, "prende un'arma dall'inventario.");
 	Trigger_OnPlayerInvItemUse(playerid, itemid, 1, ITEM_TYPE_WEAPON);
 	Trigger_OnPlayerInvItemUse(playerid, ammoType, ammo, ITEM_TYPE_AMMO);
     return 1;

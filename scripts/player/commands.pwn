@@ -1,9 +1,9 @@
-#include <YSI_Coding\y_hooks>
 #include <player\commands\chat_commands.pwn>
 #include <player\commands\premium_commands.pwn>
 #include <player\commands\inventory_commands.pwn>
 #include <player\commands\vehicle_commands.pwn>
 #include <player\commands\interaction_commands.pwn>
+#include <YSI_Coding\y_hooks>
 
 // CHANGE ME/AME COLOR
 
@@ -137,7 +137,7 @@ CMD:aiuto(playerid, params[])
 		}
 	}
 	if(AccountInfo[playerid][aAdmin] > 0)
-		SendClientMessage(playerid, COLOR_GREEN, "[SUPPORTER]: /asupportercmds");
+		SendClientMessage(playerid, COLOR_GREEN, "[SUPPORTER]: /scmds");
 	if(AccountInfo[playerid][aAdmin] > 1)
 		SendClientMessage(playerid, COLOR_GREEN, "[ADMIN]: /acmds");
     return 1;
@@ -287,4 +287,88 @@ CMD:stilelotta(playerid, params[])
 		Character_Save(playerid);
 	}
 	return 1;
+}
+
+flags:cambiapassword(CMD_USER);
+CMD:cambiapassword(playerid, params[])
+{
+	gLoginAttempts{playerid} = 0;
+	Dialog_Show(playerid, Dialog_ChangePassword, DIALOG_STYLE_INPUT, "Cambia Password", "Inserisci la tua password attuale.", "Continua", "Chiudi");
+	return 1;
+}
+
+Dialog:Dialog_ChangePassword(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+		return 0;
+
+	if(gLoginAttempts{playerid} >= 3)
+		return KickEx(playerid);
+
+	inline OnCheck()
+	{
+		if(cache_num_rows() > 0)
+		{
+			Dialog_Show(playerid, Dialog_SetNewPassword, DIALOG_STYLE_INPUT, "Nuova password", "Inserisci la nuova password.", "Continua", "Annulla");
+		}
+		else
+		{
+			Dialog_Show(playerid, Dialog_ChangePassword, DIALOG_STYLE_INPUT, "Cambia Password", "{FF0000}La password inserita non è valida.\n{FFFFFF}Inserisci la tua password per continuare.\nTentativo: %d/%d", "Continua", "Annulla", gLoginAttempts{playerid}, MAX_LOGIN_ATTEMPTS);
+			gLoginAttempts{playerid}++;
+		}
+	}
+
+	new 
+		psw[WHIRLPOOL_LEN];
+	WP_Hash(psw, sizeof(psw), inputtext);
+	MySQL_TQueryInline(gMySQL, using inline OnCheck, "SELECT * FROM accounts WHERE ID = '%d' AND Password = '%e'", Account_GetID(playerid), psw);
+	return 1;
+}
+
+Dialog:Dialog_SetNewPassword(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+		return 0;
+	if(!IsValidPassword(inputtext))
+		return Dialog_Show(playerid, Dialog_SetNewPassword, DIALOG_STYLE_INPUT, "Nuova password", "La password inserita non è corretta.\nInserisci la nuova password.\nLa password deve contenere almeno:\n- 8 caratteri.\n- Almeno una lettera maiuscola.\n- Almeno un numero.\n- Almeno un carattere speciale.\nLa password non puo':\n- Cominciare o finire con uno spazio\n- Contenere come caratteri speciali: %, \\, ', `, \".", "Continua", "Annulla");
+	inline OnUpdate()
+	{
+		SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato la tua password con successo.");
+	}
+	new 
+		psw[WHIRLPOOL_LEN];
+	WP_Hash(psw, sizeof(psw), inputtext);
+	MySQL_TQueryInline(gMySQL, using inline OnUpdate, "UPDATE `accounts` SET Password = '%e' WHERE ID = '%d';", psw, Account_GetID(playerid));
+	return 1;
+}
+
+
+stock bool:IsValidPassword(const password[])
+{
+	if(strlen(password) < 8 || strlen(password) > 15 || password[0] == ' ' || password[strlen(password)-1] == ' ')
+		return false;
+	
+	new 
+		specialCounter = 0, 
+		numberCounter = 0, 
+		capitalCounter = 0
+	;
+
+	for(new i = 0, j = strlen(password); i < j; ++i)
+	{
+		// Unallowed Characters
+		if(password[i] == '%' || password[i] == '\\' || password[i] == '\'' || password[i] == '`' || password[i] == '\"')
+			return false;
+		if('0' <= password[i] <= '9')
+			numberCounter++;
+		else if('A' <= password[i] <= 'Z')
+			capitalCounter++;
+		else if(password[i] == ' ')
+			continue;
+		else
+			specialCounter++;
+	}
+	if(specialCounter > 0 && numberCounter > 0 && capitalCounter > 0)
+		return true;
+	return false;
 }

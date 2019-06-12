@@ -1,5 +1,11 @@
 #include <YSI_Coding\y_hooks>
 
+static 
+	pVehicleListItem[MAX_PLAYERS][MAX_VEHICLES_PER_PLAYER],
+	pSelectedVehicleListItem[MAX_PLAYERS]
+;
+
+
 flags:vmenu(CMD_ALIVE_USER);
 CMD:vmenu(playerid, params[])
 {
@@ -66,6 +72,7 @@ CMD:finestrino(playerid, params[])
 	Character_AMe(playerid, w[window] ? ("chiude il finestrino") : ("apre il finestrino"));
 	return 1;
 }
+alias:finestrino("fin");
 
 flags:vluci(CMD_ALIVE_USER);
 CMD:vluci(playerid, params[])
@@ -169,7 +176,7 @@ CMD:vapri(playerid, params[])
 		{
 			Character_AMe(playerid, "prende le chiavi e apre il suo veicolo");
 		}*/
-		Character_AMe(playerid, "prende le chiavi e apre il suo veicolo");
+		Character_AMe(playerid, "prende le chiavi e apre il suo veicolo.");
 		Vehicle_UnLock(vehicleid);
 
 		return SendFormattedMessage(playerid, COLOR_GREEN, "Hai aperto il tuo veicolo (%s).", Vehicle_GetName(vehicleid));
@@ -226,7 +233,7 @@ CMD:vdeposita(playerid, params[])
 	if(!Vehicle_IsOwner(vehicleid, playerid, false))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei il proprietario di questo veicolo.");
 
-	new itemid = GetPlayerWeapon(playerid);
+	new itemid = AC_GetPlayerWeapon(playerid);
 	if(itemid == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma.");
 	
@@ -246,7 +253,7 @@ CMD:vdeposita(playerid, params[])
 		Vehicle_GiveItem(vehicleid, itemid, 1, ammo);
 		Player_InfoStr(playerid, str_format("Hai depositato ~g~%s~w~~n~nel veicolo~n~con %d munizioni.", Weapon_GetName(itemid), ammo), true);
 	}
-	Character_AMe(playerid, "deposita qualcosa all'interno del veicolo");
+	Character_AMe(playerid, "deposita qualcosa all'interno del veicolo.");
 	AC_RemovePlayerWeapon(playerid, itemid);
 	return 1;
 }
@@ -266,7 +273,7 @@ CMD:vdisassembla(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei il proprietario di questo veicolo.");
 	if(sscanf(params, "d", slotid))
 	{
-		itemid = GetPlayerWeapon(playerid);
+		itemid = AC_GetPlayerWeapon(playerid);
 		ammo = AC_GetPlayerAmmo(playerid);
 		if(itemid == 0 || ammo == 0)
 		{
@@ -308,7 +315,7 @@ CMD:vdisassembla(playerid, params[])
 	Vehicle_GiveItem(vehicleid, itemid, 1);
 	Vehicle_GiveItem(vehicleid, Weapon_GetAmmoType(itemid), ammo);
 	SendFormattedMessage(playerid, COLOR_GREEN, "Hai disassemblato la tua arma (%s) all'interno del veicolo. Munizioni: %d", ServerItem_GetName(itemid), ammo);
-	Character_AMe(playerid, "disassembla un'arma e la deposita nel veicolo");
+	Character_AMe(playerid, "disassembla un'arma e la deposita nel veicolo.");
 	return 1;
 }
 alias:vdisassembla("vdis");
@@ -332,7 +339,7 @@ CMD:motore(playerid, params[])
     {
         Vehicle_SetEngineOff(vehicleid);
 		Vehicle_SetLightState(vehicleid, false);
-        Character_AMe(playerid, "gira la chiave e spegne il motore");
+        Character_AMe(playerid, "gira la chiave e spegne il motore.");
     }
     else
     {
@@ -342,8 +349,8 @@ CMD:motore(playerid, params[])
 			return SendClientMessage(playerid, COLOR_ERROR, "Il motore del veicolo non funziona.");
         if(Vehicle_IsOwner(vehicleid, playerid, false))
         {
-            Character_AMe(playerid, "inserisce la chiave e la gira");
-			Character_Do(playerid, "Il motore si accende");
+            Character_AMe(playerid, "inserisce la chiave e la gira.");
+			Character_Do(playerid, "Il motore si accende.");
 			Vehicle_SetEngineOn(vehicleid);
 			//Character_SetFreezed(playerid, true);
 			//defer TurnOnVehicleEngine(playerid);

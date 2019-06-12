@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"workbench.editor.labelFormat": "short",
+		"window.title": "${activeEditorShort}${separator}${rootName}",
+		"emeraldwalk.runonsave": {
+			"commands": [
+				{
+					"match": ".pwn",
+					"isAsync": true,
+					"cmd": "py ${workspaceRoot}\\parse_snippets.py"
+				}
+			]
+		}
+	}
+}
