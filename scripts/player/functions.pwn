@@ -1,3 +1,4 @@
+#include <YSI_Coding\y_hooks>
 // Called when Character_Spawn is called.
 forward OnCharacterSpawn(playerid);
 
@@ -33,14 +34,22 @@ stock OnCharacterLoad(playerid)
     
     AC_SetPlayerHealth(playerid, 100);
 
-    //SetSpawnInfo(playerid, NO_TEAM, 0, PlayerRestore[playerid][pLastX], PlayerRestore[playerid][pLastY], PlayerRestore[playerid][pLastZ], 0, 0, 0, 0, 0, 0, 0);
+    //SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
 
     SpawnPlayer(playerid);
     
     CallLocalFunction("OnPlayerCharacterLoad", "i", playerid);
 
+	//wait_ticks(1);
 	Character_Spawn(playerid);
     return 1;
+}
+
+// Needed for anti-tp bug that makes player being kicked random.
+hook OnPlayerRequestClass(playerid, classid)
+{
+	//SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
+	return 1;
 }
 
 stock LoadCharacterResult(playerid)
@@ -219,7 +228,7 @@ stock Character_Delete(playerid, character_db_id, character_name[])
 stock Character_ShowStats(playerid, targetid)
 {
 	if(!Character_IsLogged(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non ï¿½ collegato.");
 	new
 		Float:hp, Float:armour,
 		expForNewLevel = (PlayerInfo[playerid][pLevel]+1) * 2;
@@ -237,11 +246,11 @@ stock Character_ShowStats(playerid, targetid)
 	SendFormattedMessage(targetid, -1, "[Alimentazione] Fame: %d", Character_GetHunger(playerid));
     
 	if(Character_HasBuildingKey(playerid) && Character_HasHouseKey(playerid))
-	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietà]: Edificio: %d - Casa: %d", Character_GetBuildingKey(playerid), Character_GetHouseKey(playerid));
+	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietï¿½]: Edificio: %d - Casa: %d", Character_GetBuildingKey(playerid), Character_GetHouseKey(playerid));
     else if(Character_HasBuildingKey(playerid))
-	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietà]: Edificio: %d", Character_GetBuildingKey(playerid));
+	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietï¿½]: Edificio: %d", Character_GetBuildingKey(playerid));
     else if(Character_HasHouseKey(playerid))
-	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietà]: Casa: %d", Character_GetHouseKey(playerid));
+	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietï¿½]: Casa: %d", Character_GetHouseKey(playerid));
 	
 	SendFormattedMessage(targetid, -1, "[Altro] Interior: %d - VW: %d", GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
 	
@@ -273,108 +282,8 @@ stock Character_Clear(playerid)
 
 	pLastPMTime[playerid] = 0;
 }
-
-stock Character_HandleFirstSpawn(playerid)
-{
-	PlayerRestore[playerid][pFirstSpawn] = 0;
-
-	Character_SetSkin(playerid, 46);
-
-	SetPlayerPos(playerid, 1748.1887, -1860.0414, 13.5792);
-
-	if(AccountInfo[playerid][aCharactersCount] <= 2)
-	{
-		static const characterFirstLoginMoney[] = {30000, 20000, 10000};
-		Character_GiveMoney(playerid, characterFirstLoginMoney[AccountInfo[playerid][aCharactersCount]], "FirstSpawn");
-		SendFormattedMessage(playerid, -1, "(( Ti sono stati dati {85bb65}$%d{FFFFFF} per cominciare. ))", characterFirstLoginMoney[AccountInfo[playerid][aCharactersCount]]);
-	}
-	
-	new query[128];
-	mysql_format(gMySQL, query, sizeof(query), "UPDATE `characters` SET FirstSpawn = '0' WHERE ID = '%d'", PlayerInfo[playerid][pID]);
-	mysql_tquery(gMySQL, query);
-
-	AccountInfo[playerid][aCharactersCount]++;
-	
-	mysql_format(gMySQL, query, sizeof(query), "UPDATE `accounts` SET CharactersCounter = '%d' WHERE ID = '%d'", AccountInfo[playerid][aCharactersCount], AccountInfo[playerid][aID]);
-	mysql_tquery(gMySQL, query);
-
-	Character_Save(playerid);
-	return 1;
-}
-
 // 283,75
 // 284
-
-stock Character_Spawn(playerid)
-{
-	PreloadAnimations(playerid);
-	#if defined LSARP_DEBUG
-		if(!pAdminDuty[playerid] && !strcmp(AccountInfo[playerid][aName], "Coda", false))
-		{
-			pc_cmd_aduty(playerid, "");
-		}
-	#endif
-
-	AC_SetPlayerHealth(playerid, 100.0);
-	AC_SetPlayerArmour(playerid, 0.0);
-
-	Character_FreezeForTime(playerid, 2000);
-	
-	
-
-	CallLocalFunction(#OnCharacterSpawn, "d", playerid);
-
-	if(PlayerRestore[playerid][pFirstSpawn]) // First Login/Spawn
-    {
-		Character_HandleFirstSpawn(playerid);
-		return 1;
-    }
-
-    if(PlayerRestore[playerid][pSpawned] && PlayerRestore[playerid][pLastX] != 0 && PlayerRestore[playerid][pLastY] != 0 && PlayerRestore[playerid][pLastZ] != 0)
-    {
-		PlayerRestore[playerid][pSpawned] = 0;
-		SetPlayerPos(playerid, PlayerRestore[playerid][pLastX], PlayerRestore[playerid][pLastY], PlayerRestore[playerid][pLastZ]);
-		SetPlayerFacingAngle(playerid, PlayerRestore[playerid][pLastAngle]);
-		SetPlayerInterior(playerid, PlayerRestore[playerid][pLastInterior]);
-		SetPlayerVirtualWorld(playerid, PlayerRestore[playerid][pLastVirtualWorld]);
-		defer LoadCharacterDataAfterTime(playerid);
-    }
-    else
-    {
-		if(Character_GetFaction(playerid) == INVALID_FACTION_ID && !Character_HasHouseKey(playerid))
-		{
-			SetPlayerPos(playerid, 1723.3232, -1867.1775, 13.5705);
-			SetPlayerInterior(playerid, 0);
-			SetPlayerVirtualWorld(playerid, 0);
-		}
-		else if( Character_HasHouseKey(playerid))
-		{
-			new Float:x, Float:y, Float:z,housekey = Character_GetHouseKey(playerid);
-			House_GetEnterPosition(housekey, x, y, z);
-			SetPlayerPos(playerid, x, y, z);
-			SetPlayerInterior(playerid, House_GetEnterInterior(housekey));
-			SetPlayerVirtualWorld(playerid, House_GetEnterWorld(housekey));
-		}
-		else if( Character_GetFaction(playerid) != INVALID_FACTION_ID)
-		{
-			new Float:x, Float:y, Float:z, factionid = Character_GetFaction(playerid);
-			Faction_GetSpawnPos(factionid, x, y, z);
-			SetPlayerPos(playerid, x, y, z);
-			SetPlayerInterior(playerid, Faction_GetSpawnInterior(factionid));
-			SetPlayerVirtualWorld(playerid, Faction_GetSpawnWorld(factionid));
-		}
-		AC_SetPlayerHealth(playerid, 100.0);
-		AC_SetPlayerArmour(playerid, 0.0);
-    }
-
-	if(Character_IsJailed(playerid))
-	{
-		Character_SetToJailPos(playerid);
-		PlayerTextDrawShow(playerid, pJailTimeText[playerid]);
-		return 1;
-	}
-	return 1;
-}
 
 stock Character_GetNameFromDatabase(userdbid, bool:removeUnderscore)
 {

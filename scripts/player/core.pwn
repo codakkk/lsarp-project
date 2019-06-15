@@ -24,6 +24,7 @@
 #include <player\components\drugs.pwn>
 #include <player\components\hunger.pwn>
 #include <player\components\drag.pwn>
+#include <player\components\spawn.pwn>
 #include <YSI_Coding\y_hooks>
 
 
