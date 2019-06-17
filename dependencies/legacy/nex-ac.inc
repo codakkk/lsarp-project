@@ -1332,6 +1332,7 @@ ac_fpublic ac_GivePlayerWeapon(playerid, ac_weaponid, ac_ammo)
 		ACInfo[playerid][acGtcGiveAmmo][ac_s] =
 		ACInfo[playerid][acGtcSetWeapon][ac_s] = ACInfo[playerid][acGtc][2] = GetTickCount() + 2650;
 	}
+	printf("AntiCheatGivePlayerWeapon");
 	return GivePlayerWeapon(playerid, ac_weaponid, ac_ammo);
 }
 

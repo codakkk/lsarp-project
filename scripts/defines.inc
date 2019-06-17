@@ -1,4 +1,4 @@
-#include <utils\colors.pwn>
+#include <utils\colors>
 
 #define Inventory List@Inventory
 

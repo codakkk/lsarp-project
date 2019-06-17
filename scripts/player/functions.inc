@@ -34,21 +34,21 @@ stock OnCharacterLoad(playerid)
     
     AC_SetPlayerHealth(playerid, 100);
 
-    //SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
-
-    SpawnPlayer(playerid);
+	
+    SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
+	SpawnPlayer(playerid);
     
-    CallLocalFunction("OnPlayerCharacterLoad", "i", playerid);
 
-	//wait_ticks(1);
-	Character_Spawn(playerid);
-    return 1;
+    //CallLocalFunction("OnPlayerCharacterLoad", "i", playerid);
+
+	//Character_Spawn(playerid);
+	return 1;
 }
 
 // Needed for anti-tp bug that makes player being kicked random.
 hook OnPlayerRequestClass(playerid, classid)
 {
-	//SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
+	SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
 	return 1;
 }
 

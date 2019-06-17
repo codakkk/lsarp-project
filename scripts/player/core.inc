@@ -1,0 +1,54 @@
+#include <player\accessors>
+#include <player\functions>
+#include <player\textdraws>
+#include <player\components\death_system>
+#include <player\components\walk>
+#include <player\components\chat>
+#include <player\components\mask>
+#include <player\components\inventory>
+#include <player\components\drop>
+#include <player\components\payday>
+#include <player\components\interaction>
+#include <player\components\vehicle>
+#include <player\components\weapons>
+#include <player\components\pickup>
+#include <player\components\jail>
+#include <player\components\animation>
+#include <player\components\request>
+#include <player\components\property>
+#include <player\components\care>
+#include <player\components\options>
+#include <player\components\afk>
+#include <player\components\damage_system>
+#include <player\components\customanims>
+#include <player\components\drugs>
+#include <player\components\hunger>
+#include <player\components\drag>
+#include <player\components\spawn>
+#include <YSI_Coding\y_hooks>
+
+
+hook OnPlayerClearData(playerid)
+{
+    Character_Clear(playerid);
+	Character_ResetBitState(playerid);
+    return 1;
+}
+
+hook OnCharacterDisconnected(playerid)
+{
+    Character_Save(playerid, _, true);
+    return Y_HOOKS_CONTINUE_RETURN_1;
+}
+
+hook OnCharacterSpawn(playerid)
+{
+	SetPlayerSkin(playerid, PlayerInfo[playerid][pSkin]);
+
+	if(Character_GetFightingStyle(playerid) == 0)
+		Character_SetFightingStyle(playerid, FIGHT_STYLE_NORMAL);
+	
+	SetPlayerFightingStyle(playerid, Character_GetFightingStyle(playerid));
+    return Y_HOOKS_CONTINUE_RETURN_1;
+}
+

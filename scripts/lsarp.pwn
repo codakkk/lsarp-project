@@ -36,60 +36,125 @@
 	#warning LSARP_DEBUG is enabled. Care!!
 #endif
 
-#include <includes.pwn>
+#include <a_samp>
+native IsValidVehicle(vehicleid);
 
-#include <defines.pwn>
-#include <utils\iterators.pwn>
-#include <forwarded_functions.pwn>
-#include <miscellaneous\timestamp_to_date.pwn>
+#define CGEN_MEMORY 20000
+
+//#define DEBUG 0
+
+#define E_MAIL_CHECK
+
+#undef MAX_PLAYERS
+#define MAX_PLAYERS	(200)
+
+#if defined CRASHDETECT
+	#include <crashdetect>
+#endif
+
+#define FIXES_Single
+// #define FIX_OnDialogResponse 1
+#define FIX_SetPlayerName 0
+#define FIX_ServerVarMsg 0
+#include <fixes>
+
+// Includes
+#include <sscanf2>
+#include <a_mysql>
+#include <YSI_Coding\y_timers>
+#include <YSI_Coding\y_va>
+#include <YSI_Coding\y_inline>
+// For YSI and PawnPlus yield conflict.
+#undef yield
+#undef @@
+#include <Pawn.CMD>
+#include <whirlpool>
+#include <streamer>
+#include <strlib>
+#include <YSI_Data\y_bit>
+
+#define PP_SYNTAX 1
+//#define PP_SYNTAX_GENERIC 1
+#define PP_ADDITIONAL_TAGS E_ITEM_DATA
+
+#include <PawnPlus>
+// #include <pp-mysql> // Must update pp first
+#include <OPA>
+
+#include <miscellaneous\pp_wrappers>
+#include <easyDialogs>
+
+#include <sa_zones>
+
+#include <YSI_Coding\y_hooks> // Needed for NexAC
+
+#include <nex-ac_it.lang>
+#include <nex-ac>
+
+#define AC_GetPlayerHealth AntiCheatGetHealth
+#define AC_SetPlayerHealth SetPlayerHealth
+
+#define AC_GetPlayerArmour AntiCheatGetArmour
+#define AC_SetPlayerArmour SetPlayerArmour
+
+#define AC_GetPlayerWeapon AntiCheatGetWeapon
+#define AC_GivePlayerWeapon GivePlayerWeapon
+#define AC_GetPlayerAmmo GetPlayerAmmo
+
+#define AC_GetPlayerWeaponData AntiCheatGetWeaponData
+
+#include <defines>
+#include <utils\iterators>
+#include <forwarded_functions>
+#include <miscellaneous\timestamp_to_date>
 
 DEFINE_HOOK_REPLACEMENT(ShowRoom, SR);
 DEFINE_HOOK_REPLACEMENT(Element, Elm);
 
-#include <miscellaneous\globals.pwn>
+#include <miscellaneous\globals>
 // https://github.com/emmet-jones/New-SA-MP-callbacks/blob/master/README.md
 // Exception. Must be on top of all others.
-#include <pickup\enum.pwn>
+#include <pickup\enum>
 
-//#include <anticheat\enum.pwn>
-#include <account_system\enum.pwn>
-#include <drop_system\enum.pwn>
-#include <player\enum.pwn>
-#include <vehicles\enum.pwn>
-#include <admin\enum.pwn>
-#include <dealership\enum.pwn>
-#include <inventory\enum.pwn>
-#include <building\enum.pwn>
-#include <weapon_system\enum.pwn>
-#include <house_system\enum.pwn>
-#include <faction_system\enum.pwn>
-#include <dp_system\enum.pwn>
+//#include <anticheat\enum>
+#include <account_system\enum>
+#include <drop_system\enum>
+#include <player\enum>
+#include <vehicles\enum>
+#include <admin\enum>
+#include <dealership\enum>
+#include <inventory\enum>
+#include <building\enum>
+#include <weapon_system\enum>
+#include <house_system\enum>
+#include <faction_system\enum>
+#include <dp_system\enum>
 
-#include <database\core.pwn>
+#include <database\core>
 
 // ===== [ ANTI-CHEAT SYSTEM ] =====
-//#include <anticheat\core.pwn>
+//#include <anticheat\core>
 
 // ===== [ PICKUP SYSTEM ] =====
-#include <pickup\core.pwn>
+#include <pickup\core>
 
 // ===== [ INVENTORY SYSTEM ] =====
-#include <inventory\core.pwn>
-#include <inventory\server.pwn>
+#include <inventory\core>
+#include <inventory\server>
 
 // ===== [ WEAPON SYSTEM ] =====
-#include <weapon_system\core.pwn>
+#include <weapon_system\core>
 
 // ===== [ DP SYSTEM ] =====
-#include <dp_system\core.pwn>
+#include <dp_system\core>
 
-#include <utils/utils.pwn>
-#include <utils/maths.pwn>
+#include <utils/utils>
+#include <utils/maths>
 
 
-#include <callbacks.pwn>
+#include <callbacks>
 
-#include <miscellaneous\global_timers.pwn>
+#include <miscellaneous\global_timers>
 
 #include <YSI_Coding\y_remote>
 #include <YSI_Coding\y_hooks> // Place hooks after this. Everything included before this, is hooked first.
@@ -216,7 +281,7 @@ hook OnPlayerShootDynObject(playerid, weaponid, objectid, Float:x, Float:y, Floa
 
 /*hook OnAntiCheatDetected(playerid, code)
 {
-	SendMessageToAdmins(true, COLOR_ERROR, "[ADMIN-ALERT]: %s (%d) è sospetto di hack. (%s)", Character_GetOOCName(playerid), playerid, AC_Name[code]);
+	SendMessageToAdmins(true, COLOR_ERROR, "[ADMIN-ALERT]: %s (%d) ï¿½ sospetto di hack. (%s)", Character_GetOOCName(playerid), playerid, AC_Name[code]);
 	return 1;
 }
 */
@@ -372,7 +437,7 @@ hook OnPlayerDisconnect(playerid, reason)
 	new String:string, name[MAX_PLAYER_NAME];
 
 	GetPlayerName(playerid, name, sizeof(name));
-	string = str_format("%s è uscito dal server. [%s]", name, reasonName[reason]);
+	string = str_format("%s ï¿½ uscito dal server. [%s]", name, reasonName[reason]);
 	SendClientMessageToAllStr(COLOR_GREY, string);
 	TextDrawHideForPlayer(playerid, Clock);
 	if(Character_IsLogged(playerid))
@@ -459,7 +524,7 @@ hook OnRconLoginAttempt(ip[], password[], success )
 		{
 			if(success)
 			{
-				SendMessageToAdmins(true, COLOR_ADMIN, "%s (%d) è entrato in RCON.", Character_GetOOCName(i), i);
+				SendMessageToAdmins(true, COLOR_ADMIN, "%s (%d) ï¿½ entrato in RCON.", Character_GetOOCName(i), i);
 			}
 			else
 			{
@@ -564,68 +629,68 @@ stock IsPlayerIDConnected(dbid)
 	return INVALID_PLAYER_ID;
 }
 
-#include <textdraws.pwn>
+#include <textdraws>
 
 // ========== [ INCLUDES THAT DOESN'T CARE ABOUT HOOKING ORDER ] ==========
-#include <mailer_system\core.pwn>
-#include <log_system\core.pwn>
+#include <mailer_system\core>
+#include <log_system\core>
 
-#include <account_system\core.pwn>
-#include <animation_system\core.pwn>
+#include <account_system\core>
+#include <animation_system\core>
 
 // ===== [ PLAYER ] =====
-#include <player\core.pwn>
-#include <anticheat\cheats\money.pwn>
+#include <player\core>
+#include <anticheat\cheats\money>
 
 // ===== [ VEHICLE SYSTEM ] =====
-#include <vehicles\core.pwn>
-#include <vehicles\inventory.pwn>
+#include <vehicles\core>
+#include <vehicles\inventory>
 
 // ===== [ DEALERSHIP SYSTEM ] =====
-#include <dealership\core.pwn>
-#include <dealership\player.pwn>
+#include <dealership\core>
+#include <dealership\player>
 
 // ===== [ HOUSE SYSTEM ] =====
-#include <house_system\core.pwn>
-#include <house_system\inventory.pwn>
+#include <house_system\core>
+#include <house_system\inventory>
 // ===== [ BUILDING SYSTEM ] =====
-#include <building\core.pwn>
+#include <building\core>
 
 
 // ===== [ ADMIN SYSTEM ] =====
-#include <admin\core.pwn>
+#include <admin\core>
 
 // ===== [ DROP SYSTEM ] =====
-#include <drop_system\core.pwn>
+#include <drop_system\core>
 
 // ===== [ FACTION SYSTEM ] =====
-#include <faction_system\core.pwn>
+#include <faction_system\core>
 
 // ===== [ WEATHER SYSTEM ] =====
-#include <weather_system\core.pwn>
+#include <weather_system\core>
 
 // ===== [ CHOPSHOP SYSTEM ] =====
-#include <chopshop_system\core.pwn>
-#include <chopshop_system\commands.pwn>
+#include <chopshop_system\core>
+#include <chopshop_system\commands>
 
 // ========== [ COMMANDS ] ==========
-#include <commands.pwn>
-#include <player\commands.pwn>
-#include <building\commands\admin.pwn>
-#include <house_system\commands.pwn>
-#include <admin\commands.pwn>
-#include <admin\supporter_commands.pwn>
-#include <dealership\commands.pwn>
-#include <faction_system\commands.pwn>
-#include <animation_system\commands.pwn>
+#include <commands>
+#include <player\commands>
+#include <building\commands\admin>
+#include <house_system\commands>
+#include <admin\commands>
+#include <admin\supporter_commands>
+#include <dealership\commands>
+#include <faction_system\commands>
+#include <animation_system\commands>
 // ========== [ DIALOGS ] ==========
-#include <player\dialogs.pwn>
-#include <account_system\dialogs.pwn>
-#include <faction_system\dialogs.pwn>
+#include <player\dialogs>
+#include <account_system\dialogs>
+#include <faction_system\dialogs>
 
 // ========== [ MISCELLANEOUS ] ==========
 #if defined ENABLE_MAPS
-	#include <server\maps\maps.pwn>
+	#include <server\maps\maps>
 #endif
 
 stock AC_RemovePlayerWeapon(playerid, weaponid)

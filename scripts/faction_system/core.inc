@@ -1,5 +1,5 @@
 #include <YSI_Coding\y_hooks>
-#include <faction_system\accessors.pwn>
+#include <faction_system\accessors>
 
 hook OnGameModeInit()
 {
@@ -72,7 +72,7 @@ stock Faction_Reset(factionid)
 		{
 			Character_SetFaction(i, -1);
 			Character_SetRank(i, 0);
-			SendClientMessage(i, COLOR_GREEN, "La fazione a cui facevi parte non esiste più. Sei stato rimosso.");
+			SendClientMessage(i, COLOR_GREEN, "La fazione a cui facevi parte non esiste piï¿½. Sei stato rimosso.");
 		}
 	}
 

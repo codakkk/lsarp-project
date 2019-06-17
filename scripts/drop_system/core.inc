@@ -1,4 +1,4 @@
-#include <drop_system\accessors.pwn>
+#include <drop_system\accessors>
 #include <YSI_Coding\y_hooks>
 
 hook OnPlayerClearData(playerid)

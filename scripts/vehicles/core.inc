@@ -1,4 +1,4 @@
-#include <vehicles\accessors.pwn>
+#include <vehicles\accessors>
 #include <YSI_Coding\y_hooks>
 
 hook OnGameModeInit()

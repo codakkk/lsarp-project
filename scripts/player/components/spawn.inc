@@ -28,6 +28,12 @@ stock Character_HandleFirstSpawn(playerid)
 	return 1;
 }
 
+hook OnPlayerSpawn(playerid)
+{
+	Character_Spawn(playerid);
+	return 1;
+}
+
 stock Character_Spawn(playerid)
 {
 	PreloadAnimations(playerid);

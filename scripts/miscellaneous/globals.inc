@@ -46,7 +46,7 @@ new
 	pSelectedListItem[MAX_PLAYERS] // Used by Dialogs
 	;
 
-#include <player\components\timers.pwn>
+#include <player\components\timers>
 
 
 hook OnPlayerClearData(playerid)

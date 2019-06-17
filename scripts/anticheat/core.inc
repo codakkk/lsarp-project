@@ -113,7 +113,7 @@ CMD:trigger(playerid, params[])
 
 
 
-#include <anticheat\cheats\money.pwn>
-#include <anticheat\cheats\weapons.pwn>
-#include <anticheat\cheats\health_armour.pwn>
-#include <anticheat\cheats\no_reload.pwn>
+#include <anticheat\cheats\money>
+#include <anticheat\cheats\weapons>
+#include <anticheat\cheats\health_armour>
+#include <anticheat\cheats\no_reload>
