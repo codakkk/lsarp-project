@@ -656,7 +656,6 @@ stock IsPlayerIDConnected(dbid)
 // ===== [ BUILDING SYSTEM ] =====
 #include <building\core>
 
-
 // ===== [ ADMIN SYSTEM ] =====
 #include <admin\core>
 
@@ -672,6 +671,9 @@ stock IsPlayerIDConnected(dbid)
 // ===== [ CHOPSHOP SYSTEM ] =====
 #include <chopshop_system\core>
 #include <chopshop_system\commands>
+
+// ===== [ FURNITURE SYSTEM ] =====
+#include <furniture_system\core>
 
 // ========== [ COMMANDS ] ==========
 #include <commands>

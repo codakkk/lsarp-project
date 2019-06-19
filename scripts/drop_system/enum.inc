@@ -25,5 +25,3 @@ enum E_DROP_INFO // _: for tag mismatch thing
 new 
 	DropInfo[MAX_DROPS][E_DROP_INFO],
 	Iterator:DropsIterator<MAX_DROPS>;
-
-new pEditingDrop[MAX_PLAYERS];

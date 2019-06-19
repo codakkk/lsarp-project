@@ -15,7 +15,7 @@ for line in base_pawn_snippets:
 
 for root, dirs, files in os.walk(startPath):
 	for file in files:
-		if file.endswith('.pwn') or file.endswith('.p'):
+		if file.endswith('.inc') or file.endswith('.pwn') or file.endswith('.p'):
 			file_name = root.replace('scripts\\', '')
 			f = open(root + '/' + file)
 			local_snippets_file.write(

@@ -1,16 +1,6 @@
 #include <drop_system\accessors>
 #include <YSI_Coding\y_hooks>
 
-hook OnPlayerClearData(playerid)
-{
-	if(pEditingDrop[playerid] != -1)
-	{
-		CancelEdit(pEditingDrop[playerid]);
-		pEditingDrop[playerid] = -1;
-	}
-	return 1;
-}
-
 hook GlobalMinuteTimer(playerid)
 {
     foreach(new i : DropsIterator)
@@ -28,41 +18,22 @@ hook GlobalMinuteTimer(playerid)
 	}
 }
 
-hook OnPlayerDeath(playerid, killerid, reason)
-{
-	if(pEditingDrop[playerid] != -1)
-	{
-		CancelEdit(pEditingDrop[playerid]);
-		pEditingDrop[playerid] = -1;
-	}
-	return 1;
-}
-
-hook OnPlayerStateChange(playerid, newstate, oldstate)
-{
-	if(pEditingDrop[playerid] == -1) 
-		return 0;
-	if(oldstate == PLAYER_STATE_ONFOOT && newstate != PLAYER_STATE_ONFOOT)
-	{
-		CancelEdit(pEditingDrop[playerid]);
-		pEditingDrop[playerid] = -1;
-	}
-	return 1;
-}
-
 hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz)
 {
-	if(pEditingDrop[playerid] != -1)
+	if(EditObject_GetType(playerid) == EDIT_TYPE_DROP)
 	{
-		new dropid = pEditingDrop[playerid];
+		new dropid = EditObject_GetExtraID(playerid);
 		if(response == EDIT_RESPONSE_CANCEL)
 		{
 			new Float:tx, Float:ty, Float:tz;
+			
 			Drop_GetPosition(dropid, tx, ty, tz);
 			SetDynamicObjectPos(objectid, tx, ty, tz);
+
 			Drop_GetRotation(dropid, tx, ty, tz);
 			SetDynamicObjectRot(objectid, tx, ty, tz);
-			pEditingDrop[playerid] = -1;
+
+			EditObject_End(playerid);
 		}
 		else if(response == EDIT_RESPONSE_FINAL)
 		{
@@ -72,12 +43,15 @@ hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float
 			DropInfo[dropid][dRotX] = rx;
 			DropInfo[dropid][dRotY] = ry;
 			DropInfo[dropid][dRotZ] = rz;
+			
 			Drop_DestroyElements(dropid);
 			Drop_CreateElements(dropid);
-			pEditingDrop[playerid] = -1;
+			
 			Character_AMe(playerid, "sposta l'oggetto.");
 			SendClientMessage(playerid, COLOR_GREEN, "Hai spostato l'oggetto.");
 			Log(Character_GetOOCName(playerid), "", "Edit Drop", dropid);
+
+			EditObject_End(playerid);
 		}
 	}
 	return 1;

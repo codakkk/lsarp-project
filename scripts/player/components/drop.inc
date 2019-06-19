@@ -40,7 +40,7 @@ stock bool:Character_CollectDrop(playerid, dropid)
 	   new 
 		  String:title,
 		  String:content = @("Raccogli\nSposta");
-	   title = str_format("%s (%S: %d)", ServerItem_GetName(itemid), (ServerItem_IsWeapon(itemid) ? @("Munizioni") : @("Quantità")), (ServerItem_IsWeapon(itemid) ? Drop_GetItemExtra(dropid) : Drop_GetItemAmount(dropid)));
+	   title = str_format("%s (%S: %d)", ServerItem_GetName(itemid), (ServerItem_IsWeapon(itemid) ? @("Munizioni") : @("Quantitï¿½")), (ServerItem_IsWeapon(itemid) ? Drop_GetItemExtra(dropid) : Drop_GetItemAmount(dropid)));
 	   if(ServerItem_IsWeapon(itemid))
 		  content += @("\n{FFFFFF}Equipaggia{FFFFFF}");
 	   SetPVarInt(playerid, "Player_DropID", dropid);
@@ -73,9 +73,8 @@ Dialog:Dialog_ItemDropAction(playerid, response, listitem, inputtext[])
 		}
 		case 1:
 		{
-			EditDynamicObject(playerid, Drop_GetObject(dropid));
-			pEditingDrop[playerid] = dropid;
-			SendClientMessage(playerid, -1, "Stai spostando l'oggetto. Quando hai finito, usa il {00FF00}Floppy{FFFFFF} per salvare.");
+			EditObject_Start(playerid, EDIT_TYPE_DROP, Drop_GetObject(dropid), dropid);
+			SendClientMessage(playerid, -1, "Stai spostando l'oggetto. Quando hai finito, clicca il {00FF00}Floppy{FFFFFF} per salvare.");
 		}
 		case 2:
 		{
@@ -86,7 +85,7 @@ Dialog:Dialog_ItemDropAction(playerid, response, listitem, inputtext[])
 				invAmmo = Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType);
 			if(Weapon_RequireAmmo(itemid) && extra <= 0 && invAmmo <= 0)
 			{
-					return SendClientMessage(playerid, COLOR_ERROR, "L'arma è scarica e non puo' essere equipaggiata.");
+				return SendClientMessage(playerid, COLOR_ERROR, "L'arma è scarica e non puo' essere equipaggiata.");
 				//Dialog_Show(playerid, Dialog_EquipWeaponDrop, DIALOG_STYLE_INPUT, "Munizioni", "{FFFFFF}Inserisci la quantità di munizioni che vuoi disporre all'interno dell'arma.\n{00FF00}Munizioni disponibili: {FFFFFF}%d", "Inserisci", "Annulla", invAmmo);
 			}
 			if(extra > 0)
@@ -98,7 +97,7 @@ Dialog:Dialog_ItemDropAction(playerid, response, listitem, inputtext[])
 			}
 			else 
 			{
-				Dialog_Show(playerid, Dialog_ItemDropEquipWeapon, DIALOG_STYLE_INPUT, "Equipaggia Arma", "Inserisci le munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}", "Equipaggia", "Annulla", invAmmo);
+				Dialog_Show(playerid, Dialog_ItemDropEquipWeapon, DIALOG_STYLE_INPUT, "Equipaggia Arma", "Inserisci le munizioni che vuoi inserire nell'arma.\nQuantitï¿½: {00FF00}%d{FFFFFF}", "Equipaggia", "Annulla", invAmmo);
 			}
 		}
 	}
@@ -118,7 +117,7 @@ Dialog:Dialog_ItemDropEquipWeapon(playerid, response, listitem, inputtext[])
 		ammoType = Weapon_GetAmmoType(itemid),
 		invAmmo = Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType);
 	if(ammo <= 0 || ammo > invAmmo)
-		return Dialog_Show(playerid, Dialog_ItemDropEquipWeapon, DIALOG_STYLE_INPUT, "Equipaggia Arma", "{FF0000}Non possiedi la quantità di munizioni inserita.{FFFFFF}\nInserisci le munizioni che vuoi inserire nell'arma.\n{00FF00}%d{FFFFFF}", "Equipaggia", "Annulla", invAmmo);
+		return Dialog_Show(playerid, Dialog_ItemDropEquipWeapon, DIALOG_STYLE_INPUT, "Equipaggia Arma", "{FF0000}Non possiedi la quantitï¿½ di munizioni inserita.{FFFFFF}\nInserisci le munizioni che vuoi inserire nell'arma.\n{00FF00}%d{FFFFFF}", "Equipaggia", "Annulla", invAmmo);
 	Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~~n~con ~g~%d~w~ proiettili.", ServerItem_GetName(itemid), extra + ammo), true);
 	Character_AMe(playerid, "raccoglie un'arma.");
 	AC_GivePlayerWeapon(playerid, itemid, extra + ammo);

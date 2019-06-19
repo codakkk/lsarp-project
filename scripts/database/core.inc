@@ -239,6 +239,22 @@ hook OnGameModeInit()
 						CONSTRAINT IDCharacterID PRIMARY KEY (`ID`, `CharacterID`), \
 						CONSTRAINT `CharacterCustomAnimations` FOREIGN KEY (`CharacterID`) REFERENCES `characters` (`ID`) ON DELETE CASCADE \
 						) ENGINE=InnoDB DEFAULT CHARSET=latin1", false);
+
+	mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS furnitures \
+						(`id` INT(11) NOT NULL AUTO_INCREMENT,\
+						`object_id` INT(11) DEFAULT '0', \
+						`world` INT(11) DEFAULT '0', \
+						`interior` INT(11) DEFAULT '0', \
+						`model` INT(11) DEFAULT '0', \
+						`price` INT(11) DEFAULT '0', \
+						`pos_x` FLOAT DEFAULT 0.0, \
+						`pos_y` FLOAT DEFAULT 0.0, \
+						`pos_z` FLOAT DEFAULT 0.0, \
+						`rot_x` FLOAT DEFAULT 0.0, \
+						`rot_y` FLOAT DEFAULT 0.0, \
+						`rot_z` FLOAT DEFAULT 0.0, \
+						`name` VARCHAR(64) DEFAULT '', \
+						PRIMARY KEY (`ID`))", false);
     printf("Database Connected.");
     return 1;
 }

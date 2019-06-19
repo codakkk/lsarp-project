@@ -5,14 +5,17 @@
 		}
 	],
 	"settings": {
+		"files.encoding": "windows1252",
+		"files.autoSave": "onFocusChange",
 		"workbench.editor.labelFormat": "short",
 		"window.title": "${activeEditorShort}${separator}${rootName}",
+		"editor.snippetSuggestions": "top",
 		"emeraldwalk.runonsave": {
 			"commands": [
 				{
-					"match": ".pwn",
+					"match": ".inc",
 					"isAsync": true,
-					"cmd": "py ${workspaceRoot}\\parse_snippets.py"
+					"cmd": "python ${workspaceRoot}\\parse_snippets.py"
 				}
 			]
 		}

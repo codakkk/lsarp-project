@@ -39,7 +39,7 @@ stock OnCharacterLoad(playerid)
 	SpawnPlayer(playerid);
     
 
-    //CallLocalFunction("OnPlayerCharacterLoad", "i", playerid);
+    CallLocalFunction("OnPlayerCharacterLoad", "i", playerid);
 
 	//Character_Spawn(playerid);
 	return 1;

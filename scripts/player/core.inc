@@ -1,6 +1,7 @@
 #include <player\accessors>
 #include <player\functions>
 #include <player\textdraws>
+#include <player\components\editobject>
 #include <player\components\death_system>
 #include <player\components\walk>
 #include <player\components\chat>
