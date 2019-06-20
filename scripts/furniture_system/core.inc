@@ -2,10 +2,12 @@
 
 #include <YSI_Coding\y_hooks>
 
+#define MAX_FURNITURE_PER_PAGE      (20)
+
 static 
     FurniturePage[MAX_PLAYERS char] = {0, ...},
-    SelectedFurniture[MAX_PLAYERS] = {0, ...},
-    FurnitureListItem[MAX_PLAYERS][20] = {{0}, ...}
+    SelectedFurniture[MAX_PLAYERS] = {-1, ...},
+    FurnitureListItem[MAX_PLAYERS][sizeof(BuyableFurnitures)]
 ;
 
 static enum e_FurnitureCustomData
@@ -20,18 +22,29 @@ static
 
 hook OnGameModeInit()
 {
-    mysql_tquery(gMySQL, "UPDATE `furnitures` SET 'object_id' = '0' WHERE 1");
+    mysql_tquery(gMySQL, "UPDATE `furnitures` SET object_id = '0' WHERE 1");
     Furniture_LoadAll();
     return 1;
 }
 
-flags:arredamento(CMD_ALIVE_USER);
+hook OnPlayerClearData(playerid)
+{
+    FurniturePage{playerid} = 0;
+    SelectedFurniture[playerid] = -1;
+    return 1;
+}
+
+//flags:arredamento(CMD_ALIVE_USER);
 CMD:arredamento(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
-    // "Mura e scale\nTavoli per cucine e salotti\nSedie da uffici e da cucina\nLetti singoli e matrimoniali\nDivani e poltrone\nDecorazioni\nElettronica\nVario\nCucina\nBagno\nBottiglie, bicchieri e tazze\nPorte\nVasi\nPoster e graffiti\nContenitori rifiuti\nVestiti\nBombole e barili\nOggetti per il mare\nQuadri\nScatole\nColonne\nCibo\nUtensili\nMeccanica\nSpeciali\nLavagne"
-    Dialog_Show(playerid, Dialog_FurnitureOptions, DIALOG_STYLE_LIST, "Arredamento", "Mobili piazzati\nAcquista", "Avanti", "Chiudi");
+    new canFurnish = Character_CanFurnish(playerid);
+    if(canFurnish)
+    {
+        Dialog_Show(playerid, Dialog_Furniture, DIALOG_STYLE_LIST, "Arredamento", "Mobili piazzati\nAcquista", "Avanti", "Chiudi");
+    }
+    else return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un edificio.");
     return 1;
 }
 alias:arredamento("arreda");
@@ -46,32 +59,55 @@ hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float
         }
         else if(response == EDIT_RESPONSE_FINAL)
         {
+            SetDynamicObjectPos(objectid, x, y, z);
+            SetDynamicObjectRot(objectid, rx, ry, rz);
+
             Furniture_FinishBuy(playerid, objectid);
         }
     }
     else if(EditObject_GetType(playerid) == EDIT_TYPE_FURNITURE)
     {
+        new Float:tx, Float:ty, Float:tz, Float:trx, Float:try, Float:trz;
+        GetDynamicObjectPos(objectid, tx, ty, tz);
+        GetDynamicObjectRot(objectid, trx, try, trz);
         if(response == EDIT_RESPONSE_CANCEL)
         {
+            SetDynamicObjectPos(objectid, tx, ty, tz);
+            SetDynamicObjectRot(objectid, trx, try, trz);
+
+            SendClientMessage(playerid, COLOR_ERROR, "Hai annullato le modifiche apportate al mobile.");
 
             EditObject_End(playerid);
         }
         else if(response == EDIT_RESPONSE_FINAL)
         {
+            Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+
+            SetDynamicObjectPos(objectid, x, y, z);
+            SetDynamicObjectRot(objectid, rx, ry, rz);
+            
+            mysql_tquery_f(gMySQL, "UPDATE furnitures SET \
+            pos_x = '%f', pos_y = '%f', pos_z = '%f', \
+            rot_x = '%f', rot_y = '%f', rot_z = '%f' WHERE id = '%d'", 
+            x, y, z,
+            rx, ry, rz,
+            FurnitureCustomData[DATABASE_ID]);
 
             EditObject_End(playerid);
+
+            SendClientMessage(playerid, COLOR_GREEN, "Hai spostato il mobile con successo.");
         }
     }
     return 1;
 }
 
-Dialog:Dialog_FurnitureOptions(playerid, response, listitem, inputtext[])
+Dialog:Dialog_Furniture(playerid, response, listitem, inputtext[])
 {
     if(!response)
         return 0;
     if(listitem == 0)
     {
-        return 1;
+        return Character_ShowFurnitures(playerid, 0);
     }
     else if(listitem == 1)
     {
@@ -85,15 +121,14 @@ Dialog:Dialog_CategorySelect(playerid, response, listitem, inputtext[])
 {
     if(!response)
         return pc_cmd_arredamento(playerid, "");
-
-    new String:dyn = @("Mobile\tPrezzo\n"), name[64], count = 0;
-
+    new String:dyn = @("Mobile\n");
+    new name[64], count = 0;
     for(new i = 0, j = sizeof(BuyableFurnitures); i < j; ++i)
     {
         if(BuyableFurniture_GetCategory(i) != listitem)
             continue;
         BuyableFurniture_GetName(i, name);
-        dyn += str_format("%s\t$%d\n", name, BuyableFurniture_GetPrice(i));
+        dyn += str_format("%s\n", name);
         FurnitureListItem[playerid][count++] = i;
     }
     Dialog_Show_s(playerid, Dialog_FurnitureBuy, DIALOG_STYLE_TABLIST_HEADERS, @("Arredamento"), dyn, "Acquista", "Chiudi");
@@ -109,12 +144,166 @@ Dialog:Dialog_FurnitureBuy(playerid, response, listitem, inputtext[])
     return 1;
 }
 
-stock Furniture_ShowList(playerid, page)
+stock Character_ShowFurnitures(playerid, page)
 {
     FurniturePage{playerid} = page;
 
+    new world = GetPlayerVirtualWorld(playerid);
+    
+    inline OnSelect()
+    {
+        new 
+            rows = cache_num_rows(),
+            String:str = @("")    
+        ;
+
+        if(rows > page * MAX_FURNITURE_PER_PAGE)
+            str += String:str_format(">>> Pagina %d\n", page + 2);
+        else if(rows <= page * MAX_FURNITURE_PER_PAGE && !rows)
+            return SendClientMessage(playerid, COLOR_ERROR, "Non hai ancora piazzato nessun mobile.");
+
+        new objectid = 0;
+        new count = 0;
+        for(new i = page * MAX_FURNITURE_PER_PAGE; i < rows; ++i)
+        {
+            if(count == MAX_FURNITURE_PER_PAGE)
+                break;
+
+            cache_get_value_index_int(i, 1, objectid);
+
+            if(!IsValidDynamicObject(objectid))
+                continue;
+            
+            if(Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_WORLD_ID) != world)
+                continue;
+
+            Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+
+            str += str_format("%s [ID: %d - Object ID: %d]\n", FurnitureCustomData[FURNITURE_NAME], page * MAX_FURNITURE_PER_PAGE + count, objectid);
+
+            FurnitureListItem[playerid][count] = objectid;
+            count++;
+        }
+
+        Dialog_Show_s(playerid, Dialog_CharacterFurnitures, DIALOG_STYLE_LIST, @("Lista mobili piazzati"), str, "Modifica", "Indietro");
+    }
+
+    MySQL_TQueryInline(gMySQL, using inline OnSelect, "SELECT * FROM `furnitures` WHERE world = '%d' AND object_id != '0'", world);
     return 1;
 }
+
+Dialog:Dialog_CharacterFurnitures(playerid, response, listitem, inputtext[])
+{
+    if(!response)
+    {
+        if(FurniturePage{playerid} <= 0)
+            return pc_cmd_arredamento(playerid, "");
+        else
+            return Character_ShowFurnitures(playerid, FurniturePage{playerid}-1);
+    }
+    if(listitem == 0)
+        return Character_ShowFurnitures(playerid, FurniturePage{playerid}+1);
+    
+    new slot = listitem - 1;
+    SelectedFurniture[playerid] = FurnitureListItem[playerid][slot];
+    Furniture_ShowOptions(playerid);
+    return 1;
+}
+
+Dialog:Dialog_FurnitureOptions(playerid, response, listitem, inputtext[])
+{
+    if(!response)
+    {
+        Character_ShowFurnitures(playerid, FurniturePage{playerid});
+        SelectedFurniture[playerid] = -1;
+        return 1;   
+    }
+    
+    new 
+        selected = SelectedFurniture[playerid],
+        Float:x, Float:y, Float:z;
+    
+    GetDynamicObjectPos(selected, x, y, z);
+
+    Streamer_GetArrayData(STREAMER_TYPE_OBJECT, selected, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+
+    switch(listitem)
+    {
+        case 0:
+        {
+            if(GetPlayerDistanceFromPoint(playerid, x, y, z) > 25.0)
+                return SendClientMessage(playerid, COLOR_ERROR, "Sei troppo distante dall'oggetto.");
+            SendClientMessage(playerid, COLOR_WHITE, "Premi {FF6347}ESC{FFFFFF} per annullare e {FF6347}SPAZIO{FFFFFF} per spostare la visuale. Clicca sul {FF6347}FLOPPY{FFFFFF} per salvare.");
+            EditObject_Start(playerid, EDIT_TYPE_FURNITURE, selected, FurnitureCustomData[DATABASE_ID]);
+        }
+        case 1:
+        {
+            Dialog_Show(playerid, Dialog_RenameFurniture, DIALOG_STYLE_INPUT, "Rinomina", "Inserisci il nuovo nome per il mobile:", "Rinomina", "Chiudi");
+        }
+        case 2:
+        {
+            Dialog_Show(playerid, Dialog_SellFurniture, DIALOG_STYLE_MSGBOX, "Rimuovi", "Sei sicuro di voler rimuovere questo mobile (%s)?", "Rimuovi", "Annulla", FurnitureCustomData[FURNITURE_NAME]);
+        }
+        case 3: // GOTO
+        {
+            SetPlayerPos(playerid, x, y, z);
+            SetPlayerInterior(playerid, Streamer_GetIntData(STREAMER_TYPE_OBJECT, selected, E_STREAMER_INTERIOR_ID));
+            SetPlayerVirtualWorld(playerid, Streamer_GetIntData(STREAMER_TYPE_OBJECT, selected, E_STREAMER_WORLD_ID));
+            SendFormattedMessage(playerid, COLOR_GREEN, "Ti sei gotato al mobile id %d.", selected);
+        }
+    }
+    return 1;
+}
+
+Dialog:Dialog_RenameFurniture(playerid, response, listitem, inputtext[])
+{
+    if(!response)
+        return Furniture_ShowOptions(playerid);
+    if(strlen(inputtext) < 4 || strlen(inputtext) > 63)
+        return Dialog_Show(playerid, Dialog_RenameFurniture, DIALOG_STYLE_INPUT, "Rinomina", "{FF0000}Il nome inserito non è valido (Troppo lungo o troppo corto).{FFFFFF}\nInserisci il nuovo nome per il mobile:", "Rinomina", "Chiudi");
+    
+    new selected = SelectedFurniture[playerid];
+
+    Streamer_GetArrayData(STREAMER_TYPE_OBJECT, selected, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+    set(FurnitureCustomData[FURNITURE_NAME], inputtext);
+    Streamer_SetArrayData(STREAMER_TYPE_OBJECT, selected, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+
+    mysql_tquery_f(gMySQL, "UPDATE furnitures SET name = '%e' WHERE id = '%d'", inputtext, FurnitureCustomData[DATABASE_ID]);
+
+    return 1;
+}
+
+
+Dialog:Dialog_SellFurniture(playerid, response, listitem, inputtext[])
+{
+    if(!response)
+        return Furniture_ShowOptions(playerid);
+    new selected = SelectedFurniture[playerid];
+    Streamer_GetArrayData(STREAMER_TYPE_OBJECT, selected, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+
+    //Character_GiveMoney(playerid, FurnitureCustomData[FURNITURE_PRICE]/2, "furniture _ sell");
+
+    Player_Info(playerid, "Hai ~r~rimosso~w~ il mobile.", true, 5000);
+
+    if(FurnitureCustomData[DATABASE_ID] > 0)
+    {
+        mysql_tquery_f(gMySQL, "DELETE FROM furnitures WHERE id = '%d' AND object_id = '%d';", FurnitureCustomData[DATABASE_ID], selected);
+    }
+
+    FurnitureCustomData[DATABASE_ID] = 0;
+    FurnitureCustomData[FURNITURE_PRICE] = 0;
+    FurnitureCustomData[FURNITURE_NAME] = EOS;
+
+    Streamer_SetArrayData(STREAMER_TYPE_OBJECT, selected, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+
+
+
+    DestroyDynamicObject(selected);
+    SelectedFurniture[playerid] = -1;
+    pc_cmd_arredamento(playerid, "");
+    return 1;
+}
+
 
 stock Furniture_CreateTemporary(modelid, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz, worldid, interior)
 {
@@ -127,7 +316,7 @@ stock Furniture_CreateTemporary(modelid, Float:x, Float:y, Float:z, Float:rx, Fl
 
 stock Furniture_Store(objectid, furnitureid)
 {
-    if(Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData) && FurnitureCustomData[DATABASE_ID] > 0)
+    if(Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData) && FurnitureCustomData[DATABASE_ID] == 0)
     {
         new
             Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz,
@@ -139,8 +328,11 @@ stock Furniture_Store(objectid, furnitureid)
         
         inline OnInsert()
         {
+            new tname[64];
+            BuyableFurniture_GetName(furnitureid, tname);
             FurnitureCustomData[DATABASE_ID] = cache_insert_id();
             FurnitureCustomData[FURNITURE_PRICE] = BuyableFurniture_GetPrice(furnitureid);
+            set(FurnitureCustomData[FURNITURE_NAME], tname);
             Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData);
         }
 
@@ -211,8 +403,8 @@ stock Furniture_SetObject(objectid, dbid)
 
 stock Furniture_StartBuy(playerid, furnitureid)
 {
-    if(Character_GetMoney(playerid) < BuyableFurniture_GetPrice(furnitureid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza denaro per acquistare questo mobile.");
+    //if(Character_GetMoney(playerid) < BuyableFurniture_GetPrice(furnitureid))
+        //return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza denaro per acquistare questo mobile.");
 
     new Float:x, Float:y, Float:z;
 	GetPlayerPos(playerid, x, y, z);
@@ -229,16 +421,16 @@ stock Furniture_FinishBuy(playerid, objectid)
 {
     new furnitureid = SelectedFurniture[playerid];
 
-    if(Character_GetMoney(playerid) < BuyableFurniture_GetPrice(furnitureid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza denaro per acquistare questo mobile.");
+    //if(Character_GetMoney(playerid) < BuyableFurniture_GetPrice(furnitureid))
+        //return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza denaro per acquistare questo mobile.");
 
     Furniture_Store(objectid, furnitureid);
 
-    Character_GiveMoney(playerid, -BuyableFurniture_GetPrice(furnitureid), "furniture buy");
+    //Character_GiveMoney(playerid, -BuyableFurniture_GetPrice(furnitureid), "furniture buy");
 
     new name[64];
     BuyableFurniture_GetName(furnitureid, name);
-    SendFormattedMessage(playerid, COLOR_GREEN, "Hai acquistato questo mobile (%s) per $%d.", name, BuyableFurniture_GetPrice(furnitureid));
+    SendFormattedMessage(playerid, COLOR_GREEN, "Hai piazzato questo mobile (%s) con successo.", name);
 
     EditObject_End(playerid);
     return 1;
@@ -253,4 +445,32 @@ stock Furniture_CancelBuy(playerid)
     
     EditObject_End(playerid);
     return 1;
+}
+
+stock Furniture_ShowOptions(playerid)
+{
+    if(Account_GetAdminLevel(playerid) > 1)
+    {
+        Dialog_Show(playerid, Dialog_FurnitureOptions, DIALOG_STYLE_LIST, "Opzioni mobili", "Sposta\nRinomina\nRimuovi\nGotati", "Seleziona", "Indietro");
+    }
+    else
+    {
+        Dialog_Show(playerid, Dialog_FurnitureOptions, DIALOG_STYLE_LIST, "Opzioni mobili", "Sposta\nRinomina\nRimuovi", "Seleziona", "Indietro");
+    }
+    return 1;
+}
+
+stock Character_CanFurnish(playerid)
+{
+    new currentHouse = Character_GetHouseID(playerid);
+    if(currentHouse != -1 && House_GetOwnerID(currentHouse) == Character_GetID(playerid) && IsPlayerInRangeOfHouseExit(playerid, currentHouse, 50.0))
+    {
+        return 1;
+    }
+    /*for_house(h)
+    {
+        if(House_GetOwnerID(h) == Character_GetID(playerid) && IsPlayerInRangeOfHouseEntrance(playerid, h, 5.0))
+            return 1;
+    }*/
+    return 0;
 }

@@ -36,6 +36,8 @@
 	#warning LSARP_DEBUG is enabled. Care!!
 #endif
 
+//#define FAKE_LOGIN 1
+
 #include <a_samp>
 native IsValidVehicle(vehicleid);
 
@@ -61,9 +63,12 @@ native IsValidVehicle(vehicleid);
 // Includes
 #include <sscanf2>
 #include <a_mysql>
+
 #include <YSI_Coding\y_timers>
 #include <YSI_Coding\y_va>
 #include <YSI_Coding\y_inline>
+#include <YSI_Data\y_bit>
+
 // For YSI and PawnPlus yield conflict.
 #undef yield
 #undef @@
@@ -71,7 +76,6 @@ native IsValidVehicle(vehicleid);
 #include <whirlpool>
 #include <streamer>
 #include <strlib>
-#include <YSI_Data\y_bit>
 
 #define PP_SYNTAX 1
 //#define PP_SYNTAX_GENERIC 1
@@ -148,8 +152,8 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 // ===== [ DP SYSTEM ] =====
 #include <dp_system\core>
 
-#include <utils/utils>
-#include <utils/maths>
+#include <utils\utils>
+#include <utils\maths>
 
 
 #include <callbacks>
@@ -159,8 +163,16 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 #include <YSI_Coding\y_remote>
 #include <YSI_Coding\y_hooks> // Place hooks after this. Everything included before this, is hooked first.
 
+WasteDeAMXersTime()
+{
+    new b;
+    #emit load.pri b
+    #emit stor.pri b
+}
+
 main()
 {
+	WasteDeAMXersTime();
 	printf("LSARP - By CodaKKK. Started: 26/02/2019.");
 
 	// Should I initialize them in a OnGameModeInit hook?
@@ -253,6 +265,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
+
 hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ) 
 {
 	if(IsPlayerNPC(playerid))
@@ -281,7 +294,7 @@ hook OnPlayerShootDynObject(playerid, weaponid, objectid, Float:x, Float:y, Floa
 
 /*hook OnAntiCheatDetected(playerid, code)
 {
-	SendMessageToAdmins(true, COLOR_ERROR, "[ADMIN-ALERT]: %s (%d) ï¿½ sospetto di hack. (%s)", Character_GetOOCName(playerid), playerid, AC_Name[code]);
+	SendMessageToAdmins(true, COLOR_ERROR, "[ADMIN-ALERT]: %s (%d) è sospetto di hack. (%s)", Character_GetOOCName(playerid), playerid, AC_Name[code]);
 	return 1;
 }
 */
@@ -437,7 +450,7 @@ hook OnPlayerDisconnect(playerid, reason)
 	new String:string, name[MAX_PLAYER_NAME];
 
 	GetPlayerName(playerid, name, sizeof(name));
-	string = str_format("%s ï¿½ uscito dal server. [%s]", name, reasonName[reason]);
+	string = str_format("%s è uscito dal server. [%s]", name, reasonName[reason]);
 	SendClientMessageToAllStr(COLOR_GREY, string);
 	TextDrawHideForPlayer(playerid, Clock);
 	if(Character_IsLogged(playerid))
@@ -510,6 +523,12 @@ hook OnPlayerConnect(playerid)
 	}
 	LoadPlayerTextDraws(playerid);
 	SendClientMessage(playerid, -1, "Hai 60 secondi per registrarti o effettuare il login prima di essere kickato.");
+
+	#if defined FAKE_LOGIN
+		Account_SetLogged(playerid, true);
+		Character_SetLogged(playerid, true);
+		SpawnPlayer(playerid);
+	#endif
 	//OnPlayerRequestClass(playerid, 0);
 	return 1;
 }
@@ -524,7 +543,7 @@ hook OnRconLoginAttempt(ip[], password[], success )
 		{
 			if(success)
 			{
-				SendMessageToAdmins(true, COLOR_ADMIN, "%s (%d) ï¿½ entrato in RCON.", Character_GetOOCName(i), i);
+				SendMessageToAdmins(true, COLOR_ADMIN, "%s (%d) è entrato in RCON.", Character_GetOOCName(i), i);
 			}
 			else
 			{

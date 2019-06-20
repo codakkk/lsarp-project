@@ -40,7 +40,7 @@ stock bool:Character_CollectDrop(playerid, dropid)
 	   new 
 		  String:title,
 		  String:content = @("Raccogli\nSposta");
-	   title = str_format("%s (%S: %d)", ServerItem_GetName(itemid), (ServerItem_IsWeapon(itemid) ? @("Munizioni") : @("Quantitï¿½")), (ServerItem_IsWeapon(itemid) ? Drop_GetItemExtra(dropid) : Drop_GetItemAmount(dropid)));
+	   title = str_format("%s (%S: %d)", ServerItem_GetName(itemid), (ServerItem_IsWeapon(itemid) ? @("Munizioni") : @("Quantità")), (ServerItem_IsWeapon(itemid) ? Drop_GetItemExtra(dropid) : Drop_GetItemAmount(dropid)));
 	   if(ServerItem_IsWeapon(itemid))
 		  content += @("\n{FFFFFF}Equipaggia{FFFFFF}");
 	   SetPVarInt(playerid, "Player_DropID", dropid);
@@ -97,7 +97,7 @@ Dialog:Dialog_ItemDropAction(playerid, response, listitem, inputtext[])
 			}
 			else 
 			{
-				Dialog_Show(playerid, Dialog_ItemDropEquipWeapon, DIALOG_STYLE_INPUT, "Equipaggia Arma", "Inserisci le munizioni che vuoi inserire nell'arma.\nQuantitï¿½: {00FF00}%d{FFFFFF}", "Equipaggia", "Annulla", invAmmo);
+				Dialog_Show(playerid, Dialog_ItemDropEquipWeapon, DIALOG_STYLE_INPUT, "Equipaggia Arma", "Inserisci le munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}", "Equipaggia", "Annulla", invAmmo);
 			}
 		}
 	}
@@ -117,7 +117,7 @@ Dialog:Dialog_ItemDropEquipWeapon(playerid, response, listitem, inputtext[])
 		ammoType = Weapon_GetAmmoType(itemid),
 		invAmmo = Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType);
 	if(ammo <= 0 || ammo > invAmmo)
-		return Dialog_Show(playerid, Dialog_ItemDropEquipWeapon, DIALOG_STYLE_INPUT, "Equipaggia Arma", "{FF0000}Non possiedi la quantitï¿½ di munizioni inserita.{FFFFFF}\nInserisci le munizioni che vuoi inserire nell'arma.\n{00FF00}%d{FFFFFF}", "Equipaggia", "Annulla", invAmmo);
+		return Dialog_Show(playerid, Dialog_ItemDropEquipWeapon, DIALOG_STYLE_INPUT, "Equipaggia Arma", "{FF0000}Non possiedi la quantità di munizioni inserita.{FFFFFF}\nInserisci le munizioni che vuoi inserire nell'arma.\n{00FF00}%d{FFFFFF}", "Equipaggia", "Annulla", invAmmo);
 	Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~~n~con ~g~%d~w~ proiettili.", ServerItem_GetName(itemid), extra + ammo), true);
 	Character_AMe(playerid, "raccoglie un'arma.");
 	AC_GivePlayerWeapon(playerid, itemid, extra + ammo);

@@ -1,5 +1,7 @@
 #define for_house(%0) for_list(%0:HouseList)
 
+#define HOUSE_START_WORLD 	(1000)
+
 enum _:E_HOUSE_DATA
 {
     hID,
@@ -19,7 +21,8 @@ enum _:E_HOUSE_DATA
     Float:hExitY,
     Float:hExitZ,
     hExitInterior,
-    
+    hExitWorld,
+	
 	hInterior,
 
     hEnterPickup,

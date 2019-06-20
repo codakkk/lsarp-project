@@ -66,7 +66,7 @@ stock Character_Enter(playerid, pickupid, elementId, E_ELEMENT_TYPE:type)
     {
 	   House_GetExitPosition(elementId, x, y, z);
 	   interiorId = House_GetExitInterior(elementId);
-	   world = elementId;
+	   world = House_GetExitWorld(elementId);
 	   locked = House_IsLocked(elementId);
     }
     if(locked)

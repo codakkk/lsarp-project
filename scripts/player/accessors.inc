@@ -337,11 +337,20 @@ stock List:Character_GetOwnedHouses(playerid)
 	return list;
 }
 
-stock Character_GetNearHouseID(playerid)
+stock Character_GetNearHouseID(playerid, bool:inside = false)
 {
-	new pickupid = Character_GetLastPickup(playerid), id, E_ELEMENT_TYPE:type;
-	if(Pickup_GetInfo(pickupid, id, type) && (type == ELEMENT_TYPE_HOUSE_ENTRANCE || type == ELEMENT_TYPE_HOUSE_EXIT) && IsPlayerInRangeOfPickup(playerid, pickupid, 3.0))
-		return id;
+	if(inside)
+	{
+		return Character_GetHouseID(playerid);
+		//if(Pickup_GetInfo(pickupid, id, type) && (type == ELEMENT_TYPE_HOUSE_EXIT) && IsPlayerInRangeOfPickup(playerid, pickupid, 3.0))
+			//return id;
+	}
+	else
+	{
+		new pickupid = Character_GetLastPickup(playerid), id, E_ELEMENT_TYPE:type;
+		if(Pickup_GetInfo(pickupid, id, type) && (type == ELEMENT_TYPE_HOUSE_ENTRANCE) && IsPlayerInRangeOfPickup(playerid, pickupid, 3.0))
+			return id;
+	}
 	return -1;
 }
 
@@ -355,6 +364,13 @@ stock Character_GetNearHouseIDMenu(playerid)
 	return -1;
 }
 
+stock Character_GetHouseID(playerid)
+{
+	if(GetPlayerVirtualWorld(playerid) < HOUSE_START_WORLD)
+		return -1;
+	return GetPlayerVirtualWorld(playerid) - HOUSE_START_WORLD;
+}
+
 stock Character_GetNearBuildingID(playerid)
 {
 	if(GetPlayerVirtualWorld(playerid) < BUILDING_START_WORLD)
@@ -366,11 +382,12 @@ stock Character_GetNearBuilding(playerid, bool:inside)
 {
 	if(inside)
 	{
-		foreach(new b : Buildings)
+		/*foreach(new b : Buildings)
 		{
 			if(BuildingInfo[b][bExists] && Building_GetExitWorld(b) == GetPlayerVirtualWorld(playerid))
 				return b;
-		}
+		}*/
+		return Character_GetHouseID(playerid);
 	}
 	else
 	{

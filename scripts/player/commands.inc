@@ -9,11 +9,10 @@
 
 hook OnPlayerClearData(playerid)
 {
-    printf("player_commands.pwn/OnPlayerClearData");
     if(pVehicleSeller[playerid] != -1 && pVehicleSellingTo[pVehicleSeller[playerid]] == playerid)
     {
 	   new seller = pVehicleSeller[playerid];
-	   SendClientMessage(seller, COLOR_ERROR, "Il giocatore a cui volevi vendere il veicolo si ï¿½ disconnesso.");
+	   SendClientMessage(seller, COLOR_ERROR, "Il giocatore a cui volevi vendere il veicolo si è disconnesso.");
 	   pVehicleSellingTo[seller] = -1;
 	   pVehicleSellingPrice[seller] = 0;
 	   pSellingVehicleID[seller] = 0;
@@ -21,7 +20,7 @@ hook OnPlayerClearData(playerid)
     else if(pVehicleSellingTo[playerid] != -1 && pVehicleSeller[pVehicleSellingTo[playerid]] == playerid)
     {
 	   new customer = pVehicleSellingTo[playerid];
-	   SendClientMessage(customer, COLOR_ERROR, "Il giocatore che voleva venderti il veicolo si ï¿½ disconnesso.");
+	   SendClientMessage(customer, COLOR_ERROR, "Il giocatore che voleva venderti il veicolo si è disconnesso.");
 	   pVehicleSeller[customer] = -1;
 	   pVehicleSellingPrice[customer] = 0;
 	   pSellingVehicleID[customer] = 0;
@@ -90,13 +89,13 @@ CMD:dom(playerid, params[])
     if(AccountInfo[playerid][aPremium])
     {
 	   SendMessageToAdmins(0, 0xEA7500FF, "(( [PREMIUM] %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);
-	   SendClientMessage(playerid, -1, "La domanda ï¿½ stata inviata ai moderatori online. Attendi.");
-	   SendClientMessage(playerid, -1, "Essendo un utente Premium, la tua domanda avrï¿½ maggiore prioritï¿½.");
+	   SendClientMessage(playerid, -1, "La domanda è stata inviata ai moderatori online. Attendi.");
+	   SendClientMessage(playerid, -1, "Essendo un utente Premium, la tua domanda avrà maggiore priorità.");
     }
     else
     {
 	   SendMessageToAdmins(0, 0xEA7500FF, "(( %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);
-	   SendClientMessage(playerid, -1, "La domanda ï¿½ stata inviata ai moderatori online. Attendi.");
+	   SendClientMessage(playerid, -1, "La domanda è stata inviata ai moderatori online. Attendi.");
     }
     pLastAdminQuestionTime[playerid] = GetTickCount();
     return 1;
@@ -111,9 +110,9 @@ CMD:afk(playerid, params[])
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Non valido.");
 	if(Account_GetAdminLevel(playerid) < 1 && Account_GetAdminLevel(id) > 1)
-		SendFormattedMessage(playerid, -1, (Character_IsAFK(id)) ? ("%s ï¿½ AFK.") : ("%s non ï¿½ AFK."), Character_GetOOCName(id));
+		SendFormattedMessage(playerid, -1, (Character_IsAFK(id)) ? ("%s è AFK.") : ("%s non è AFK."), Character_GetOOCName(id));
 	else
-		SendFormattedMessage(playerid, -1, (Character_IsAFK(id)) ? ("%s ï¿½ AFK da %d minuti (%d secondi).") : ("%s non ï¿½ AFK."), Character_GetOOCName(id), Character_GetAFKTime(id)/60, Character_GetAFKTime(id));
+		SendFormattedMessage(playerid, -1, (Character_IsAFK(id)) ? ("%s è AFK da %d minuti (%d secondi).") : ("%s non è AFK."), Character_GetOOCName(id), Character_GetAFKTime(id)/60, Character_GetAFKTime(id));
 	return 1;
 }
 
@@ -212,7 +211,7 @@ CMD:id(playerid, params[])
 	{
 		id = strval(params);
 		if(!IsPlayerConnected(id) || !Character_IsLogged(id))
-			return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non ï¿½ connesso.");
+			return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
 		SendFormattedMessage(playerid, -1, "%s (%d) - Livello: %d", Character_GetOOCName(id), id, Character_GetLevel(id));
 	}
 	else
@@ -313,7 +312,7 @@ Dialog:Dialog_ChangePassword(playerid, response, listitem, inputtext[])
 		}
 		else
 		{
-			Dialog_Show(playerid, Dialog_ChangePassword, DIALOG_STYLE_INPUT, "Cambia Password", "{FF0000}La password inserita non ï¿½ valida.\n{FFFFFF}Inserisci la tua password per continuare.\nTentativo: %d/%d", "Continua", "Annulla", gLoginAttempts{playerid}, MAX_LOGIN_ATTEMPTS);
+			Dialog_Show(playerid, Dialog_ChangePassword, DIALOG_STYLE_INPUT, "Cambia Password", "{FF0000}La password inserita non è valida.\n{FFFFFF}Inserisci la tua password per continuare.\nTentativo: %d/%d", "Continua", "Annulla", gLoginAttempts{playerid}, MAX_LOGIN_ATTEMPTS);
 			gLoginAttempts{playerid}++;
 		}
 	}
@@ -330,7 +329,7 @@ Dialog:Dialog_SetNewPassword(playerid, response, listitem, inputtext[])
 	if(!response)
 		return 0;
 	if(!IsValidPassword(inputtext))
-		return Dialog_Show(playerid, Dialog_SetNewPassword, DIALOG_STYLE_INPUT, "Nuova password", "La password inserita non ï¿½ corretta.\nInserisci la nuova password.\nLa password deve contenere almeno:\n- 8 caratteri.\n- Almeno una lettera maiuscola.\n- Almeno un numero.\n- Almeno un carattere speciale.\nLa password non puo':\n- Cominciare o finire con uno spazio\n- Contenere come caratteri speciali: %, \\, ', `, \".", "Continua", "Annulla");
+		return Dialog_Show(playerid, Dialog_SetNewPassword, DIALOG_STYLE_INPUT, "Nuova password", "La password inserita non è corretta.\nInserisci la nuova password.\nLa password deve contenere almeno:\n- 8 caratteri.\n- Almeno una lettera maiuscola.\n- Almeno un numero.\n- Almeno un carattere speciale.\nLa password non puo':\n- Cominciare o finire con uno spazio\n- Contenere come caratteri speciali: %, \\, ', `, \".", "Continua", "Annulla");
 	inline OnUpdate()
 	{
 		SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato la tua password con successo.");

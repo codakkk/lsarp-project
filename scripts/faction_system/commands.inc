@@ -44,10 +44,10 @@ CMD:fcreate(playerid, params[])
 	}
 
 	if(strlen(name) < 4 || strlen(name) > 32)
-		return SendClientMessage(playerid, COLOR_ERROR, "Il nome della fazione non puo' essere piï¿½ lungo di 32 caratteri e piï¿½ corto di 4 caratteri.");
+		return SendClientMessage(playerid, COLOR_ERROR, "Il nome della fazione non puo' essere più lungo di 32 caratteri e più corto di 4 caratteri.");
 
 	if(strlen(shortName) < 3 || strlen(shortName) > 8)
-		return SendClientMessage(playerid, COLOR_ERROR, "L'acronimo della fazione non puo' essere piï¿½ lungo di 8 caratteri e piï¿½ corto di 3 caratteri.");
+		return SendClientMessage(playerid, COLOR_ERROR, "L'acronimo della fazione non puo' essere più lungo di 8 caratteri e più corto di 3 caratteri.");
 
 	Faction_Create(name, shortName, type);
 
@@ -80,7 +80,7 @@ CMD:setfaction(playerid, params[])
 		return 1;	
 	}
 	if(!Character_IsLogged(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non ï¿½ connesso.");
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
 	if(!Faction_IsValid(factionid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Fazione non valida! Usa /afactionslist per una lista completa.");
 	if(rankid < 1 || rankid > 10)

@@ -48,7 +48,7 @@ stock CheckAccount(playerid)
 		if(Account_IsLogged(i) && !strcmp(AccountInfo[i][aName], name, false))
 		{
 			KickEx(playerid);
-			SendClientMessage(playerid, COLOR_ERROR, "Questo account risulta giï¿½ collegato nel server.");
+			SendClientMessage(playerid, COLOR_ERROR, "Questo account risulta già collegato nel server.");
 			return 0;
 		}
 	}
@@ -284,7 +284,7 @@ timer LoginKickTimer[1000 * 60](playerid)
 {
 	if(Account_IsLogged(playerid))
 		return 0;
-	SendClientMessage(playerid, COLOR_ERROR, "Sei stato kickato per inattivitï¿½.");
+	SendClientMessage(playerid, COLOR_ERROR, "Sei stato kickato per inattività.");
 	KickEx(playerid);
 	return 1;
 }

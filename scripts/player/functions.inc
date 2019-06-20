@@ -228,7 +228,7 @@ stock Character_Delete(playerid, character_db_id, character_name[])
 stock Character_ShowStats(playerid, targetid)
 {
 	if(!Character_IsLogged(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non ï¿½ collegato.");
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
 	new
 		Float:hp, Float:armour,
 		expForNewLevel = (PlayerInfo[playerid][pLevel]+1) * 2;
@@ -246,11 +246,11 @@ stock Character_ShowStats(playerid, targetid)
 	SendFormattedMessage(targetid, -1, "[Alimentazione] Fame: %d", Character_GetHunger(playerid));
     
 	if(Character_HasBuildingKey(playerid) && Character_HasHouseKey(playerid))
-	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietï¿½]: Edificio: %d - Casa: %d", Character_GetBuildingKey(playerid), Character_GetHouseKey(playerid));
+	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietà]: Edificio: %d - Casa: %d", Character_GetBuildingKey(playerid), Character_GetHouseKey(playerid));
     else if(Character_HasBuildingKey(playerid))
-	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietï¿½]: Edificio: %d", Character_GetBuildingKey(playerid));
+	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietà]: Edificio: %d", Character_GetBuildingKey(playerid));
     else if(Character_HasHouseKey(playerid))
-	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietï¿½]: Casa: %d", Character_GetHouseKey(playerid));
+	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietà]: Casa: %d", Character_GetHouseKey(playerid));
 	
 	SendFormattedMessage(targetid, -1, "[Altro] Interior: %d - VW: %d", GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
 	

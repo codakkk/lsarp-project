@@ -30,7 +30,8 @@ stock Character_HandleFirstSpawn(playerid)
 
 hook OnPlayerSpawn(playerid)
 {
-	Character_Spawn(playerid);
+	if(Character_IsAlive(playerid))
+		Character_Spawn(playerid);
 	return 1;
 }
 

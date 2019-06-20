@@ -53,7 +53,8 @@ stock House_CreateObjects(houseid)
 	   Float:ex, Float:ey, Float:ez,
 	   interior = House_GetEnterInterior(houseid),
 	   einterior = House_GetExitInterior(houseid),
-	   world = House_GetEnterWorld(houseid);
+	   enterWorld = House_GetEnterWorld(houseid),
+       exitWorld = House_GetExitWorld(houseid);
     
     House_GetEnterPosition(houseid, x, y, z);
     House_GetExitPosition(houseid, ex, ey, ez);
@@ -63,9 +64,9 @@ stock House_CreateObjects(houseid)
     Get2DZoneName(x, y, z, zone, sizeof(zone));
 
     new 
-	   enterPickupid = Pickup_Create(1273, houseid, x, y, z, ELEMENT_TYPE_HOUSE_ENTRANCE, world, interior),
-	   exitPickupid = Pickup_Create(1007, houseid, ex, ey, ez, ELEMENT_TYPE_HOUSE_EXIT, houseid, einterior),
-	   Text3D:label = CreateDynamic3DTextLabel(zone, 0xFFFFFF, x, y, z + 0.55, 15.0, .worldid = world, .interiorid = interior, .testlos = 1);
+	   enterPickupid = Pickup_Create(1273, houseid, x, y, z, ELEMENT_TYPE_HOUSE_ENTRANCE, enterWorld, interior),
+	   exitPickupid = Pickup_Create(1007, houseid, ex, ey, ez, ELEMENT_TYPE_HOUSE_EXIT, exitWorld, einterior),
+	   Text3D:label = CreateDynamic3DTextLabel(zone, 0xFFFFFF, x, y, z + 0.55, 15.0, .worldid = enterWorld, .interiorid = interior, .testlos = 1);
     
     list_set_cell(HouseList, houseid, hEnterPickup, enterPickupid);
     list_set_cell(HouseList, houseid, hExitPickup, exitPickupid);
@@ -191,6 +192,11 @@ stock House_GetEnterWorld(houseid)
     return list_get(HouseList, houseid, hEnterWorld);
 }
 
+stock House_GetExitWorld(houseid)
+{
+    return list_get(HouseList, houseid, hExitWorld);
+}
+
 stock House_SetExitPosition(houseid, Float:x, Float:y, Float:z)
 {
     list_set_cell(HouseList, houseid, hExitX, x);
@@ -304,6 +310,8 @@ stock House_LoadAll()
 			cache_get_value_index_int(i, 15, data[hInterior]);
 			cache_get_value_index_int(i, 16, data[hInterior]);
 
+            data[hExitWorld] = HOUSE_START_WORLD + i;
+
 			list_add_arr(HouseList, data);
 			House_CreateObjects(i);
 			
@@ -354,10 +362,18 @@ Dialog:Dialog_HouseInventory(playerid, response, listitem, inputtext[])
 }
 
 
-stock IsPlayerInRangeOfHouseEntrance(playerid, houseid)
+stock IsPlayerInRangeOfHouseEntrance(playerid, houseid, Float:range = 2.5)
 {
 	if(!House_IsValid(houseid))
 		return 0;
 	new pickupid = House_GetEnterPickup(houseid);
-	return IsPlayerInRangeOfPickup(playerid, pickupid, 2.5);
+	return IsPlayerInRangeOfPickup(playerid, pickupid, range);
+}
+
+stock IsPlayerInRangeOfHouseExit(playerid, houseid, Float:range = 2.5)
+{
+	if(!House_IsValid(houseid))
+		return 0;
+	new pickupid = House_GetExitPickup(houseid);
+	return IsPlayerInRangeOfPickup(playerid, pickupid, range);
 }

@@ -9483,11 +9483,16 @@
 	},
 	"lsarp_Inventory_Show": {
 		"prefix": "Inventory_Show",
-		"body": "Inventory_Show(${1:Inventory:inventory}, ${2:playerid}, ${3:const title[]}, ${4:const dialog}, ${5:const button1}, ${6:const button2})",
+		"body": "Inventory_Show(${1:Inventory:inventory}, ${2:playerid}, ${3:const title[]}, ${4:const dialog}, ${5:const button1}, ${6:const button2})$0",
 		"description": ""
 	},
 	"lsarp_Inventory_ShowStr": {
 		"prefix": "Inventory_ShowStr",
-		"body": "Inventory_ShowStr(${1:Inventory:inventory}, ${2:playerid}, ${3:String:title}, ${4:const dialog}, ${5:const button1}, ${6:const button2})",
+		"body": "Inventory_ShowStr(${1:Inventory:inventory}, ${2:playerid}, ${3:String:title}, ${4:const dialog}, ${5:const button1}, ${6:const button2})$0",
+		"description": ""
+	},
+	"lsarp_MySQL_TQueryInline": {
+		"prefix": "MySQL_TQueryInline",
+		"body": "MySQL_TQueryInline(${1:MySQL:handle}, ${2:Func:cb<>}, ${3:const query[]}, ${4:GLOBAL_TAG_TYPES:...})$0",
 		"description": ""
 	},
