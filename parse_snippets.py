@@ -1,13 +1,23 @@
 import glob
 import os
 import re
+from sys import platform
 
-startPath = os.path.dirname(__file__) + '\\scripts'
-base_pawn_snippets = open(os.path.dirname(__file__) + '\\base_snippets.txt')
 
-local_snippets_file = open(
-    "C:\\Users\\Ciro\\AppData\\Roaming\\Code\\User\\snippets\\pawn.json", "w")
-print(os.listdir(startPath))
+startPath = ''
+local_snippets_file = ''
+base_pawn_snippets = ''
+
+if platform == "linux" or platform == "linux2":
+	startPath = os.path.dirname(__file__) + '/scripts'
+	local_snippets_file = open("/home/ciro/.config/Code/User/snippets/pawn.json", "w")
+	base_pawn_snippets = open(os.path.dirname(__file__) + '/base_snippets.txt', "r")
+elif platform == "win32":
+	local_snippets_file = open("C:\\Users\\Ciro\\AppData\\Roaming\\Code\\User\\snippets\\pawn.json", "w")
+	base_pawn_snippets = open(os.path.dirname(__file__) + '\\base_snippets.txt', "r")
+	startPath = os.path.dirname(__file__) + '\\scripts'
+
+# print(os.listdir(startPath))
 local_snippets_file.write('{\n')
 
 for line in base_pawn_snippets:
@@ -80,5 +90,7 @@ for root, dirs, files in os.walk(startPath):
 			local_snippets_file.write(
 				'\t// ==================================================\n')
 local_snippets_file.write('}')
+
+print('Pawn files parsed.')
 
 #input("Press Enter to exit")

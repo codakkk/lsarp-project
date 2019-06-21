@@ -7,6 +7,7 @@
 	"settings": {
 		"files.encoding": "windows1252",
 		"files.autoSave": "onFocusChange",
+		"editor.tabSize": 4,
 		"workbench.editor.labelFormat": "short",
 		"window.title": "${activeEditorShort}${separator}${rootName}",
 		"editor.snippetSuggestions": "top",
@@ -15,7 +16,7 @@
 				{
 					"match": ".inc",
 					"isAsync": true,
-					"cmd": "python ${workspaceRoot}\\parse_snippets.py"
+					"cmd": "python ${workspaceRoot}/parse_snippets.py"
 				}
 			]
 		}

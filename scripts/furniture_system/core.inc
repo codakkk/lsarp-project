@@ -157,6 +157,9 @@ stock Character_ShowFurnitures(playerid, page)
             String:str = @("")    
         ;
 
+        if(!rows)
+            return SendClientMessage(playerid, COLOR_ERROR, "Non hai ancora piazzato nessun mobile.");
+
         if(rows > page * MAX_FURNITURE_PER_PAGE)
             str += String:str_format(">>> Pagina %d\n", page + 2);
         else if(rows <= page * MAX_FURNITURE_PER_PAGE && !rows)
@@ -473,4 +476,15 @@ stock Character_CanFurnish(playerid)
             return 1;
     }*/
     return 0;
+}
+
+stock Character_GetFurnitureSlot(playerid)
+{
+    static const limit[] = {40, 60, 75, 100};
+
+    //MySQL_TQueryInline(gMySQL, using inline OnSelect, "SELECT FurnitureSlots FROM Account WHERE ID = '%d';", Account_GetID(playerid));
+
+    mysql_query(MySQL:handle, const query[], bool:use_cache = true)
+
+    return limit[Account_GetPremiumLevel(playerid)];
 }
