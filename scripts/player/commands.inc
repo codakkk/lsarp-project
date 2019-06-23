@@ -124,7 +124,7 @@ CMD:aiuto(playerid, params[])
 	SendClientMessage(playerid, -1, "[GENERALE]: /afk - /stilechat - /stilelotta - /stilecamminata");
     SendClientMessage(playerid, -1, "[CHAT]: /b - /me - /ame - /low - /melow - /do - /dolow - (/s)hout");
     SendClientMessage(playerid, -1, "[CHAT]: (/w)hisper - (/cw)hisper - /pm - /blockb - /blockpm");
-    SendClientMessage(playerid, -1, "[ALTRO]: /animlist - /vcmds - /invcmds - /zpoints");
+    SendClientMessage(playerid, -1, "[ALTRO]: /animlist - /vcmds - /invcmds - /zpoints - /furniturecmds");
 	new factionid = Character_GetFaction(playerid);
 	if(factionid != -1)
 	{

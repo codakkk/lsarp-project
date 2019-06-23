@@ -75,12 +75,11 @@ native IsValidVehicle(vehicleid);
 #include <Pawn.CMD>
 #include <whirlpool>
 #include <streamer>
-#include <strlib>
+//#include <strlib>
 
 #define PP_SYNTAX 1
 //#define PP_SYNTAX_GENERIC 1
-#define PP_ADDITIONAL_TAGS E_ITEM_DATA
-
+#define PP_ADDITIONAL_TAGS E_ITEM_DATA, Text3D, Pool
 #include <PawnPlus>
 // #include <pp-mysql> // Must update pp first
 #include <OPA>
@@ -114,6 +113,7 @@ native IsValidVehicle(vehicleid);
 
 DEFINE_HOOK_REPLACEMENT(ShowRoom, SR);
 DEFINE_HOOK_REPLACEMENT(Element, Elm);
+DEFINE_HOOK_REPLACEMENT(Player, Ply);
 
 #include <miscellaneous\globals>
 // https://github.com/emmet-jones/New-SA-MP-callbacks/blob/master/README.md
@@ -692,7 +692,7 @@ stock IsPlayerIDConnected(dbid)
 #include <chopshop_system\commands>
 
 // ===== [ FURNITURE SYSTEM ] =====
-#include <furniture_system\core>
+#include <furniture_system\core_map>
 
 // ========== [ COMMANDS ] ==========
 #include <commands>

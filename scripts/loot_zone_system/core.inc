@@ -152,7 +152,7 @@ stock LootZone_AdminShowMenu(playerid, last_lz_id = 0)
 stock LootZone_ShowItemsToPlayer(playerid, zone_id)
 {
 	if(!LootZone_IsValid(zone_id) || !IsPlayerInRangeOfLootZone(playerid, zone_id) ||
-		GetPlayerVirtualWorld(playerid) != LootZoneInfo[zone_id][lzVirtualWorld] ||
+		Character_GetVirtualWorld(playerid) != LootZoneInfo[zone_id][lzVirtualWorld] ||
 		GetPlayerInterior(playerid) != LootZoneInfo[zone_id][lzInterior])
 		return 0;
 	

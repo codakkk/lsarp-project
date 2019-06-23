@@ -75,7 +75,7 @@ stock Character_Enter(playerid, pickupid, elementId, E_ELEMENT_TYPE:type)
     Character_AMe(playerid, "apre la porta ed entra.");
     Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
     SetPlayerInterior(playerid, interiorId);
-    SetPlayerVirtualWorld(playerid, world);
+    Character_SetVirtualWorld(playerid, world);
     SetPlayerPos(playerid, x, y, z);
     return 1;
 }
@@ -113,7 +113,7 @@ stock Character_Exit(playerid, pickupid, elementId, E_ELEMENT_TYPE:type)
     Character_AMe(playerid, "apre la porta ed esce.");
     Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
     SetPlayerInterior(playerid, interiorId);
-    SetPlayerVirtualWorld(playerid, world);
+    Character_SetVirtualWorld(playerid, world);
     SetPlayerPos(playerid, x, y, z);
     return 1;
 }
@@ -145,6 +145,9 @@ stock Character_BuyHouse(playerid, houseid)
 {
     if(!House_IsValid(houseid))
 	   return 0;
+
+	if(House_GetOwnerID(houseid) == Character_GetID(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Sei già proprietario di questa casa.");
 
     if(House_GetOwnerID(houseid) != 0)
 	   return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");

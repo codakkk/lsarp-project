@@ -35,7 +35,7 @@ timer UpdateDragging[250](playerid, targetid)
 
 			SetPlayerPos(targetid, x+0.2, y+0.2, z);
 			SetPlayerInterior(targetid, GetPlayerInterior(playerid));
-			SetPlayerVirtualWorld(targetid, GetPlayerVirtualWorld(playerid));
+			Character_SetVirtualWorld(targetid, Character_GetVirtualWorld(playerid));
 			SetPlayerFacingAngle(targetid, angle);
 		}
 	}

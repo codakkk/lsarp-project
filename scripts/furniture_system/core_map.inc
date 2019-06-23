@@ -2,20 +2,20 @@
 
 #include <YSI_Coding\y_hooks>
 
-#define MAX_FURNITURE_PER_PAGE      (20)
+#define MAX_FURNITURE_PER_PAGE      (15)
 
 static 
     FurniturePage[MAX_PLAYERS char] = {0, ...},
     SelectedFurniture[MAX_PLAYERS] = {-1, ...},
-    FurnitureListItem[MAX_PLAYERS][sizeof(BuyableFurnitures)],
-    Map:FurnitureLabels[MAX_PLAYERS],
-    List:LoadedFurnituresWorld
+    //FurnitureListItem[MAX_PLAYERS][sizeof(BuyableFurnitures)],
+    List:FurnitureListItem[MAX_PLAYERS],
+    List:FurnitureLabels[MAX_PLAYERS],
+    Map:Furnitures // Map<houseid, Pool<objectid>>
 ;
 
 static enum e_FurnitureCustomData
 {
     FURNITURE_DATABASE_ID,
-    FURNITURE_LOCAL_ID,
     FURNITURE_PRICE,
     FURNITURE_NAME[64],
     FURNITURE_CREATED_BY_CHARACTER,
@@ -27,11 +27,15 @@ static
     FurnitureCustomData[e_FurnitureCustomData],
     szCustomData = e_FurnitureCustomData;
 
+#include <furniture_system\commands>
+
 hook OnGameModeInit()
 {
+    Furnitures = map_new();
+
     mysql_tquery(gMySQL, "UPDATE `furnitures` SET object_id = '0' WHERE 1");
-    //mysql_tquery(gMySQL, "DELETE FROM `loaded_furnitures` WHERE 1");
     Furniture_Load(0);
+
     return 1;
 }
 
@@ -39,15 +43,11 @@ hook OnPlayerClearData(playerid)
 {
     FurniturePage{playerid} = 0;
     SelectedFurniture[playerid] = -1;
+    if(list_valid(FurnitureListItem[playerid]))
+        list_delete(FurnitureListItem[playerid]);
     if(Furniture_IsShowingInfo(playerid))
     {
-        for_map(i : FurnitureLabels[playerid])
-        {
-            new Text3D:label;
-            if(iter_get_safe(i, label))
-                DestroyDynamic3DTextLabel(label);
-        }
-        map_delete_deep(FurnitureLabels[playerid]);
+        Furniture_DeleteLabels(playerid);
     }
     return 1;
 }
@@ -74,71 +74,8 @@ hook OnPlyVirtualWorldChange(playerid, oldWorld, newWorld)
         }
         if(Furniture_IsShowingInfo(playerid))
         {
-            pc_cmd_showid(playerid, "");
+            Furniture_DeleteLabels(playerid);
         }
-    }
-    return 1;
-}
-
-//flags:arredamento(CMD_ALIVE_USER);
-CMD:arredamento(playerid, params[])
-{
-    if(EditObject_IsEditing(playerid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
-    new canFurnish = Character_CanFurnish(playerid);
-    if(canFurnish)
-    {
-        Dialog_Show(playerid, Dialog_Furniture, DIALOG_STYLE_LIST, "Arredamento", "Mobili piazzati\nAcquista", "Avanti", "Chiudi");
-    }
-    else return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un edificio.");
-    return 1;
-}
-alias:arredamento("arreda");
-
-CMD:showid(playerid, params[])
-{
-    if(EditObject_IsEditing(playerid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
-    
-    if(Furniture_IsShowingInfo(playerid))
-    {
-        for_map(i : FurnitureLabels[playerid])
-        {
-            new Text3D:label;
-            if(iter_get_safe(i, label))
-                DestroyDynamic3DTextLabel(label);
-        }
-        map_delete_deep(FurnitureLabels[playerid]);
-        SendClientMessage(playerid, COLOR_GREEN, "Hai disabilitato le informazioni sui mobili.");
-    }
-    else
-    {
-        new world = Character_GetVirtualWorld(playerid);
-
-        //FurnitureLabels[playerid] = list_new();
-        FurnitureLabels[playerid] = map_new();
-        inline OnLoad()
-        {
-            new rows = cache_num_rows();
-            if(!rows)
-                return 1;
-            new count = 0, objectid;
-            for(new i = 0; i < rows; ++i)
-            {
-                cache_get_value_index_int(i, 0, objectid);
-
-                if(!IsValidDynamicObject(objectid) || Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_WORLD_ID) != world)
-                    continue;   
-                
-                Furniture_AddToInfoList(playerid, objectid);
-
-                count++;
-            }
-        }
-
-        MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT object_id FROM furnitures WHERE world = '%d' and object_id != '0'", world);
-        //list_resize(FurnitureLabels[playerid], newsize, AnyTag:padding, TagTag:tag_id=tagof(padding))
-        SendClientMessage(playerid, COLOR_GREEN, "Hai abilitato le informazioni sui mobili.");
     }
     return 1;
 }
@@ -200,8 +137,7 @@ Dialog:Dialog_Furniture(playerid, response, listitem, inputtext[])
     }
     else if(listitem == 1)
     {
-        static const info[] = "Mura e scale\nTavoli per cucine e salotti\nSedie da uffici e da cucina\nLetti singoli e matrimoniali\nDivani e poltrone\nDecorazioni\nElettronica\nVario\nCucina\nBagno\nBottiglie, bicchieri e tazze\nPorte\nVasi\nPoster e graffiti\nContenitori rifiuti\nVestiti\nBombole e barili\nOggetti per il mare\nQuadri\nScatole\nColonne\nCibo\nUtensili\nMeccanica\nSpeciali\nLavagne";
-        Dialog_Show(playerid, Dialog_CategorySelect, DIALOG_STYLE_LIST, "Categoria", info, "Continua", "Indietro");
+        Furniture_ShowCategoryList(playerid);
     }
     return 1;
 }
@@ -210,15 +146,22 @@ Dialog:Dialog_CategorySelect(playerid, response, listitem, inputtext[])
 {
     if(!response)
         return pc_cmd_arredamento(playerid, "");
+    
+    if(!list_valid(FurnitureListItem[playerid]))
+        FurnitureListItem[playerid] = list_new();
+    
+    list_clear(FurnitureListItem[playerid]);
+
     new String:dyn = @("Mobile\n");
-    new name[64], count = 0;
+    new name[64];
     for(new i = 0, j = sizeof(BuyableFurnitures); i < j; ++i)
     {
         if(BuyableFurniture_GetCategory(i) != listitem)
             continue;
         BuyableFurniture_GetName(i, name);
         dyn += str_format("%s\n", name);
-        FurnitureListItem[playerid][count++] = i;
+        //FurnitureListItem[playerid][count++] = i;
+        list_add(FurnitureListItem[playerid], i);
     }
     Dialog_Show_s(playerid, Dialog_FurnitureBuy, DIALOG_STYLE_TABLIST_HEADERS, @("Arredamento"), dyn, "Acquista", "Chiudi");
     return 1;
@@ -226,66 +169,90 @@ Dialog:Dialog_CategorySelect(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_FurnitureBuy(playerid, response, listitem, inputtext[])
 {
+    new selected = list_get(FurnitureListItem[playerid], listitem);
+    list_delete(FurnitureListItem[playerid]);
     if(!response)
         return 0;
-    SelectedFurniture[playerid] = FurnitureListItem[playerid][listitem];
+    SelectedFurniture[playerid] = selected;
     Furniture_StartBuy(playerid, SelectedFurniture[playerid]);
     return 1;
 }
 
 stock Character_ShowFurnitures(playerid, page)
 {
+
     FurniturePage{playerid} = page;
 
     new world = Character_GetVirtualWorld(playerid);
+
+    new Pool:furnituresInWorld = Pool:map_get(Furnitures, world);
     
-    inline OnSelect()
-    {
-        new 
-            rows = cache_num_rows(),
-            String:str = @("")    
+    if(!pool_valid(furnituresInWorld) || pool_size(furnituresInWorld) == 0)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono mobili.");
+    
+    new rows = pool_size(furnituresInWorld);
+    
+    new 
+        String:str = @("")    
+    ;
+
+    if(rows > page * MAX_FURNITURE_PER_PAGE)
+        str += String:str_format(">>> Pagina %d\n", page + 2);
+    else if(rows <= page * MAX_FURNITURE_PER_PAGE && !rows)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai ancora piazzato nessun mobile.");
+
+    if(!list_valid(FurnitureListItem[playerid]))
+        FurnitureListItem[playerid] = list_new();
+
+    list_clear(FurnitureListItem[playerid]);
+
+    // MODIFICARE QUESTO PERCHE' CON LE POOL NON FUNZIONERA' MAI
+    //for(new i = page * MAX_FURNITURE_PER_PAGE; i < rows; ++i)
+    new 
+        objectid = 0,
+        counter = -1,
+        startIndex = page * MAX_FURNITURE_PER_PAGE,
+        lastIndex = startIndex + MAX_FURNITURE_PER_PAGE
         ;
+    printf("Start: %d - Last: %d", startIndex, lastIndex);
+    for_pool(i : furnituresInWorld)
+    {
 
-        if(!rows)
-            return SendClientMessage(playerid, COLOR_ERROR, "Non hai ancora piazzato nessun mobile.");
-
-        if(rows > page * MAX_FURNITURE_PER_PAGE)
-            str += String:str_format(">>> Pagina %d\n", page + 2);
-        else if(rows <= page * MAX_FURNITURE_PER_PAGE && !rows)
-            return SendClientMessage(playerid, COLOR_ERROR, "Non hai ancora piazzato nessun mobile.");
-
-        new objectid = 0;
-        new count = 0;
-        for(new i = page * MAX_FURNITURE_PER_PAGE; i < rows; ++i)
+        printf("counter: %d", counter);
+        if(counter < startIndex)
         {
-            if(count == MAX_FURNITURE_PER_PAGE)
-                break;
-
-            cache_get_value_index_int(i, 1, objectid);
-
-            if(!IsValidDynamicObject(objectid))
-                continue;
-            
-            if(Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_WORLD_ID) != world)
-                continue;
-
-            Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
-            new modelid = Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_MODEL_ID);
-            str += str_format("%s [ID: %d - Model ID: %d]\n", FurnitureCustomData[FURNITURE_NAME], page * MAX_FURNITURE_PER_PAGE + count, modelid);
-
-            FurnitureListItem[playerid][count] = objectid;
-            count++;
+            counter++;
+            continue;
         }
 
-        Dialog_Show_s(playerid, Dialog_CharacterFurnitures, DIALOG_STYLE_LIST, @("Lista mobili piazzati"), str, "Modifica", "Indietro");
+        if(counter == lastIndex)
+            break;
+
+        objectid = iter_get_value(i);
+
+        if(Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_WORLD_ID) != world)
+            continue;
+
+        Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+        new modelid = Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_MODEL_ID);
+        str += str_format("%s [ID: %d - Model ID: %d]\n", FurnitureCustomData[FURNITURE_NAME], iter_get_key(i), modelid);
+
+        list_add(FurnitureListItem[playerid], objectid);
+        counter++;
     }
 
-    MySQL_TQueryInline(gMySQL, using inline OnSelect, "SELECT * FROM `furnitures` WHERE world = '%d' AND object_id != '0'", world);
+    Dialog_Show_s(playerid, Dialog_CharacterFurnitures, DIALOG_STYLE_LIST, @("Lista mobili piazzati"), str, "Modifica", "Indietro");
     return 1;
 }
 
 Dialog:Dialog_CharacterFurnitures(playerid, response, listitem, inputtext[])
 {
+    new 
+        slot = listitem - 1, 
+        selected = slot >= 0 ? list_get(FurnitureListItem[playerid], slot) : -1;
+    
+    list_delete(FurnitureListItem[playerid]);
+
     if(!response)
     {
         if(FurniturePage{playerid} <= 0)
@@ -296,8 +263,7 @@ Dialog:Dialog_CharacterFurnitures(playerid, response, listitem, inputtext[])
     if(listitem == 0)
         return Character_ShowFurnitures(playerid, FurniturePage{playerid}+1);
     
-    new slot = listitem - 1;
-    SelectedFurniture[playerid] = FurnitureListItem[playerid][slot];
+    SelectedFurniture[playerid] = selected;
     Furniture_ShowOptions(playerid);
     return 1;
 }
@@ -356,13 +322,11 @@ Dialog:Dialog_RenameFurniture(playerid, response, listitem, inputtext[])
     
     new selected = SelectedFurniture[playerid];
 
-    Streamer_GetArrayData(STREAMER_TYPE_OBJECT, selected, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
-    set(FurnitureCustomData[FURNITURE_NAME], inputtext);
-    Streamer_SetArrayData(STREAMER_TYPE_OBJECT, selected, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
-
-    mysql_tquery_f(gMySQL, "UPDATE furnitures SET name = '%e' WHERE id = '%d'", inputtext, FurnitureCustomData[FURNITURE_DATABASE_ID]);
-
-    return 1;
+    if(Furniture_Rename(Character_GetVirtualWorld(playerid), selected, inputtext))
+    {
+        return SendFormattedMessage(playerid, COLOR_GREEN, "Hai rinominato l'oggetto. Nuovo nome: %s", inputtext);
+    }
+    return SendClientMessage(playerid, COLOR_ERROR, "Non è stato possibile rinominare l'oggetto. ID invalido.");
 }
 
 
@@ -419,6 +383,8 @@ stock Furniture_Store(objectid, furnitureid, createdBy = -1)
             FurnitureCustomData[FURNITURE_LAST_EDIT_CHARACTER] = FurnitureCustomData[FURNITURE_CREATED_BY_CHARACTER] = character_id;
             set(FurnitureCustomData[FURNITURE_NAME], tname);
             Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData);
+
+            Furniture_AddToWorld(objectid, Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_WORLD_ID));
         }
 
         MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO `furnitures` \
@@ -437,6 +403,8 @@ stock Furniture_Store(objectid, furnitureid, createdBy = -1)
         character_id,
         account_id,
         character_id);
+
+
         return 1;
     }
     return 0;
@@ -450,13 +418,19 @@ stock Furniture_Load(worldid)
     inline OnLoad()
     {
         printf("Loading furnitures...");
+        
+        /*
+        // Commented because we create Pool and then add it to Furnitures map.
         new rows = cache_num_rows();
         if(!rows)
-            return 1;
+            return 1;*/
+        new rows = cache_num_rows();
         new modelid, vw, interior,
             Float:x, Float:y, Float:z,
             Float:rx, Float:ry, Float:rz
             ;
+        new Pool:pool = pool_new();
+
         for(new i = 0; i < rows; ++i)
         {
             cache_get_value_index_int(i, 0, FurnitureCustomData[FURNITURE_DATABASE_ID]);
@@ -475,22 +449,23 @@ stock Furniture_Load(worldid)
 
             cache_get_value_index(i, 12, FurnitureCustomData[FURNITURE_NAME]);
 
-            cache_get_value_index(i, 13, FurnitureCustomData[FURNITURE_CREATED_BY_ACCOUNT]);
-            cache_get_value_index(i, 14, FurnitureCustomData[FURNITURE_CREATED_BY_CHARACTER]);
-            cache_get_value_index(i, 15, FurnitureCustomData[FURNITURE_LAST_EDIT_ACCOUNT]);
-            cache_get_value_index(i, 16, FurnitureCustomData[FURNITURE_LAST_EDIT_CHARACTER]);
+            cache_get_value_index_int(i, 13, FurnitureCustomData[FURNITURE_CREATED_BY_ACCOUNT]);
+            cache_get_value_index_int(i, 14, FurnitureCustomData[FURNITURE_CREATED_BY_CHARACTER]);
+            cache_get_value_index_int(i, 15, FurnitureCustomData[FURNITURE_LAST_EDIT_ACCOUNT]);
+            cache_get_value_index_int(i, 16, FurnitureCustomData[FURNITURE_LAST_EDIT_CHARACTER]);
 
             new objectid = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, vw, interior);
 
-            FurnitureCustomData[FURNITURE_LOCAL_ID] = i;
             Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
             
             Furniture_SetObject(objectid, FurnitureCustomData[FURNITURE_DATABASE_ID]);
+
+            pool_add(pool, objectid);
         }
         
+        map_add(Furnitures, worldid, pool);
 
         printf("%d furnitures loaded for world %d.", rows, worldid);
-        mysql_tquery_f(gMySQL, "INSERT IGNORE INTO loaded_furnitures (world) VALUES('%d')", worldid);
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM furnitures WHERE world = '%d' AND object_id = '0';", worldid);
     return 1;
@@ -499,11 +474,7 @@ stock Furniture_Load(worldid)
 // Checks if furnitures are loaded for a specific world
 stock Furniture_AreLoaded(world)
 {
-    new Cache:cache = mysql_query_f(gMySQL, true, "SELECT world FROM loaded_furnitures WHERE world = '%d'", world),
-        rows = cache_num_rows()
-    ;
-    cache_delete(cache);
-    return rows;
+    return map_valid(Furnitures) && map_has_key(Furnitures, world) && pool_valid(Pool:map_get(Furnitures, world));
 }
 
 stock Furniture_SetObject(objectid, dbid)
@@ -543,9 +514,9 @@ stock Furniture_FinishBuy(playerid, objectid)
 
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai piazzato questo mobile (%s) con successo.", name);
 
-    Furniture_AddToInfoList(playerid, objectid);
-
     EditObject_End(playerid);
+
+    Furniture_UpdateInfoList(playerid);
     return 1;
 }
 
@@ -575,7 +546,7 @@ stock Furniture_ShowOptions(playerid)
 
 stock Furniture_IsShowingInfo(playerid)
 {
-    return map_valid(FurnitureLabels[playerid]);//list_valid(FurnitureLabels[playerid]);
+    return list_valid(FurnitureLabels[playerid]);//list_valid(FurnitureLabels[playerid]);
 }
 
 stock Furniture_Update(objectid, playerid)
@@ -606,36 +577,49 @@ stock Furniture_Update(objectid, playerid)
             Character_GetID(playerid),
             FurnitureCustomData[FURNITURE_DATABASE_ID]);
     
-    
-    
-    Furniture_AddToInfoList(playerid, objectid);
+    Furniture_UpdateInfoList(playerid);
     return 1;
 }
 
 // Adds (or update if objectid key exists) a text label.
-stock Furniture_AddToInfoList(playerid, objectid)
+stock Furniture_UpdateInfoList(playerid)
 {
     if(!Furniture_IsShowingInfo(playerid))
         return 0;
-    Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
 
-    new Float:x, Float:y, Float:z, text[128 + MAX_PLAYER_NAME];
-    GetDynamicObjectPos(objectid, x, y, z);
-    
-    format(text, sizeof(text), "ID: %d\n(( Ultima Modifica Da: %s ))", FurnitureCustomData[FURNITURE_LOCAL_ID], Character_GetNameFromDatabase(FurnitureCustomData[FURNITURE_LAST_EDIT_CHARACTER], true));
-    
-    if(Account_GetAdminLevel(playerid) > 1 && pAdminDuty[playerid])
-    {
-        format(text, sizeof(text), "%s\n{{FF6347}(( Account: %s )){FFFFFF}\n{FF6347}(( Object ID: %d )){FFFFFF}", Account_GetNameFromDatabase(Account_GetID(playerid)), objectid);
-    }
+    new Pool:furnitures = Pool:map_get(Furnitures, Character_GetVirtualWorld(playerid));
+    if(!pool_valid(furnitures))
+        return 0;
 
-    new Text3D:labelid;
-    if(map_has_key(FurnitureLabels[playerid], objectid) && map_get_safe(FurnitureLabels[playerid], objectid, labelid))
+    for_list(i : FurnitureLabels[playerid])
     {
-        DestroyDynamic3DTextLabel(labelid);
+        DestroyDynamic3DTextLabelEx(Text3D:iter_get(i));
     }
-    labelid = CreateDynamic3DTextLabel(text, -1, x, y, z + 0.2, 20.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), playerid);  
-    map_add(FurnitureLabels[playerid], objectid, labelid);
+    
+    list_clear(FurnitureLabels[playerid]);
+
+    new text[128 + MAX_PLAYER_NAME], Text3D:labelid;
+    for_pool(i : furnitures)
+    {
+        new objectid = iter_get_value(i), index = iter_get_key(i);
+
+        Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+
+        new Float:x, Float:y, Float:z;
+        GetDynamicObjectPos(objectid, x, y, z);
+        
+        format(text, sizeof(text), "%s\nID: %d\n(( Ultima Modifica Da: %s ))", FurnitureCustomData[FURNITURE_NAME], index, Character_GetNameFromDatabase(FurnitureCustomData[FURNITURE_LAST_EDIT_CHARACTER], true));
+        
+        if(Account_GetAdminLevel(playerid) > 1 && pAdminDuty[playerid])
+        {
+            format(text, sizeof(text), "%s\n{{FF6347}(( Account: %s )){FFFFFF}\n{FF6347}(( Object ID: %d )){FFFFFF}", Account_GetNameFromDatabase(Account_GetID(playerid)), objectid);
+        }
+
+        labelid = CreateDynamic3DTextLabel(text, -1, x, y, z + 0.2, 20.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), playerid);  
+
+        list_add(FurnitureLabels[playerid], labelid);
+    }
+    
     return 1;
 }
 
@@ -672,11 +656,13 @@ stock Character_GetFurnitureSlot(playerid)
 
 stock Character_GetFurnitureCount(playerid)
 {
-    new world = Character_GetVirtualWorld(playerid),
-        Cache:cache = mysql_query_f(gMySQL, true, "SELECT id FROM furnitures WHERE world = '%d';", world),
-        num = cache_num_rows();
-    cache_delete(cache);
-    return num;
+    new worldid = Character_GetVirtualWorld(playerid);
+    if(map_has_key(Furnitures, worldid))
+    {
+        new Pool:pool = Pool:map_get(Furnitures, worldid);
+        return pool_size(pool);
+    }
+    return 0;
 }
 
 stock Furniture_Remove(playerid, objectid)
@@ -698,37 +684,87 @@ stock Furniture_Remove(playerid, objectid)
     Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
 
     DestroyDynamicObject(objectid);
+
+    if(map_has_key(Furnitures, Character_GetVirtualWorld(playerid)))
+    {
+        new Pool:pool = Pool:map_get(Furnitures, Character_GetVirtualWorld(playerid));
+        pool_remove(pool, objectid);
+    }
+
+    Furniture_UpdateInfoList(playerid);
     return 1;
 }
 
-stock Furniture_ReassignLocalId(worldid)
+stock Furniture_AddToWorld(objectid, worldid)
 {
-    inline OnGenerate()
+    if(map_has_key(Furnitures, worldid))
     {
-        new rows = cache_num_rows(), objectid;
-
-        for(new i = 0; i < rows; ++i)
+        new Pool:pool = Pool:map_get(Furnitures, worldid);
+        pool_add(pool, objectid);
+        foreach(new i : Player)
         {
-            cache_get_value_index_int(i, 0, objectid);
-            
-            if(!IsValidDynamicObject(objectid))
+            if(Character_GetVirtualWorld(i) != worldid)
                 continue;
-
-            Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
-            FurnitureCustomData[FURNITURE_LOCAL_ID] = i;
-            Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+            Furniture_UpdateInfoList(i);
         }
-
-        // Reupdate text labels for players in this world.
-
-        foreach(new p : Player)
-        {
-            if(Character_GetVirtualWorld(p) != worldid || !Furniture_IsShowingInfo(p))
-                continue;
-            pc_cmd_showid(playerid, ""); // First disables showid
-            pc_cmd_showid(playerid, ""); // then enables.
-        }
+        return 1;
     }
+    return 0;
+}
 
-    MySQL_TQueryInline(gMySQL, using inline OnGenerate, "SELECT object_id FROM furnitures WHERE world = '%d' AND object_id != '0'", worldid);
+stock Furniture_ShowCategoryList(playerid)
+{
+    static const info[] = "Mura e scale\nTavoli per cucine e salotti\nSedie da uffici e da cucina\nLetti singoli e matrimoniali\nDivani e poltrone\nDecorazioni\nElettronica\nVario\nCucina\nBagno\nBottiglie, bicchieri e tazze\nPorte\nVasi\nPoster e graffiti\nContenitori rifiuti\nVestiti\nBombole e barili\nOggetti per il mare\nQuadri\nScatole\nColonne\nCibo\nUtensili\nMeccanica\nSpeciali\nLavagne";
+    Dialog_Show(playerid, Dialog_CategorySelect, DIALOG_STYLE_LIST, "Categoria", info, "Continua", "Indietro");
+    return 1;
+}
+
+stock Furniture_IsValidLocalId(worldid, localid)
+{
+    new Pool:pool;
+    
+    if(!map_get_safe(Furnitures, worldid, pool) || !pool_has(pool, localid))
+        return 0;
+    
+    return 1;
+}
+
+stock Furniture_GetFurnitureObjectID(worldid, localid)
+{
+    new Pool:pool;
+    
+    if(!map_get_safe(Furnitures, worldid, pool) || !pool_has(pool, localid))
+        return -1;
+    
+    return pool_get(pool, localid);
+}
+
+stock Furniture_Rename(worldid, objectid, const name[])
+{
+    #pragma unused worldid
+    if(!IsValidDynamicObject(objectid))
+        return 0;
+    Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+    set(FurnitureCustomData[FURNITURE_NAME], name);
+    Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+
+    mysql_tquery_f(gMySQL, "UPDATE furnitures SET name = '%e' WHERE id = '%d'", name, FurnitureCustomData[FURNITURE_DATABASE_ID]);
+    return 1;
+}
+
+stock Furniture_CreateLabels(playerid)
+{
+    FurnitureLabels[playerid] = list_new();
+    Furniture_UpdateInfoList(playerid);
+    return 1;
+}
+
+stock Furniture_DeleteLabels(playerid)
+{
+    for_list(i : FurnitureLabels[playerid])
+    {
+        DestroyDynamic3DTextLabel(Text3D:iter_get(i));
+    }
+    list_delete(FurnitureLabels[playerid]);
+    return 1;
 }

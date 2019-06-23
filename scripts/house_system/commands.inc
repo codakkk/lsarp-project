@@ -11,7 +11,7 @@ CMD:hcreate(playerid, params[])
 
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
-    House_Create(x, y, z, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid), interior);
+    House_Create(x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid), interior);
     SendFormattedMessage(playerid, COLOR_GREEN, "Casa creata. Interno: %d.", interior);
     return 1;
 }
@@ -33,7 +33,7 @@ CMD:hedit(playerid, params[])
 	   GetPlayerPos(playerid, x, y, z);
 	   House_SetEnterPosition(houseid, x, y, z);
 	   House_SetEnterInterior(houseid, GetPlayerInterior(playerid));
-	   House_SetEnterWorld(houseid, GetPlayerVirtualWorld(playerid));
+	   House_SetEnterWorld(houseid, Character_GetVirtualWorld(playerid));
 	   House_CreateObjects(houseid);
 	   House_Save(houseid);
     }

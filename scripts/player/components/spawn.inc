@@ -64,7 +64,7 @@ stock Character_Spawn(playerid)
 		SetPlayerPos(playerid, PlayerRestore[playerid][pLastX], PlayerRestore[playerid][pLastY], PlayerRestore[playerid][pLastZ]);
 		SetPlayerFacingAngle(playerid, PlayerRestore[playerid][pLastAngle]);
 		SetPlayerInterior(playerid, PlayerRestore[playerid][pLastInterior]);
-		SetPlayerVirtualWorld(playerid, PlayerRestore[playerid][pLastVirtualWorld]);
+		Character_SetVirtualWorld(playerid, PlayerRestore[playerid][pLastVirtualWorld]);
 		defer LoadCharacterDataAfterTime(playerid);
     }
     else
@@ -73,7 +73,7 @@ stock Character_Spawn(playerid)
 		{
 			SetPlayerPos(playerid, 1723.3232, -1867.1775, 13.5705);
 			SetPlayerInterior(playerid, 0);
-			SetPlayerVirtualWorld(playerid, 0);
+			Character_SetVirtualWorld(playerid, 0);
 		}
 		else if( Character_HasHouseKey(playerid))
 		{
@@ -81,7 +81,7 @@ stock Character_Spawn(playerid)
 			House_GetEnterPosition(housekey, x, y, z);
 			SetPlayerPos(playerid, x, y, z);
 			SetPlayerInterior(playerid, House_GetEnterInterior(housekey));
-			SetPlayerVirtualWorld(playerid, House_GetEnterWorld(housekey));
+			Character_SetVirtualWorld(playerid, House_GetEnterWorld(housekey));
 		}
 		else if( Character_GetFaction(playerid) != INVALID_FACTION_ID)
 		{
@@ -89,7 +89,7 @@ stock Character_Spawn(playerid)
 			Faction_GetSpawnPos(factionid, x, y, z);
 			SetPlayerPos(playerid, x, y, z);
 			SetPlayerInterior(playerid, Faction_GetSpawnInterior(factionid));
-			SetPlayerVirtualWorld(playerid, Faction_GetSpawnWorld(factionid));
+			Character_SetVirtualWorld(playerid, Faction_GetSpawnWorld(factionid));
 		}
 		AC_SetPlayerHealth(playerid, 100.0);
 		AC_SetPlayerArmour(playerid, 0.0);

@@ -154,7 +154,7 @@ stock Character_Save(playerid, spawned = true, disconnected = false)
 		Hunger = '%d' \
 	   	WHERE ID = '%d'", 
 	   	Character_GetMoney(playerid), Character_GetLevel(playerid), PlayerInfo[playerid][pAge], PlayerInfo[playerid][pSex], 
-	   	_x, _y, _z, angle, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid),
+	   	_x, _y, _z, angle, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid),
 	   	hp, armour, PlayerInfo[playerid][pSkin],
 	   	isSpawned, PlayerInfo[playerid][pPayDay], Character_GetExp(playerid),
 	   	Character_GetBuildingKey(playerid), Character_GetHouseKey(playerid),
@@ -252,7 +252,7 @@ stock Character_ShowStats(playerid, targetid)
     else if(Character_HasHouseKey(playerid))
 	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietà]: Casa: %d", Character_GetHouseKey(playerid));
 	
-	SendFormattedMessage(targetid, -1, "[Altro] Interior: %d - VW: %d", GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
+	SendFormattedMessage(targetid, -1, "[Altro] Interior: %d - VW: %d", GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
 	
 	if(Account_GetPremiumLevel(playerid) > 0 && Account_GetPremiumExpiry(playerid) > gettime())
 	{

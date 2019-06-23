@@ -288,3 +288,20 @@ timer LoginKickTimer[1000 * 60](playerid)
 	KickEx(playerid);
 	return 1;
 }
+
+stock Account_GetNameFromDatabase(accountdbid)
+{
+	new tmpName[MAX_PLAYER_NAME] = "Nessuno";
+	if(accountdbid > 0)
+	{
+		new query[76];
+		mysql_format(gMySQL, query, sizeof(query), "SELECT Name FROM `accounts` WHERE ID = '%d';", accountdbid);
+		new Cache:cache = mysql_query(gMySQL, query, true);
+		if(cache_num_rows() > 0)
+		{
+			cache_get_value_index(0, 0, tmpName, sizeof(tmpName));
+		}
+		cache_delete(cache);
+	}
+	return tmpName;
+}

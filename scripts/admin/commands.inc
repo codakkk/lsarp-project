@@ -437,7 +437,7 @@ CMD:gotovehicle(playerid, params[])
     GetVehiclePos(id, x, y, z);
     SetPlayerPos(playerid, x, y, z);
     SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, GetVehicleVirtualWorld(id)); 
+    Character_SetVirtualWorld(playerid, GetVehicleVirtualWorld(id)); 
     return 1;
 }
 alias:gotovehicle("gotov");
@@ -455,7 +455,7 @@ CMD:getvhere(playerid, params[])
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
     SetVehiclePos(id, x, y, z);
-	SetVehicleVirtualWorld(id, GetPlayerVirtualWorld(playerid));
+	SetVehicleVirtualWorld(id, Character_GetVirtualWorld(playerid));
 	LinkVehicleToInterior(id, GetPlayerInterior(playerid));
     return 1;
 }
@@ -526,12 +526,12 @@ CMD:goto(playerid, params[])
 
     new 
 	   Float:x, Float:y, Float:z,
-	   vw = GetPlayerVirtualWorld(id), int = GetPlayerInterior(id);
+	   vw = Character_GetVirtualWorld(id), int = GetPlayerInterior(id);
     
     GetPlayerPos(id, x, y, z);
     Streamer_UpdateEx(playerid, x, y, z, vw, int);
     
-	SetPlayerVirtualWorld(playerid, vw);
+	Character_SetVirtualWorld(playerid, vw);
     SetPlayerInterior(playerid, int);
 
     if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
@@ -557,13 +557,13 @@ CMD:gethere(playerid, params[])
 	   return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
     new 
 	   Float:x, Float:y, Float:z,
-	   vw = GetPlayerVirtualWorld(playerid), int = GetPlayerInterior(playerid);
+	   vw = Character_GetVirtualWorld(playerid), int = GetPlayerInterior(playerid);
     
     GetPlayerPos(playerid, x, y, z);
     
     Streamer_UpdateEx(id, x, y, z, vw, int);
     
-	SetPlayerVirtualWorld(id, vw);
+	Character_SetVirtualWorld(id, vw);
     SetPlayerInterior(id, int);
 
     if(GetPlayerState(id) == PLAYER_STATE_DRIVER)
@@ -584,7 +584,7 @@ CMD:gotopos(playerid, params[])
     if(sscanf(params, "fffdd", x, y, z, int, vw))
 	   return SendClientMessage(playerid, COLOR_ERROR, "/gotopos <x> <y> <z> <int> <vw>");
     SetPlayerInterior(playerid, int);
-    SetPlayerVirtualWorld(playerid, vw);
+    Character_SetVirtualWorld(playerid, vw);
     Streamer_UpdateEx(playerid, x, y, z, vw, int);
     SetPlayerPos(playerid, x, y, z);
     return 1;

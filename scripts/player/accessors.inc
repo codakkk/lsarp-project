@@ -366,16 +366,16 @@ stock Character_GetNearHouseIDMenu(playerid)
 
 stock Character_GetHouseID(playerid)
 {
-	if(GetPlayerVirtualWorld(playerid) < HOUSE_START_WORLD)
+	if(Character_GetVirtualWorld(playerid) < HOUSE_START_WORLD)
 		return -1;
-	return GetPlayerVirtualWorld(playerid) - HOUSE_START_WORLD;
+	return Character_GetVirtualWorld(playerid) - HOUSE_START_WORLD;
 }
 
 stock Character_GetNearBuildingID(playerid)
 {
-	if(GetPlayerVirtualWorld(playerid) < BUILDING_START_WORLD)
+	if(Character_GetVirtualWorld(playerid) < BUILDING_START_WORLD)
 		return -1;
-	return GetPlayerVirtualWorld(playerid) - BUILDING_START_WORLD;
+	return Character_GetVirtualWorld(playerid) - BUILDING_START_WORLD;
 }
 
 stock Character_GetNearBuilding(playerid, bool:inside)
@@ -384,7 +384,7 @@ stock Character_GetNearBuilding(playerid, bool:inside)
 	{
 		/*foreach(new b : Buildings)
 		{
-			if(BuildingInfo[b][bExists] && Building_GetExitWorld(b) == GetPlayerVirtualWorld(playerid))
+			if(BuildingInfo[b][bExists] && Building_GetExitWorld(b) == Character_GetVirtualWorld(playerid))
 				return b;
 		}*/
 		return Character_GetHouseID(playerid);
@@ -406,12 +406,12 @@ stock Character_SetToJailPos(playerid)
 	if(Character_IsICJailed(playerid))
 	{
 		SetPlayerInterior(playerid, 2);
-		SetPlayerVirtualWorld(playerid, 5258);
+		Character_SetVirtualWorld(playerid, 5258);
 		SetPlayerPos(playerid, IC_JAIL_X, IC_JAIL_Y, IC_JAIL_Z);
 		return 1;
 	}
 	
-	SetPlayerVirtualWorld(playerid, 255+playerid);
+	Character_SetVirtualWorld(playerid, 255+playerid);
 	SetPlayerInterior(playerid, OOC_JAIL_INT);
 	return SetPlayerPos(playerid, OOC_JAIL_X, OOC_JAIL_Y, OOC_JAIL_Z);
 }

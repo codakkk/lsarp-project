@@ -39,7 +39,7 @@ hook OnCharacterPreSaveData(playerid, disconnect)
 		if(gBuyingVehicle[playerid])
 		{
 			SetPlayerInterior(playerid, 0);
-			SetPlayerVirtualWorld(playerid, 0);
+			Character_SetVirtualWorld(playerid, 0);
 		}
 	}
     return 1;
@@ -167,7 +167,7 @@ Dialog:Dialog_PlayerShowRoom(playerid, response, listitem, inputtext[])
     gBuyingVehicleID[playerid] = Vehicle_Create(vehicle_model, DealershipInfo[dealership_id][dsVehX], DealershipInfo[dealership_id][dsVehY], DealershipInfo[dealership_id][dsVehZ], 0, 0, 0, 0, 0);
     
     SetPlayerPos(playerid, DealershipInfo[dealership_id][dsVehX], DealershipInfo[dealership_id][dsVehY], DealershipInfo[dealership_id][dsVehZ]);
-    SetPlayerVirtualWorld(playerid, playerid + 1);
+    Character_SetVirtualWorld(playerid, playerid + 1);
     SetVehicleVirtualWorld(gBuyingVehicleID[playerid], playerid + 1);
     PutPlayerInVehicle(playerid, gBuyingVehicleID[playerid], 0);
     TogglePlayerControllable(playerid, 0);
@@ -196,7 +196,7 @@ stock Dealership_PlayerConfirmBuy(playerid)
 		new dealershipid = gCurrentShowRoom[playerid];
 		SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi.");
 		Vehicle_Destroy(gBuyingVehicleID[playerid]);
-		SetPlayerVirtualWorld(playerid, 0);
+		Character_SetVirtualWorld(playerid, 0);
 		SetPlayerPos(playerid, DealershipInfo[dealershipid][dsX], DealershipInfo[dealershipid][dsY], DealershipInfo[dealershipid][dsZ]);
 		ClearBuyingVehicleData(playerid);
 	}
@@ -205,7 +205,7 @@ stock Dealership_PlayerConfirmBuy(playerid)
 		SendFormattedMessage(playerid, -1, "Congratulazioni! Hai acquistato questo veicolo ({00AA00}%s{FFFFFF}) per {00FF00}$%d{FFFFFF}.", Vehicle_GetName(gBuyingVehicleID[playerid]), gBuyingVehiclePrice[playerid]);
 		Character_GiveMoney(playerid, -gBuyingVehiclePrice[playerid], "Concessionaria");
 		SetVehicleVirtualWorld(gBuyingVehicleID[playerid], 0);
-		SetPlayerVirtualWorld(playerid, 0);
+		Character_SetVirtualWorld(playerid, 0);
 		PutPlayerInVehicle(playerid, gBuyingVehicleID[playerid], 0);
 		
 		Character_AddOwnedVehicle(playerid, gBuyingVehicleID[playerid]);
@@ -225,7 +225,7 @@ stock Dealership_PlayerCancelBuy(playerid)
     Vehicle_Destroy(gBuyingVehicleID[playerid]);
     SetPlayerPos(playerid, DealershipInfo[showroom][dsX], DealershipInfo[showroom][dsY], DealershipInfo[showroom][dsZ]);
     TogglePlayerControllable(playerid, 1);
-    SetPlayerVirtualWorld(playerid, 0);
+    Character_SetVirtualWorld(playerid, 0);
     SetCameraBehindPlayer(playerid);
     ClearBuyingVehicleData(playerid);
     SendClientMessage(playerid, COLOR_ERROR, "Hai annullato l'acquisto.");

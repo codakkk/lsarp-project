@@ -19,7 +19,7 @@ CMD:gotobuilding(playerid, params[])
 	Building_GetEnterPos(id, x, y, z);
 	SetPlayerPos(playerid, x, y, z);
 	SetPlayerInterior(playerid, Building_GetEnterInterior(id));
-	SetPlayerVirtualWorld(playerid, Building_GetEnterWorld(id));
+	Character_SetVirtualWorld(playerid, Building_GetEnterWorld(id));
 	return 1;
 }
 
@@ -33,7 +33,7 @@ CMD:abcreate(playerid, params[])
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
 
-    new id = Building_Create("SET_NAME", x, y, z, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
+    new id = Building_Create("SET_NAME", x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
     Log(AccountInfo[playerid][aName], "", "/abcreate", id);
     return 1;
 }*/
@@ -100,7 +100,7 @@ CMD:abuildingentrance(playerid, params[])
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
 
-    if(Building_SetPosition(id, x, y, z, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid)))
+    if(Building_SetPosition(id, x, y, z, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid)))
     {
 		Building_Save(id);
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai spostato il building %d.", id);

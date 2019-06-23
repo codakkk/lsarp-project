@@ -4,7 +4,7 @@ CMD:acreateshowroom(playerid, params[])
 {
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
-    new id = Dealership_Create(x, y, z, GetPlayerVirtualWorld(playerid));
+    new id = Dealership_Create(x, y, z, Character_GetVirtualWorld(playerid));
     SendFormattedMessage(playerid, COLOR_GREEN, "Concessionaria [%d] creata.", id);
     SendClientMessage(playerid, COLOR_GREEN, "Ricorda di settare tutte le impostazioni giuste.");
     SendClientMessage(playerid, COLOR_GREEN, "Utilizza /ashowroommenu <id> per cominciare a modificare questa concessionaria.");

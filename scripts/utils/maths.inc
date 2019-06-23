@@ -30,7 +30,7 @@ stock GetXYInFrontOfPlayer(playerid, &Float:x, &Float:y, Float:distance)
 
 stock IsPlayerInRangeOfPlayer(playerid, otherid, Float:radius)
 {
-	if(playerid == INVALID_PLAYER_ID || otherid == INVALID_PLAYER_ID || GetPlayerInterior(playerid) != GetPlayerInterior(otherid) || GetPlayerVirtualWorld(playerid) != GetPlayerVirtualWorld(otherid))
+	if(playerid == INVALID_PLAYER_ID || otherid == INVALID_PLAYER_ID || GetPlayerInterior(playerid) != GetPlayerInterior(otherid) || Character_GetVirtualWorld(playerid) != Character_GetVirtualWorld(otherid))
 		return 0;
 	if(otherid == playerid) 
 		return 1;

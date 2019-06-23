@@ -1,0 +1,114 @@
+
+CMD:furniturecmds(playerid, params[])
+{
+    SendClientMessage(playerid, -1, "[FURNITURE]: (/arreda)mento - /showid - /listaobject");
+    SendClientMessage(playerid, -1, "[FURNITURE]: /piazzaobject - /rinominaobject - /spostaoggetto");
+    return 1;
+}
+
+flags:arredamento(CMD_ALIVE_USER);
+CMD:arredamento(playerid, params[])
+{
+    if(EditObject_IsEditing(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
+    new canFurnish = Character_CanFurnish(playerid);
+    if(canFurnish)
+    {
+        Dialog_Show(playerid, Dialog_Furniture, DIALOG_STYLE_LIST, "Arredamento", "Mobili piazzati\nPiazza", "Avanti", "Chiudi");
+    }
+    else return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un edificio.");
+    return 1;
+}
+alias:arredamento("arreda");
+
+CMD:showid(playerid, params[])
+{
+    if(EditObject_IsEditing(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+    
+    if(Furniture_IsShowingInfo(playerid))
+    {
+        Furniture_DeleteLabels(playerid);
+        SendClientMessage(playerid, COLOR_GREEN, "Hai disabilitato le informazioni sui mobili.");
+    }
+    else
+    {
+        Furniture_CreateLabels(playerid);
+        SendClientMessage(playerid, COLOR_GREEN, "Hai abilitato le informazioni sui mobili.");
+    }
+    return 1;
+}
+
+CMD:listaobject(playerid, params[])
+{
+    if(EditObject_IsEditing(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
+    new canFurnish = Character_CanFurnish(playerid);
+    if(canFurnish)
+    {
+        Character_ShowFurnitures(playerid, 0);
+    }
+    return 1;
+}
+
+CMD:piazzaobject(playerid, params[])
+{
+    if(EditObject_IsEditing(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
+    new canFurnish = Character_CanFurnish(playerid);
+    if(!canFurnish)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+    Furniture_ShowCategoryList(playerid);
+    return 1;
+}
+
+CMD:rinominaobject(playerid, params[])
+{
+    if(EditObject_IsEditing(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
+    new id, name[64];
+    
+    if(sscanf(params, "ds[64]", id, name) || strlen(name) < 3)
+        return SendClientMessage(playerid, COLOR_ERROR, "/rinominaobject <localid> <nome (min 3 caratteri - max 64 caratteri)>");
+    
+    if(!Character_CanFurnish(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+
+    new objectid = Furniture_GetFurnitureObjectID(Character_GetVirtualWorld(playerid), id);
+
+    if(Furniture_Rename(Character_GetVirtualWorld(playerid), objectid, name))
+    {
+        return SendFormattedMessage(playerid, COLOR_GREEN, "Hai rinominato l'oggetto. Nuovo nome: %s", name);
+    }
+    return SendClientMessage(playerid, COLOR_ERROR, "Non è stato possibile rinominare l'oggetto. ID invalido.");
+}
+
+CMD:spostaoggetto(playerid, params[])
+{
+    if(EditObject_IsEditing(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+    
+    new id;
+    if(sscanf(params, "d", id))
+        return SendClientMessage(playerid, COLOR_ERROR, "/spostaoggetto <local id>");
+    
+    if(!Character_CanFurnish(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei in una tua casa.");
+
+    new 
+        world = Character_GetVirtualWorld(playerid),
+        objectid = Furniture_GetFurnitureObjectID(world, id);
+
+    if(objectid == -1)
+        return SendClientMessage(playerid, COLOR_ERROR, "L'id inserito non è valido.");
+
+    new Float:x, Float:y, Float:z;
+    GetDynamicObjectPos(objectid, x, y, z);
+
+    if(GetPlayerDistanceFromPoint(playerid, x, y, z) > 25.0)
+        return SendClientMessage(playerid, COLOR_ERROR, "Sei troppo distante dall'oggetto.");
+    
+    SendClientMessage(playerid, COLOR_WHITE, "Premi {FF6347}ESC{FFFFFF} per annullare e {FF6347}SPAZIO{FFFFFF} per spostare la visuale. Clicca sul {FF6347}FLOPPY{FFFFFF} per salvare.");
+    EditObject_Start(playerid, EDIT_TYPE_FURNITURE, objectid, 0);
+    return 1;
+}

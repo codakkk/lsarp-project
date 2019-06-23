@@ -374,7 +374,7 @@ stock ProxDetectorS(Float:radius, playerid, targetid)
 	   return 0;
     new Float:x, Float:y, Float:z;
     GetPlayerPos(targetid, x, y, z);
-    if(GetPlayerVirtualWorld(playerid) == GetPlayerVirtualWorld(targetid) && IsPlayerInRangeOfPlayer(playerid, targetid, radius))
+    if(Character_GetVirtualWorld(playerid) == Character_GetVirtualWorld(targetid) && IsPlayerInRangeOfPlayer(playerid, targetid, radius))
 	   return 1;
     return 0;
 }
@@ -397,14 +397,14 @@ stock ProxDetector(playerid, Float:radius, const string[], col1, col2, col3, col
     if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))
 	   return 0;
     new 
-	   int = GetPlayerInterior(playerid), vw = GetPlayerVirtualWorld(playerid),
+	   int = GetPlayerInterior(playerid), vw = Character_GetVirtualWorld(playerid),
 	   Float:x, Float:y, Float:z;/* Float:dist,
 	   Float:ox, Float:oy, Float:oz,
 	   Float:tx, Float:ty, Float:tz;*/
 	GetPlayerPos(playerid, x, y, z);
 	foreach(new i : Player)
 	{
-		if(GetPlayerInterior(i) != int || GetPlayerVirtualWorld(i) != vw)
+		if(GetPlayerInterior(i) != int || Character_GetVirtualWorld(i) != vw)
 			continue;
 		if( (!Account_HasOOCEnabled(i) || !Account_HasOOCEnabledForPlayer(i, playerid)) && ooc)
 			continue;

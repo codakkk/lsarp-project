@@ -25,7 +25,7 @@ CMD:createlootzone(playerid, params[])
 		string[128],
 		zone_id;
 	GetPlayerPos(playerid, x, y, z);
-	zone_id = LootZone_Create(x, y, z, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
+	zone_id = LootZone_Create(x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
 	if(zone_id == -1)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non è stato possibile creare una Loot Zone. Contatta lo sviluppatore.");
 	format(string, sizeof(string), "Hai creato una loot zone [ID: %d].", zone_id);

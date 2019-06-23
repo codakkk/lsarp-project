@@ -69,7 +69,7 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 				GetVehiclePos(GetPlayerVehicleID(playerid), x, y, z);
 			else 
 			 	GetPlayerPos(playerid, x, y, z);
-			new result = Drop_Create(x, y, z - 0.9, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, 0, Character_GetOOCNameStr(playerid));
+			new result = Drop_Create(x, y, z - 0.9, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, 0, Character_GetOOCNameStr(playerid));
 			if(result != -1)
 			{
 				AC_RemovePlayerWeapon(playerid, weaponid);
@@ -573,7 +573,7 @@ stock Character_DropItem(playerid, slotid, amount)
 	new Float:x, Float:y, Float:z;
 	GetPlayerPos(playerid, x, y, z);
 	GetXYInFrontOfPlayer(playerid, x, y, 1.5);
-	new result = Drop_Create(x, y, z - 0.9, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), itemid, amount, extra, Character_GetOOCNameStr(playerid));
+	new result = Drop_Create(x, y, z - 0.9, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), itemid, amount, extra, Character_GetOOCNameStr(playerid));
 	if(result != -1)
 	{
 		ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 3.0, 0, 0, 0, 0, 0);

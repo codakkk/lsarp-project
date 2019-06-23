@@ -28,6 +28,7 @@
 #include <player\components\spawn>
 #include <YSI_Coding\y_hooks>
 
+forward OnPlayerVirtualWorldChange(playerid, oldWorld, newWorld);
 
 hook OnPlayerClearData(playerid)
 {
@@ -53,3 +54,15 @@ hook OnCharacterSpawn(playerid)
     return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
+stock Character_SetVirtualWorld(playerid, virtualWorld)
+{
+	new old = Character_GetVirtualWorld(playerid);
+	SetPlayerVirtualWorld(playerid, virtualWorld);
+	CallLocalFunction(#OnPlayerVirtualWorldChange, "ddd", playerid, old, virtualWorld);
+	return 1;
+}
+
+stock Character_GetVirtualWorld(playerid)
+{
+    return GetPlayerVirtualWorld(playerid);
+}

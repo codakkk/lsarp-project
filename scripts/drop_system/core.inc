@@ -127,5 +127,5 @@ stock Drop_IsPlayerInRangeOf(playerid, dropid, Float:range = 3.0)
 {
 	if(!Drop_IsValid(dropid))
 		return 0;
-	return GetPlayerInterior(playerid) == Drop_GetInterior(dropid) && GetPlayerVirtualWorld(playerid) == Drop_GetVirtualWorld(dropid) && IsPlayerInRangeOfPoint(playerid, range, DropInfo[dropid][dX], DropInfo[dropid][dY], DropInfo[dropid][dZ]);
+	return GetPlayerInterior(playerid) == Drop_GetInterior(dropid) && Character_GetVirtualWorld(playerid) == Drop_GetVirtualWorld(dropid) && IsPlayerInRangeOfPoint(playerid, range, DropInfo[dropid][dX], DropInfo[dropid][dY], DropInfo[dropid][dZ]);
 }

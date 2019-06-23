@@ -173,7 +173,7 @@ CMD:gettaarma(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma da gettare.");
 	new Float:x, Float:y, Float:z;
 	GetPlayerPos(playerid, x, y, z);
-	new result = Drop_Create(x, y, z - 0.9, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, ammo, Character_GetOOCNameStr(playerid));
+	new result = Drop_Create(x, y, z - 0.9, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, ammo, Character_GetOOCNameStr(playerid));
 	if(result != -1)
 	{
 		AC_RemovePlayerWeapon(playerid, weaponid);

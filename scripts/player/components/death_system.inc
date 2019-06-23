@@ -91,13 +91,13 @@ hook GlobalPlayerSecondTimer(playerid)
 			AC_SetPlayerHealth(playerid, 9999.0);
 		}
 
-		if(!IsPlayerInRangeOfPoint(playerid, 3.0, x, y, z) || GetPlayerInterior(playerid) != interior || GetPlayerVirtualWorld(playerid) != world)
+		if(!IsPlayerInRangeOfPoint(playerid, 3.0, x, y, z) || GetPlayerInterior(playerid) != interior || Character_GetVirtualWorld(playerid) != world)
 		{
 			SetPlayerPos(playerid, x, y, z);
 			SetPlayerFacingAngle(playerid, a);
 
 			SetPlayerInterior(playerid, interior);
-			SetPlayerVirtualWorld(playerid, world);
+			Character_SetVirtualWorld(playerid, world);
 		}
 
 		if(GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) 
@@ -116,7 +116,7 @@ hook OnPlayerDeath(playerid, killerid, reason)
 	GetPlayerFacingAngle(playerid, PlayerDeathState[playerid][pDeathA]);
 
 	PlayerDeathState[playerid][pDeathInt] = GetPlayerInterior(playerid);
-	PlayerDeathState[playerid][pDeathWorld] = GetPlayerVirtualWorld(playerid);
+	PlayerDeathState[playerid][pDeathWorld] = Character_GetVirtualWorld(playerid);
 	new weapons[13], ammo[13];
 	for(new x = 0; x < 13; x++)
 	{
@@ -176,7 +176,7 @@ hook OnPlayerSpawn(playerid)
 			SetPlayerPos(playerid, x, y, z);
 			SetPlayerFacingAngle(playerid, a);
 			SetPlayerInterior(playerid, interior);
-			SetPlayerVirtualWorld(playerid, world);
+			Character_SetVirtualWorld(playerid, world);
 
 			ApplyAnimation(playerid, "WUZI", "CS_Dead_Guy", 4.0, 0, 0, 0, 1, 0, 1);
 
@@ -205,7 +205,7 @@ hook OnPlayerSpawn(playerid)
 			SetPlayerPos(playerid, x, y, z);
 			SetPlayerFacingAngle(playerid, a);
 			SetPlayerInterior(playerid, interior);
-			SetPlayerVirtualWorld(playerid, world);
+			Character_SetVirtualWorld(playerid, world);
 
 			ApplyAnimation(playerid, "WUZI", "CS_Dead_Guy", 4.0, 0, 0, 0, 1, 0, 1);
 			CallLocalFunction(#OnCharacterDeath, "d", playerid);

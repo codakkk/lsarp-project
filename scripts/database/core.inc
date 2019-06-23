@@ -254,7 +254,15 @@ hook OnGameModeInit()
 						`rot_y` FLOAT DEFAULT 0.0, \
 						`rot_z` FLOAT DEFAULT 0.0, \
 						`name` VARCHAR(64) DEFAULT '', \
+						`created_by_account` INT(11) DEFAULT '0', \
+						`created_by_character` INT(11) DEFAULT '0', \
+						`last_edit_by_account` INT(11) DEFAULT '0', \
+						`last_edit_by_character` INT(11) DEFAULT '0', \
 						PRIMARY KEY (`ID`))", false);
+						
+	mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS loaded_furnitures \
+						(`world` INT(11) )", false);
+
     printf("Database Connected.");
     return 1;
 }
@@ -274,4 +282,11 @@ stock mysql_tquery_f(MySQL:handle, const query[], GLOBAL_TAG_TYPES:...)
 		ret = mysql_tquery(handle, YSI_UNSAFE_HUGE_STRING);
 	}
 	return ret;
+}
+
+stock Cache:mysql_query_f(MySQL:handle, bool:useCache, const query[], GLOBAL_TAG_TYPES:...)
+{
+	mysql_format(handle, YSI_UNSAFE_HUGE_STRING, YSI_UNSAFE_HUGE_LENGTH, query, ___(3));
+	new Cache:cache = mysql_query(handle, YSI_UNSAFE_HUGE_STRING, useCache);
+	return cache;
 }

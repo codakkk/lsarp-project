@@ -65,7 +65,7 @@ stock DP_Create(playerid, slotid, const text[], Float:x, Float:y, Float:z)
 		}
 	}
 
-	DPInfo[playerid][slotid][dpText3D] = CreateDynamic3DTextLabel(string, -1, x, y, z, 30.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), -1);
+	DPInfo[playerid][slotid][dpText3D] = CreateDynamic3DTextLabel(string, -1, x, y, z, 30.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), -1);
 	DPInfo[playerid][slotid][dpTimer] = defer Timer_DestroyDP(playerid, slotid);
 	return 1;
 }

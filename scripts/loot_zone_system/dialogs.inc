@@ -109,7 +109,7 @@ Dialog:Dialog_LootZoneEdit(playerid, response, listitem, inputtext[])
 				Float:y,
 				Float:z;
 			GetPlayerPos(playerid, x, y, z);
-			LootZone_SetPosition(zone_id, x, y, z, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
+			LootZone_SetPosition(zone_id, x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
 			SendFormattedMessage(playerid, -1, [LOOT ZONE %d] Posizione modificata.", zone_id);
 			new s[4];
 			valstr(s, zone_id);
@@ -120,7 +120,7 @@ Dialog:Dialog_LootZoneEdit(playerid, response, listitem, inputtext[])
 		{
 			SetPlayerPos(playerid, LootZoneInfo[zone_id][lzX], LootZoneInfo[zone_id][lzY], LootZoneInfo[zone_id][lzZ]);
 			SetPlayerInterior(playerid, LootZoneInfo[zone_id][lzInterior]);
-			SetPlayerVirtualWorld(playerid, LootZoneInfo[zone_id][lzVirtualWorld]);
+			Character_SetVirtualWorld(playerid, LootZoneInfo[zone_id][lzVirtualWorld]);
 			LootZone_EndEdit(zone_id, playerid);
 		}
 		case 4: // Delete
