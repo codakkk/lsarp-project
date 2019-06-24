@@ -768,3 +768,39 @@ stock Furniture_DeleteLabels(playerid)
     list_delete(FurnitureLabels[playerid]);
     return 1;
 }
+
+stock Furniture_SetTexture(objectid, index, modelid, txdName, textureName, materialColor)
+{
+    if(!IsValidDynamicObject(objectid) || index < 0 || index > 15)
+        return 0;
+    return SetDynamicObjectMaterial(objetid, index, modelid, txdName, textureName, materialColor);
+}
+
+stock Furniture_RemoveTextures(objectid)
+{
+    if(!IsValidDynamicObject(objectid))
+        return 0;
+    for(new i = 0; i < 15; ++i) 
+        SetDynamicObjectMaterial(objectid, i, 19341, "invalid", "invalid");
+    Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+    mysql_tquery_f(gMySQL, "DELETE FROM furniture_textures WHERE furniture_id = '%d';", FurnitureCustomData[FURNITURE_DATABASE_ID]);
+    return 1;
+}
+
+stock Furniture_LoadTextures(objectid)
+{
+    if(!IsValidDynamicObject(objectid))
+        return 0;
+    
+    Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+    if(FurnitureCustomData[FURNITURE_DATABASE_ID] == 0)
+        return 0;
+    
+    inline OnLoad()
+    {
+        new rows = cache_num_rows();
+        
+    }
+    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM furniture_textures WHERE furniture_id = '%d';", FurnitureCustomData[FURNITURE_DATABASE_ID]);
+    return 1;
+}
