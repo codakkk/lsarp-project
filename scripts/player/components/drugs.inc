@@ -114,9 +114,9 @@ hook OnPlayerCharacterLoad(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-hook CharacterMinuteTimer(playerid)
+ptask OnPlayerDrugTimer[60000](playerid)
 {
-	if(pAdminDuty[playerid])
+	if(pAdminDuty[playerid] || !Character_IsLogged(playerid))
 		return Y_HOOKS_CONTINUE_RETURN_1;
 	new drugid = 0;
 	for(new i = 0, j = MAX_PLAYER_DRUGS; i < j; ++i)
@@ -141,10 +141,10 @@ hook CharacterMinuteTimer(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-hook GlobalPlayerSecondTimer(playerid)
+hook OnPlayerAddictionTimer(playerid)
 {
-	if(pAdminDuty[playerid])
-		return Y_HOOKS_CONTINUE_RETURN_1;	
+	if(!Character_IsLogged(playerid) || pAdminDuty[playerid])
+		return 1;	
 	new drugid = 0;
 	for(new i = 0, j = MAX_PLAYER_DRUGS; i < j; ++i)
 	{
@@ -170,7 +170,7 @@ hook GlobalPlayerSecondTimer(playerid)
 			}
 		}
 	}
-	return Y_HOOKS_CONTINUE_RETURN_1;
+	return 1;
 }
 
 hook OnCharacterUseItem(playerid, slotid)
@@ -342,7 +342,7 @@ static stock Character_SaveDrugAddiction(playerid)
 {
 	mysql_tquery(gMySQL, "START TRANSACTION;");
 	new drugid = 0;
-	for(new i = 0, j = MAX_PLAYER_DRUGS; i < j; ++i)
+	for(new i = 0; i < MAX_PLAYER_DRUGS; ++i)
 	{
 		drugid = Character_GetDrug(playerid, i);
 		if(drugid == 0)

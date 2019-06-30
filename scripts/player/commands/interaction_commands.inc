@@ -71,10 +71,14 @@ CMD:dai(playerid, params[])
 
 	if(!strcmp(text, "arma", true))
 	{
-		new weapon = AC_GetPlayerWeapon(playerid);
-		new ammo = GetPlayerAmmo(playerid);
+		new weapon = Character_GetWeapon(playerid);
+		new ammo = Character_GetAmmo(playerid);
 		if(weapon == 0 || ammo <= 0)
 			return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma in mano.");
+		
+		if(Character_IsFactionDuty(playerid))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
+
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto di dare l'arma (%s) con %d proiettili a %s.", Weapon_GetName(weapon), ammo, Character_GetRolePlayName(id));
 		SendClientMessage(playerid, -1, "Digita '{FF0000}/annulla arma{FFFFFF}'' per annullare.");
 		SendFormattedMessage(id, COLOR_GREEN, "%s vuole darti un'arma (%s) con %d proiettili.", Character_GetRolePlayName(playerid), Weapon_GetName(weapon), ammo);
@@ -155,11 +159,11 @@ CMD:accetta(playerid, params[])
 			return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non possiede più l'arma, pertanto non puoi più accettare.");	
 		}
 		new w, a;
-		AC_GetPlayerWeaponData(playerid, Weapon_GetSlot(weaponid), w, a);
+		Character_GetWeaponData(playerid, Weapon_GetSlot(weaponid), w, a);
 		if(w == 0 || a == 0)
 		{
-			AC_RemovePlayerWeapon(requestSender, weaponid);
-			AC_GivePlayerWeapon(playerid, weaponid, ammo);
+			Character_RemoveWeapon(requestSender, weaponid);
+			Character_GiveWeapon(playerid, weaponid, ammo);
 			SendFormattedMessage(playerid, COLOR_GREEN, "Hai accettato l'arma (%s) con %d proiettili da %s.", Weapon_GetName(weaponid), ammo, Character_GetOOCName(requestSender));
 			
 			ResetPendingRequest(playerid);
@@ -167,7 +171,7 @@ CMD:accetta(playerid, params[])
 		}
 		else if(Character_HasSpaceForItem(playerid, weaponid, ammo))
 		{
-			AC_RemovePlayerWeapon(requestSender, weaponid);
+			Character_RemoveWeapon(requestSender, weaponid);
 			Character_GiveItem(playerid, weaponid, 1, ammo);
 			SendFormattedMessage(playerid, COLOR_GREEN, "Hai accettato l'arma (%s) con %d proiettili da %s.", Weapon_GetName(weaponid), ammo, Character_GetOOCName(requestSender));
 			SendClientMessage(playerid, COLOR_GREEN, "L'arma è stata messa nell'inventario poiché lo slot è occupato.");

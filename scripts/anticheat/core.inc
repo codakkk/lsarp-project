@@ -36,7 +36,7 @@ ptask AntiCheatTimer[250](playerid)
 	if(!Character_IsDead(playerid))
 	{
 		new currentWeapon = GetPlayerWeapon(playerid),
-		currentAmmo = GetPlayerAmmo(playerid),
+		currentAmmo = Character_GetAmmo(playerid),
 		slot = Weapon_GetSlot(currentWeapon),
 		anticheatWeapon = ACInfo[playerid][acWeapons][slot],
 		anticheatAmmo = ACInfo[playerid][acAmmo][slot];
@@ -47,7 +47,7 @@ ptask AntiCheatTimer[250](playerid)
 				KickEx(playerid);
 			}
 			else if(slot == 1 || slot == 10)
-				AC_RemovePlayerWeapon(playerid, currentWeapon);
+				Character_RemoveWeapon(playerid, currentWeapon);
 			else
 				SetPlayerAmmo(playerid, currentWeapon, 0);
 			AC_Detect(playerid, AC_WEAPON_HACK);

@@ -1,15 +1,23 @@
 #include <YSI_Coding\y_hooks>
 
-hook GlobalPlayerSecondTimer(playerid)
+ptask OnPlayerUniformSelectUpdate[1000](playerid)
 {
+	if(!Character_IsLogged(playerid) || !Character_IsSelectingUniform(playerid))
+		return 1;
     new keys, updown, leftright;
     GetPlayerKeys(playerid, keys, updown, leftright);
-	if(Character_IsSelectingUniform(playerid))
+	if(leftright == KEY_LEFT)
 	{
-		if(leftright == KEY_LEFT)
-		{
-			pSelectedUniformSlot{playerid}--;
-		}
+		pSelectedUniformSlot{playerid}--;
+	}
+	return 1;
+}
+
+hook OnCharacterPreSaveData(playerid, disconnect)
+{
+	if(disconnect && Character_IsFactionDuty(playerid))
+	{
+		Character_OffDuty(playerid);
 	}
 	return 1;
 }
@@ -95,10 +103,13 @@ CMD:trascina(playerid, params[])
 		SendClientMessage(playerid, COLOR_GREEN, "Hai finito di trascinare il giocatore.");
 		return 1;
 	}
+
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 3.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
-	if(!Character_IsCuffed(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è ammanettato.");
+
+	if(!Character_IsCuffed(id) || !Character_IsStunned(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è ammanettato o stordito.");
+	
 	Character_SetDragged(id, true);
 	Character_SetDraggedBy(id, playerid);
 	Character_SetFreezed(id, true);
@@ -160,5 +171,7 @@ stock Character_OffDuty(playerid)
 	Character_SetSelectingUniform(playerid, false);
 
 	pTempSkin[playerid] = 0;
+
+	CallLocalFunction(#OnCharacterDutyChange, "dd", playerid, 0);
 	return 1;
 }

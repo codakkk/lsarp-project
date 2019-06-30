@@ -92,7 +92,7 @@ Dialog:Dialog_ItemDropAction(playerid, response, listitem, inputtext[])
 			{
 				SendFormattedMessage(playerid, COLOR_GREEN, "Hai raccolto %s (%d).", ServerItem_GetName(itemid), extra);
 				Character_AMe(playerid, "raccoglie un'arma.");
-				AC_GivePlayerWeapon(playerid, itemid, extra);
+				Character_GiveWeapon(playerid, itemid, extra);
 				Drop_Destroy(dropid);
 			}
 			else 
@@ -120,7 +120,7 @@ Dialog:Dialog_ItemDropEquipWeapon(playerid, response, listitem, inputtext[])
 		return Dialog_Show(playerid, Dialog_ItemDropEquipWeapon, DIALOG_STYLE_INPUT, "Equipaggia Arma", "{FF0000}Non possiedi la quantità di munizioni inserita.{FFFFFF}\nInserisci le munizioni che vuoi inserire nell'arma.\n{00FF00}%d{FFFFFF}", "Equipaggia", "Annulla", invAmmo);
 	Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~~n~con ~g~%d~w~ proiettili.", ServerItem_GetName(itemid), extra + ammo), true);
 	Character_AMe(playerid, "raccoglie un'arma.");
-	AC_GivePlayerWeapon(playerid, itemid, extra + ammo);
+	Character_GiveWeapon(playerid, itemid, extra + ammo);
 	Character_DecreaseItemAmount(playerid, ammoType, ammo);
 	Drop_Destroy(dropid);
 	Character_Save(playerid);

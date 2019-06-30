@@ -6,7 +6,7 @@ CMD:acmds(playerid, params[])
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /a - /aduty - /goto - /gethere - /jetpack");
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /gotopos - /check - /invcheck - /freeze - /unfreeze");
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /masks - /n - /setweather - /settime - /resetinv");
-		SendClientMessage(playerid, -1, "[MODERATORE JR]: /resetdrugstats - /drugstats");
+		SendClientMessage(playerid, -1, "[MODERATORE JR]: /resetdrugstats - /drugstats - /setvw");
 		
 	}
 	if(AccountInfo[playerid][aAdmin] >= 3)
@@ -140,6 +140,20 @@ CMD:aduty(playerid, params[])
     return 1;
 }
 
+flags:setvw(CMD_JR_MODERATOR);
+CMD:setvw(playerid, params[])
+{
+    new id, vw;
+    if(sscanf(params, "k<u>d", id, vw))
+	   return SendClientMessage(playerid, COLOR_ERROR, "/setvw <playerid/nome> <virtual world>");
+	
+	Character_SetVirtualWorld(id, vw);
+
+	SendFormattedMessage(id, COLOR_GREEN, "L'admin %s ti ha settato il virtual world a %d.", AccountInfo[playerid][aName], vw);
+	SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il virtual world di %s al valore %d.", Character_GetOOCName(id), vw);
+	return 1;
+}
+
 flags:setskin(CMD_MODERATOR);
 CMD:setskin(playerid, params[])
 {
@@ -150,7 +164,10 @@ CMD:setskin(playerid, params[])
     if(id < 0 || id >= MAX_PLAYERS || !Character_IsLogged(id))
 	   return SendClientMessage(playerid, COLOR_ERROR, "L'utente non è collegato.");
     
-    PlayerInfo[id][pSkin] = skid;
+	if(skid < 1 || (skid > 311 && skid < 20000) || skid > 30000)
+		return SendClientMessage(playerid, COLOR_ERROR, "Inserisci un ID compreso tra 1 e 311. (20000 - 30000 per le custom skin)");
+    
+	PlayerInfo[id][pSkin] = skid;
     SetPlayerSkin(id, skid);
     // Send admin alert (?)
     // Log (?)
@@ -273,11 +290,17 @@ CMD:vcreate(playerid, params[])
 	new id = Vehicle_Create(model, _x, _y, _z, 0, c1, c2, 0, 0);
 	if(id == -1)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non è stato possibile creare il veicolo.");
+	
+	LinkVehicleToInterior(id, GetPlayerInterior(playerid));
+	SetVehicleVirtualWorld(id, Character_GetVirtualWorld(playerid));
+	
 	Vehicle_SetTemporary(id, true);
 	Vehicle_SetFuel(id, 100);
 	PutPlayerInVehicle(playerid, id, 0);
 	Vehicle_SetEngineOn(id);
+
 	SendFormattedMessage(playerid, COLOR_GREEN, "Veicolo %d creato. Non dimenticare di distruggerlo con /vdelete (a bordo).", id);
+	
 	Log(AccountInfo[playerid][aName], "", "/vcreate", model);
 	return 1;
 }
@@ -419,6 +442,10 @@ CMD:avcolor(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Il colore 2 inserito non è valido (0 - 255).");
 	
 	ChangeVehicleColor(id, color1, color2);
+	
+	VehicleInfo[id][vColor1] = color1;
+	VehicleInfo[id][vColor2] = color2;
+
 	SendMessageToAdmins(false, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha modificato il colore del veicolo id %d.", AccountInfo[playerid][aName], id);
 	return 1;
 }
@@ -491,12 +518,12 @@ CMD:apark(playerid, params[])
 flags:vfuel(CMD_MODERATOR);
 CMD:vfuel(playerid, params[])
 {
-	new Float:fuel = 0.0, vid;
-	if(sscanf(params, "f", fuel))
+	new fuel = 0, vid;
+	if(sscanf(params, "d", fuel))
 		return SendClientMessage(playerid, COLOR_ERROR, "/vfuel <fuel>");
 	if( (vid = GetPlayerVehicleID(playerid)) == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un veicolo.");
-	if(fuel < 0.0 || fuel > 100.0)
+	if(fuel < 0 || fuel > 100)
 		return SendClientMessage(playerid, COLOR_ERROR, "Valore benzina non valido. (0 - 100).");
 	Vehicle_SetFuel(vid, fuel);
 	SendMessageToAdmins(false, COLOR_YELLOW, "[ADMIN-ALERT]: %s (%d) ha settato la benzina del veicolo %d. Benzina: %0.2f.", AccountInfo[playerid][aName], playerid, vid, fuel);
@@ -509,6 +536,8 @@ CMD:payday(playerid, params[])
 {
 	foreach(new i : Player)
 	{
+		if(!Character_IsLogged(i))
+			continue;
 		Character_PayDay(i);
 	}
     return 1;
@@ -695,7 +724,7 @@ CMD:giveweapon(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Valore munizioni errato. (0 - 1000)");
 	if(wid < 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "ID arma errato.");
-	AC_GivePlayerWeapon(id, wid, ammo);
+	Character_GiveWeapon(id, wid, ammo);
 	SendMessageToAdmins(false, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha dato l'arma id %d con %d munizioni a %s.", AccountInfo[playerid][aName], wid, ammo, Character_GetOOCName(id));
 	SendFormattedMessage(id, COLOR_GREEN, "[ADMIN]: %s ti ha dato l'arma id %d con %d munizioni.", AccountInfo[playerid][aName], wid, ammo);
 	Log(AccountInfo[playerid][aName], Character_GetOOCName(id), "/giveweapon", wid);
@@ -966,7 +995,7 @@ CMD:banofflineaccount(playerid, params[])
 		{
 			new id, e_name[MAX_PLAYER_NAME];
 			cache_get_value_index_int(0, 0, id);
-			cache_get_value_index(0, 1, name);
+			cache_get_value_index(0, 1, e_name);
 			mysql_tquery_f(gMySQL, "UPDATE `accounts` SET Banned = '1' WHERE ID = '%d'", id);
 			SendFormattedMessage(playerid, COLOR_ORANGE, "L'account \"%s\" è stato bannato.", e_name);
 			SendMessageToAdmins(true, COLOR_ORANGE, "[ADMIN-ALERT]: %s ha bannato l'account \"%s\".", AccountInfo[playerid][aName], e_name);
@@ -1004,7 +1033,7 @@ CMD:unbanaccount(playerid, params[])
 			SendFormattedMessage(playerid, COLOR_ERROR, "L'account non esiste.");
 		}
 	}
-	MySQL_TQueryInline(gMySQL, using inline FindAccount, "SELECT ID FROM `accounts` WHERE LOWER(Name) = LOWER('%e')", name);
+	MySQL_TQueryInline(gMySQL, using inline FindAccount, "SELECT ID, Name FROM `accounts` WHERE LOWER(Name) = LOWER('%e')", name);
 	return 1;
 }
 
@@ -1045,7 +1074,7 @@ CMD:unban(playerid, params[])
 			SendFormattedMessage(playerid, COLOR_ERROR, "Il personaggio non esiste.");
 		}
 	}
-	MySQL_TQueryInline(gMySQL, using inline FindAccount, "SELECT ID FROM `characters` WHERE LOWER(Name) = LOWER('%e')", name);
+	MySQL_TQueryInline(gMySQL, using inline FindAccount, "SELECT ID, Name FROM `characters` WHERE LOWER(Name) = LOWER('%e')", name);
 	return 1;
 }
 

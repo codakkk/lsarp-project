@@ -50,7 +50,7 @@ hook OnPlayerClearData(playerid)
 
 hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
-	new ammo = GetPlayerAmmo(playerid);
+	new ammo = Character_GetAmmo(playerid);
 	if(( /*(GetPlayerWeaponState(playerid) == WEAPONSTATE_LAST_BULLET || IsPlayerInAnyVehicle(playerid)) && */ /*AC_AntiWeaponCheck(playerid, weaponid, ammo) &&*/ ammo <= 1))
 	{
 		if(Character_HasSpaceForItem(playerid, weaponid, 1))
@@ -58,7 +58,7 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 			SendClientMessage(playerid, COLOR_GREEN, "Proiettili esauriti. L'arma è stata rimessa nell'inventario.");
 			Character_AMe(playerid, "ripone l'arma nell'inventario.");
 			Character_GiveItem(playerid, weaponid, 1, 0, false);
-			AC_RemovePlayerWeapon(playerid, weaponid);
+			Character_RemoveWeapon(playerid, weaponid);
 		}
 		else
 		{
@@ -72,7 +72,7 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 			new result = Drop_Create(x, y, z - 0.9, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, 0, Character_GetOOCNameStr(playerid));
 			if(result != -1)
 			{
-				AC_RemovePlayerWeapon(playerid, weaponid);
+				Character_RemoveWeapon(playerid, weaponid);
 			}
 		}
 		if(Request_IsPending(playerid) && Request_GetType(playerid) == REQUEST_TYPE_WEAPON && Request_GetSlot(playerid) == Weapon_GetSlot(weaponid) && Request_GetItem(playerid) == weaponid)
@@ -209,8 +209,9 @@ stock Character_UseInventoryItem(playerid, slotid)
 		{
 			if(extra > 0)
 			{
-				AC_GivePlayerWeapon(playerid, itemid, extra);
-				Character_DecreaseItemAmount(playerid, itemid, 1);
+				Character_GiveWeapon(playerid, itemid, extra);
+				//Character_DecreaseItemAmount(playerid, itemid, 1);
+				Character_DecreaseSlotAmount(playerid, slotid, 1);
 				Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~~n~con ~g~%d~w~ proiettili.", Weapon_GetName(itemid), extra), true);
 				//Character_AMe(playerid, "prende un'arma dall'inventario.");
 			}
@@ -228,7 +229,7 @@ stock Character_UseInventoryItem(playerid, slotid)
 		}
 		else
 		{
-			AC_GivePlayerWeapon(playerid, itemid, amount);
+			Character_GiveWeapon(playerid, itemid, amount);
 			Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~", Weapon_GetName(itemid)), true);
 			//Character_AMe(playerid, "prende un'arma dall'inventario.");
 			Character_DecreaseSlotAmount(playerid, slotid, amount);
@@ -237,7 +238,7 @@ stock Character_UseInventoryItem(playerid, slotid)
 	}
     else if(ServerItem_IsAmmo(itemid))
     {
-		new currentWeapon = AC_GetPlayerWeapon(playerid);
+		new currentWeapon = Character_GetWeapon(playerid);
 		if(currentWeapon == 0)
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Non hai armi equipaggiate.");

@@ -9,7 +9,7 @@ Dialog:Dialog_InvSelectAmmo(playerid, response, listitem, inputtext[])
 	   return Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "{FF0000}Munizioni non valide!{FFFFFF}\nImmetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}", "Usa", "Annulla", 
 				Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType));
     
-	AC_GivePlayerWeapon(playerid, itemid, ammo);
+	Character_GiveWeapon(playerid, itemid, ammo);
     
 	Character_DecreaseItemAmount(playerid, itemid, 1);
     Character_DecreaseItemAmount(playerid, ammoType, ammo);
@@ -165,7 +165,7 @@ Dialog:Dialog_InvSelectAddAmmo(playerid, response, listitem, inputtext[])
 	   return Dialog_Show(playerid, Dialog_InvSelectAddAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", 
 					"{FF0000}Munizioni non valide!{FFFFFF}\nImmetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}", "Usa", "Annulla", 
 					amount);
-    AC_GivePlayerWeapon(playerid, weaponid, ammo);
+    Character_GiveWeapon(playerid, weaponid, ammo);
     Character_DecreaseItemAmount(playerid, ammoType, ammo);
 	
 	Character_AMe(playerid, "prende delle munizioni e le inserisce nell'arma.");

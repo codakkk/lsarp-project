@@ -64,6 +64,8 @@ native IsValidVehicle(vehicleid);
 #include <sscanf2>
 #include <a_mysql>
 
+#include <timerfix>
+
 #include <YSI_Coding\y_timers>
 #include <YSI_Coding\y_va>
 #include <YSI_Coding\y_inline>
@@ -89,6 +91,11 @@ native IsValidVehicle(vehicleid);
 
 #include <sa_zones>
 
+DEFINE_HOOK_REPLACEMENT(ShowRoom, SR);
+DEFINE_HOOK_REPLACEMENT(Element, Elm);
+DEFINE_HOOK_REPLACEMENT(Player, Ply);
+DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
+
 #include <YSI_Coding\y_hooks> // Needed for NexAC
 
 #include <nex-ac_it.lang>
@@ -100,20 +107,10 @@ native IsValidVehicle(vehicleid);
 #define AC_GetPlayerArmour AntiCheatGetArmour
 #define AC_SetPlayerArmour SetPlayerArmour
 
-#define AC_GetPlayerWeapon AntiCheatGetWeapon
-#define AC_GivePlayerWeapon GivePlayerWeapon
-#define AC_GetPlayerAmmo GetPlayerAmmo
-
-#define AC_GetPlayerWeaponData AntiCheatGetWeaponData
-
 #include <defines>
 #include <utils\iterators>
 #include <forwarded_functions>
 #include <miscellaneous\timestamp_to_date>
-
-DEFINE_HOOK_REPLACEMENT(ShowRoom, SR);
-DEFINE_HOOK_REPLACEMENT(Element, Elm);
-DEFINE_HOOK_REPLACEMENT(Player, Ply);
 
 #include <miscellaneous\globals>
 // https://github.com/emmet-jones/New-SA-MP-callbacks/blob/master/README.md
@@ -158,10 +155,15 @@ DEFINE_HOOK_REPLACEMENT(Player, Ply);
 
 #include <callbacks>
 
-#include <miscellaneous\global_timers>
+//#include <anticheat\cheats\triggerbot>
 
-#include <YSI_Coding\y_remote>
 #include <YSI_Coding\y_hooks> // Place hooks after this. Everything included before this, is hooked first.
+
+CMD:resetwe(playerid, params[])
+{
+	ResetPlayerWeapons(playerid);
+	return 1;
+}
 
 WasteDeAMXersTime()
 {
@@ -238,10 +240,11 @@ hook OnPlayerUpdate(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-hook OnPlayerDeath(playerid, killerid, reason) 
+hook OnPlayerDeath(playerid, killerid, reason)
 {
-	if(IsPlayerNPC(playerid)) return Y_HOOKS_BREAK_RETURN_1;
-
+	if(IsPlayerNPC(playerid))
+		return 1;
+	
 	if(killerid != INVALID_PLAYER_ID)
 		Log(Character_GetOOCName(playerid), Character_GetOOCName(killerid), "OnPlayerDeath", reason);
 	
@@ -251,7 +254,9 @@ hook OnPlayerDeath(playerid, killerid, reason)
 		pAnimLoop{playerid} = false;
 		TextDrawHideForPlayer(playerid, txtAnimHelper);
 	}
-	return Y_HOOKS_CONTINUE_RETURN_1;
+	printf("OnPlayerDeath");
+	//CallLocalFunction(#OnCharacterDeath, "ddd", playerid, killerid, reason);
+	return 1;
 }
 
 hook OnPlayerRequestSpawn(playerid)
@@ -304,11 +309,22 @@ hook OnVehicleMod(playerid, vehicleid, componentid)
 	return 0;
 }
 
+hook OnPlayerExitVehicle(playerid, vehicleid)
+{
+	return Y_HOOKS_CONTINUE_RETURN_1;
+}
 
 public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 {
 	if(!Character_IsLogged(playerid))
 		return 0;
+	printf("Packet Loss: %f", NetStats_PacketLossPercent(playerid));
+	if(NetStats_PacketLossPercent(playerid) > 2.0)
+	{
+		SendClientMessage(playerid, COLOR_ERROR, "Il tuo livello di pacchetti persi risulta elevato.");
+		SendClientMessage(playerid, COLOR_ERROR, "Pertanto, alcuni comandi ti sono stati bloccati.");
+		return 0;
+	}
 	/*printf("%s", cmd);
 	static const banned_commands[] = {
 		"/.spam","/r2info","/pos","/placebomb","/detonate","/fakenick", "/fakeskin","/ro","/follow","/safk","/bcinfo","/tpc","/skr","/be_chat","/be_anon","/be_id","/be_name","/name","/connect",
@@ -522,7 +538,6 @@ hook OnPlayerConnect(playerid)
 		return 0;
 	}
 	LoadPlayerTextDraws(playerid);
-	SendClientMessage(playerid, -1, "Hai 60 secondi per registrarti o effettuare il login prima di essere kickato.");
 
 	#if defined FAKE_LOGIN
 		Account_SetLogged(playerid, true);
@@ -530,6 +545,11 @@ hook OnPlayerConnect(playerid)
 		SpawnPlayer(playerid);
 	#endif
 	//OnPlayerRequestClass(playerid, 0);
+	return 1;
+}
+
+public OnPlayerFinishedDownloading(playerid, virtualworld)
+{
 	return 1;
 }
 
@@ -702,7 +722,6 @@ stock IsPlayerIDConnected(dbid)
 #include <admin\commands>
 #include <admin\supporter_commands>
 #include <dealership\commands>
-#include <faction_system\commands>
 #include <animation_system\commands>
 // ========== [ DIALOGS ] ==========
 #include <player\dialogs>
@@ -714,39 +733,7 @@ stock IsPlayerIDConnected(dbid)
 	#include <server\maps\maps>
 #endif
 
-stock AC_RemovePlayerWeapon(playerid, weaponid)
-{
-	new plyWeapons[12] = 0;
-	new plyAmmo[12] = 0;
-	for(new slot = 0; slot != 12; slot++)
-	{
-		new wep, ammo;
-		AC_GetPlayerWeaponData(playerid, slot, wep, ammo);
 
-		if(wep != weaponid && ammo != 0)
-		{
-			AC_GetPlayerWeaponData(playerid, slot, plyWeapons[slot], plyAmmo[slot]);
-		}
-		else if(wep == weaponid)
-		{
-			//ACInfo[playerid][acWeapons][slot] = 0; // AntiCheat
-			//ACInfo[playerid][acAmmo][slot] = 0; // AntiCheat
-		}
-	}
-	new query[128];
-	format(query, sizeof(query), "DELETE FROM `player_weapons` WHERE CharacterID = '%d' AND WeaponID = '%d'", Character_GetID(playerid), weaponid);
-	mysql_pquery(gMySQL, query);
-
-	ResetPlayerWeapons(playerid);
-	for(new slot = 0; slot != 12; slot++)
-	{
-		if(plyAmmo[slot] != 0)
-		{
-			GivePlayerWeapon(playerid, plyWeapons[slot], plyAmmo[slot]);
-		}
-	}
-	return 1;
-}
 
 stock AC_ResetPlayerWeapons(playerid, bool:deleteFromDatabase = false)
 {

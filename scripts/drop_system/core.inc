@@ -1,7 +1,7 @@
 #include <drop_system\accessors>
 #include <YSI_Coding\y_hooks>
 
-hook GlobalMinuteTimer(playerid)
+task OnDropCheck[60000]()
 {
     foreach(new i : DropsIterator)
     {

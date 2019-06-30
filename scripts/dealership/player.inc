@@ -1,34 +1,33 @@
 #include <YSI_Coding\y_hooks>
 
-hook GlobalPlayerSecondTimer(playerid)
+ptask OnPlayerDealerShipTimer[1000](playerid)
 {
+	if(!Character_IsLogged(playerid) || !gBuyingVehicle[playerid])
+		return 0;
     new keys, updown, leftright;
     GetPlayerKeys(playerid, keys, updown, leftright);
-	if(gBuyingVehicle[playerid])
-    {
-	   if(leftright == KEY_LEFT)
-	   {
-		  VehicleColorNum1[playerid]--;
-	   }
-	   else if(leftright == KEY_RIGHT)
-	   {
-		  VehicleColorNum1[playerid]++;
-	   }
-	   else if(keys & KEY_FIRE)
-	   {
-		  VehicleColorNum2[playerid]--;
-	   }
-	   else if(keys & KEY_HANDBRAKE)
-	   {
-		  VehicleColorNum2[playerid]++;
-	   }
-	   new maxColor = sizeof(CarColors) - 1;
-	   if(VehicleColorNum1[playerid] < 0) VehicleColorNum1[playerid] = maxColor;
-	   if(VehicleColorNum1[playerid] > maxColor) VehicleColorNum1[playerid] = 0;
-	   if(VehicleColorNum2[playerid] < 0) VehicleColorNum2[playerid] = maxColor;
-	   if(VehicleColorNum2[playerid] > maxColor) VehicleColorNum2[playerid] = 0;
-	   ChangeVehicleColor(gBuyingVehicleID[playerid], CarColors[VehicleColorNum1[playerid]], CarColors[VehicleColorNum2[playerid]]);
-    }
+	if(leftright == KEY_LEFT)
+	{
+		VehicleColorNum1[playerid]--;
+	}
+	else if(leftright == KEY_RIGHT)
+	{
+		VehicleColorNum1[playerid]++;
+	}
+	else if(keys & KEY_FIRE)
+	{
+		VehicleColorNum2[playerid]--;
+	}
+	else if(keys & KEY_HANDBRAKE)
+	{
+		VehicleColorNum2[playerid]++;
+	}
+	new maxColor = sizeof(CarColors) - 1;
+	if(VehicleColorNum1[playerid] < 0) VehicleColorNum1[playerid] = maxColor;
+	if(VehicleColorNum1[playerid] > maxColor) VehicleColorNum1[playerid] = 0;
+	if(VehicleColorNum2[playerid] < 0) VehicleColorNum2[playerid] = maxColor;
+	if(VehicleColorNum2[playerid] > maxColor) VehicleColorNum2[playerid] = 0;
+	ChangeVehicleColor(gBuyingVehicleID[playerid], CarColors[VehicleColorNum1[playerid]], CarColors[VehicleColorNum2[playerid]]);
     return 1;
 }
 

@@ -52,8 +52,10 @@ hook OnPlayerClearData(playerid)
     return 1;
 }
 
-hook GlobalPlayerSecondTimer(playerid)
+ptask OnRequestUpdateTimer[1000](playerid)
 {
+	if(!Character_IsLogged(playerid))
+		return 0;
 	if(Request_IsPending(playerid))
 	{
 		if(GetTickCount() - PendingRequestInfo[playerid][rdTime] > PENDING_REQUEST_TIME * 60 * 1000) // 60 seconds

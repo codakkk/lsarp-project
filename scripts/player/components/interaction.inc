@@ -7,7 +7,7 @@ stock Character_AMe(playerid, text[], GLOBAL_TAG_TYPES:...)
 	   temp[148];
     format(textString, sizeof(textString), text, ___2);
 
-    format(temp, sizeof(temp), "* %s *", textString);
+    format(temp, sizeof(temp), "> %s ", textString);
     SendTwoLinesMessage(playerid, 0xD0AEEBFF, "%s %s ", Character_GetRolePlayName(playerid), textString); //0xD6C3E3FF
     
     format(temp, 120, "%s", textString);

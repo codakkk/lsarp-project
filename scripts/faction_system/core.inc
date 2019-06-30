@@ -1,5 +1,14 @@
-#include <YSI_Coding\y_hooks>
+
+
 #include <faction_system\accessors>
+
+#include <faction_system\commands>
+#include <faction_system\commands\police>
+#include <faction_system\commands\common>
+
+#include <faction_system\national_guard\beanbag_taser>
+
+#include <YSI_Coding\y_hooks>
 
 hook OnGameModeInit()
 {

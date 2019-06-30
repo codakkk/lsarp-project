@@ -387,7 +387,7 @@ stock Character_GetNearBuilding(playerid, bool:inside)
 			if(BuildingInfo[b][bExists] && Building_GetExitWorld(b) == Character_GetVirtualWorld(playerid))
 				return b;
 		}*/
-		return Character_GetHouseID(playerid);
+		return Character_GetNearBuildingID(playerid);
 	}
 	else
 	{

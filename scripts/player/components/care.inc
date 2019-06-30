@@ -14,8 +14,10 @@ hook OnPlayerClearData(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-hook GlobalPlayerSecondTimer(playerid)
+ptask OnCharacterCareUpdateTimer[1000](playerid)
 {
+	if(!Character_IsLogged(playerid))
+		return 0;
 	if(Character_GetCareTicks(playerid) > 0)
 	{
 		Character_DecreaseCareTick(playerid);
@@ -23,7 +25,7 @@ hook GlobalPlayerSecondTimer(playerid)
 		{
 			for(new i = 0; i < 13; ++i)
 			{
-				AC_GivePlayerWeapon(playerid, pTempWeapons[playerid][i], pTempAmmo[playerid][i]);
+				Character_GiveWeapon(playerid, pTempWeapons[playerid][i], pTempAmmo[playerid][i]);
 			}
 			SetCameraBehindPlayer(playerid);
 			Character_SetFreezed(playerid, false);
@@ -34,7 +36,7 @@ hook GlobalPlayerSecondTimer(playerid)
 			SetPlayerDrunkLevel(playerid, 0);
 		}
 	}
-	return Y_HOOKS_CONTINUE_RETURN_1;
+	return 1;
 }
 
 stock Character_AcceptCare(playerid)

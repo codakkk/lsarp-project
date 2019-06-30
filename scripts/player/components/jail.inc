@@ -1,7 +1,9 @@
 #include <YSI_Coding\y_hooks>
 
-hook GlobalPlayerSecondTimer(playerid)
+ptask OnJailTimeUpdate[1000](playerid)
 {
+	if(!Character_IsLogged(playerid))
+		return 0;
 	if(Character_IsJailed(playerid))
 	{
 		PlayerInfo[playerid][pJailTime]--;
@@ -22,5 +24,5 @@ hook GlobalPlayerSecondTimer(playerid)
 			Character_Save(playerid);
 		}
 	}
-	return Y_HOOKS_CONTINUE_RETURN_1;
+	return 1;
 }

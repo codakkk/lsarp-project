@@ -28,6 +28,49 @@ task OnVehicleCheck[120000]()
 	}
 }
 
+ptask OnPlayerVehicleFuelUpdate[15000](playerid)
+{
+	new vehicleid = GetPlayerVehicleID(playerid);
+	if(vehicleid <= 0)
+		return 1;
+	if(Vehicle_IsEngineOn(vehicleid))
+	{
+		if(Vehicle_GetFuel(vehicleid) > 0.0)
+		{
+			//!IsAHelicopter(vehicleid) && !IsAPlane(vehicleid) && !IsABoat(vehicleid)
+			if(Vehicle_IsEngineOn(vehicleid) && !IsABike(vehicleid))
+			{
+				Vehicle_GiveFuel(vehicleid, -0.5);
+			}
+		}
+		else
+		{
+			Player_Info(playerid, "Benzina ~r~finita~w~.", true, 4000);
+			Vehicle_SetEngineOff(vehicleid);
+		}
+	}
+	return 1;
+}
+
+ptask OnPlayerVehicleCheck[1000 + 1](playerid)
+{
+	new vehicleid = GetPlayerVehicleID(playerid);
+	if(vehicleid <= 0)
+		return 1;
+	if(Vehicle_IsEngineOn(vehicleid))
+	{
+		
+		new Float:health = Vehicle_GetHealth(vehicleid);
+		if(health < 350.0)
+		{
+			Vehicle_SetEngineOff(vehicleid);
+			SendClientMessage(playerid, COLOR_ERROR, "Il motore del veicolo si è spento poiché è danneggiato.");
+		}
+
+	}
+	return 1;
+}
+
 // TODO: Write a Vehicle_LoadAll that loads factions vehicles
 
 hook OnVehicleSpawn(vehicleid)
@@ -47,8 +90,12 @@ hook OnVehicleDeath(vehicleid, killerid)
 stock Vehicle_Reload(vehicleid)
 {
     Vehicle_ResetStats(vehicleid);
+	
 	SetVehiclePos(vehicleid, VehicleInfo[vehicleid][vX], VehicleInfo[vehicleid][vY], VehicleInfo[vehicleid][vZ]);
 	SetVehicleZAngle(vehicleid, VehicleInfo[vehicleid][vA]);
+	
+	ChangeVehicleColor(vehicleid, VehicleInfo[vehicleid][vColor1], VehicleInfo[vehicleid][vColor2]);
+
 	Vehicle_SetEngineOff(vehicleid);
 	if(Vehicle_IsDestroyed(vehicleid))
 	{

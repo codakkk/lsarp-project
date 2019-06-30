@@ -266,7 +266,7 @@ Dialog:Dialog_VehicleInvAction(playerid, response, listitem, inputtext[])
 			{
 				SendFormattedMessage(playerid, COLOR_GREEN, "Hai preso %s (Munizioni: %d) dal veicolo.", ServerItem_GetName(itemid), ammo);
 				Character_AMe(playerid, "prende un'arma dal veicolo.");
-				AC_GivePlayerWeapon(playerid, itemid, ammo);
+				Character_GiveWeapon(playerid, itemid, ammo);
 				if(Weapon_IsGrenade(itemid))
 					Vehicle_DecreaseSlotAmount(vehicleid, pSelectedListItem[playerid], ammo);
 				else

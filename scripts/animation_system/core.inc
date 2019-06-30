@@ -1,6 +1,6 @@
 stock AnimationCheck(playerid)
 {
-	return (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && !Character_IsDead(playerid) && !Character_IsFreezed(playerid) && !Character_IsCuffed(playerid)/*!PlayerInfo[playerid][pFreezed] && !PlayerInfo[playerid][pCuffed] && !PlayerInfo[playerid][pStunned]*/);
+	return (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && !Character_IsDead(playerid) && !Character_IsFreezed(playerid) && !Character_IsCuffed(playerid) && !Character_IsStunned(playerid));
 }
 
 stock ClearAnimationsEx(playerid, bool:animCheck = true)

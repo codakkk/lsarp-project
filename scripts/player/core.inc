@@ -5,7 +5,6 @@
 #include <player\components\death_system>
 #include <player\components\walk>
 #include <player\components\chat>
-#include <player\components\mask>
 #include <player\components\inventory>
 #include <player\components\drop>
 #include <player\components\payday>
@@ -24,7 +23,13 @@
 #include <player\components\customanims>
 #include <player\components\drugs>
 #include <player\components\hunger>
-#include <player\components\drag>
+
+// EFFECTS 
+#include <player\components\effects\mask>
+#include <player\components\effects\drag>
+#include <player\components\effects\stun>
+
+// OTHERS
 #include <player\components\spawn>
 #include <YSI_Coding\y_hooks>
 
@@ -52,6 +57,31 @@ hook OnCharacterSpawn(playerid)
 	
 	SetPlayerFightingStyle(playerid, Character_GetFightingStyle(playerid));
     return Y_HOOKS_CONTINUE_RETURN_1;
+}
+
+ptask OnCharacterUpdateTimer[1000](playerid)
+{
+	if(!Character_IsLogged(playerid))
+		return 1;
+
+	if(gPlayerAMeExpiry[playerid] > 0)
+	{
+	   gPlayerAMeExpiry[playerid]--;
+	   if(!gPlayerAMeExpiry[playerid])
+	   {
+		  UpdateDynamic3DTextLabelText(gPlayerAMe3DText[playerid], 0xFFFFFFFF, " ");
+	   }
+	}
+
+	//Clock System
+    new hour, minute, second, string[64];
+    gettime(hour, minute, second);
+	// hour += TIME_ZONE; // TIME_ZONE = 0
+	if(hour > 24) hour -= 24;
+	if(hour < 0) hour += 24;
+	format(string,25,"%02d:%02d:%02d",hour, minute, second);
+    TextDrawSetString(Clock, string);
+	return 1;
 }
 
 stock Character_SetVirtualWorld(playerid, virtualWorld)

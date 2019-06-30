@@ -1332,7 +1332,6 @@ ac_fpublic ac_GivePlayerWeapon(playerid, ac_weaponid, ac_ammo)
 		ACInfo[playerid][acGtcGiveAmmo][ac_s] =
 		ACInfo[playerid][acGtcSetWeapon][ac_s] = ACInfo[playerid][acGtc][2] = GetTickCount() + 2650;
 	}
-	printf("AntiCheatGivePlayerWeapon");
 	return GivePlayerWeapon(playerid, ac_weaponid, ac_ammo);
 }
 
@@ -1381,6 +1380,7 @@ ac_fpublic ac_ResetPlayerWeapons(playerid)
 	}
 	ACInfo[playerid][acSet][3] = -1;
 	ACInfo[playerid][acGtc][7] = GetTickCount() + 2650;
+	printf("NexAC: ResetPlayerWeapons");
 	return 1;
 }
 
@@ -7980,6 +7980,7 @@ public OnPlayerRequestSpawn(playerid)
 
 ac_fpublic ac_Timer(playerid)
 {
+	//printf("ac_Timer");
 	if(!IsPlayerConnected(playerid) || ACInfo[playerid][acKicked] > 0) return 0;
 	new ac_gpp;
 	#if defined NetStats_MessagesRecvPerSecond

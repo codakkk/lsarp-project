@@ -50,15 +50,18 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 	return 1;
 }
 
-// Called every second (by SecondCheck) when a player is inspecting (listing) a loot zone.
-hook GlobalPlayerSecondTimer(playerid)
+// Called every second when a player is inspecting (listing) a loot zone.
+ptask OnPlayerLootZoneUpdateTimer[1000](playerid)
 {
+	if(!Character_IsLogged(playerid))
+		return 1;
 	new zone_id = Player_GetLootZone(playerid);
 	if(zone_id != -1 && !IsPlayerInRangeOfLootZone(playerid, zone_id) || Character_IsFreezed(playerid))
 	{
 		Player_ClearLootZoneVars(playerid);
 		Dialog_Close(playerid);
 	}
+	return 1;
 }
 
 stock LootZone_StartEdit(zone_id, playerid)

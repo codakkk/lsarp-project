@@ -21,8 +21,10 @@ hook OnPlayerClearData(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-hook CharacterMinuteTimer(playerid)
+ptask OnPlayerHungerTimer[60000](playerid)
 {
+	if(!Character_IsLogged(playerid))
+		return 0;
 	pHungerTime{playerid}++;
 	if(pHungerTime{playerid} >= HUNGER_DECREASE_TIME)
 	{
@@ -37,6 +39,7 @@ hook CharacterMinuteTimer(playerid)
 			SendClientMessage(playerid, -1, "La fame comincia a farsi sentire...");
 		}
 	}
+	return 1;
 }
 
 hook OnCharacterUseItem(playerid, slotid)

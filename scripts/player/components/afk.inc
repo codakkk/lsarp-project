@@ -2,8 +2,10 @@
 
 static pAFKTime[MAX_PLAYERS];
 
-hook GlobalPlayerSecondTimer(playerid)
+ptask OnCharacterAFKTimeUpdate[1000](playerid)
 {
+	if(!Character_IsLogged(playerid))
+		return 0;
 	pAFKTime[playerid]++;
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }

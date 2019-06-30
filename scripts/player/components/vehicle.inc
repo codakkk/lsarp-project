@@ -25,8 +25,10 @@ hook OnPlayerClearData(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-hook GlobalPlayerSecondTimer(playerid)
+ptask OnVehicleFuelTextDrawTimer[1000](playerid)
 {
+	if(!Character_IsLogged(playerid))
+		return 0;
 	new vehicleid = GetPlayerVehicleID(playerid);
 	if(vehicleid > 0)
 	{
@@ -34,7 +36,7 @@ hook GlobalPlayerSecondTimer(playerid)
 		format(string, sizeof(string), "~y~%0.1f%s", Vehicle_GetFuel(vehicleid), "%");
 		PlayerTextDrawSetString(playerid, pVehicleFuelText[playerid], string);
 	}
-	return Y_HOOKS_CONTINUE_RETURN_1;
+	return 1;
 }
 
 hook OnCharacterDisconnected(playerid)
@@ -51,7 +53,7 @@ hook OnCharacterDisconnected(playerid)
 hook OnPlayerExitVehicle(playerid, vehicleid)
 {
 	new seat = GetPlayerVehicleSeat(playerid);
-	if(Vehicle_IsLocked(vehicleid))
+	if(Vehicle_IsLocked(vehicleid)&& !pAdminDuty[playerid])
 	{
 		if(Vehicle_GetOwnerID(vehicleid) != Character_GetID(playerid))// && (!IsABike(vehicleid) && !IsAMotorBike(vehicleid)))
 		{
@@ -71,7 +73,7 @@ hook OnPlayerExitVehicle(playerid, vehicleid)
 hook OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
 {
 	printf("OnPlayerEnterVehicle - %d - %d", vehicleid, Vehicle_IsLocked(vehicleid) ? 1 : 0);
-	if(Vehicle_IsLocked(vehicleid))
+	if(Vehicle_IsLocked(vehicleid) && !pAdminDuty[playerid])
 	{
 		/*if(Vehicle_IsOwner(vehicleid, playerid, false))
 		{
@@ -220,7 +222,7 @@ stock Character_GetClosestVehicle(playerid, Float:radius)
 	foreach(new i : Vehicle)
 	{
 		GetVehiclePos(i, x, y, z);
-		if(IsPlayerInRangeOfPoint(playerid, radius, x, y, z))
+		if(Character_GetVirtualWorld(playerid) == GetVehicleVirtualWorld(i) && IsPlayerInRangeOfPoint(playerid, radius, x, y, z))
 		{
 			return i;
 		}

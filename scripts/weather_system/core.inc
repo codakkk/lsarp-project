@@ -21,17 +21,19 @@ hook OnCharacterSpawn(playerid)
 	return 1;
 }
 
-hook OnPlayerDeath(playerid, killerid, reason)
+hook OnCharacterDeath(playerid, killerid, reason)
 {
 	SetPlayerWeather(playerid, gCurrentWeather);
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-hook HourTimer()
+task OnWeatherUpdateTimer[1000 * 60 * 60]()
 {
 	Server_UpdateWeather();
 	foreach (new i : Player)
 	{
+		if(!Character_IsLogged(i))
+			continue;
 		//if(!DrugWeather[i])
 		SetPlayerWeather(i, Server_GetCurrentWeather());
 		new tmphour, tmpminute, tmpsecond;

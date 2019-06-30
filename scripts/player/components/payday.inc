@@ -1,3 +1,18 @@
+#include <YSI_Coding\y_hooks>
+
+ptask OnPlayerPayDayMinute[60000](playerid) // 
+{
+	if(!Character_IsLogged(playerid))
+		return 1;
+	PlayerInfo[playerid][pPayDay]++;
+	if(PlayerInfo[playerid][pPayDay] >= 60) // Pay Day Time in minutes
+	{
+		PlayerInfo[playerid][pPayDay] -= 60;
+		Character_PayDay(playerid);
+	}
+	return 1;
+}
+
 stock Character_PayDay(playerid)
 {
     new expForNewLevel = (PlayerInfo[playerid][pLevel]+1)*2;

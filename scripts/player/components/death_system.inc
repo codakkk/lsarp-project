@@ -55,8 +55,10 @@ hook OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
 }
 
 // Causes death system to get bugged
-hook GlobalPlayerSecondTimer(playerid)
+ptask OnPlayerDeathSystemUpdate[1000](playerid)
 {
+	if(!Character_IsLogged(playerid))
+		return 0;
 	if(!Character_IsAlive(playerid))
 	{
 		if(GetPlayerAnimationIndex(playerid) != 1701)
@@ -103,12 +105,12 @@ hook GlobalPlayerSecondTimer(playerid)
 		if(GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) 
 			RemovePlayerFromVehicle(playerid);
 	}
-	return Y_HOOKS_CONTINUE_RETURN_1;
+	return 1;
 }
 
 hook OnPlayerDeath(playerid, killerid, reason)
 {
-	printf("ONPlayerDeathStart");
+	printf("OnCharacterDeathStart");
 	new deathState = Character_GetDeathState(playerid) < 2 ? Character_GetDeathState(playerid)+1 : 0;
 	Character_SetDeathState(playerid, deathState);
 
@@ -120,7 +122,7 @@ hook OnPlayerDeath(playerid, killerid, reason)
 	new weapons[13], ammo[13];
 	for(new x = 0; x < 13; x++)
 	{
-		AC_GetPlayerWeaponData(playerid, x, weapons[x], ammo[x]);
+		Character_GetWeaponData(playerid, x, weapons[x], ammo[x]);
 		pTempWeapons[playerid][x] = weapons[x];
 		pTempAmmo[playerid][x] = ammo[x];
 		/*GetPlayerWeaponData(playerid, x, weapons[x], ammo[x]);
@@ -144,7 +146,7 @@ hook OnPlayerDeath(playerid, killerid, reason)
 	{
 		Character_SetDeathTime(playerid, GetTickCount());
 	}
-	printf("OnPlayerDeath End");
+	printf("OnCharacterDeath End");
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 

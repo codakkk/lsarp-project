@@ -77,7 +77,7 @@ stock AC_RemovePlayerWeaponBySlot(playerid, slotid)
 {
 	new w, a;
 	GetPlayerWeaponData(playerid, slotid, w, a);
-	AC_RemovePlayerWeapon(playerid, w);
+	Character_RemoveWeapon(playerid, w);
 	return 1;
 }
 

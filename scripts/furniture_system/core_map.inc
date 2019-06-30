@@ -302,7 +302,13 @@ Dialog:Dialog_FurnitureOptions(playerid, response, listitem, inputtext[])
         {
             Dialog_Show(playerid, Dialog_SellFurniture, DIALOG_STYLE_MSGBOX, "Rimuovi", "Sei sicuro di voler rimuovere questo mobile (%s)?", "Rimuovi", "Annulla", FurnitureCustomData[FURNITURE_NAME]);
         }
-        case 3: // GOTO
+        case 3:
+        {
+            Furniture_RemoveTextures(selected);
+            SendClientMessage(playerid, COLOR_GREEN, "Hai rimosso le texture al mobile.");
+            Furniture_ShowOptions(playerid);
+        }
+        case 4: // GOTO
         {
             SetPlayerPos(playerid, x, y, z);
             SetPlayerInterior(playerid, Streamer_GetIntData(STREAMER_TYPE_OBJECT, selected, E_STREAMER_INTERIOR_ID));
@@ -456,6 +462,8 @@ stock Furniture_Load(worldid)
 
             new objectid = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, vw, interior);
 
+            Furniture_LoadTextures(objectid);
+
             Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
             
             Furniture_SetObject(objectid, FurnitureCustomData[FURNITURE_DATABASE_ID]);
@@ -533,14 +541,13 @@ stock Furniture_CancelBuy(playerid)
 
 stock Furniture_ShowOptions(playerid)
 {
+    new String:s = @("Sposta\nRinomina\nRimuovi\nResetta Textures\n");
     if(Account_GetAdminLevel(playerid) > 1)
     {
-        Dialog_Show(playerid, Dialog_FurnitureOptions, DIALOG_STYLE_LIST, "Opzioni mobili", "Sposta\nRinomina\nRimuovi\nGotati", "Seleziona", "Indietro");
+        s += @("Gotati");
     }
-    else
-    {
-        Dialog_Show(playerid, Dialog_FurnitureOptions, DIALOG_STYLE_LIST, "Opzioni mobili", "Sposta\nRinomina\nRimuovi", "Seleziona", "Indietro");
-    }
+    
+    Dialog_Show_s(playerid, Dialog_FurnitureOptions, DIALOG_STYLE_LIST, @("Opzioni mobili"), s, "Seleziona", "Indietro");
     return 1;
 }
 
@@ -593,7 +600,8 @@ stock Furniture_UpdateInfoList(playerid)
 
     for_list(i : FurnitureLabels[playerid])
     {
-        DestroyDynamic3DTextLabelEx(Text3D:iter_get(i));
+        new Text3D:label = Text3D:iter_get(i);
+        DestroyDynamic3DTextLabelEx(label);
     }
     
     list_clear(FurnitureLabels[playerid]);
@@ -683,6 +691,8 @@ stock Furniture_Remove(playerid, objectid)
 
     Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
 
+    Furniture_RemoveTextures(objectid);
+
     DestroyDynamicObject(objectid);
 
     if(map_has_key(Furnitures, Character_GetVirtualWorld(playerid)))
@@ -769,19 +779,32 @@ stock Furniture_DeleteLabels(playerid)
     return 1;
 }
 
-stock Furniture_SetTexture(objectid, index, modelid, txdName, textureName, materialColor)
+stock Furniture_SetTexture(objectid, index, modelid, const txdName[], const textureName[], materialColor)
 {
     if(!IsValidDynamicObject(objectid) || index < 0 || index > 15)
         return 0;
-    return SetDynamicObjectMaterial(objetid, index, modelid, txdName, textureName, materialColor);
+    Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+    mysql_tquery_f(gMySQL, "INSERT INTO `furniture_textures` \
+			(furniture_id, material_index, model_id, txd_name, texture_name, material_color) \
+			VALUES('%d', '%d', '%d', '%s', '%s', '%d') \
+			ON DUPLICATE KEY UPDATE \
+			model_id = VALUES(model_id), \
+            txd_name = VALUES(txd_name), \
+            texture_name = VALUES(texture_name), \
+            material_color = VALUES(material_color)", 
+            FurnitureCustomData[FURNITURE_DATABASE_ID],
+            index, modelid, txdName, textureName, materialColor);
+    return SetDynamicObjectMaterial(objectid, index, modelid, txdName, textureName, materialColor);
 }
 
 stock Furniture_RemoveTextures(objectid)
 {
     if(!IsValidDynamicObject(objectid))
         return 0;
+    
     for(new i = 0; i < 15; ++i) 
         SetDynamicObjectMaterial(objectid, i, 19341, "invalid", "invalid");
+    
     Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
     mysql_tquery_f(gMySQL, "DELETE FROM furniture_textures WHERE furniture_id = '%d';", FurnitureCustomData[FURNITURE_DATABASE_ID]);
     return 1;
@@ -793,13 +816,24 @@ stock Furniture_LoadTextures(objectid)
         return 0;
     
     Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+
     if(FurnitureCustomData[FURNITURE_DATABASE_ID] == 0)
         return 0;
     
     inline OnLoad()
     {
         new rows = cache_num_rows();
-        
+        new materialIndex, modelId, txdName[64], textureName[64], materialColor;
+        for(new i = 0; i < rows; ++i)
+        {
+            cache_get_value_index_int(i, 1, materialIndex);
+            cache_get_value_index_int(i, 2, modelId);
+            cache_get_value_index(i, 3, txdName);
+            cache_get_value_index(i, 4, textureName);
+            cache_get_value_index_int(i, 5, materialColor);
+
+            SetDynamicObjectMaterial(objectid, materialIndex, modelId, txdName, textureName, materialColor);
+        }
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM furniture_textures WHERE furniture_id = '%d';", FurnitureCustomData[FURNITURE_DATABASE_ID]);
     return 1;

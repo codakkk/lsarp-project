@@ -78,7 +78,7 @@ enum e_Bit1_Data
 	e_pDragged,
 	e_pDragging,
 	e_pMasked,
-	e_pLegHit
+	e_pLegHit,
 };
 
 new 

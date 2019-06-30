@@ -24,12 +24,6 @@ hook OnCharacterSpawn(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-hook OnPlayerDeath(playerid, killerid, reason)
-{
-	//Character_SetLegHit(playerid, false);
-	return Y_HOOKS_CONTINUE_RETURN_1;
-}
-
 /*hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
 	if(!Character_IsAlive(playerid))

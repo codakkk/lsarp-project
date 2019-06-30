@@ -1,6 +1,3 @@
-#include <faction_system\commands\police>
-#include <faction_system\commands\common>
-
 flags:fazione(CMD_ALIVE_USER);
 CMD:fazione(playerid, params[])
 {

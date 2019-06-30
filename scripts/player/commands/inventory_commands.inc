@@ -32,7 +32,7 @@ alias:inventario("inv");
 flags:usa(CMD_ALIVE_USER);
 CMD:usa(playerid, params[])
 {
-	if(!Character_IsAlive(playerid))
+	if(!Character_IsAlive(playerid) || Character_IsStunned(playerid) || Character_IsCuffed(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
@@ -49,6 +49,9 @@ CMD:usa(playerid, params[])
 flags:passa(CMD_ALIVE_USER);
 CMD:passa(playerid, params[])
 {
+	if(!Character_IsAlive(playerid) || Character_IsStunned(playerid) || Character_IsCuffed(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+	
 	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
 	new slotid, id, amount;
@@ -62,6 +65,12 @@ CMD:passa(playerid, params[])
 flags:getta(CMD_ALIVE_USER);
 CMD:getta(playerid, params[])
 {
+	if(!Character_IsAlive(playerid) || Character_IsStunned(playerid) || Character_IsCuffed(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+	
+	if(Character_IsFactionDuty(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
+	
 	new slotid, amount;
 	if(sscanf(params, "dD(1)", slotid, amount))
 		return SendClientMessage(playerid, COLOR_ERROR, "/getta <slotid> <quantità (default 1)>");
@@ -73,15 +82,22 @@ CMD:getta(playerid, params[])
 flags:deposita(CMD_ALIVE_USER);
 CMD:deposita(playerid, params[])
 {
-	if(!Character_IsAlive(playerid))
+	if(!Character_IsAlive(playerid) || Character_IsStunned(playerid) || Character_IsCuffed(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+	
+	if(Character_IsFactionDuty(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
+
 	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
-	new itemid = AC_GetPlayerWeapon(playerid);
+	new itemid = Character_GetWeapon(playerid);
+	printf("Depositando: %d", itemid);
 	if(itemid == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma.");
 	
-	new ammo = AC_GetPlayerAmmo(playerid);
+	new ammo = Character_GetAmmo(playerid);
+	if(ammo == 0)
+		return 1;
 	if(Weapon_IsGrenade(itemid))
 	{
 		if(!Character_HasSpaceForItem(playerid, itemid, ammo))
@@ -96,7 +112,7 @@ CMD:deposita(playerid, params[])
 		Character_GiveItem(playerid, itemid, 1, ammo);
 		Player_InfoStr(playerid, str_format("Hai depositato: ~g~%s~w~~n~nell'inventario~n~con ~y~%d~w~ munizioni.", Weapon_GetName(itemid), ammo), true);
 	}
-	AC_RemovePlayerWeapon(playerid, itemid);
+	Character_RemoveWeapon(playerid, itemid);
 	return 1;
 }
 alias:deposita("dep");
@@ -104,16 +120,21 @@ alias:deposita("dep");
 flags:disassembla(CMD_ALIVE_USER);
 CMD:disassembla(playerid, params[])
 {
-	if(!Character_IsAlive(playerid))
+	if(!Character_IsAlive(playerid) || Character_IsStunned(playerid) || Character_IsCuffed(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+	
+	if(Character_IsFactionDuty(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
+
 	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
+
 	new 
 		slotid, itemid, ammo;
 	if(sscanf(params, "d", slotid))
 	{
-		itemid = AC_GetPlayerWeapon(playerid);
-		ammo = AC_GetPlayerAmmo(playerid);
+		itemid = Character_GetWeapon(playerid);
+		ammo = Character_GetAmmo(playerid);
 		if(itemid == 0 || ammo == 0)
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma.");
@@ -128,7 +149,7 @@ CMD:disassembla(playerid, params[])
 		amounts[1] = ammo;
 		if(!Inventory_HasSpaceForItems(Character_GetInventory(playerid), data, amounts))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario.");
-		AC_RemovePlayerWeapon(playerid, itemid);
+		Character_RemoveWeapon(playerid, itemid);
 	}
 	else
 	{	
@@ -164,11 +185,15 @@ CMD:gettaarma(playerid, params[])
 {
 	if(!Character_IsAlive(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+
+	if(Character_IsFactionDuty(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
+
 	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
 	new 
-		weaponid = AC_GetPlayerWeapon(playerid), 
-		ammo = GetPlayerAmmo(playerid);
+		weaponid = Character_GetWeapon(playerid), 
+		ammo = Character_GetAmmo(playerid);
 	if(weaponid == 0 || ammo == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma da gettare.");
 	new Float:x, Float:y, Float:z;
@@ -176,7 +201,7 @@ CMD:gettaarma(playerid, params[])
 	new result = Drop_Create(x, y, z - 0.9, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, ammo, Character_GetOOCNameStr(playerid));
 	if(result != -1)
 	{
-		AC_RemovePlayerWeapon(playerid, weaponid);
+		Character_RemoveWeapon(playerid, weaponid);
 		SendClientMessage(playerid, COLOR_GREEN, "Hai gettato l'arma.");
 		ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 3.0, 0, 0, 0, 0, 0);
 	}

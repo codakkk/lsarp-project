@@ -72,9 +72,18 @@ stock CheckAccount(playerid)
 	return 1;
 }
 
+hook OnPlayerFinishedDwnling(playerid, virtualworld)
+{
+	if(!Account_IsLogged(playerid))
+	{
+		SendClientMessage(playerid, -1, "Hai 60 secondi per registrarti o effettuare il login prima di essere kickato.");
+		gLoginTimer[playerid] = defer LoginKickTimer(playerid);
+	}
+	return 1;
+}
+
 hook OnPlayerConnect(playerid)
 {
-	gLoginTimer[playerid] = defer LoginKickTimer(playerid);
 	return 1;
 }
 

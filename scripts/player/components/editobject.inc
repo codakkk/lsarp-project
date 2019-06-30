@@ -24,7 +24,7 @@ hook OnPlayerClearData(playerid)
     return 1;
 }
 
-hook OnPlayerDeath(playerid, killerid, reason)
+hook OnCharacterDeath(playerid, killerid, reason)
 {
     EditObject_End(playerid);
     return 1;

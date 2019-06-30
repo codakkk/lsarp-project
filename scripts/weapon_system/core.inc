@@ -48,6 +48,12 @@ hook OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
 	if(weaponDamage == 0)
 		weaponDamage = amount;
 
+	if(weaponid == 25 && Character_HasBeanBag(playerid))
+		weaponDamage = 5;
+	else if(weaponid == 23 && Character_HasTaser(playerid))
+		weaponDamage = 2;
+	
+
 	AC_GetPlayerHealth(playerid, currentHealth);
 	AC_GetPlayerArmour(playerid, currentArmour);
 	if(weaponDamage)
