@@ -5,39 +5,6 @@ static
 	PlayerAmmo[MAX_PLAYERS][13]
 ;
 
-ptask OnWeaponHackTimer[500](playerid)
-{
-	if(!Character_IsLogged(playerid) || Character_IsDead(playerid))
-		return 1;
-	new currentWeapon = GetPlayerWeapon(playerid);
-	if(currentWeapon == -1)
-		return 1;
-	new currentSlot = Weapon_GetSlot(currentWeapon);
-	for(new slot = 0, ac_weapon = 0, ac_ammo = 0; slot != 12; ++slot)
-	{
-		GetPlayerWeaponData(playerid, slot, ac_weapon, ac_ammo);
-
-		if(slot != currentSlot)
-		{
-			if(ac_weapon != PlayerWeapons[playerid]{slot})
-			{
-				Character_RemoveWeapon(playerid, ac_weapon);
-				Character_GiveWeapon(playerid, PlayerWeapons[playerid]{slot}, PlayerAmmo[playerid]{slot});
-				SendMessageToAdmins(true, COLOR_ERROR, "Il giocatore %s (%d) è sospetto di Weapon Hack.", Character_GetOOCName(playerid), playerid);
-			}
-		}
-		else if(ac_weapon == 38 || 22 <= ac_weapon <= 34)
-		{
-			if(ac_ammo > PlayerAmmo[playerid][slot] || ac_ammo < 0 <= PlayerAmmo[playerid][slot])
-			{
-				SendMessageToAdmins(true, COLOR_ERROR, "Il giocatore %s (%d) è sospetto di Ammo Hack.", Character_GetOOCName(playerid), playerid);
-				Character_RemoveWeapon(playerid, ac_weapon);
-				Character_GiveWeapon(playerid, PlayerWeapons[playerid]{slot}, PlayerAmmo[playerid]{slot});
-			}
-		}
-	}
-	return 1;
-}
 
 hook OnPlayerClearData(playerid)
 {
@@ -125,39 +92,45 @@ stock Character_GetWeaponInSlot(playerid, slotid)
 stock Character_RemoveWeapon(playerid, weaponid)
 {
 	new 
-		plyWeapons[12] = {0, ...},
-		plyAmmo[12] = {0, ...}
+		w[12] = {0, ...},
+		a[12] = {0, ...}
 	;
+
 	for(new slot = 0; slot != 12; slot++)
 	{
-		new wep, ammo;
-		Character_GetWeaponData(playerid, slot, wep, ammo);
-		if(wep != weaponid)
+		GetPlayerWeaponData(playerid, slot, w[slot], a[slot]);
+		if(w[slot] == weaponid)
 		{
-			plyWeapons[slot] = wep;
-			plyAmmo[slot] = ammo;
+			w[slot] = 0;
+			a[slot] = 0;
 		}
 	}
 
-	new query[128];
-	format(query, sizeof(query), "DELETE FROM `player_weapons` WHERE CharacterID = '%d' AND WeaponID = '%d'", Character_GetID(playerid), weaponid);
-	mysql_pquery(gMySQL, query);
-
-	ResetPlayerWeapons(playerid);
+	Character_ResetWeapons(playerid);
 
 	for(new slot = 0; slot != 12; slot++)
 	{
-		//if(plyWeapons[slot] != 0 && plyAmmo[slot] > 0)
-		//{
-			printf("Give: %d - %d", plyWeapons[slot], plyAmmo[slot]);
-		Character_GiveWeapon(playerid, plyWeapons[slot], plyAmmo[slot]);
-		//}
+		Character_GiveWeapon(playerid, w[slot], a[slot]);
 	}
+	return 1;
+}
+
+stock Character_ResetWeapons(playerid)
+{
+	if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))
+		return 0;
+	for(new slot = 0; slot != 12; slot++)
+	{
+		PlayerWeapons[playerid]{slot} = PlayerAmmo[playerid][slot] = 0;
+	}
+	ResetPlayerWeapons(playerid);
 	return 1;
 }
 
 stock Character_GiveWeapon(playerid, weaponid, ammo)
 {
+	if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))
+		return 0;
 	if(0 <= weaponid <= 18 || 22 <= weaponid <= 46)
 	{
 		new weaponSlot = Weapon_GetSlot(weaponid);
@@ -173,7 +146,11 @@ stock Character_GiveWeapon(playerid, weaponid, ammo)
 				PlayerAmmo[playerid][weaponSlot] = ammo;
 			}
 		}
-
+		else 
+		{
+			PlayerWeapons[playerid]{weaponSlot} = weaponid;
+			PlayerAmmo[playerid][weaponSlot] = ammo;
+		}
 	}
 	return GivePlayerWeapon(playerid, weaponid, ammo);
 }
@@ -186,6 +163,24 @@ stock Character_GetWeapon(playerid)
 stock Character_GetAmmo(playerid)
 {
 	return GetPlayerAmmo(playerid);
+}
+
+stock Character_SetWeaponAmmo(playerid, weaponid, ammo)
+{
+	if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))
+		return 0;
+	new slotid = Weapon_GetSlot(weaponid);
+	if(PlayerWeapons[playerid]{slotid} != weaponid)
+		return 0;
+	SetPlayerAmmo(playerid, weaponid, ammo);
+	
+	PlayerAmmo[playerid][slotid] = ammo;
+	
+	if(ammo <= 0)
+	{
+		PlayerWeapons[playerid]{slotid} = PlayerAmmo[playerid][slotid] = 0;
+	}
+	return 1;
 }
 
 stock Character_GetWeaponData(playerid, slotid, &weaponid, &ammo)
