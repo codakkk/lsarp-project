@@ -99,6 +99,16 @@ DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
 #include <YSI_Coding\y_hooks> // Needed for NexAC
 
 #include <nex-ac_it.lang>
+
+#define AC_USE_VENDING_MACHINES		false
+#define AC_USE_TUNING_GARAGES		false
+#define AC_USE_PICKUP_WEAPONS		false
+#define AC_USE_AMMUNATIONS			false
+#define AC_USE_RESTAURANTS			false
+#define AC_USE_PAYNSPRAY			true
+#define AC_USE_CASINOS				false
+#define AC_USE_QUERY				false
+#define AC_USE_NPC					false
 #include <nex-ac>
 
 #define AC_GetPlayerHealth AntiCheatGetHealth
@@ -117,6 +127,7 @@ DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
 // Exception. Must be on top of all others.
 #include <pickup\enum>
 
+#include <server\core>
 //#include <anticheat\enum>
 #include <account_system\enum>
 #include <drop_system\enum>
@@ -187,7 +198,7 @@ main()
 
 hook OnGameModeInit() 
 {
-	SetGameModeText("ApoC1");
+	SetGameModeText("ApocalypseV1");
 	
 	ShowPlayerMarkers(PLAYER_MARKERS_MODE_OFF);
 	SetNameTagDrawDistance(20.0);
@@ -249,9 +260,9 @@ hook OnPlayerDeath(playerid, killerid, reason)
 		Log(Character_GetOOCName(playerid), Character_GetOOCName(killerid), "OnPlayerDeath", reason);
 	
 	SetPlayerDrunkLevel(playerid, 0);
-	if(pAnimLoop{playerid})
+	if(Character_IsAnimLoop(playerid))
 	{
-		pAnimLoop{playerid} = false;
+		Character_SetAnimLoop(playerid, false);
 		TextDrawHideForPlayer(playerid, txtAnimHelper);
 	}
 	printf("OnPlayerDeath");
@@ -283,7 +294,7 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 		#endif
 		return 0;
 	}
-	if(hittype == BULLET_HIT_TYPE_PLAYER && hitid != INVALID_PLAYER_ID && pAdminDuty[hitid])
+	if(hittype == BULLET_HIT_TYPE_PLAYER && hitid != INVALID_PLAYER_ID && Account_IsAdminDuty(hitid))
 	{
 		return Y_HOOKS_BREAK_RETURN_0;
 	}
@@ -318,10 +329,11 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 {
 	if(!Character_IsLogged(playerid))
 		return 0;
-	printf("Packet Loss: %f", NetStats_PacketLossPercent(playerid));
-	if(NetStats_PacketLossPercent(playerid) > 2.0)
+	//printf("Packet Loss: %f", NetStats_PacketLossPercent(playerid));
+	//if(NetStats_PacketLossPercent(playerid) > 2.0)
+	if(!IsPlayerSynced(playerid) || GetPacketLoss(playerid) > 2.0)
 	{
-		SendClientMessage(playerid, COLOR_ERROR, "Il tuo livello di pacchetti persi risulta elevato.");
+		SendClientMessage(playerid, COLOR_ERROR, "Non risulti syncato, rilogga per continuare a giocare.");
 		SendClientMessage(playerid, COLOR_ERROR, "Pertanto, alcuni comandi ti sono stati bloccati.");
 		return 0;
 	}
@@ -537,7 +549,6 @@ hook OnPlayerConnect(playerid)
 		KickEx(playerid);
 		return 0;
 	}
-	LoadPlayerTextDraws(playerid);
 
 	#if defined FAKE_LOGIN
 		Account_SetLogged(playerid, true);
@@ -704,9 +715,6 @@ stock IsPlayerIDConnected(dbid)
 // ===== [ FACTION SYSTEM ] =====
 #include <faction_system\core>
 
-// ===== [ WEATHER SYSTEM ] =====
-#include <weather_system\core>
-
 // ===== [ CHOPSHOP SYSTEM ] =====
 #include <chopshop_system\core>
 #include <chopshop_system\commands>
@@ -732,13 +740,3 @@ stock IsPlayerIDConnected(dbid)
 #if defined ENABLE_MAPS
 	#include <server\maps\maps>
 #endif
-
-
-
-stock AC_ResetPlayerWeapons(playerid, bool:deleteFromDatabase = false)
-{
-	ResetPlayerWeapons(playerid);
-	if(deleteFromDatabase)
-		Character_DeleteAllWeapons(playerid);
-	return 1;
-}

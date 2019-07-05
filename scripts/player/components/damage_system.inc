@@ -47,7 +47,11 @@ hook OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
 	if(Character_IsAlive(playerid) || Character_IsInjured(playerid)) // Equivalent to !Character_IsDead(playerid)
 	{
 		new Float:customDamage = Weapon_GetDamage(weaponid);
-		if(customDamage == 0)
+		if(weaponid == 23 && Character_HasTaser(issuerid))
+			customDamage = 3;
+		else if(weaponid == 25 && Character_HasBeanBag(issuerid))
+			customDamage = 7;
+		else if(customDamage == 0)
 			customDamage = amount;
 		Character_AddDamage(playerid, (issuerid != INVALID_PLAYER_ID ? Character_GetRolePlayName(issuerid) : ("Nessuno")), weaponid, customDamage, bodypart);
 

@@ -1,17 +1,8 @@
 #include <YSI_Coding\y_hooks>
 
-static 
-	PlayerWeapons[MAX_PLAYERS][13 char],
-	PlayerAmmo[MAX_PLAYERS][13]
-;
-
-
-hook OnPlayerClearData(playerid)
+CMD:info2(playerid, params[])
 {
-	for(new i = 0; i < 13; ++i)
-	{
-		PlayerWeapons[playerid]{i} = PlayerAmmo[playerid][i] = 0;
-	}
+	SendFormattedMessage(playerid, COLOR_GREEN, "Weapon: %d - AC Weapon: %d", GetPlayerWeapon(playerid), AntiCheatGetWeapon(playerid));
 	return 1;
 }
 
@@ -30,14 +21,16 @@ stock Character_SaveWeapons(playerid)
 	for(new i = 0; i < 13; ++i)
 	{
 		Character_GetWeaponData(playerid, i, weaponid, ammo);
-		if(weaponid == 0 || ammo == 0)
+		if(!weaponid)
+			continue;
+		if(ammo == 0)
 		{
-			// probably causes weapons bug on respawn.
-			format(query, sizeof(query), "DELETE FROM `player_weapons` WHERE weaponid = '%d' AND CharacterID = '%d';", weaponid, Character_GetID(playerid));
+			// removes weaponid from database if empty.
+			format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE WeaponID = '%d' AND CharacterID = '%d';", weaponid, Character_GetID(playerid));
 		}
 		else
 		{
-			format(query, sizeof(query), "INSERT INTO `player_weapons` (CharacterID, WeaponID, Ammo) VALUES('%d', '%d', '%d') ON DUPLICATE KEY UPDATE Ammo = VALUES(Ammo);", Character_GetID(playerid), weaponid, ammo);
+			format(query, sizeof(query), "INSERT INTO `character_weapons` (CharacterID, WeaponID, Ammo) VALUES('%d', '%d', '%d') ON DUPLICATE KEY UPDATE Ammo = VALUES(Ammo);", Character_GetID(playerid), weaponid, ammo);
 		}
 		mysql_pquery(gMySQL, query);
 	}
@@ -62,15 +55,7 @@ stock Character_LoadWeapons(playerid)
 		}
 		printf("Player %d weapons loaded.", playerid);
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT WeaponID, Ammo FROM `player_weapons` WHERE CharacterID = '%d'", Character_GetID(playerid));
-}
-
-stock Character_DeleteAllWeapons(playerid)
-{
-	new query[256];
-	format(query, sizeof(query), "DELETE FROM `player_weapons` WHERE CharacterID = '%d'", Character_GetID(playerid));
-	mysql_pquery(gMySQL, query);
-	return 1;
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT WeaponID, Ammo FROM `character_weapons` WHERE CharacterID = '%d'", Character_GetID(playerid));
 }
 
 stock Character_HasWeaponInSlot(playerid, slotid)
@@ -106,6 +91,10 @@ stock Character_RemoveWeapon(playerid, weaponid)
 		}
 	}
 
+	static query[128];
+	format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE WeaponID = '%d' AND CharacterID = '%d';", weaponid, Character_GetID(playerid));
+	mysql_pquery(gMySQL, query);
+
 	Character_ResetWeapons(playerid);
 
 	for(new slot = 0; slot != 12; slot++)
@@ -119,11 +108,10 @@ stock Character_ResetWeapons(playerid)
 {
 	if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))
 		return 0;
-	for(new slot = 0; slot != 12; slot++)
-	{
-		PlayerWeapons[playerid]{slot} = PlayerAmmo[playerid][slot] = 0;
-	}
 	ResetPlayerWeapons(playerid);
+	new query[256];
+	format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE CharacterID = '%d'", Character_GetID(playerid));
+	mysql_pquery(gMySQL, query);
 	return 1;
 }
 
@@ -131,33 +119,20 @@ stock Character_GiveWeapon(playerid, weaponid, ammo)
 {
 	if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))
 		return 0;
-	if(0 <= weaponid <= 18 || 22 <= weaponid <= 46)
-	{
-		new weaponSlot = Weapon_GetSlot(weaponid);
-		if(16 <= weaponid <= 18 || 22 <= weaponid <= 43)
-		{
-			if(3 <= weaponSlot <= 5 || PlayerWeapons[playerid]{weaponSlot} == weaponid)
-			{
-				PlayerAmmo[playerid][weaponSlot] += ammo;
-			}
-			else
-			{
-				PlayerWeapons[playerid]{weaponSlot} = weaponid;
-				PlayerAmmo[playerid][weaponSlot] = ammo;
-			}
-		}
-		else 
-		{
-			PlayerWeapons[playerid]{weaponSlot} = weaponid;
-			PlayerAmmo[playerid][weaponSlot] = ammo;
-		}
-	}
 	return GivePlayerWeapon(playerid, weaponid, ammo);
 }
 
 stock Character_GetWeapon(playerid)
 {
-	return GetPlayerWeapon(playerid);
+	new weaponid, a;
+	Character_GetCurrentWeaponData(playerid, weaponid, a);
+	return weaponid;
+	//return AntiCheatGetWeapon(playerid);
+}
+
+stock Character_GetCurrentWeaponData(playerid, &weaponid, &ammo)
+{
+	return Character_GetWeaponData(playerid, Weapon_GetSlot(AntiCheatGetWeapon(playerid)), weaponid, ammo);
 }
 
 stock Character_GetAmmo(playerid)
@@ -170,16 +145,7 @@ stock Character_SetWeaponAmmo(playerid, weaponid, ammo)
 	if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))
 		return 0;
 	new slotid = Weapon_GetSlot(weaponid);
-	if(PlayerWeapons[playerid]{slotid} != weaponid)
-		return 0;
 	SetPlayerAmmo(playerid, weaponid, ammo);
-	
-	PlayerAmmo[playerid][slotid] = ammo;
-	
-	if(ammo <= 0)
-	{
-		PlayerWeapons[playerid]{slotid} = PlayerAmmo[playerid][slotid] = 0;
-	}
 	return 1;
 }
 
@@ -187,7 +153,6 @@ stock Character_GetWeaponData(playerid, slotid, &weaponid, &ammo)
 {
 	if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))
 		return 0;
-	weaponid = PlayerWeapons[playerid]{slotid};
-	ammo = PlayerAmmo[playerid][slotid];
-	return 1;
+	new res = AntiCheatGetWeaponData(playerid, slotid, weaponid, ammo);
+	return res;
 }

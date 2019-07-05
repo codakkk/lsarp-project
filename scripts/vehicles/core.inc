@@ -61,7 +61,7 @@ ptask OnPlayerVehicleCheck[1000 + 1](playerid)
 	{
 		
 		new Float:health = Vehicle_GetHealth(vehicleid);
-		if(health < 350.0)
+		if(health < 350.0 && !Account_IsAdminDuty(playerid))
 		{
 			Vehicle_SetEngineOff(vehicleid);
 			SendClientMessage(playerid, COLOR_ERROR, "Il motore del veicolo si è spento poiché è danneggiato.");
@@ -500,7 +500,7 @@ stock Vehicle_Despawn(vehicleid)
 
 stock Vehicle_IsOwner(vehicleid, playerid, bool:onlyEffectiveOwner)
 {
-	if(Vehicle_GetOwnerID(vehicleid) == Character_GetID(playerid) || pAdminDuty[playerid])
+	if(Vehicle_GetOwnerID(vehicleid) == Character_GetID(playerid) || Account_IsAdminDuty(playerid))
 		return 1;
 	if(!onlyEffectiveOwner)
 	{

@@ -1,0 +1,131 @@
+AddCharModel(305, 20001, "lvpdpc2.dff", "lvpdpc2.txd");
+AddCharModel(305, 20002, "lapdpd2.dff", "lapdpd2.txd");
+AddCharModel(287, 20003, "Bianca_1.dff", "Bianca_1.txd");
+AddCharModel(287, 20004, "Bianca_2.dff", "Bianca_2.txd");
+AddCharModel(287, 20005, "Bianca_3.dff", "Bianca_3.txd");
+AddCharModel(287, 20006, "Bianca_4.dff", "Bianca_4.txd");
+AddCharModel(287, 20007, "Bianca_5.dff", "Bianca_5.txd");
+AddCharModel(287, 20008, "Nera_1.dff", "Nera_1.txd");
+AddCharModel(287, 20009, "Bianco_1.dff", "Bianco_1.txd");
+AddCharModel(287, 20010, "Bianco_2.dff", "Bianco_2.txd");
+AddCharModel(287, 20011, "Bianco_3.dff", "Bianco_3.txd");
+AddCharModel(287, 20012, "Bianco_4.dff", "Bianco_4.txd");
+AddCharModel(287, 20013, "Bianco_5.dff", "Bianco_5.txd");
+AddCharModel(287, 20014, "Nero_1.dff", "Nero_1.txd");
+AddCharModel(287, 20015, "wmyjg.dff", "wmyjg.txd");
+AddCharModel(287, 20016, "swmyhp1.dff", "swmyhp1.txd");
+AddCharModel(287, 20017, "maddogg.dff", "maddogg.txd");
+AddCharModel(287, 20018, "vmaff1.dff", "vmaff1.txd");
+AddCharModel(287, 20019, "hmogar.dff", "hmogar.txd");
+AddCharModel(287, 20020, "2.dff", "2.txd");
+AddCharModel(287, 20021, "wbdyg2.dff", "wbdyg2.txd");
+AddCharModel(287, 20022, "vwmybjd.dff", "vwmybjd.txd");
+AddCharModel(287, 20023, "wmopj.dff", "wmopj.txd");
+AddCharModel(287, 20024, "bmyst.dff", "bmyst.txd");
+AddCharModel(287, 20025, "bmycr.dff", "bmycr.txd");
+AddCharModel(287, 20026, "fam2.dff", "fam2.txd");
+AddCharModel(287, 20027, "fam1.dff", "fam1.txd");
+AddCharModel(287, 20028, "wmopj.dff", "wmopj.txd");
+AddCharModel(287, 20029, "ballas3.dff", "ballas3.txd");
+AddCharModel(287, 20030, "male01.dff", "male01.txd");
+AddCharModel(287, 20031, "polo.dff", "polo.txd");
+AddCharModel(287, 20032, "dwarfism.dff", "dwarfism.txd");
+AddCharModel(287, 20033, "sbmycr.dff", "sbmycr.txd");
+AddCharModel(287, 20034, "wmydrug.dff", "wmydrug.txd");
+AddCharModel(287, 20035, "final.dff", "final.txd");
+AddCharModel(287, 20036, "swmyst.dff", "swmyst.txd");
+AddCharModel(287, 20037, "female.dff", "female.txd");
+AddCharModel(287, 20038, "vwmotr2.dff", "vwmotr2.txd");
+AddCharModel(287, 20039, "wmybmx.dff", "wmybmx.txd");
+AddCharModel(287, 20040, "tee.dff", "tee.txd");
+AddCharModel(287, 20041, "zero.dff", "zero.txd");
+AddCharModel(287, 20042, "boboshirt.dff", "boboshirt.txd");
+AddCharModel(287, 20043, "document.dff", "document.txd");
+AddCharModel(287, 20044, "bmyri.dff", "bmyri.txd");
+AddCharModel(287, 20045, "omyst.dff", "omyst.txd");
+AddCharModel(287, 20046, "vmaff3.dff", "vmaff3.txd");
+AddCharModel(287, 20047, "WSHgangornogang.dff", "WSHgangornogang.txd");
+AddCharModel(287, 20048, "torino.dff", "torino.txd");
+AddCharModel(287, 20049, "lsv2.dff", "lsv2.txd");
+AddCharModel(287, 20050, "sweet.dff", "sweet.txd");
+AddCharModel(287, 20051, "bmocd.dff", "bmocd.txd");
+AddCharModel(287, 20052, "bmycr.dff", "bmycr.txd");
+AddCharModel(287, 20053, "1.dff", "1.txd");
+AddCharModel(287, 20054, "rose.dff", "rose.txd");
+AddCharModel(287, 20055, "swmyhp2.dff", "swmyhp2.txd");
+AddCharModel(287, 20056, "sindaco.dff", "sindaco.txd");
+AddCharModel(287, 20057, "wmyst.dff", "wmyst.txd");
+AddCharModel(287, 20058, "cesar.dff", "cesar.txd");
+AddCharModel(287, 20059, "somyst.dff", "somyst.txd");
+AddCharModel(287, 20060, "kurtka.dff", "kurtka.txd");
+AddCharModel(287, 20061, "bmypol.dff", "bmypol.txd");
+AddCharModel(287, 20062, "gangrl3.dff", "gangrl3.txd");
+AddCharModel(287, 20063, "wmoprea.dff", "wmoprea.txd");
+AddCharModel(287, 20064, "wmybu.dff", "wmybu.txd");
+AddCharModel(287, 20065, "claude.dff", "claude.txd");
+AddCharModel(287, 20066, "persn7.dff", "persn7.txd");
+AddCharModel(287, 20067, "wfyclot.dff", "wfyclot.txd");
+AddCharModel(287, 20068, "wfyclot.dff", "wfyclot.txd");
+AddCharModel(287, 20069, "smoke.dff", "smoke.txd");
+AddCharModel(287, 20070, "wmyri.dff", "wmyri.txd");
+AddCharModel(287, 20071, "rename.dff", "rename.txd");
+AddCharModel(287, 20072, "vmaff2.dff", "vmaff2.txd");
+AddCharModel(287, 20073, "gungrl3.dff", "gungrl3.txd");
+AddCharModel(287, 20074, "omyri.dff", "omyri.txd");
+
+
+
+
+
+///////////////PRIVATE/////////////////////
+AddCharModel(287, 20250, "maffa.dff", "maffa.txd");
+AddCharModel(287, 24019, "sebi.dff", "sebi.txd");
+AddCharModel(12, 25444, "kocis.dff", "kocis.txd");
+
+////////////////GUARDIA NAZIONALE//////////////////
+AddCharModel(287, 20200, "Bianco1.dff", "Bianco1.txd");
+AddCharModel(287, 20201, "bianco2.dff", "bianco2.txd");
+AddCharModel(287, 20202, "bianco3.dff", "bianco3.txd");
+AddCharModel(287, 20203, "nero1.dff", "nero1.txd");
+AddCharModel(287, 20204, "nero2.dff", "nero2.txd");
+AddCharModel(287, 20205, "nero3.dff", "nero3.txd");
+AddCharModel(287, 20206, "Bianco1.dff", "Bianco1.txd");
+AddCharModel(287, 20207, "bianco4.dff", "bianco4.txd");
+AddCharModel(287, 20208, "bianca1.dff", "bianca1.txd");
+AddCharModel(287, 20209, "nera1.dff", "nera1.txd");
+////lennie///
+AddCharModel(287, 20210, "sbob.dff", "sbob.txd");
+
+
+
+AddSimpleModel(-1,19142, -1000, "Giubbotto_3.dff", "Giubbotto_3.txd");
+AddSimpleModel(-1,19142, -1001, "Giubbotto_1.dff", "Giubbotto_1.txd");
+AddSimpleModel(-1,19142, -1002, "giubbotto_deserto2.dff", "giubbotto_deserto2.txd");
+AddSimpleModel(-1,18939, -1003, "Cappello_Militare.dff", "Cappello_Militare.txd");
+AddSimpleModel(-1,19115, -1004, "casco_korkom.dff", "casco_korkom.txd");
+AddSimpleModel(-1,19115, -1005, "elmetto_boschivo.dff", "elmetto_boschivo.txd");
+AddSimpleModel(-1,19115, -1006, "elmetto_deserto.dff", "elmetto_deserto.txd");
+AddSimpleModel(-1,19773, -1007, "fondina.dff", "fondina.txd");
+AddSimpleModel(-1,19033, -1008, "occhiali_deserto.dff", "occhiali_deserto.txd");
+AddSimpleModel(-1,19559, -1009, "Zaino_Obj.dff", "Zaino_Obj.txd");
+AddSimpleModel(-1,19115, -1010, "CascoAntiso.dff", "CascoAntiso.txd");
+AddSimpleModel(-1,19270, -1010, "campfire.dff", "campfire.txd");
+AddSimpleModel(-1,19142, -1011, "swatarmour1.dff", "swatarmour1.txd");
+AddSimpleModel(-1,19142, -1012, "swatgrey.dff", "swatgrey.txd");
+AddSimpleModel(-1,19142, -1013, "pilotchest.dff", "pilotchest.txd");
+AddSimpleModel(-1,19472, -1014, "gasmask01.dff", "gasmask01.txd");
+AddSimpleModel(-1,19472, -1015, "gasmaskgn.dff", "gasmaskgn.txd");
+AddSimpleModel(-1,324, -1016, "gun_vibe1.dff", "gun_vibe1.txd");
+AddSimpleModel(-1,19033, -1017, "irgoggles.dff", "irgoggles.txd");
+AddSimpleModel(-1,19559, -1018, "gun_para.dff", "gun_para.txd");
+AddSimpleModel(-1,19559, -1019, "gun_paragn.dff", "gun_paragn.txd");
+AddSimpleModel(-1,19559, -1020, "gun_paragn1.dff", "gun_paragn1.txd");
+AddSimpleModel(-1,19559, -1021, "para_pack.dff", "para_pack.txd");
+AddSimpleModel(-1,19142, -1022, "giubbotto_deserto.dff", "giubbotto_deserto.txd");
+
+
+
+
+
+
+

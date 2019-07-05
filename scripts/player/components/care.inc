@@ -55,7 +55,7 @@ stock Character_AcceptCare(playerid)
 	
 	Character_SetCarePlayer(playerid, INVALID_PLAYER_ID);
 
-	if(!pAdminDuty[playerid] && !pAdminDuty[senderid])
+	if(!Account_IsAdminDuty(playerid) && !Account_IsAdminDuty(senderid))
 	{
 		ApplyAnimation(senderid, "MEDIC", "CPR", 4.1, 0, 0, 0, 0, 0, 1);
 		ApplyAnimation(playerid, "PED", "KO_shot_stom", 4.0, 0, 1, 1, 1, 0, 1);

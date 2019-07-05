@@ -1,4 +1,15 @@
-stock LoadPlayerTextDraws(playerid)
+
+#include <YSI_Coding\y_hooks>
+
+new
+	PlayerText:pMoneyTD[MAX_PLAYERS],
+	PlayerText:pInfoText[MAX_PLAYERS],
+	PlayerText:pVehicleFuelText[MAX_PLAYERS],
+	PlayerText:pJailTimeText[MAX_PLAYERS],
+	PlayerText:pDeathTextDraw[MAX_PLAYERS]
+;
+
+hook OnPlayerConnect(playerid)
 {
 	pInfoText[playerid] = CreatePlayerTextDraw(playerid, 23.000000, 180.000000, "Testo");
 	PlayerTextDrawUseBox(playerid, pInfoText[playerid],1);
@@ -47,4 +58,6 @@ stock LoadPlayerTextDraws(playerid)
 	PlayerTextDrawSetOutline(playerid, pDeathTextDraw[playerid], 1);
 	PlayerTextDrawSetProportional(playerid, pDeathTextDraw[playerid], 1);
 	PlayerTextDrawSetSelectable(playerid, pDeathTextDraw[playerid], 0);
+	
+	return 1;
 }

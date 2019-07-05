@@ -1,27 +1,21 @@
-/*enum E_SERVER_INFO
-{
-	CurrentWeather,
-	NextWeather,
-};
+#include <server\components\clock>
+#include <server\components\weather>
 
-static new ServerInfo[E_SERVER_INFO];
+#include <YSI_Coding\y_hooks>
 
-stock Server_SetCurrentWeather(weatherid)
+enum E_SERVER_INFO
 {
-	ServerInfo[CurrentWeather] = weatherid;
+	TimeAdd
 }
 
-stock Server_GetCurrentWeather()
+static ServerInfo[E_SERVER_INFO];
+
+stock Server_SetTimeAdd(timeToAdd)
 {
-	return ServerInfo[CurrentWeather];
+	ServerInfo[TimeAdd] = timeToAdd;
 }
 
-stock Server_SetNextWeather(weatherid)
+stock Server_GetTimeAdd()
 {
-	ServerInfo[NextWeather] = weatherid;
+	return ServerInfo[TimeAdd];
 }
-
-stock Server_GetNextWeather()
-{
-	return ServerInfo[NextWeather];
-}*/

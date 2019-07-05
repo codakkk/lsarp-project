@@ -1,6 +1,12 @@
 #include <YSI_Coding\y_hooks>
 
-new pLastPickup[MAX_PLAYERS];
+static pLastPickup[MAX_PLAYERS];
+
+hook OnPlayerClearData(playerid)
+{
+	Character_SetLastPickup(playerid, -1);
+	return 1;
+}
 
 hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
 {
@@ -16,10 +22,10 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
 		{
 			if(Building_GetOwnerID(buildingid) != 0)
 			{
-				new bname[MAX_BUILDING_NAME], ownerName[MAX_PLAYER_NAME];
+				new bname[MAX_BUILDING_NAME];
 				Building_GetName(buildingid, bname);
-				Building_GetOwnerName(buildingid, ownerName);
-				string += str_format("~y~%s~n~~w~Proprietario: ~y~%s~w~.~n~", bname, ownerName);
+				//Building_GetOwnerName(buildingid, ownerName);
+				string += str_format("~y~%s~n~~w~Proprietario: ~y~%s~w~.~n~", bname, Character_GetNameFromDatabase(Building_GetOwnerID(buildingid), true));
 			}
 			else
 			{
@@ -45,7 +51,9 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
 		}
 		if(House_IsOwned(houseid))
 		{
-			string += str_format("~y~Proprietario: ~w~%S~n~", House_GetOwnerNameStr(houseid));
+			//static name[MAX_PLAYER_NAME];
+			
+			string += str_format("~y~Proprietario: ~w~%s~n~", Character_GetNameFromDatabase(House_GetOwnerID(houseid), true));
 			if(House_GetOwnerID(houseid) == PlayerInfo[playerid][pID])
 			{
 				if(Account_HasHotKeysEnabled(playerid))

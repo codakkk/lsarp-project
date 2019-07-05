@@ -4,7 +4,6 @@
 	"port": 7777,
 	"hostname": "Los Santos Apocalypse Roleplay",
 	"filterscripts": [
-		
 	],
 	"plugins": [
 				"Zeex/crashdetect:v4.19.4", 
@@ -15,5 +14,6 @@
 				"maddinat0r/sscanf:v2.8.3",
 				"IllidanS4/PawnPlus:v1.1-pre"
 			],
-	"maxplayers": 32
+	"maxplayers": 32,
+	"announce": false
 }

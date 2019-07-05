@@ -10,12 +10,12 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
 	if(newkeys & KEY_NO/* && (GetTickCount() - PlayerInfo[playerid][pKeyTick]) > 2500*/)
 	{
-		if(pAnimLoop{playerid} == true)
+		if(Character_IsAnimLoop(playerid))
 		{
 			ClearAnimations(playerid);
 			ApplyAnimation(playerid, "CARRY", "crry_prtial", 2.0, 0, 0, 0, 0, 0);
 			TextDrawHideForPlayer(playerid, txtAnimHelper);
-			pAnimLoop{playerid} = false;
+			Character_SetAnimLoop(playerid, false);
 		}
 	}
 	return Y_HOOKS_CONTINUE_RETURN_1;

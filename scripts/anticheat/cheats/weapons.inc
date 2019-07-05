@@ -59,7 +59,7 @@ stock AC_RemovePlayerWeapon(playerid, weaponid)
 		}
 	}
 	new query[128];
-	format(query, sizeof(query), "DELETE FROM `player_weapons` WHERE CharacterID = '%d' AND WeaponID = '%d'", Character_GetID(playerid), weaponid);
+	format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE CharacterID = '%d' AND WeaponID = '%d'", Character_GetID(playerid), weaponid);
 	mysql_pquery(gMySQL, query);
 
 	ResetPlayerWeapons(playerid);

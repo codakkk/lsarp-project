@@ -164,6 +164,16 @@ stock Character_IsSelectingUniform(playerid)
 	return Bit_Get(gCharacterBitState[e_pSelectingUniform], playerid);
 }
 
+stock Character_SetBuyingVehicle(playerid, bool:value)
+{
+	Bit_Set(gCharacterBitState[e_pBuyingVehicle], playerid, value);
+}
+
+stock Character_IsBuyingVehicle(playerid)
+{
+	return Bit_Get(gCharacterBitState[e_pBuyingVehicle], playerid);
+}
+
 stock Character_AddPayCheck(playerid, amount)
 {
 	PlayerInfo[playerid][pPayCheck] += amount;

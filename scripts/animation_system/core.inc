@@ -1,3 +1,14 @@
+
+stock bool:Character_IsAnimLoop(playerid)
+{
+	return Bit_Get(gCharacterBitState[e_pAnimLoop], playerid);
+}
+
+stock Character_SetAnimLoop(playerid, bool:set)
+{
+	Bit_Set(gCharacterBitState[e_pAnimLoop], playerid, set);
+}
+
 stock AnimationCheck(playerid)
 {
 	return (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && !Character_IsDead(playerid) && !Character_IsFreezed(playerid) && !Character_IsCuffed(playerid) && !Character_IsStunned(playerid));
@@ -11,17 +22,17 @@ stock ClearAnimationsEx(playerid, bool:animCheck = true)
 	ApplyAnimation(playerid, "CARRY", "crry_prtial", 2.0, 0, 0, 0, 0, 0);
 	SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
 	TextDrawHideForPlayer(playerid, txtAnimHelper);
-	pAnimLoop{playerid} = false;
+	Character_SetAnimLoop(playerid, false);
 	return 1;
 }
 
 // Used for looped animations.
 stock ApplyAnimationEx(playerid, animlib[], animname[], Float:fDelta, loop, lockx, locky, freeze, time, forcesync = 0)
 {
-	if(pAnimLoop{playerid}) TextDrawHideForPlayer(playerid, txtAnimHelper);
+	if(Character_IsAnimLoop(playerid)) TextDrawHideForPlayer(playerid, txtAnimHelper);
 	ApplyAnimation(playerid, animlib, animname, fDelta, loop, lockx, locky, freeze, time, forcesync);
 
-	pAnimLoop{playerid} = true;
+	Character_SetAnimLoop(playerid, true);
 	//Player_Info(playerid, "Premi ~y~N~w~ per fermare l'animazione.");
 	TextDrawShowForPlayer(playerid,txtAnimHelper);
 	return 1;

@@ -53,7 +53,7 @@ hook OnCharacterDisconnected(playerid)
 hook OnPlayerExitVehicle(playerid, vehicleid)
 {
 	new seat = GetPlayerVehicleSeat(playerid);
-	if(Vehicle_IsLocked(vehicleid)&& !pAdminDuty[playerid])
+	if(Vehicle_IsLocked(vehicleid)&& !Account_IsAdminDuty(playerid))
 	{
 		if(Vehicle_GetOwnerID(vehicleid) != Character_GetID(playerid))// && (!IsABike(vehicleid) && !IsAMotorBike(vehicleid)))
 		{
@@ -73,7 +73,7 @@ hook OnPlayerExitVehicle(playerid, vehicleid)
 hook OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
 {
 	printf("OnPlayerEnterVehicle - %d - %d", vehicleid, Vehicle_IsLocked(vehicleid) ? 1 : 0);
-	if(Vehicle_IsLocked(vehicleid) && !pAdminDuty[playerid])
+	if(Vehicle_IsLocked(vehicleid) && !Account_IsAdminDuty(playerid))
 	{
 		/*if(Vehicle_IsOwner(vehicleid, playerid, false))
 		{
@@ -133,7 +133,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 		return Y_HOOKS_CONTINUE_RETURN_0;
 	if(Account_HasHotKeysEnabled(playerid))
 	{
-		if(!gBuyingVehicle[playerid])
+		if(!Character_IsBuyingVehicle(playerid))
 		{
 			if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
 			{

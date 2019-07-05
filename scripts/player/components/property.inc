@@ -152,8 +152,8 @@ stock Character_BuyHouse(playerid, houseid)
     if(House_GetOwnerID(houseid) != 0)
 	   return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
 
-    if(Character_HasHouseKey(playerid))
-	   return SendClientMessage(playerid, COLOR_ERROR, "Sei già proprietario di una casa.");
+    //if(Character_HasHouseKey(playerid))
+	   //return SendClientMessage(playerid, COLOR_ERROR, "Sei già proprietario di una casa.");
 
     new price = House_GetPrice(houseid);
     if(Character_GetMoney(playerid) < price)

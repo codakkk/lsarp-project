@@ -1,36 +1,3 @@
-stock Character_AMe(playerid, text[], GLOBAL_TAG_TYPES:...)
-{
-    gPlayerAMeExpiry[playerid] = 4; // Seconds
-
-    new 
-	   textString[148],
-	   temp[148];
-    format(textString, sizeof(textString), text, ___2);
-
-    format(temp, sizeof(temp), "> %s ", textString);
-    SendTwoLinesMessage(playerid, 0xD0AEEBFF, "%s %s ", Character_GetRolePlayName(playerid), textString); //0xD6C3E3FF
-    
-    format(temp, 120, "%s", textString);
-	if(strlen(temp) > 43)
-	    strins(temp, "-\n-", 43, sizeof(temp));
-	if(strlen(temp) > 95)
-	    strins(temp, "-\n-", 90, sizeof(temp));
-	strins(temp, "* ", 0, sizeof(temp));
-	strins(temp, " *", strlen(temp), sizeof(temp));
-
-    UpdateDynamic3DTextLabelText(gPlayerAMe3DText[playerid], 0xD0AEEBFF, temp);
-    
-
-    new Float:x, Float:y, Float:z;
-    GetPlayerPos(playerid, x, y, z);
-    foreach(new i : Player)
-    {
-	   if(IsPlayerInRangeOfPoint(playerid, 25.0, x, y, z))
-		  Streamer_Update(i);
-    }
-    return 1;
-}
-
 stock Character_CharacterAMe(playerid, otherid, text[], GLOBAL_TAG_TYPES:...)
 {
 	new s[148];
@@ -86,7 +53,7 @@ stock Character_DoLow(playerid, text[], GLOBAL_TAG_TYPES:...)
 
 stock Player_Info(playerid, text[], bool:forced = false, time = 2500)
 {
-	if(pInfoBoxShown[playerid] == true && !forced)
+	if(pInfoBoxShown{playerid} == true && !forced)
 		return 1;
 
 	PlayerTextDrawHide(playerid, pInfoText[playerid]);
@@ -94,7 +61,7 @@ stock Player_Info(playerid, text[], bool:forced = false, time = 2500)
 	PlayerTextDrawShow(playerid, pInfoText[playerid]);
 
 	SetTimerEx("DeleteInfoBox", time, false, "d", playerid);
-	pInfoBoxShown[playerid] = true;
+	pInfoBoxShown{playerid} = true;
 
 	return 1;
 }
@@ -117,7 +84,7 @@ public DeleteInfoBox(playerid)
 {
 	PlayerTextDrawHide(playerid, pInfoText[playerid]);
 
-	pInfoBoxShown[playerid] = false;
+	pInfoBoxShown{playerid} = false;
 
 	return 1;
 }

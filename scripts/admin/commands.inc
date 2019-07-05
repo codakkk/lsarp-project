@@ -5,7 +5,7 @@ CMD:acmds(playerid, params[])
 	{
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /a - /aduty - /goto - /gethere - /jetpack");
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /gotopos - /check - /invcheck - /freeze - /unfreeze");
-		SendClientMessage(playerid, -1, "[MODERATORE JR]: /masks - /n - /setweather - /settime - /resetinv");
+		SendClientMessage(playerid, -1, "[MODERATORE JR]: /masks - /n - /setweather - /settimeadd - /resetinv");
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /resetdrugstats - /drugstats - /setvw");
 		
 	}
@@ -87,39 +87,29 @@ CMD:disablealerts(playerid, params[])
 flags:aduty(CMD_JR_MODERATOR);
 CMD:aduty(playerid, params[])
 {
-	if(pSupporterDuty[playerid])
+	if(Account_IsSupporterDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio supporter.");
-	if(pAdminDuty[playerid])
+	if(Account_IsAdminDuty(playerid))
 	{
-		pAdminDuty[playerid] = 0;
+		Account_SetAdminDuty(playerid, false);
 		SetPlayerName(playerid, PlayerInfo[playerid][pName]);
 		AC_SetPlayerHealth(playerid, 100);
 		AC_SetPlayerArmour(playerid, 0);
 		SendMessageToAdmins(0, COLOR_ADMINCHAT, "[ADMIN] %s (%d) non è più in servizio.", AccountInfo[playerid][aName], playerid);
 		SetPlayerColor(playerid, 0xFFFFFFFF);
-		/*if(IsValidDynamic3DTextLabel(pAdminDuty3DText[playerid]))
-		{
-			DestroyDynamic3DTextLabelEx(pAdminDuty3DText[playerid]);
-		}*/
 	}    
 	else
 	{
 		if(Character_IsMasked(playerid))
 			pc_cmd_sconosciuto(playerid, "");
 		
-		pAdminDuty[playerid] = 1;
+		Account_SetAdminDuty(playerid, true);
 		SetPlayerName(playerid, AccountInfo[playerid][aName]);
 		AC_SetPlayerHealth(playerid, 99999.0);
 		AC_SetPlayerArmour(playerid, 99999.0);
 		//pc_cmd_jetpack(playerid, NULL);
 		SendMessageToAdmins(0, COLOR_ADMINCHAT, "[ADMIN] %s (%d) è in servizio.", AccountInfo[playerid][aName], playerid);
 		SetPlayerColor(playerid, 0xFF6347FF);
-		/*if(IsValidDynamic3DTextLabel(pAdminDuty3DText[playerid]))
-		{
-			DestroyDynamic3DTextLabelEx(pAdminDuty3DText[playerid]);
-			pAdminDuty3DText[playerid] = Text3D:INVALID_3DTEXT_ID;
-		}
-		pAdminDuty3DText[playerid] = CreateDynamic3DTextLabel("Admin", COLOR_ADMINDUTY, 0, 0, 0.3, 30.0, playerid);*/
 	}
 	foreach(new i : Player)
 	{
@@ -127,7 +117,7 @@ CMD:aduty(playerid, params[])
 			continue;
 		if(Character_IsMasked(i))
 		{
-			if(pAdminDuty[playerid])
+			if(Account_IsAdminDuty(playerid))
 			{
 				SetPlayerMarkerForPlayer(playerid, i, 0xFFFF00AA);
 				ShowPlayerNameTagForPlayer(playerid, i, true);
@@ -188,7 +178,7 @@ CMD:setadmin(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Livello Admin non valido.");
 	if(lvl == 0)
 	{
-		if(pAdminDuty[id])
+		if(Account_IsAdminDuty(id))
 			pc_cmd_aduty(id, "");
 		SendFormattedMessage(id, COLOR_ERROR, "[ADMIN] %s (%d) ti ha rimosso dallo staff.", AccountInfo[playerid][aName], playerid);
 		SendFormattedMessage(playerid, COLOR_ERROR, "Hai rimosso %s (%d) dallo staff.", AccountInfo[id][aName], id);
@@ -372,7 +362,6 @@ CMD:jetpack(playerid, params[])
 		SetPlayerSpecialAction(id, SPECIAL_ACTION_NONE);
 	else
 		SetPlayerSpecialAction(id, SPECIAL_ACTION_USEJETPACK);
-	gPlayerJetpack[id] = 1;
 	return 1;
 }
 
@@ -903,14 +892,15 @@ CMD:randomweather(playerid, params[])
 	return 1;
 }
 
-flags:settime(CMD_JR_MODERATOR);
-CMD:settime(playerid, params[])
+flags:settimeadd(CMD_JR_MODERATOR);
+CMD:settimeadd(playerid, params[])
 {
 	new w = strval(params);
 	if(isnull(params) || w < 0 || w > 24)
-		return SendClientMessage(playerid, COLOR_ERROR, "/settime <hour (0-24)>");
-	SendMessageToAdmins(true, COLOR_ADMIN, "%s ha utilizzato il comando /settime. Orario: %d", AccountInfo[playerid][aName], w);
+		return SendClientMessage(playerid, COLOR_ERROR, "/settimeadd <hour (0-24)>");
+	SendMessageToAdmins(true, COLOR_ADMIN, "%s ha utilizzato il comando /settimeadd. Orario: %d", AccountInfo[playerid][aName], w);
 	SetWorldTime(w);
+	Server_SetTimeAdd(w);
 	return 1;
 }
 

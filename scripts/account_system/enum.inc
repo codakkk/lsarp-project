@@ -68,7 +68,9 @@ enum e_Bit1_AccountData
     e_pToggleOOCAll,
     e_pHotKeys,
 	e_pInvMode, // 0: Dialog - 1: Chat
-	e_pToggleHUD
+	e_pToggleHUD,
+	e_pAdminDuty,
+	e_pSupporterDuty
 };
 
 new 

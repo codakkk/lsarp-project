@@ -15,10 +15,10 @@ ptask OnPlayerUniformSelectUpdate[1000](playerid)
 
 hook OnCharacterPreSaveData(playerid, disconnect)
 {
-	if(disconnect && Character_IsFactionDuty(playerid))
+	/*if(disconnect && Character_IsFactionDuty(playerid))
 	{
 		Character_OffDuty(playerid);
-	}
+	}*/
 	return 1;
 }
 
@@ -35,14 +35,14 @@ CMD:ammanetta(playerid, params[])
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 2.5))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore");
 	
-	Character_SetCuffed(id, !bool:Character_IsCuffed(id));
-	if(Character_IsCuffed(playerid))
+	Character_SetCuffed(id, !Character_IsCuffed(id));
+	if(Character_IsCuffed(id))
 	{
 		Character_AMe(playerid, "ammanetta %s.", Character_GetRolePlayName(id));
 	}
 	else
 	{
-		Character_AMe(playerid, "smanetta %s.", Character_GetRolePlayName(id));
+		Character_AMe(playerid, "toglie le manette a %s.", Character_GetRolePlayName(id));
 	}
 	return 1;
 }
@@ -107,7 +107,7 @@ CMD:trascina(playerid, params[])
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 3.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
 
-	if(!Character_IsCuffed(id) || !Character_IsStunned(id))
+	if(!Character_IsCuffed(id) && !Character_IsStunned(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è ammanettato o stordito.");
 	
 	Character_SetDragged(id, true);
@@ -124,9 +124,9 @@ flags:cura(CMD_ALIVE_USER);
 CMD:cura(playerid, params[])
 {
 	new factionid = Character_GetFaction(playerid);
-	if(!pAdminDuty[playerid])
+	if(!Account_IsAdminDuty(playerid))
 	{
-		if(factionid == INVALID_FACTION_ID || (Faction_GetType(factionid) != FACTION_TYPE_POLICE && Faction_GetType(factionid) != FACTION_TYPE_MEDICAL && !pAdminDuty[playerid]))
+		if(factionid == INVALID_FACTION_ID || (Faction_GetType(factionid) != FACTION_TYPE_POLICE && Faction_GetType(factionid) != FACTION_TYPE_MEDICAL && !Account_IsAdminDuty(playerid)))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando.");
 		if(!Character_IsFactionDuty(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non sei in servizio.");
@@ -134,7 +134,7 @@ CMD:cura(playerid, params[])
 	new id;
 	if(sscanf(params, "k<u>", id))
 		return SendClientMessage(playerid, COLOR_ERROR, "/cura <playerid/partofname>");
-	if( (!pAdminDuty[playerid] && id == playerid) || !IsPlayerConnected(id) || !Character_IsLogged(id))
+	if( (!Account_IsAdminDuty(playerid) && id == playerid) || !IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 5.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
@@ -163,7 +163,7 @@ stock Character_OffDuty(playerid)
 	if(pTempSkin[playerid] != 0)
 		SetPlayerSkin(playerid, pTempSkin[playerid]);
 	
-	AC_ResetPlayerWeapons(playerid);
+	Character_ResetWeapons(playerid);
 
 	AC_SetPlayerHealth(playerid, 100.0);
 	AC_SetPlayerArmour(playerid, 0.0);

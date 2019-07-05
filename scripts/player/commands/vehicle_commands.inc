@@ -9,7 +9,7 @@ static
 flags:vmenu(CMD_ALIVE_USER);
 CMD:vmenu(playerid, params[])
 {
-    if(gBuyingVehicle[playerid])
+    if(Character_IsBuyingVehicle(playerid))
         return 1;
     new 
         current_vehicle = GetPlayerVehicleID(playerid),
@@ -340,7 +340,7 @@ CMD:motore(playerid, params[])
     {
 		if(Vehicle_GetFuel(vehicleid) < 0.5)
 			return SendClientMessage(playerid, COLOR_ERROR, "Non c'è benzina nel veicolo.");
-		if(Vehicle_GetHealth(vehicleid) <= 350.0 && !pAdminDuty[playerid])
+		if(Vehicle_GetHealth(vehicleid) <= 350.0 && !Account_IsAdminDuty(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Il motore del veicolo è danneggiato.");
         if(Vehicle_IsOwner(vehicleid, playerid, false))
         {

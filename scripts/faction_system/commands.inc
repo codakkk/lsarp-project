@@ -56,7 +56,27 @@ CMD:fcreate(playerid, params[])
 flags:fedit(CMD_DEVELOPER);
 CMD:fedit(playerid, params[])
 {
-	return Faction_ShowList(playerid);
+	new factionid, what[16];
+	if(sscanf(params, "ds[16]", factionid, what))
+	{
+		SendClientMessage(playerid, COLOR_ERROR, "Ricorda che puoi utilizzare anche: /fedit <factionid> <spawn>");
+		return Faction_ShowList(playerid);
+	}
+	if(!Faction_IsValid(factionid))
+		return SendClientMessage(playerid, COLOR_ERROR, "La fazione inserita non è valida o non è inizializzata.");
+	if(!strcmp(what, "spawn", true))
+	{
+		SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato le coordinate di spawn per la fazione %s qui.", FactionInfo[factionid][fName]);
+		SendMessageToAdmins(false, COLOR_ORANGE, "L'admin %s ha spostato le coordinate di spawn per la fazione %s (ID: %d).", AccountInfo[playerid][aName], FactionInfo[factionid][fName], factionid);
+		Log(AccountInfo[playerid][aName], "", "/fedit <spawn>", factionid);
+		new Float:x, Float:y, Float:z;
+		GetPlayerPos(playerid, x, y, z);
+
+		Faction_SetSpawnPos(factionid, x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
+		Faction_Save(factionid);
+	}
+	else SendClientMessage(playerid, COLOR_ERROR, "/fedit <spawn>");
+	return 1;
 }
 
 flags:afactioncmds(CMD_DEVELOPER);

@@ -14,7 +14,7 @@ CMD:servizio(playerid, params[])
 		if(!Character_IsFactionDuty(playerid))
 		{
 			Character_SetFactionDuty(playerid, true);
-			AC_ResetPlayerWeapons(playerid);
+			Character_ResetWeapons(playerid);
 
 			AC_SetPlayerHealth(playerid, 100.0);
 			AC_SetPlayerArmour(playerid, Faction_GetType(factionid) == FACTION_TYPE_POLICE ? 100.0 : 0.0);

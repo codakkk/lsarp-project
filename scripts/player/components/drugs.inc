@@ -116,7 +116,7 @@ hook OnPlayerCharacterLoad(playerid)
 
 ptask OnPlayerDrugTimer[60000](playerid)
 {
-	if(pAdminDuty[playerid] || !Character_IsLogged(playerid))
+	if(Account_IsAdminDuty(playerid) || !Character_IsLogged(playerid))
 		return Y_HOOKS_CONTINUE_RETURN_1;
 	new drugid = 0;
 	for(new i = 0, j = MAX_PLAYER_DRUGS; i < j; ++i)
@@ -143,7 +143,7 @@ ptask OnPlayerDrugTimer[60000](playerid)
 
 hook OnPlayerAddictionTimer(playerid)
 {
-	if(!Character_IsLogged(playerid) || pAdminDuty[playerid])
+	if(!Character_IsLogged(playerid) || Account_IsAdminDuty(playerid))
 		return 1;	
 	new drugid = 0;
 	for(new i = 0, j = MAX_PLAYER_DRUGS; i < j; ++i)

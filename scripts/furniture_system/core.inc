@@ -624,7 +624,7 @@ stock Furniture_AddToInfoList(playerid, objectid)
     
     format(text, sizeof(text), "ID: %d\n(( Ultima Modifica Da: %s ))", FurnitureCustomData[FURNITURE_LOCAL_ID], Character_GetNameFromDatabase(FurnitureCustomData[FURNITURE_LAST_EDIT_CHARACTER], true));
     
-    if(Account_GetAdminLevel(playerid) > 1 && pAdminDuty[playerid])
+    if(Account_GetAdminLevel(playerid) > 1 && Account_IsAdminDuty(playerid))
     {
         format(text, sizeof(text), "%s\n{{FF6347}(( Account: %s )){FFFFFF}\n{FF6347}(( Object ID: %d )){FFFFFF}", Account_GetNameFromDatabase(Account_GetID(playerid)), objectid);
     }

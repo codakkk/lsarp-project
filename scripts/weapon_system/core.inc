@@ -27,7 +27,7 @@ hook OnGameModeInit()
 hook OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
 {
 	//printf("Weapon System");
-	if(pAdminDuty[playerid] && AccountInfo[playerid][aAdmin] > 1)
+	if(Account_IsAdminDuty(playerid) && AccountInfo[playerid][aAdmin] > 1)
 		return Y_HOOKS_BREAK_RETURN_1;
 
 	//Uncomment if we wanna hide Fall damages from /danni

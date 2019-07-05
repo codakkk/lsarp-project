@@ -87,7 +87,7 @@ CMD:casa(playerid, params[])
 	new pickupid = Character_GetLastPickup(playerid), id, E_ELEMENT_TYPE:type;
 	if(Pickup_GetInfo(pickupid, id, type) && IsPlayerInRangeOfPickup(playerid, pickupid, 2.0) && (type == ELEMENT_TYPE_HOUSE_ENTRANCE || type == ELEMENT_TYPE_HOUSE_EXIT))
 	{
-		if(House_GetOwnerID(id) == Character_GetID(playerid) || pAdminDuty[playerid])
+		if(House_GetOwnerID(id) == Character_GetID(playerid) || Account_IsAdminDuty(playerid))
 		{
 			// REMEMBER TO EDIT THE HOTKEY PART IF THIS DIALOG IS EDITED
 			Dialog_Show(playerid, Dialog_House, DIALOG_STYLE_LIST, "Casa", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nCambia Interior", "Continua", "Chiudi");

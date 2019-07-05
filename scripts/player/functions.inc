@@ -30,7 +30,6 @@ stock OnCharacterLoad(playerid)
     SetPlayerScore(playerid, PlayerInfo[playerid][pLevel]);
 
     SetPlayerName(playerid, PlayerInfo[playerid][pName]); // disable to avoid GTA restart everytime during "debugging"
-    gPlayerAMe3DText[playerid] = CreateDynamic3DTextLabel(" ", 0xFFFFFFFF, 0.0, 0.0, 0.30, 15.0, playerid, _, 1);
     
     AC_SetPlayerHealth(playerid, 100);
 
@@ -107,6 +106,16 @@ stock LoadCharacterResult(playerid)
 		new tmp;
 		cache_get_value_index_int(0, 33, tmp);
 		Character_SetHunger(playerid, tmp);
+
+		cache_get_value_index_int(0, 34, tmp);
+		printf("Faction Duty: %d", tmp);
+		Character_SetFactionDuty(playerid, tmp ? true : false);
+
+		cache_get_value_index_int(0, 35, tmp);
+		Character_SetSpawnPoint(playerid, tmp);
+
+		cache_get_value_index_int(0, 36, tmp);
+		Character_SetSpawnPointExtraID(playerid, tmp);
 		return 1;
     }
     return 0;
@@ -134,7 +143,7 @@ stock Character_Save(playerid, spawned = true, disconnected = false)
     AC_GetPlayerHealth(playerid, hp);
     AC_GetPlayerArmour(playerid, armour);
 
-	if(pAdminDuty[playerid])
+	if(Account_IsAdminDuty(playerid))
 	{
 		hp = 100.0;
 		armour = 0.0;
@@ -151,7 +160,10 @@ stock Character_Save(playerid, spawned = true, disconnected = false)
 		FightStyle = '%d', ChatStyle = '%d', WalkStyle = '%d', \
 		Banned = '%d', BanExpiry = '%d', \
 		LastChopShopTime = '%d', \
-		Hunger = '%d' \
+		Hunger = '%d', \
+		FactionDuty = '%d', \
+		SpawnPoint = '%d', \
+		SpawnPointExtraID = '%d' \
 	   	WHERE ID = '%d'", 
 	   	Character_GetMoney(playerid), Character_GetLevel(playerid), PlayerInfo[playerid][pAge], PlayerInfo[playerid][pSex], 
 	   	_x, _y, _z, angle, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid),
@@ -165,6 +177,9 @@ stock Character_Save(playerid, spawned = true, disconnected = false)
 		Character_IsBanned(playerid), Character_GetBanExpiry(playerid),
 		Character_GetLastChopShopTime(playerid),
 		Character_GetHunger(playerid),
+		Character_IsFactionDuty(playerid),
+		Character_GetSpawnPoint(playerid),
+		Character_GetSpawnPointExtraID(playerid),
 	   	Character_GetID(playerid));
 	
     // Save A' Mammt
@@ -182,7 +197,7 @@ stock Character_Delete(playerid, character_db_id, character_name[])
     mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `character_inventory` WHERE CharacterID = '%d'", character_db_id);
     mysql_tquery(gMySQL, query);
 
-	format(query, sizeof(query), "DELETE FROM `player_weapons` WHERE CharacterID = '%d'", character_db_id);
+	format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE CharacterID = '%d'", character_db_id);
 	mysql_pquery(gMySQL, query);
 
     inline OnVehicles()

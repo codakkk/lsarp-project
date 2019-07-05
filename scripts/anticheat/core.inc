@@ -98,7 +98,7 @@ ptask AntiCheatTimer[250](playerid)
 	if(AccountInfo[playerid][aAdmin] > 1)
 		return Y_HOOKS_CONTINUE_RETURN_1;
 	
-	if(GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_USEJETPACK && !gPlayerJetpack[playerid])
+	if(GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_USEJETPACK)
 	{
 		SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
 	}

@@ -35,12 +35,7 @@ hook OnPlayerClearData(playerid)
 
 hook OnCharacterSpawn(playerid)
 {
-	if(IsValidDynamic3DTextLabel(PlayerDeathState[playerid][pDeathText]))
-		DestroyDynamic3DTextLabelEx(PlayerDeathState[playerid][pDeathText]);
-	PlayerTextDrawHide(playerid, pDeathTextDraw[playerid]);
-	Character_SetDeathState(playerid, DEATH_STATE_NONE);
-	Character_SetDeathTime(playerid, 0);
-	Character_OffDuty(playerid);
+	Character_ResetDeathState(playerid);
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
@@ -125,14 +120,6 @@ hook OnPlayerDeath(playerid, killerid, reason)
 		Character_GetWeaponData(playerid, x, weapons[x], ammo[x]);
 		pTempWeapons[playerid][x] = weapons[x];
 		pTempAmmo[playerid][x] = ammo[x];
-		/*GetPlayerWeaponData(playerid, x, weapons[x], ammo[x]);
-		if(!AC_AntiWeaponCheck(playerid, weapons[x], ammo[x]) || !ammo[x])
-		{
-  			weapons[x] = 0;
-  			ammo[x] = 0;
-		}
-		ACInfo[playerid][acWeapons][x] = weapons[x];
-		ACInfo[playerid][acAmmo][x] = ammo[x];*/
 	}
 
 	if(deathState == DEATH_STATE_INJURED)
@@ -145,6 +132,7 @@ hook OnPlayerDeath(playerid, killerid, reason)
 	else if(deathState == DEATH_STATE_DEAD)
 	{
 		Character_SetDeathTime(playerid, GetTickCount());
+		Character_OffDuty(playerid);
 	}
 	printf("OnCharacterDeath End");
 	return Y_HOOKS_CONTINUE_RETURN_1;
@@ -189,8 +177,8 @@ hook OnPlayerSpawn(playerid)
 		}
 		else if(deathState == DEATH_STATE_DEAD)
 		{
-			
-			AC_ResetPlayerWeapons(playerid, true);
+			Character_OffDuty(playerid);
+			Character_ResetWeapons(playerid);
 			
 			AC_SetPlayerHealth(playerid, 9999.0); // Sets invincible
 			
@@ -245,7 +233,7 @@ CMD:respawnme(playerid, params[])
 	new death_time = GetTickCount() - Character_GetDeathTime(playerid);
 	if(death_time < DEATH_TIME_AS_SECONDS * 1000/*120000*/)
 		return SendFormattedMessage(playerid, COLOR_ERROR, "Devi aspettare ancora %d secondi prima di poter digitare il comando.", DEATH_TIME_AS_SECONDS - death_time/1000);
-	AC_ResetPlayerWeapons(playerid, true);
+	Character_ResetWeapons(playerid);
 	Character_Spawn(playerid);
 	return 1;
 }
@@ -254,6 +242,7 @@ stock Character_ResetDeathState(playerid)
 {
 	if(IsValidDynamic3DTextLabel(PlayerDeathState[playerid][pDeathText]))
 		DestroyDynamic3DTextLabelEx(PlayerDeathState[playerid][pDeathText]);
+	PlayerTextDrawHide(playerid, pDeathTextDraw[playerid]);
 	new CleanPlayerDeathState[e_DeathState];
 	PlayerDeathState[playerid] = CleanPlayerDeathState;
 }

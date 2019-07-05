@@ -2,7 +2,7 @@
 
 hook OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
 {
-    if(AccountInfo[playerid][aAdmin] <= 0 || !pAdminDuty[playerid])
+    if(AccountInfo[playerid][aAdmin] <= 0 || !Account_IsAdminDuty(playerid))
 	   return 0;
     SetPlayerPos(playerid, fX, fY, fZ);
     return 1;

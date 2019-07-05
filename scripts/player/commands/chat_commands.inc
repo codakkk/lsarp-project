@@ -127,7 +127,7 @@ CMD:b(playerid, params[])
     if(isnull(params) || strlen(params) > 128) 
         return SendClientMessage(playerid, COLOR_ERROR, "/b <testo>");
     new String:string;
-    if(pAdminDuty[playerid])
+    if(Account_IsAdminDuty(playerid))
     {
         string = str_format("{FFFFFF}(( {FF4500}%s{FFFFFF} [%d]: %s ))", AccountInfo[playerid][aName], playerid, params);
         //ProxDetectorStr(playerid, 15.0, string, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, true);

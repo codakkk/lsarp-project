@@ -236,7 +236,7 @@ CMD:accetta(playerid, params[])
 
 CMD:annulla(playerid, params[])
 {
-	if(gBuyingVehicle[playerid])
+	if(Character_IsBuyingVehicle(playerid))
     {
         return Dealership_PlayerCancelBuy(playerid);
     }
@@ -265,7 +265,7 @@ CMD:annulla(playerid, params[])
 flags:compra(CMD_ALIVE_USER);
 CMD:compra(playerid, params[])
 {
-	if(gBuyingVehicle[playerid])
+	if(Character_IsBuyingVehicle(playerid))
 	{
 		return Dealership_PlayerConfirmBuy(playerid);
 	}

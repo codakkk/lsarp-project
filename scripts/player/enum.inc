@@ -79,6 +79,8 @@ enum e_Bit1_Data
 	e_pDragging,
 	e_pMasked,
 	e_pLegHit,
+	e_pAnimLoop,
+	e_pBuyingVehicle, // Is Buying something
 };
 
 new 
