@@ -64,8 +64,14 @@ stock CheckAccount(playerid)
 		}
 		else
 		{
-			string = str_format("Benvenuto %s.\nQuesto account non risulta registrato.\nInserisci una password per registrarti!\nN.B: Minimo 6 caratteri. Massimo 16.", name);
-			Dialog_Show_s(playerid, Dialog_Register, DIALOG_STYLE_PASSWORD, @("Account non registrato"), string, "Ok", "");
+			#if ALLOW_NEW_USERS
+				string = str_format("Benvenuto %s.\nQuesto account non risulta registrato.\nInserisci una password per registrarti!\nN.B: Minimo 6 caratteri. Massimo 16.", name);
+				Dialog_Show_s(playerid, Dialog_Register, DIALOG_STYLE_PASSWORD, @("Account non registrato"), string, "Ok", "");
+			#else
+				Dialog_Show_s(playerid, Dialog_Register, DIALOG_STYLE_PASSWORD, @("Account non registrato"), @("Benvenuto.\nQuesto account non risulta registrato.\nAttualmente non è possibile effettuare l'accesso.\nSe fai parte del team dei tester, contatta Coda.\nBYE"), "Oh shit", "");
+			#endif
+			KickEx(playerid);
+			
 		}
     }
     MySQL_TQueryInline(gMySQL, using inline AccountCheckCallback, "SELECT ID FROM accounts WHERE LOWER(Name) = LOWER('%e')", name);

@@ -12,11 +12,11 @@ CMD:fazione(playerid, params[])
 	if(!Character_IsFactionOOCEnabled(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Hai disabilitato la chat OOC di fazione! Per attivarla usa /togf");
 	
-	new String:string = str_format("(( [FAZIONE]: %S %s (%d): %s ))", 
-		Faction_GetRankNameStr(factionid, Character_GetRank(playerid)-1), 
-		Character_GetOOCName(playerid), 
-		playerid, params);
-	Faction_SendMessageStr(playerid, COLOR_SLATEBLUE, string);
+	//new String:string = str_format("(( [FAZIONE]: %S %s (%d): %s ))", 
+		//Faction_GetRankNameStr(factionid, Character_GetRank(playerid)-1), 
+		//Character_GetOOCName(playerid), 
+		//playerid, params);
+	//Faction_SendMessageStr(playerid, COLOR_SLATEBLUE, string);
 	return 1;
 }
 alias:fazione("f");

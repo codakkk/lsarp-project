@@ -333,6 +333,16 @@ stock Character_SetLastChopShopTime(playerid, time)
 	PlayerInfo[playerid][pLastChopShopTime] = time;
 }
 
+stock Character_HasChopShopPrivileges(playerid)
+{
+	return Bit_Get(gCharacterBitState[e_pCanChopShop], playerid);
+}
+
+stock Character_SetChopShopPrivileges(playerid, bool:can)
+{
+	Bit_Set(gCharacterBitState[e_pCanChopShop], playerid, can);
+}
+
 // Returns a PP List with all house ids owned (not affittate) by playerid.
 // Remember to delete List with list_delete/list_delete_deep
 stock List:Character_GetOwnedHouses(playerid)
@@ -367,6 +377,8 @@ stock Character_GetNearHouseID(playerid, bool:inside = false)
 stock Character_GetNearHouseIDMenu(playerid)
 {
 	new houseid = Character_GetNearHouseID(playerid);
+	if(houseid == -1)
+		return -1;
 	if(House_GetOwnerID(houseid) == Character_GetID(playerid))
 		return houseid;
 	if(House_GetID(houseid) == Character_GetHouseKey(playerid))

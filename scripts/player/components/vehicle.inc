@@ -152,7 +152,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 				new vehicleid = GetPlayerVehicleID(playerid);
 				if(vehicleid <= 0)
 					vehicleid = Character_GetClosestVehicle(playerid, 3.5);
-				if(Vehicle_IsOwner(vehicleid, playerid, false)) //We're owners
+				if(vehicleid > 0 && Vehicle_IsOwner(vehicleid, playerid, false)) //We're owners
 				{
 					if(Vehicle_IsLocked(vehicleid))
 					{

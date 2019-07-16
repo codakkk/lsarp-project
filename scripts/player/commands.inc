@@ -59,9 +59,16 @@ CMD:tog(playerid, params[])
 	{
 		Account_SetHUDEnabled(playerid, !Account_HasHUDEnabled(playerid));
 		if(Account_HasHUDEnabled(playerid))
+		{
 			TextDrawShowForPlayer(playerid, Clock);
+			SetHealthBarVisible(playerid, true);
+		}
 		else
+		{
 			TextDrawHideForPlayer(playerid, Clock);
+			SetHealthBarVisible(playerid, false);
+
+		}
 	}
 	else if(!strcmp(params, "pm", true))
 	{

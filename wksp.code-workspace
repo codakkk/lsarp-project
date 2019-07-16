@@ -19,6 +19,10 @@
 					"cmd": "python ${workspaceRoot}/parse_snippets.py"
 				}
 			]
-		}
+		},
+		"LineCount.includes": [
+			"**/scripts/*.inc",
+			"**/scripts/**"
+		]
 	}
 }

@@ -119,7 +119,7 @@ stock Character_Spawn(playerid)
 			pc_cmd_aduty(playerid, "");
 		}
 	#endif
-
+	Character_ResetDeathState(playerid);
 	AC_SetPlayerHealth(playerid, 100.0);
 	AC_SetPlayerArmour(playerid, 0.0);
 
@@ -179,6 +179,8 @@ stock Character_Spawn(playerid)
 		AC_SetPlayerHealth(playerid, 100.0);
 		AC_SetPlayerArmour(playerid, 0.0);
     }
+	//ClearAnimations(playerid);
+	//ApplyAnimation(playerid, "CARRY", "crry_prtial", 2.0, 0, 0, 0, 0, 0);
 	CallLocalFunction(#OnCharacterSpawn, "d", playerid);
 	return 1;
 }

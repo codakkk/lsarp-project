@@ -74,6 +74,13 @@ hook OnGameModeInit()
 						CONSTRAINT `Account-Characters` FOREIGN KEY (`AccountID`) REFERENCES `accounts` (`ID`) ON DELETE CASCADE \
 						) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=latin1;", false);
 
+	mysql_query(gMySQL, "CREATE TABLE `character_privileges` (\
+						`CharacterID` INT(11) NOT NULL, \
+						`ChopShop` INT(11) NOT NULL DEFAULT 0, \
+						PRIMARY KEY (`CharacterID`), \
+						CONSTRAINT `CharacterPrivileges` FOREIGN KEY (`CharacterID`) REFERENCES `characters` (`ID`) ON DELETE CASCADE \
+						) ENGINE=InnoDB DEFAULT CHARSET=latin1;", false);
+
     mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS dealerships \
 						(`ID` INT(11) NOT NULL AUTO_INCREMENT, \
 						`Name` VARCHAR(24) NULL, \

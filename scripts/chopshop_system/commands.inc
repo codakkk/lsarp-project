@@ -4,6 +4,9 @@ CMD:chopshop(playerid, params[])
 	if(!IsPlayerInRangeOfPoint(playerid, 10.0, CHOPSHOP_X, CHOPSHOP_Y, CHOPSHOP_Z))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un Chopshop.");
 
+	if(!Character_HasChopShopPrivileges(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non hai i permessi necessari per poter utilizzare questo comando.");
+
 	new vehicle_id = GetPlayerVehicleID(playerid);
 	if(vehicle_id == 0 || vehicle_id == INVALID_VEHICLE_ID)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un veicolo.");
@@ -26,10 +29,10 @@ CMD:chopshop(playerid, params[])
         return 0;
 	}
 
-	if(!Character_CanUseChopShop(playerid))
+	if(!ChopShop_CanCharacterUse(playerid))
 	{
 		new time = gettime() - Character_GetLastChopShopTime(playerid);
-		SendFormattedMessage(playerid, COLOR_ERROR, "Puoi riutilizzare questo comando tra %d minuti.", time/60);
+		SendFormattedMessage(playerid, COLOR_ERROR, "Puoi riutilizzare questo comando tra %d minuti.", (CHOPSHOP_PLAYER_TIME*60 - time)/60);
 		return 0;
 	}
 

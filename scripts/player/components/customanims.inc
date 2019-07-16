@@ -59,10 +59,10 @@ CMD:customanim(playerid, params[])
 				cache_get_value_index(i, 1, tmp);
 				content += str_new(tmp) % @("\t");
 
-				cache_get_value_index(i, 1, tmp);
+				cache_get_value_index(i, 2, tmp);
 				content += str_new(tmp) % @("\t");
 
-				cache_get_value_index_int(i, 0, tmpInt);
+				cache_get_value_index_int(i, 3, tmpInt);
 				if(tmpInt)
 					content += @("Si");
 				else

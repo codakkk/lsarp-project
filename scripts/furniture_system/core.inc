@@ -449,7 +449,6 @@ stock Furniture_Load(worldid)
     
     inline OnLoad()
     {
-        printf("Loading furnitures...");
         new rows = cache_num_rows();
         if(!rows)
             return 1;

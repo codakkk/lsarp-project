@@ -80,6 +80,8 @@ hook OnGameModeInit()
 	gItem_OrangeJuice = ServerItem_InitializeDrinkItem(93, "Succo d'Arancia", 19563, 10);
 	gItem_AppleJuice = ServerItem_InitializeDrinkItem(94, "Succo di mela", 19564, 10);
 
+	gItem_MechanicalComponents = ServerItem_ManualInitializeItem(95, "Componenti Meccanici", ITEM_TYPE_MECHANICAL_COMPONENTS, 19577, 64);
+
     printf("Items loaded. N: %d\n", Iter_Count(ServerItems));
     return 1;
 }

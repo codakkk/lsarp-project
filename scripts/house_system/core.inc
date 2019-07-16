@@ -94,7 +94,17 @@ stock House_DestroyObjects(houseid)
 
 stock House_IsValid(houseid)
 {
-    return 0 <= houseid < list_size(HouseList) && House_GetID(houseid) > 0;
+    return 0 <= houseid < list_size(HouseList) && House_GetID(houseid) > 0 ;
+}
+
+stock House_IsCreated(houseid)
+{
+    return list_get(HouseList, houseid, hCreated);
+}
+
+stock House_SetCreated(houseid, created)
+{
+    list_set_cell(HouseList, houseid, hCreated, created);
 }
 
 stock House_GetData(houseid, data[E_HOUSE_DATA])
@@ -304,11 +314,14 @@ stock House_LoadAll()
 			cache_get_value_index_float(i, 9, data[hExitY]);
 			cache_get_value_index_float(i, 10, data[hExitZ]);
 			cache_get_value_index_int(i, 11, data[hExitInterior]);
+            //cache_get_value_index_int(i, 12, data[hExitWorld]);
 
-			cache_get_value_index_int(i, 12, data[hPrice]);
-			cache_get_value_index_int(i, 13, data[hLocked]);
-			cache_get_value_index_int(i, 15, data[hInterior]);
+			cache_get_value_index_int(i, 13, data[hPrice]);
+			cache_get_value_index_int(i, 14, data[hLocked]);
+			cache_get_value_index_int(i, 15, data[hMoney]);
 			cache_get_value_index_int(i, 16, data[hInterior]);
+
+            cache_get_value_index_int(i, 17, data[hCreated]);
 
             data[hExitWorld] = HOUSE_START_WORLD + i;
 
@@ -324,26 +337,32 @@ stock House_LoadAll()
 
 stock House_Save(houseid)
 {
-    if(!House_IsValid(houseid))
-	   return 0;
-    new data[E_HOUSE_DATA];
-    if(!House_GetData(houseid, data))
+    if(!House_IsValid(houseid) || !House_IsCreated(houseid))
 	   return 0;
     inline OnSave()
     {
 	   //printf("House %d saved successfully.", houseid);
     }
+    new 
+        Float:x, Float:y, Float:z, Float:ex, Float:ey, Float:ez,
+        name[MAX_PLAYER_NAME];
+    
+    House_GetEnterPosition(houseid, x, y, z);
+    House_GetExitPosition(houseid, ex, ey, ez);
+    House_GetOwnerName(houseid, name);
+
     MySQL_TQueryInline(gMySQL, using inline OnSave, "UPDATE `houses` SET \
     OwnerID = '%d', OwnerName = '%e', \
     EnterX = '%f', EnterY = '%f', EnterZ = '%f', EnterInterior = '%d', EnterWorld = '%d', \
     ExitX = '%f', ExitY = '%f', ExitZ = '%f', ExitInterior = '%d', \
-    Price = '%d', Locked = '%d', Money = '%d', Interior = '%d' \
+    Price = '%d', Locked = '%d', Money = '%d', Interior = '%d', Created = '%d' \
     WHERE ID = '%d'", 
-    data[hOwnerID], data[hOwnerName], 
-    data[hEnterX], data[hEnterY], data[hEnterZ], data[hEnterInterior], data[hEnterWorld],
-    data[hExitX], data[hExitY], data[hExitZ], data[hExitInterior],
-    data[hPrice], data[hLocked], data[hMoney], data[hInterior],
-	data[hID]);
+    House_GetOwnerID(houseid), name, 
+    x, y, z, House_GetEnterInterior(houseid), House_GetEnterWorld(houseid),
+    ex, ey, ez, House_GetExitInterior(houseid),
+    House_GetPrice(houseid), House_IsLocked(houseid), House_GetMoney(houseid), House_GetInteriorID(houseid),
+    House_IsCreated(houseid),
+	House_GetID(houseid));
     return 1;
 }
 

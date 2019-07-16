@@ -3189,6 +3189,10 @@
 		"prefix": "Dialog",
 		"body": "Dialog:${1:name}(${2:playerid}, ${3:response}, ${4:listitem}, ${5:inputtext[]})$0\n{\n\t\n\treturn 1;\n}\n"
 	},
+	"DialogResponse": {
+		"prefix": "OnResponse",
+		"body": "OnResponse:${1:name}(${2:playerid}, ${3:response}, ${4:listitem}, ${5:inputtext[]})$0\n{\n\t\n\treturn 1;\n}\n"
+	},
 
 	// SAMP - FILE
 

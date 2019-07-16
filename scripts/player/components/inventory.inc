@@ -51,7 +51,7 @@ hook OnPlayerClearData(playerid)
 hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
 	new ammo = Character_GetAmmo(playerid);
-	if(( /*(GetPlayerWeaponState(playerid) == WEAPONSTATE_LAST_BULLET || IsPlayerInAnyVehicle(playerid)) && */ /*AC_AntiWeaponCheck(playerid, weaponid, ammo) &&*/ ammo <= 1))
+	if(Character_HasWeapon(playerid, weaponid) && ( /*(GetPlayerWeaponState(playerid) == WEAPONSTATE_LAST_BULLET || IsPlayerInAnyVehicle(playerid)) && */ /*AC_AntiWeaponCheck(playerid, weaponid, ammo) &&*/ ammo <= 1))
 	{
 		if(Character_HasSpaceForItem(playerid, weaponid, 1))
 		{
@@ -488,6 +488,11 @@ stock Character_GetSlotAmount(playerid, slotid)
 	return Inventory_GetSlotAmount(playerInv, slotid);
 }
 
+stock Character_GetItemAmount(playerid, itemid)
+{
+	new Inventory:playerInv = Character_GetInventory(playerid);
+	return Inventory_GetItemAmount(playerInv, itemid);
+}
 
 stock Character_HasItem(playerid, itemid, min = 1) return Inventory_HasItem(Character_GetInventory(playerid), itemid, min);
 
@@ -591,6 +596,9 @@ stock Character_SendItemRequest(playerid, toPlayerId, slotid, amount)
 {
 	if(!IsPlayerConnected(toPlayerId) || !Character_IsLogged(toPlayerId))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
+
+	if(playerid == toPlayerId)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi inviare la richiesta a te stesso.");
 
 	if(!IsPlayerInRangeOfPlayer(playerid, toPlayerId, 2.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");

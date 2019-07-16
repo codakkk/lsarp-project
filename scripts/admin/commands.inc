@@ -6,14 +6,14 @@ CMD:acmds(playerid, params[])
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /a - /aduty - /goto - /gethere - /jetpack");
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /gotopos - /check - /invcheck - /freeze - /unfreeze");
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /masks - /n - /setweather - /settimeadd - /resetinv");
-		SendClientMessage(playerid, -1, "[MODERATORE JR]: /resetdrugstats - /drugstats - /setvw");
+		SendClientMessage(playerid, -1, "[MODERATORE JR]: /resetdrugstats - /drugstats - /setvw - /kick - /slap");
 		
 	}
 	if(AccountInfo[playerid][aAdmin] >= 3)
 	{
 		SendClientMessage(playerid, -1, "[MODERATORE]: /setskin - /sethp - /setvhp - /setarmour - /ajail - /unjail");
 		SendClientMessage(playerid, -1, "[MODERATORE]: /vcreate - /vdelete - (/fix)veh - /gotov - /getvhere - /avcolor");
-		SendClientMessage(playerid, -1, "[MODERATORE]: /ban - /unban");
+		SendClientMessage(playerid, -1, "[MODERATORE]: /bancharacter - /unbancharacter");
 	}
 	if(AccountInfo[playerid][aAdmin] >= 4)
 	{
@@ -22,6 +22,7 @@ CMD:acmds(playerid, params[])
 	}
 	if(AccountInfo[playerid][aAdmin] >= 5)
 	{
+		SendClientMessage(playerid, -1, "[DEVELOPER]: /update - /kickall");
 		//SendClientMessage(playerid, -1, "[DEVELOPER]: /giveitem - /apark");
 	}
 	if(IsPlayerAdmin(playerid))
@@ -89,6 +90,7 @@ CMD:aduty(playerid, params[])
 {
 	if(Account_IsSupporterDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio supporter.");
+
 	if(Account_IsAdminDuty(playerid))
 	{
 		Account_SetAdminDuty(playerid, false);
@@ -97,6 +99,8 @@ CMD:aduty(playerid, params[])
 		AC_SetPlayerArmour(playerid, 0);
 		SendMessageToAdmins(0, COLOR_ADMINCHAT, "[ADMIN] %s (%d) non è più in servizio.", AccountInfo[playerid][aName], playerid);
 		SetPlayerColor(playerid, 0xFFFFFFFF);
+		
+		Character_EnableSomeAntiCheats(playerid, 1);
 	}    
 	else
 	{
@@ -110,6 +114,7 @@ CMD:aduty(playerid, params[])
 		//pc_cmd_jetpack(playerid, NULL);
 		SendMessageToAdmins(0, COLOR_ADMINCHAT, "[ADMIN] %s (%d) è in servizio.", AccountInfo[playerid][aName], playerid);
 		SetPlayerColor(playerid, 0xFF6347FF);
+		Character_EnableSomeAntiCheats(playerid, 0);
 	}
 	foreach(new i : Player)
 	{
@@ -542,6 +547,9 @@ CMD:goto(playerid, params[])
     if(id < 0 || id >= MAX_PLAYERS  || !Character_IsLogged(id))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
 
+	if(id == playerid)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso.");
+
     new 
 	   Float:x, Float:y, Float:z,
 	   vw = Character_GetVirtualWorld(id), int = GetPlayerInterior(id);
@@ -573,7 +581,11 @@ CMD:gethere(playerid, params[])
     
     if(id < 0 || id >= MAX_PLAYERS  || !Character_IsLogged(id))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
-    new 
+    
+	if(id == playerid)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso.");
+
+	new 
 	   Float:x, Float:y, Float:z,
 	   vw = Character_GetVirtualWorld(playerid), int = GetPlayerInterior(playerid);
     
@@ -644,7 +656,9 @@ CMD:invcheck(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "/invcheck <playerid/partofname>");
     if(id < 0 || id >= MAX_PLAYERS  || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
-	Inventory_ShowInChat(Character_GetInventory(id), playerid, "Inventario Giocatore");
+	new str[64], Inventory:inv = Character_GetInventory(id);
+	format(str, sizeof(str), "Inventario di %s (%d/%d)",  Character_GetOOCName(id), Inventory_GetUsedSpace(inv), Inventory_GetSpace(inv));
+	Inventory_ShowInChat(Character_GetInventory(id), playerid, str);
 	// Inventory_ShowInChatStr(Character_GetInventory(id), playerid, Character_GetOOCNameStr(id));
 	return 1;
 }
@@ -709,6 +723,8 @@ CMD:giveweapon(playerid, params[])
 	new id, wid, ammo;
 	if(sscanf(params, "k<u>k<weapon>i", id, wid, ammo))
 		return SendClientMessage(playerid, COLOR_ERROR, "/giveweapon <playerid/partofname> <weaponid/weapon name> <ammo>");
+	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
 	if(ammo < 0 || ammo > 1000)
 		return SendClientMessage(playerid, COLOR_ERROR, "Valore munizioni errato. (0 - 1000)");
 	if(wid < 0)
@@ -937,10 +953,67 @@ Dialog:Dialog_AdminAnnounce(playerid, response, listitem, inputtext[])
 {
 	if(!response)
 		return 0;
-	SendClientMessageToAllStr(0xAFAFAFFF, str_format("Admin %s: %s", AccountInfo[playerid][aName], pAdminAnnounceMessage[playerid]));
+	SendTwoLinesMessageToAllStr(0x6A5ACDFF, str_format("Admin %s: %s", AccountInfo[playerid][aName], pAdminAnnounceMessage[playerid]));
 	return 1;
 }
 
+flags:slap(CMD_JR_MODERATOR);
+CMD:slap(playerid, params[])
+{
+	new id;
+	if(sscanf(params, "k<u>", id))
+		return SendClientMessage(playerid, COLOR_ERROR, "/slap <playerid/partofname>");
+	
+	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
+
+	if(Account_GetAdminLevel(id) > Account_GetAdminLevel(playerid) && id != playerid)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su un admin di livello superiore.");
+	
+	SendFormattedMessage(id, COLOR_ADMIN, "L'admin %s ti ha slappato.", AccountInfo[playerid][aName]);
+	SendMessageToAdmins(false, COLOR_ADMIN, "[ADMIN-CMD]: %s ha slappato %s.", AccountInfo[playerid][aName], Character_GetOOCName(id));
+
+	new Float:x, Float:y, Float:z;
+	GetPlayerPos(id, x, y, z);
+	SetPlayerPos(id, x, y, z + 4);
+	return 1;
+}
+
+flags:kickall(CMD_DEVELOPER);
+CMD:kickall(playerid, params[])
+{
+	if(strlen(params) <= 0 || strlen(params) > 90)
+		return SendClientMessage(playerid, COLOR_ERROR, "/kickall <motivo>");
+	
+	SendMessageToAdmins(true, COLOR_ADMIN, "L'admin %s ha kickato tutti. Motivo: %s", params);
+
+	foreach(new i : Player)
+	{
+		if(Account_GetAdminLevel(i) >= 5)
+			continue;
+		wait_ticks(1);
+		KickEx(i);
+	}
+	return 1;
+}
+
+flags:kick(CMD_JR_MODERATOR);
+CMD:kick(playerid, params[])
+{
+	new id, reason[128];
+	if(sscanf(params, "k<u>s[128]", id, reason) || strlen(reason) < 0 || strlen(reason) > 128)
+		return SendClientMessage(playerid, COLOR_ERROR, "/kick <playerid/partofname> <motivo (max 127 caratteri)>");
+	
+	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
+
+	if(Account_GetAdminLevel(id) > Account_GetAdminLevel(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su un admin di livello superiore.");
+	SendFormattedMessage(id, COLOR_ADMIN, "L'admin %s ti ha kickato. Motivo: %s", AccountInfo[playerid][aName], reason);
+	SendMessageToAdmins(false, COLOR_ADMIN, "[ADMIN-CMD]: %s ha kickato %s. Motivo: %s", AccountInfo[playerid][aName], Character_GetOOCName(id), reason);
+	KickEx(id);
+	return 1;
+}
 
 flags:banip(CMD_ADMIN);
 CMD:banip(playerid, params[])
@@ -1027,12 +1100,12 @@ CMD:unbanaccount(playerid, params[])
 	return 1;
 }
 
-flags:ban(CMD_MODERATOR);
-CMD:ban(playerid, params[])
+flags:bancharacter(CMD_MODERATOR);
+CMD:bancharacter(playerid, params[])
 {
 	new id, days, reason[128];
 	if(sscanf(params, "k<u>ds[128]", id, days, reason))
-		return SendClientMessage(playerid, COLOR_ERROR, "/ban <playerid/partofname> <giorni> <motivo>");
+		return SendClientMessage(playerid, COLOR_ERROR, "/bancharacter <playerid/partofname> <giorni> <motivo>");
 	if(!IsPlayerConnected(id) || IsPlayerNPC(id) || !Account_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 	if(days < 0)
@@ -1041,12 +1114,12 @@ CMD:ban(playerid, params[])
 	return 1;
 }
 
-flags:unban(CMD_MODERATOR);
-CMD:unban(playerid, params[])
+flags:unbancharacter(CMD_MODERATOR);
+CMD:unbancharacter(playerid, params[])
 {
 	new name[MAX_PLAYER_NAME];
 	if(sscanf(params, "s[24]", name))
-		return SendClientMessage(playerid, COLOR_ERROR, "/unban <nome>");
+		return SendClientMessage(playerid, COLOR_ERROR, "/unbancharacter <nome>");
 	inline FindAccount()
 	{
 		if(cache_num_rows() > 0)
@@ -1104,5 +1177,58 @@ stock BanAccount(playerid, adminid, reason[])
 	Log(AccountInfo[adminid][aName], AccountInfo[playerid][aName], "BanAccount");
 
 	KickEx(playerid);
+	return 1;
+}
+
+flags:update(CMD_DEVELOPER);
+CMD:update(playerid, params[])
+{
+	SendRconCommand("password lsarp_updating_psw");
+	pc_cmd_kickall(playerid, "Riavvio.");
+	return 1;
+}
+
+flags:setchopshop(CMD_ADMIN);
+CMD:setchopshop(playerid, params[])
+{
+	new id;
+	if(sscanf(params, "k<u>", id))
+		return SendClientMessage(playerid, COLOR_ERROR, "/setchopshop <playerid/partofname>");
+	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Giocatore non connesso.");
+	SendFormattedMessage(id, COLOR_ORANGE, "L'admin %s (%d) ti ha garantito i permessi per il Chop Shop.", AccountInfo[playerid][aName], playerid);
+	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai garantito i permessi per il Chop Shop a %s (%d).", Character_GetOOCName(id), id);
+	SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-CMD]: %s (%d) ha garantito i permessi per il Chop Shop a %s (%d).", AccountInfo[playerid][aName], playerid, Character_GetOOCName(id), id);
+	Character_SetChopShopPrivileges(id, true);
+	Character_SavePrivileges(id);
+	return 1;
+}
+
+flags:removechopshop(CMD_ADMIN);
+CMD:removechopshop(playerid, params[])
+{
+	new id;
+	if(sscanf(params, "k<u>", id))
+		return SendClientMessage(playerid, COLOR_ERROR, "/removechopshop <playerid/partofname>");
+	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Giocatore non connesso.");
+	SendFormattedMessage(id, COLOR_ORANGE, "L'admin %s (%d) ti ha rimosso i permessi per il Chop Shop.", AccountInfo[playerid][aName], playerid);
+	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai rimosso i permessi per il Chop Shop a %s (%d).", Character_GetOOCName(id), id);
+	SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-CMD]: %s (%d) ha rimosso i permessi per il Chop Shop a %s (%d).", AccountInfo[playerid][aName], playerid, Character_GetOOCName(id), id);
+	Character_SetChopShopPrivileges(id, false);
+	Character_SavePrivileges(id);
+	return 1;
+}
+
+flags:getprivileges(CMD_ADMIN);
+CMD:getprivileges(playerid, params[])
+{
+	new id;
+	if(sscanf(params, "k<u>", id))
+		return SendClientMessage(playerid, COLOR_ERROR, "/getprivileges <playerid/partofname>");
+	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Giocatore non connesso.");
+	SendFormattedMessage(playerid, COLOR_ORANGE, "- Privilegi di %s -", Character_GetOOCName(id));
+	SendFormattedMessage(playerid, COLOR_ORANGE, "ChopShop: %s", (Character_HasChopShopPrivileges(id) ? ("Si") : ("No")));
 	return 1;
 }

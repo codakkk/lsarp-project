@@ -109,6 +109,22 @@ CMD:sconosciuto(playerid, params[])
 	return 1;
 }
 
+flags:rimuovimaschera(CMD_ALIVE_USER);
+CMD:rimuovimaschera(playerid, params[])
+{
+	new id;
+	if(sscanf(params, "k<u>", id))
+		return SendClientMessage(playerid, COLOR_ERROR, "/rimuovimaschera <playerid/partofname/#maskid>");
+	if(!IsPlayerConnected(id) || !Character_IsLogged(id) || !IsPlayerInRangeOfPlayer(playerid, id, 2.5))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
+	if(Character_IsAlive(id) || !Character_IsMasked(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
+	Character_RemoveMask(id);
+	ProxDetectorStr(playerid, 15.0, str_format("(( %s ha tolto la maschera di %s ))", Character_GetRolePlayName(playerid), Character_GetRolePlayName(id)), 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF,	0xD0AEEBFF, false);
+	//Character_CharacterMe(playerid, id, "rimuove la maschera di");
+	return 1;
+}
+
 stock Character_RemoveMask(playerid)
 {
 	Character_SetMasked(playerid, false);

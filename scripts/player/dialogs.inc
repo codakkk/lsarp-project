@@ -30,9 +30,9 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
     if(pickupid == -1 || !IsPlayerInRangeOfPickup(playerid, pickupid, 2.0))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita della tua casa.");
 
-	new houseid = Character_GetNearHouseIDMenu(playerid);
+	new houseid = Character_GetHouseID(playerid);
 	if(houseid == -1)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita della tua casa.");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'interno della tua casa.");
 	switch(listitem)
 	{
 		case 0: // Apri/Chiudi Porta

@@ -1,5 +1,6 @@
 #include <YSI_Coding\y_hooks>
 
+
 hook OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
 {
     if(AccountInfo[playerid][aAdmin] <= 0 || !Account_IsAdminDuty(playerid))

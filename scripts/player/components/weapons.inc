@@ -26,7 +26,7 @@ stock Character_SaveWeapons(playerid)
 		if(ammo == 0)
 		{
 			// removes weaponid from database if empty.
-			format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE WeaponID = '%d' AND CharacterID = '%d';", weaponid, Character_GetID(playerid));
+			format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE CharacterID = '%d' AND WeaponID = '%d';", Character_GetID(playerid), weaponid);
 		}
 		else
 		{
@@ -53,7 +53,7 @@ stock Character_LoadWeapons(playerid)
 			}
 			Character_GiveWeapon(playerid, w, a);
 		}
-		printf("Player %d weapons loaded.", playerid);
+		printf("%d weapons loaded for player %d.", rows, playerid);
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT WeaponID, Ammo FROM `character_weapons` WHERE CharacterID = '%d'", Character_GetID(playerid));
 }
@@ -135,9 +135,17 @@ stock Character_GetCurrentWeaponData(playerid, &weaponid, &ammo)
 	return Character_GetWeaponData(playerid, Weapon_GetSlot(AntiCheatGetWeapon(playerid)), weaponid, ammo);
 }
 
+stock Character_HasWeapon(playerid, weaponid)
+{
+	new slotid = Weapon_GetSlot(weaponid), acW, acA;
+	return Character_GetWeaponData(playerid, slotid, acW, acA) && weaponid == acW;
+}
+
 stock Character_GetAmmo(playerid)
 {
-	return GetPlayerAmmo(playerid);
+	new weaponid, a;
+	Character_GetCurrentWeaponData(playerid, weaponid, a);
+	return a;//GetPlayerAmmo(playerid);
 }
 
 stock Character_SetWeaponAmmo(playerid, weaponid, ammo)

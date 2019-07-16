@@ -254,7 +254,7 @@ CMD:abuildingtype(playerid, params[])
     if(sscanf(params, "ii", id, type))
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "/abuildingtype <buildingid> <type>");
-		SendClientMessage(playerid, COLOR_ERROR, "0: Building, 1: Store, 2: Paycheck building");
+		SendClientMessage(playerid, COLOR_ERROR, "0: Store, 1: Paycheck, 2: Garage");
 		return 1;
 	}
     
@@ -266,8 +266,8 @@ CMD:abuildingtype(playerid, params[])
 
 	Building_Save(id);
 
-	SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il testo di benvenuto del building %d.", id);
-	SendFormattedMessage(playerid, COLOR_GREEN, "Testo: %s", BuildingInfo[id][bWelcomeText]);
+	SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il tipo del building %d.", id);
+	SendFormattedMessage(playerid, COLOR_GREEN, "Nuovo tipo: %d", type);
 
     return 1;
 }

@@ -24,6 +24,8 @@
 #include <player\components\drugs>
 #include <player\components\hunger>
 #include <player\components\desync_checker>
+#include <player\components\wear_objects>
+#include <player\components\privileges>
 // EFFECTS 
 #include <player\components\effects\mask>
 #include <player\components\effects\drag>

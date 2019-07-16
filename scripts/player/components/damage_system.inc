@@ -41,24 +41,13 @@ hook OnCharacterSpawn(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }*/
 
-hook OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
+stock DamageSystem_Update(playerid, Float:amount, issuerid, weaponid, bodypart)
 {
-	//printf("Damage System");
 	if(Character_IsAlive(playerid) || Character_IsInjured(playerid)) // Equivalent to !Character_IsDead(playerid)
 	{
-		new Float:customDamage = Weapon_GetDamage(weaponid);
-		if(weaponid == 23 && Character_HasTaser(issuerid))
-			customDamage = 3;
-		else if(weaponid == 25 && Character_HasBeanBag(issuerid))
-			customDamage = 7;
-		else if(customDamage == 0)
-			customDamage = amount;
-		Character_AddDamage(playerid, (issuerid != INVALID_PLAYER_ID ? Character_GetRolePlayName(issuerid) : ("Nessuno")), weaponid, customDamage, bodypart);
-
-		/*if(weaponid && (bodypart == 7 || bodypart == 8))
-			Character_SetLegHit(playerid, true);*/
+		Character_AddDamage(playerid, (issuerid != INVALID_PLAYER_ID ? Character_GetRolePlayName(issuerid) : ("Nessuno")), weaponid, amount, bodypart);
 	}
-	return Y_HOOKS_CONTINUE_RETURN_1;
+	return 1;
 }
 
 flags:danni(CMD_USER);
@@ -87,7 +76,6 @@ CMD:danni(playerid, params[])
 	{
 		if(!CharacterDamageInfo[id][i][damageUsed])
 			continue;
-		printf("Weapon ID2: %d", CharacterDamageInfo[id][i][damageWeapon]);
 		str += str_format("%s\t%s\t%f\t%s\n", CharacterDamageInfo[id][i][damageIssuerName], Weapon_GetName(CharacterDamageInfo[id][i][damageWeapon]), CharacterDamageInfo[id][i][damageAmount], partName[CharacterDamageInfo[id][i][damageBodyPart]-3]);
 		count++;
 	}

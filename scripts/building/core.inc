@@ -1,3 +1,4 @@
+#include <building\garage>
 #include <YSI_Coding\y_hooks>
 
 
@@ -65,13 +66,14 @@ stock Building_LoadAll()
 		cache_get_value_index_int(i, 15, BuildingInfo[i][bPrice]);
 		cache_get_value_index_int(i, 16, BuildingInfo[i][bLocked]);
 		cache_get_value_index_int(i, 17, BuildingInfo[i][bFaction]);
+		cache_get_value_index_int(i, 18, BuildingInfo[i][bType]);
 
 		BuildingInfo[i][bExitWorld] = BUILDING_START_WORLD + i;
 
 		BuildingInfo[i][bExists] = 1;
 
 		Building_CreateElements(i);
-		
+		printf("Type: %d", BuildingInfo[i][bType]);
 		Iter_Add(Buildings, i);
 	}
 	printf("Loaded %d buildings.\n", count);
@@ -191,7 +193,7 @@ stock Building_Delete(buildingid)
 
 stock Building_Save(buildingid)
 {
-    if(!BuildingInfo[buildingid][bExists] || !BuildingInfo[buildingid][bID])
+    if(!BuildingInfo[buildingid][bExists] || !Building_GetID(buildingid))
 	   return 0;
 
     new query[512];
@@ -204,18 +206,20 @@ stock Building_Save(buildingid)
     ExitInterior = '%d', \
     Ownable = '%d', OwnerID = '%d', \
     Price = '%d', Locked = '%d', \
-	Faction = '%d' \
+	Faction = '%d', \
+	Type = '%d' \
     WHERE ID = '%d'", 
     BuildingInfo[buildingid][bName], BuildingInfo[buildingid][bOwnerName], 
     BuildingInfo[buildingid][bWelcomeText],
     BuildingInfo[buildingid][bEnterX], BuildingInfo[buildingid][bEnterY], BuildingInfo[buildingid][bEnterZ],
     BuildingInfo[buildingid][bEnterInterior], BuildingInfo[buildingid][bEnterWorld],
     BuildingInfo[buildingid][bExitX], BuildingInfo[buildingid][bExitY], BuildingInfo[buildingid][bExitZ],
-    BuildingInfo[buildingid][bExitInterior],
-    BuildingInfo[buildingid][bOwnable], BuildingInfo[buildingid][bOwnerID],
-    BuildingInfo[buildingid][bPrice], BuildingInfo[buildingid][bLocked],
-	BuildingInfo[buildingid][bFaction],
-    BuildingInfo[buildingid][bID]);
+    Building_GetExitInterior(buildingid),
+    Building_IsOwnable(buildingid), Building_GetOwnerID(buildingid),
+    Building_GetPrice(buildingid), Building_IsLocked(buildingid),
+	Building_GetFaction(buildingid),
+	Building_GetType(buildingid),
+    Building_GetID(buildingid));
 	mysql_tquery(gMySQL, query);
     return 1;
 }
@@ -329,13 +333,24 @@ stock Building_GetExitPos(buildingid, &Float:x, &Float:y, &Float:z)
 
 stock Building_GetType(buildingid)
 {
+	if(!Building_IsValid(buildingid))
+		return -1;
 	return BuildingInfo[buildingid][bType];
 }
 
 stock Building_SetType(buildingid, type)
 {
+	if(!Building_IsValid(buildingid))
+		return 0;
 	if(type < 0 || type >= BUILDING_TYPE_LAST)
 		return 0;
 	BuildingInfo[buildingid][bType] = type;
 	return 1;
+}
+
+stock Building_GetID(buildingid)
+{
+	if(!Building_IsValid(buildingid))
+		return 0;
+	return BuildingInfo[buildingid][bID];
 }

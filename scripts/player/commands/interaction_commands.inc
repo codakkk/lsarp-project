@@ -289,6 +289,10 @@ CMD:compra(playerid, params[])
 		{
 			return Character_BuyHouse(playerid, eID);
 		}
+		else if(eType == ELEMENT_TYPE_CHOPSHOP)
+		{
+			return Garage_BuyMechanicalComponents(playerid);
+		}
 	}
     return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando qui.");
 }

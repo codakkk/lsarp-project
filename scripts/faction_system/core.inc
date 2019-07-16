@@ -200,7 +200,6 @@ stock Faction_LoadAll()
 
 stock Faction_LoadRanks(i)
 {
-	printf("Loading ranks");
 	inline OnLoad()
 	{
 		new rows = cache_num_rows();

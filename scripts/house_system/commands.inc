@@ -1,4 +1,21 @@
 
+flags:gotohouse(CMD_JR_MODERATOR);
+CMD:gotohouse(playerid, params[])
+{
+	new houseid;
+    if(sscanf(params, "d", houseid))
+	   return SendClientMessage(playerid, COLOR_ERROR, "/gotohouse <houseid>");
+	if(!House_IsValid(houseid) || !House_IsCreated(houseid))
+		return SendClientMessage(playerid, COLOR_ERROR, "La casa inserita non esiste.");
+	new Float:x, Float:y, Float:z;
+	House_GetEnterPosition(houseid, x, y, z);
+	SetPlayerPos(playerid, x, y, z);
+	SetPlayerInterior(playerid, House_GetEnterInterior(houseid));
+	Character_SetVirtualWorld(playerid, House_GetEnterWorld(houseid));
+	SendFormattedMessage(playerid, COLOR_GREEN, "Ti sei gotato alla casa id %d", houseid);
+	return 1;
+}
+
 flags:hcreate(CMD_RCON);
 CMD:hcreate(playerid, params[])
 {
@@ -9,10 +26,29 @@ CMD:hcreate(playerid, params[])
     if(interior < 0 || interior >= sizeof(allHouseInteriors))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Interno base non valido");
 
+	new availableHouseID = -1;
+	for(new i = 0, j = list_size(HouseList); i < j; ++i)
+	{
+		if(House_IsValid(i) && !House_IsCreated(i))
+		{
+			availableHouseID = i;
+		}
+	}
+
+	if(availableHouseID == -1)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non è possibile creare ulteriori case.");
+
+	House_SetCreated(availableHouseID, 1);
     new Float:x, Float:y, Float:z;
-    GetPlayerPos(playerid, x, y, z);
-    House_Create(x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid), interior);
-    SendFormattedMessage(playerid, COLOR_GREEN, "Casa creata. Interno: %d.", interior);
+	GetPlayerPos(playerid, x, y, z);
+	House_SetEnterPosition(availableHouseID, x, y, z);
+	House_SetEnterInterior(availableHouseID, GetPlayerInterior(playerid));
+	House_SetEnterWorld(availableHouseID, Character_GetVirtualWorld(playerid));
+	House_SetInterior(availableHouseID, interior);
+	House_CreateObjects(availableHouseID);
+	House_Save(availableHouseID);
+    SendFormattedMessage(playerid, COLOR_GREEN, "Casa id %d creata. Interno: %d.", availableHouseID, interior);
+	SendMessageToAdmins(true, COLOR_ORANGE, "L'admin %s (%d) ha creato la casa id %d. Interno: %d", AccountInfo[playerid][aName], playerid, availableHouseID, interior);
     return 1;
 }
 
@@ -25,6 +61,9 @@ CMD:hedit(playerid, params[])
     
     if(!House_IsValid(houseid))
 	   return SendClientMessage(playerid, COLOR_ERROR, "L'id della casa inserita non è valido.");
+
+	if(!House_IsCreated(houseid))
+		return SendClientMessage(playerid, COLOR_ERROR, "La casa non è stata creata.");
 
     if(!strcmp(command, "pos", true))
     {

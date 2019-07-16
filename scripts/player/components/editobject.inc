@@ -12,7 +12,8 @@ enum
     EDIT_TYPE_NONE = 0,
     EDIT_TYPE_DROP = 1,
     EDIT_TYPE_BUYING_FURNITURE,
-    EDIT_TYPE_FURNITURE
+    EDIT_TYPE_FURNITURE,
+    EDIT_TYPE_PLAYER_OBJECT
 }
 
 hook OnPlayerClearData(playerid)
@@ -49,16 +50,23 @@ stock EditObject_Start(playerid, type, objectid, extra_id)
     EditMode_Type{playerid} = type;
     EditMode_ObjectID[playerid] = objectid;
     EditMode_CustomID[playerid] = extra_id;
-    EditDynamicObject(playerid, objectid);
+    if(type == EDIT_TYPE_PLAYER_OBJECT)
+    {
+        EditAttachedObject(playerid, objectid);
+    }
+    else
+    {
+        EditDynamicObject(playerid, objectid);
+    }
     return 1;
 }
 
 stock EditObject_End(playerid)
 {
+    CancelEdit(playerid);
     EditMode_Type{playerid} = EDIT_TYPE_NONE;
     EditMode_ObjectID[playerid] = 0;
     EditMode_CustomID[playerid] = 0;
-    CancelEdit(playerid);
     return 1;
 }
 

@@ -2,7 +2,7 @@
 
 hook OnCharacterSpawn(playerid)
 {
-	ClearAnimationsEx(playerid, false);
+	//ClearAnimationsEx(playerid, false);
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 

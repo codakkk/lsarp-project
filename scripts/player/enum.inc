@@ -81,6 +81,8 @@ enum e_Bit1_Data
 	e_pLegHit,
 	e_pAnimLoop,
 	e_pBuyingVehicle, // Is Buying something
+	e_pCanChopShop,
+	e_pCanGetAlive
 };
 
 new 

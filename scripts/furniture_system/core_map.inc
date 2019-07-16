@@ -423,7 +423,6 @@ stock Furniture_Load(worldid)
     
     inline OnLoad()
     {
-        printf("Loading furnitures...");
         
         /*
         // Commented because we create Pool and then add it to Furnitures map.

@@ -1,8 +1,10 @@
 // Thanks to Kristo for this easyDialogs.inc edit.
+#include <strlib>
 #include <YSI_Coding\y_hooks>
 #define MAX_FUNCTION_NAME 32
 
 #define Dialog:%0(%1) forward public Dlg@%0(%1); public Dlg@%0(%1)
+#define OnResponse:%0(%1) forward public OR@%0(%1); public OR@%0(%1)
 
 #define Dialog_Show(%0,%1, Dialog_Open(%0, #%1,
 #define Dialog_Show_s(%0,%1, Dialog_Open_s(%0, #%1,
@@ -58,14 +60,18 @@ hook OnDialogResponse(playerid, dialogid, response, listitem, inputtext[]) {
 	}
 
 	if (dialogid == 32700 && Dialog_Opened(playerid)) {
-	   new name[MAX_FUNCTION_NAME];
-	   strunpack(name, DialogName[playerid]);
+		new name[MAX_FUNCTION_NAME];
+		strunpack(name, DialogName[playerid]);
 
-	   Dialog_Close(playerid);
+		Dialog_Close(playerid);
 
-	   CallLocalFunction(name, "ddds", playerid, response, listitem, (!inputtext[0]) ? ("\1") : (inputtext));
-
-	   return Y_HOOKS_BREAK_RETURN_1;
+		CallLocalFunction(name, "ddds", playerid, response, listitem, (!inputtext[0]) ? ("\1") : (inputtext));
+		
+		// ON RESPONSE
+		// Added by Coda
+		strreplace(name, "Dlg@", "OR@", true);
+		CallLocalFunction(name, "ddds", playerid, response, listitem, (!inputtext[0]) ? ("\1") : (inputtext));
+		return Y_HOOKS_BREAK_RETURN_1;
 	}
 
 	return Y_HOOKS_CONTINUE_RETURN_1;

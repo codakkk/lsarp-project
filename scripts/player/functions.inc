@@ -2,12 +2,17 @@
 // Called when Character_Spawn is called.
 forward OnCharacterSpawn(playerid);
 
+hook OnPlayerClearData(playerid)
+{
+	Character_EnableSomeAntiCheats(playerid, 1);
+	return 1;
+}
+
 stock OnCharacterLoad(playerid)
 {
 	Character_SetLogged(playerid, true);
 
     LoadCharacterResult(playerid);
-
 
 	if(Character_IsBanned(playerid))
 	{
@@ -181,7 +186,6 @@ stock Character_Save(playerid, spawned = true, disconnected = false)
 		Character_GetSpawnPoint(playerid),
 		Character_GetSpawnPointExtraID(playerid),
 	   	Character_GetID(playerid));
-	
     // Save A' Mammt
     CallLocalFunction(#OnCharacterSaveData, "d", playerid);
     return 1;
@@ -331,6 +335,8 @@ timer UnFreezeTimer[timeInMillis](playerid, timeInMillis)
 {
 	#pragma unused timeInMillis
 	Character_SetFreezed(playerid, false);
+	//ClearAnimations(playerid);
+	//ApplyAnimation(playerid, "CARRY", "crry_prtial", 2.0, 0, 0, 0, 0, 0);
 }
 
 timer LoadCharacterDataAfterTime[2000](playerid)
@@ -338,4 +344,12 @@ timer LoadCharacterDataAfterTime[2000](playerid)
 	AC_SetPlayerHealth(playerid, PlayerRestore[playerid][pLastHealth]);
 	AC_SetPlayerArmour(playerid, PlayerRestore[playerid][pLastArmour]);
 	Character_LoadWeapons(playerid);
+}
+
+// Mainly used by /aduty 
+stock Character_EnableSomeAntiCheats(playerid, enabled)
+{
+	static const cheatCodes[] = {0, 1, 2, 3, 5, 6, 7, 8, 9, 10};
+	for(new i = 0, j = sizeof(cheatCodes); i < j; ++i)
+		EnableAntiCheatForPlayer(playerid, cheatCodes[i], enabled);
 }

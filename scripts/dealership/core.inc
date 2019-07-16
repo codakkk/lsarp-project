@@ -179,7 +179,6 @@ stock Dealership_LoadAll()
 {
     inline OnLoad()
     {
-		printf("Loading dealerships...");
 		new 
 			count = 0,
 			temp[255],

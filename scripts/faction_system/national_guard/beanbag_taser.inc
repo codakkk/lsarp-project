@@ -4,19 +4,32 @@
 #include <YSI_Coding\y_hooks>
 
 static 
-    bool:BeanBag[MAX_PLAYERS] = {false, ...},
-    bool:Taser[MAX_PLAYERS] = {false, ...},
+    bool:BeanBag[MAX_PLAYERS char] = {false, ...},
+    bool:Taser[MAX_PLAYERS char] = {false, ...},
     TempWeapon[MAX_PLAYERS][2 char],
     TempAmmo[MAX_PLAYERS][2]
 ;
 
 hook OnPlayerClearData(playerid)
 {
-    BeanBag[playerid] = false;
+    BeanBag{playerid} = false;
+    Taser{playerid} = false;
     TempWeapon[playerid]{0} = 0;
     TempWeapon[playerid]{1} = 0;
     TempAmmo[playerid][0] = 0;
     TempAmmo[playerid][1] = 0;
+    return 1;
+}
+
+hook OnCharacterPreSaveData(playerid, disconnect)
+{
+    if(disconnect)
+    {
+        if(Character_HasBeanBag(playerid))
+            pc_cmd_beanbag(playerid, "");
+        if(Character_HasTaser(playerid))
+            pc_cmd_taser(playerid, "");
+    }
     return 1;
 }
 
@@ -33,12 +46,23 @@ hook OnCharacterDutyChange(playerid, isOnDuty)
     return 1;
 }
 
-hook OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
+hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
-    if(!Character_HasBeanBag(issuerid) && !Character_HasTaser(issuerid))
+    if(!Character_IsLogged(playerid))
+        return 1;
+    if(Character_HasTaser(playerid) && weaponid == 23 && Character_IsFactionDuty(playerid))
+    {
+        ApplyAnimation(playerid, "COLT45", "colt45_reload", 4.1, 0, 0, 0, 0, 0);
+    }
+    return 1;
+}
+
+hook OnCharacterDamageDone(playerid, Float:amount, issuerid, weaponid, bodypart)
+{
+    if(issuerid == INVALID_PLAYER_ID || !Character_HasBeanBag(issuerid) && !Character_HasTaser(issuerid))
         return 1;
     
-    if(issuerid != INVALID_PLAYER_ID && Character_IsAlive(playerid))
+    if(Character_IsAlive(playerid))
     {
         if(Faction_GetType(Character_GetFaction(issuerid)) == FACTION_TYPE_POLICE && Character_IsFactionDuty(issuerid) && (weaponid == 25 || weaponid == 23))
         {
@@ -67,9 +91,9 @@ CMD:beanbag(playerid, params[])
 {
     if(!Character_IsFactionDuty(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Devi essere in servizio per poter utilizzare questo comando.");
-    BeanBag[playerid] = !BeanBag[playerid];
+    BeanBag{playerid} = !BeanBag{playerid};
 
-    if(BeanBag[playerid])
+    if(BeanBag{playerid})
     {
         Character_AMe(playerid, "estrae il fucile beanbag.");
         
@@ -90,6 +114,7 @@ CMD:beanbag(playerid, params[])
         Character_RemoveWeapon(playerid, 25);
         Character_GiveWeapon(playerid, TempWeapon[playerid]{0}, TempAmmo[playerid][0]);
         SetPlayerArmedWeapon(playerid, TempWeapon[playerid]{0});
+
         TempWeapon[playerid]{0} = TempAmmo[playerid][0] = 0;
     }
     return 1;
@@ -100,12 +125,12 @@ CMD:taser(playerid, params[])
 {
     if(!Character_IsFactionDuty(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Devi essere in servizio per poter utilizzare questo comando.");
-    Taser[playerid] = !Taser[playerid];
+    Taser{playerid} = !Taser{playerid};
 
-    if(Taser[playerid])
+    if(Taser{playerid})
     {
         Character_AMe(playerid, "estrae la pistola taser.");
-
+        
         new w, a;
         
         Character_GetWeaponData(playerid, 2, w, a);
@@ -121,9 +146,7 @@ CMD:taser(playerid, params[])
     {
         Character_AMe(playerid, "ripone la pistola taser.");
         Character_RemoveWeapon(playerid, 23);
-
-        Character_GiveWeapon(playerid, TempWeapon[playerid]{1}, TempAmmo[playerid]{1});
-
+        Character_GiveWeapon(playerid, TempWeapon[playerid]{1}, TempAmmo[playerid][1]);
         SetPlayerArmedWeapon(playerid, TempWeapon[playerid]{1});
 
         TempWeapon[playerid]{1} = TempAmmo[playerid][1] = 0;
@@ -133,10 +156,10 @@ CMD:taser(playerid, params[])
 
 stock Character_HasBeanBag(playerid)
 {
-    return BeanBag[playerid];
+    return BeanBag{playerid};
 }
 
 stock Character_HasTaser(playerid)
 {
-    return Taser[playerid];
+    return Taser{playerid};
 }

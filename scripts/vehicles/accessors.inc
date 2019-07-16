@@ -134,6 +134,15 @@ stock Vehicle_GetColors(vehicleid, &color1, &color2)
 	return 1;
 }
 
+stock Vehicle_SetColors(vehicleid, color1, color2)
+{
+	if(!Vehicle_IsValid(vehicleid))
+		return 0;
+	VehicleInfo[vehicleid][vColor1] = color1;
+	VehicleInfo[vehicleid][vColor2] = color2;
+	return ChangeVehicleColor(vehicleid, color1, color2);
+}
+
 stock Float:Vehicle_GetFuel(vehicleid)
 {
 	return VehicleFuel[vehicleid];

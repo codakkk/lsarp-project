@@ -5,6 +5,19 @@ stock Character_CharacterAMe(playerid, otherid, text[], GLOBAL_TAG_TYPES:...)
 	return Character_AMe(playerid, s);
 }
 
+stock Character_CharacterMe(playerid, otherid, text[], GLOBAL_TAG_TYPES:...)
+{
+    if(!Character_IsLogged(playerid) || strlen(text) > 256)
+	   return 0;
+    new 
+	   formattedText[256];
+    format(formattedText, sizeof(formattedText), text, ___3);
+
+    format(formattedText, sizeof(formattedText), "* %s %s %s.", Character_GetRolePlayName(playerid), formattedText, Character_GetRolePlayName(otherid));
+    ProxDetector(playerid, 15.0, formattedText, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF); //0xD6C3E3FF
+    return 1;
+}
+
 stock Character_Me(playerid, text[], GLOBAL_TAG_TYPES:...)
 {
     if(!Character_IsLogged(playerid) || strlen(text) > 256)

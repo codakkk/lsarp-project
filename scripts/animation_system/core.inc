@@ -56,7 +56,7 @@ stock PreloadAnimations(playerid)
 	PreloadAnimLib(playerid,"PARK");
 	PreloadAnimLib(playerid,"INT_HOUSE");
 	PreloadAnimLib(playerid,"FOOD" );
-	PreloadAnimLib(playerid,"ped" );
+	PreloadAnimLib(playerid,"PED" );
 	PreloadAnimLib(playerid,"MISC" );
 	PreloadAnimLib(playerid,"POLICE" );
 	PreloadAnimLib(playerid,"GRAVEYARD" );

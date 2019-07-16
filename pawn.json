@@ -17,13 +17,21 @@
 		"AGraber/pawn-plus-mysql",
 		"NexiusTailer/Nex-AC"
 	],
+	"local": true,
 	"builds": [
 		{
-			"name": "main",
+			"name": "dev",
 			"version": "3.10.8",
-			"args": [
-				"-d3"
-			],
+			"args": ["-;+", "-(+", "-d3"],
+			"includes": [
+				"dependencies/legacy",
+				"scripts"
+			]
+		},
+		{
+			"name": "live",
+			"version": "3.10.8",
+			"args": ["-;+", "-(+", "-O1"],
 			"includes": [
 				"dependencies/legacy",
 				"scripts"
@@ -31,17 +39,28 @@
 		}
 	],
 	"runtime": {
-		"version": "0.3.7",
+		"version": "0.3.DL",
 		"mode": "server",
-		"echo": "-",
-		"rcon_password": "password",
+		"echo": "Loading configuration...",
+		"filterscripts": [
+			"fogne",
+			"interior",
+			"maps"
+		],
+		"plugins": [
+			"crashdetect",
+			"mysql",
+			"SKY"
+		],
+		"rcon_password": "porcodio",
 		"port": 7777,
-		"hostname": "SA-MP Server",
-		"maxplayers": 50,
-		"language": "",
-		"mapname": "San Andreas",
-		"weburl": "www.sa-mp.com",
-		"gamemodetext": "Unknown",
+		"hostname": "Los Santos Apocalypse RolePlay",
+		"maxplayers": 32,
+		"language": "Italiano",
+		"mapname": "Los Santos",
+		"weburl": "www.lsarp.it",
+		"gamemodetext": "ApocalypseV1",
+		"password": "porcoildio",
 		"announce": true,
 		"lanmode": false,
 		"query": true,

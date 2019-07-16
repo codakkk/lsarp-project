@@ -7,9 +7,9 @@ hook OnGameModeInit()
 	Weapon_InitializeType(WEAPON_SILENCED, gItem_LightAmmo, 30, true);
 	Weapon_InitializeType(WEAPON_DEAGLE, gItem_LightAmmo, 45, true);
 
-	Weapon_InitializeType(WEAPON_SHOTGUN, gItem_BuckShotAmmo, 50, true);
-	Weapon_InitializeType(WEAPON_SAWEDOFF, gItem_BuckShotAmmo, 15, true);
-	Weapon_InitializeType(WEAPON_SHOTGSPA, gItem_BuckShotAmmo, 15, true);
+	Weapon_InitializeType(WEAPON_SHOTGUN, gItem_BuckShotAmmo, 3, true);
+	Weapon_InitializeType(WEAPON_SAWEDOFF, gItem_BuckShotAmmo, 6, true);
+	Weapon_InitializeType(WEAPON_SHOTGSPA, gItem_BuckShotAmmo, 8, true);
 
 	Weapon_InitializeType(WEAPON_UZI, gItem_LightAmmo, 15, true);
 	Weapon_InitializeType(WEAPON_TEC9, gItem_LightAmmo, 15, true);
@@ -24,66 +24,20 @@ hook OnGameModeInit()
 	return 1;
 }
 
-hook OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
-{
-	//printf("Weapon System");
-	if(Account_IsAdminDuty(playerid) && AccountInfo[playerid][aAdmin] > 1)
-		return Y_HOOKS_BREAK_RETURN_1;
-
-	//Uncomment if we wanna hide Fall damages from /danni
-	if(weaponid == 51 || weaponid == 49 || weaponid == 54)
-		return Y_HOOKS_BREAK_RETURN_1;
-	
-	if(issuerid != INVALID_PLAYER_ID && /*!AC_AntiWeaponCheck(issuerid, weaponid, ammo) &&*/ AccountInfo[playerid][aAdmin] < 1)
-		return Y_HOOKS_BREAK_RETURN_1;
-
-	new 
-		Float:weaponDamage,
-		Float:currentHealth,
-		Float:currentArmour;
-
-	//
-	weaponDamage = Weapon_GetDamage(weaponid);
-	
-	if(weaponDamage == 0)
-		weaponDamage = amount;
-
-	if(weaponid == 25 && Character_HasBeanBag(playerid))
-		weaponDamage = 5;
-	else if(weaponid == 23 && Character_HasTaser(playerid))
-		weaponDamage = 2;
-	
-
-	AC_GetPlayerHealth(playerid, currentHealth);
-	AC_GetPlayerArmour(playerid, currentArmour);
-	if(weaponDamage)
-	{
-		if(currentArmour >= weaponDamage) 
-			AC_SetPlayerArmour(playerid, currentArmour - weaponDamage);
-		else if(currentArmour && currentArmour < weaponDamage)
-		{
-			AC_SetPlayerArmour(playerid, 0);
-			AC_SetPlayerHealth(playerid, (weaponDamage - currentArmour) - currentHealth);
-		}
-		else 
-			AC_SetPlayerHealth(playerid, currentHealth - weaponDamage);
-	}
-	return 1;
-}
-
-stock Weapon_InitializeType(weaponid, ammoItem, damages, canBeDisassembled = false, damageRatio = 1)
+stock Weapon_InitializeType(weaponid, ammoItem, Float:damages, canBeDisassembled = false, damageRatio = 1)
 {
 	WeaponInfo[weaponid][wInitialized] = 1;
 	WeaponInfo[weaponid][wAmmoItem] = ammoItem;
 	WeaponInfo[weaponid][wDamage] = damages;
 	WeaponInfo[weaponid][wCanBeDisassembled] = canBeDisassembled;
 	WeaponInfo[weaponid][wDamageRatio] = damageRatio;
+	SetWeaponDamage(weaponid, DAMAGE_TYPE_STATIC, damages);
 }
 
-stock Weapon_GetDamage(weaponid)
+stock Float:Weapon_GetDamage(weaponid)
 {
 	if(weaponid <= 0 || weaponid >= 47 || !WeaponInfo[weaponid][wInitialized])
-		return 0;
+		return Float:0;
 	return WeaponInfo[weaponid][wDamage];
 }
 
@@ -205,21 +159,25 @@ stock Weapon_GetMagSize(weaponid)
 stock Weapon_GetName(weaponid)
 {
 	static gsWeaponNames[][32] = {
-		"Pugni", "Tirapugni",
-		"Golf Club", "Nightstick", "Coltello", "Mazza da Baseball",
-		"Pala", "Mazza da Biliardo", "Katana", "Motosega",
-		"Dildo Viola", "Dildo", "Vibratore", "Vibratore Argento",
-		"Fiori", "Mazza", "Granata", "Fumogeno", "Molotov",
-		"INVALID", "INVALID", "INVALID",
-		"9MM", "9MM Silenziata", "Desert Eagle", "Fucile a pompa",
-		"Fucile a Canne Mozze", "Fucile da Combattimento", 
-		"Micro SMG", "MP5", "AK-47", "M4", "TEC-9", "Fucile",
-		"Fucile da Cecchino", "Lanciamissili", "HS Rocket", 
-		"Lanciafiamme", "Minigun", "Carica C4", "Detonatore",
-		"Bomboletta Spray", "Estintore", "Fotocamera", 
-		"Visore Notturno", "Visore Termico", "Paracadute",
-		"Invalid", "Invalid", "Veicolo", "Eliche Elicottero", 
-		"Esplosione", "Invalid", "Annegamento", "Caduta"
+		"Pugni", "Tirapugni", "Golf Club", 
+		"Nightstick", "Coltello", "Mazza da Baseball",
+		"Pala", "Mazza da Biliardo", "Katana", 
+		"Motosega", "Dildo Viola", "Dildo", 
+		"Vibratore", "Vibratore Argento", "Fiori", 
+		"Mazza", "Granata", "Fumogeno", 
+		"Molotov", "Arma Veicolo", "Arma Veicolo", 
+		"", "9MM", "9MM Silenziata", 
+		"Desert Eagle", "Fucile a pompa", "Fucile a Canne Mozze", 
+		"Fucile da Combattimento", "Micro SMG", "MP5", 
+		"AK-47", "M4", "TEC-9", 
+		"Fucile", "Fucile da Cecchino", "Lanciamissili", 
+		"HS Rocket", "Lanciafiamme", "Minigun", 
+		"Carica C4", "Detonatore", "Bomboletta Spray", 
+		"Estintore", "Fotocamera", "Visore Notturno", 
+		"Visore Termico", "Paracadute","Fake Pistol", 
+		"Calcio Arma", "Veicolo", "Eliche Elicottero", 
+		"Esplosione", "Investito", "Annegamento", 
+		"Caduta", "Splat", "Unknown"
 	};
     return gsWeaponNames[weaponid];
 }

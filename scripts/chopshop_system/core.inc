@@ -1,11 +1,13 @@
 #include <YSI_Coding\y_hooks>
 
+/*
 #define CHOPSHOP_X						(2771.7817)
 #define CHOPSHOP_Y						(-1606.4154)
 #define CHOPSHOP_Z						(10.9219)
-
+*/
 #define CHOPSHOP_PLAYER_TIME            (60 * 1) // Delay between each sold car to chopshop. (In minutes)
 #define CHOPSHOP_VEHICLE_PERCENTAGE		(30)
+
 hook OnGameModeInit()
 {
     Pickup_Create(1239, 0, CHOPSHOP_X, CHOPSHOP_Y, CHOPSHOP_Z, ELEMENT_TYPE_CHOPSHOP, 0, 0);
@@ -18,7 +20,7 @@ stock Vehicle_CanBeSoldToChopShop(vehicleid)
 	return ( (gettime() - Vehicle_GetLastChopShopTime(vehicleid)) > 60 * CHOPSHOP_PLAYER_TIME );
 }
 
-stock Character_CanUseChopShop(playerid)
+stock ChopShop_CanCharacterUse(playerid)
 {
 	return ( (gettime() - Character_GetLastChopShopTime(playerid)) > 60 * CHOPSHOP_PLAYER_TIME );
 }
@@ -33,13 +35,16 @@ stock ChopShop_Sell(playerid, vehicleid)
 	if(!Character_IsLogged(playerid))
 		return 0;
 	
+	if(!Character_HasChopShopPrivileges(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non hai i permessi necessari per utilizzare questo comando.");
+
 	if(!Vehicle_CanBeSoldToChopShop(vehicleid))
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Questo veicolo è stato già venduto recentemente.");
         return 0;
 	}
 
-    if(!Character_CanUseChopShop(playerid))
+    if(!ChopShop_CanCharacterUse(playerid))
     {
         SendClientMessage(playerid, COLOR_ERROR, "Puoi utilizzare questo comando una volta ogni 6 ore.");
         return 0;
@@ -47,7 +52,7 @@ stock ChopShop_Sell(playerid, vehicleid)
 
     if(GetPlayerVehicleID(playerid) != vehicleid)
     {
-        SendClientMessage(playerid, COLOR_ERROR, "Non sei più su questo veicolo.");
+        SendClientMessage(playerid, COLOR_ERROR, "Non sei più su un veicolo.");
         return 0;
     }
 

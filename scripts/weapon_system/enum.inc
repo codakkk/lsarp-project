@@ -3,7 +3,7 @@
 enum E_WEAPON_DATA
 {
     wInitialized,
-    wDamage,
+    Float:wDamage,
     wDamageRatio, // Damage ratio (for different length damages)
     wAmmoItem,
 	wCanBeDisassembled,

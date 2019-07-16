@@ -5,6 +5,9 @@
 enum _:E_HOUSE_DATA
 {
     hID,
+
+	hCreated,
+
     hOwnerID,
     hOwnerName[MAX_PLAYER_NAME],
     hPrice,

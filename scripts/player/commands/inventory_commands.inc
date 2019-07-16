@@ -10,7 +10,7 @@ CMD:invmode(playerid, params[])
 	}
 	else
 	{
-		SendClientMessage(playerid, COLOR_GREEN, "Ora l'inventario ï¿½ mostrato a dialogs.");
+		SendClientMessage(playerid, COLOR_GREEN, "Ora l'inventario è mostrato a dialogs.");
 	}
 	Dialog_Close(playerid);
 	return 1;
@@ -93,10 +93,10 @@ CMD:deposita(playerid, params[])
 	
 	new itemid , ammo;
 	Character_GetWeaponData(playerid, Weapon_GetSlot(Character_GetWeapon(playerid)), itemid, ammo);
-	
-	if(itemid == 0 || ammo == 0)
+	printf("Dep: %d - %d", itemid, ammo);
+	if(itemid == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma.");
-	
+
 	if(Weapon_IsGrenade(itemid))
 	{
 		if(!Character_HasSpaceForItem(playerid, itemid, ammo))

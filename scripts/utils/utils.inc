@@ -454,6 +454,19 @@ stock SendTwoLinesMessage(playerid, color, const message[], GLOBAL_TAG_TYPES:...
     return 1;
 }
 
+stock SendTwoLinesMessageToAllStr(color, String:string)
+{
+	new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
+    amx_to_ref(var, ptr);
+    str_get(string, ptr[0], .size=size);
+
+    new result = SendTwoLinesMessageToAll(color, ptr[0]);
+
+    amx_free(var);
+    amx_delete(var);
+	return result;
+}
+
 stock SendTwoLinesMessageToAll(color, const text[])
 {
 	new string[256];
