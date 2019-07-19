@@ -47,9 +47,7 @@ new stock
 	Iterator:pToggleOOC[MAX_PLAYERS]<MAX_PLAYERS>,
 	pTempSkin[MAX_PLAYERS],
 	pSelectedUniformSlot[MAX_PLAYERS char],
-	pLastPMTime[MAX_PLAYERS], 
-	pTempWeapons[MAX_PLAYERS][13],
-	pTempAmmo[MAX_PLAYERS][13]
+	pLastPMTime[MAX_PLAYERS]
 ;
 
 enum E_PLAYER_RESTORE_DATA
@@ -99,5 +97,22 @@ enum _:e_PendingType
 {
 	REQUEST_TYPE_NONE,
 	REQUEST_TYPE_WEAPON,
-	REQUEST_TYPE_ITEM
+	REQUEST_TYPE_ITEM,
+	REQUEST_TYPE_REPAIR,
+	REQUEST_TYPE_VEHICLE_SPRAY,
+	REQUEST_TYPE_SEARCH
+}
+
+stock GetRequestTypeName(type)
+{
+    new l[16];
+    switch(type)
+    {
+	   case REQUEST_TYPE_WEAPON: l = "Arma";
+	   case REQUEST_TYPE_ITEM: l = "Oggetto";
+	   case REQUEST_TYPE_REPAIR: l = "Riparazione";
+	   case REQUEST_TYPE_VEHICLE_SPRAY: l = "Verniciatura";
+	   default: l = "Sconosciuto";
+    }
+    return l; //unreachable
 }

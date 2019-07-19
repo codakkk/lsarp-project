@@ -3,6 +3,7 @@ CMD:furniturecmds(playerid, params[])
 {
     SendClientMessage(playerid, -1, "[FURNITURE]: (/arreda)mento - /showid - /listaobject - /textureoggetto");
     SendClientMessage(playerid, -1, "[FURNITURE]: /piazzaobject - /rinominaobject - /spostaoggetto");
+    SendClientMessage(playerid, -1, "[FURNITURE]: /furnitureid - /idmobili - /fid");
     return 1;
 }
 
@@ -11,7 +12,7 @@ CMD:arredamento(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
-    if(!Character_CanFurnish(playerid))
+    if(!Character_CanFurnish(playerid, true))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei in una tua casa.");
     
     Dialog_Show(playerid, Dialog_Furniture, DIALOG_STYLE_LIST, "Arredamento", "Mobili piazzati\nPiazza", "Avanti", "Chiudi");
@@ -19,12 +20,12 @@ CMD:arredamento(playerid, params[])
 }
 alias:arredamento("arreda");
 
-CMD:showid(playerid, params[])
+CMD:furnitureid(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
     
-    if(!Character_CanFurnish(playerid))
+    if(!Character_CanFurnish(playerid, true))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei in una tua casa.");
 
     if(Furniture_IsShowingInfo(playerid))
@@ -37,6 +38,21 @@ CMD:showid(playerid, params[])
         Furniture_CreateLabels(playerid);
         SendClientMessage(playerid, COLOR_GREEN, "Hai abilitato le informazioni sui mobili.");
     }
+    return 1;
+}
+alias:furnitureid("fid", "idmobili");
+
+flags:resethouseexterior(CMD_ADMIN);
+CMD:resethouseexterior(playerid, params[])
+{
+    new houseid;
+    if(sscanf(params, "d", houseid))
+        return SendClientMessage(playerid, COLOR_ERROR, "/resethouseexterior <houseid>");
+    if(!House_IsValid(houseid))
+        return SendClientMessage(playerid, COLOR_ERROR, "La casa inserita non è valida.");
+    new worldid = HOUSE_START_WORLD + houseid;
+    for(new i = 0)
+    Internal_RemoveFurniture(worldid, objectid)
     return 1;
 }
 

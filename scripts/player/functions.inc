@@ -261,8 +261,7 @@ stock Character_ShowStats(playerid, targetid)
 	if(Character_GetFaction(playerid) != -1)
 		SendClientMessageStr(targetid, -1, str_format("[Personaggio] Fazione: %S - Rank: %S", Faction_GetNameStr(Character_GetFaction(playerid)), Faction_GetRankNameStr(Character_GetFaction(playerid), Character_GetRank(playerid)-1)));
     SendFormattedMessage(targetid, -1, "[Denaro] Soldi: $%d - Stipendio: $%d", Character_GetMoney(playerid), Character_GetPayCheck(playerid));
-    SendFormattedMessage(targetid, -1, "[Salute] HP: %.2f - Armatura: %.2f", hp, armour);
-	SendFormattedMessage(targetid, -1, "[Alimentazione] Fame: %d", Character_GetHunger(playerid));
+    SendFormattedMessage(targetid, -1, "[Salute] HP: %.2f - Armatura: %.2f - Alimentazione: %d", hp, armour, Character_GetHunger(playerid));
     
 	if(Character_HasBuildingKey(playerid) && Character_HasHouseKey(playerid))
 	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietà]: Edificio: %d - Casa: %d", Character_GetBuildingKey(playerid), Character_GetHouseKey(playerid));
@@ -279,9 +278,12 @@ stock Character_ShowStats(playerid, targetid)
 		new year, month, day, hour, minute, second;
 		TimestampToDate(Account_GetPremiumExpiry(playerid), year, month, day, hour, minute, second, 0);
 
-		SendFormattedMessage(playerid, COLOR_YELLOW, "Premium %s - Scadenza: %d/%d/%d - %d:%d", premiumNames[Account_GetPremiumLevel(playerid)-1], day, month, year, hour, minute);
+		SendFormattedMessage(targetid, COLOR_YELLOW, "Premium %s - Scadenza: %d/%d/%d - %d:%d", premiumNames[Account_GetPremiumLevel(playerid)-1], day, month, year, hour, minute);
 	}
 	
+	if(Account_GetAdminLevel(playerid) > 0)
+		SendFormattedMessage(targetid, COLOR_YELLOW, "[STAFFER]: %s", GetAdminLevelName(Account_GetAdminLevel(playerid)));
+
 	SendFormattedMessage(targetid, -1, "Ti mancano %d/%d punti esperienza per salire di livello.", Character_GetExp(playerid), expForNewLevel);
     SendFormattedMessage(targetid, COLOR_YELLOW, "Tempo rimanente al PayDay: %d minuti", 60 - PlayerInfo[playerid][pPayDay]);
     SendClientMessage(targetid, COLOR_GREEN, "_______________________________________________________");

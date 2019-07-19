@@ -1,3 +1,13 @@
+
+flags:clearchat(CMD_USER);
+CMD:clearchat(playerid, params[])
+{
+	for(new i = 0; i < 50; ++i)
+		SendClientMessage(playerid, -1, "");
+	SendClientMessage(playerid, -1, "La chat è stata pulita.");
+	return 1;
+}
+
 flags:low(CMD_USER);
 CMD:low(playerid, params[])
 {
@@ -39,8 +49,16 @@ CMD:pm(playerid, params[])
 	}
     
     PlayerPlaySound(id, 1085, 0.0, 0.0, 0.0);
-    SendTwoLinesMessage(id, COLOR_RECEIVEPM, "PM da %s (%d): %s", Character_GetOOCName(playerid), playerid, s);
-	SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a %s (%d): %s", Character_GetOOCName(id), id, s);
+    if(Account_IsAdminDuty(playerid) || Account_IsSupporterDuty(playerid))
+    {
+        SendTwoLinesMessage(id, COLOR_RECEIVEPM, "** PM da {FF6347}%s{ffdb18}: %s", Character_GetOOCName(playerid), playerid, s);
+        SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a %s (%d): %s", Character_GetOOCName(id), id, s);
+    }
+    else
+    {
+        SendTwoLinesMessage(id, COLOR_RECEIVEPM, "PM da %s (%d): %s", Character_GetOOCName(playerid), playerid, s);
+        SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a %s (%d): %s", Character_GetOOCName(id), id, s);
+    }
 	
 	if(Character_IsAFK(id))
 	{

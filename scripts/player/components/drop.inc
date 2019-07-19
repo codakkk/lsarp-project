@@ -4,9 +4,8 @@ forward bool:Character_CollectDrop(playerid, dropid);
 
 CMD:raccogli(playerid, params[])
 {
-	new pickupid = Character_GetLastPickup(playerid),
-			eID, E_ELEMENT_TYPE:eType;
-	if( Pickup_GetInfo(pickupid, eID, eType) && eType == ELEMENT_TYPE_DROP && Drop_IsPlayerInRangeOf(playerid, eID, 2.5))
+	new eID, E_ELEMENT_TYPE:eType;
+	if( Character_GetNearestPickup(playerid, eID, eType) && eType == ELEMENT_TYPE_DROP)
 	{
 		Character_CollectDrop(playerid, eID);
 	}
@@ -20,9 +19,8 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 		return Y_HOOKS_CONTINUE_RETURN_1;
 	if(PRESSED(KEY_CROUCH))
 	{
-		new pickupid = Character_GetLastPickup(playerid),
-			eID, E_ELEMENT_TYPE:eType;
-		if( Pickup_GetInfo(pickupid, eID, eType) && eType == ELEMENT_TYPE_DROP && Drop_IsPlayerInRangeOf(playerid, eID, 2.5))
+		new eID, E_ELEMENT_TYPE:eType;
+		if( Character_GetNearestPickup(playerid, eID, eType) && eType == ELEMENT_TYPE_DROP)
 		{
 			Character_CollectDrop(playerid, eID);
 		}

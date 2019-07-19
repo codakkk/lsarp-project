@@ -202,7 +202,7 @@ stock Inventory_HasSpaceForItem(Inventory:inventory, itemid, amount)
 		{
 			iter_get_arr_safe(i, item);
 			tempCurrentQuantity = item[gInvAmount];
-			while(item[gInvItem] == itemid && tempCurrentQuantity < ServerItem_GetMaxStack(itemid))
+			while(item[gInvItem] == itemid && tempCurrentQuantity < ServerItem_GetMaxStack(itemid) && tempAmount > 0) // tempAmount > 0 added after money bug.
 			{
 				tempCurrentQuantity++;
 				tempAmount--;

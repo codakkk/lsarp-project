@@ -26,8 +26,8 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
 {
     if(!response)
 	   return 0;
-    new pickupid = Character_GetLastPickup(playerid);
-    if(pickupid == -1 || !IsPlayerInRangeOfPickup(playerid, pickupid, 2.0))
+    
+	if(!Character_IsNearPickupTypes(playerid, ELEMENT_TYPE_HOUSE_ENTRANCE, ELEMENT_TYPE_HOUSE_EXIT))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita della tua casa.");
 
 	new houseid = Character_GetHouseID(playerid);

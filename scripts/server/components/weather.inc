@@ -11,13 +11,13 @@ hook OnGameModeInit()
 
 hook OnCharacterSpawn(playerid)
 {
-	new tmphour;
-	new tmpminute;
-	new tmpsecond;
-	gettime(tmphour, tmpminute, tmpsecond);
-	FixHour(tmphour);
-	SetPlayerTime(playerid, tmphour, tmpminute);
-	SetPlayerWeather(playerid, gCurrentWeather);
+	new tmphour, tmpminute, tmpsecond;
+    gettime(tmphour, tmpminute, tmpsecond);
+    
+    tmphour += Server_GetTimeAdd();
+    
+    FixHour(tmphour);
+    SetPlayerTime(playerid, tmphour, tmpminute);
 	return 1;
 }
 

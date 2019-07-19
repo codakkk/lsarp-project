@@ -1,5 +1,7 @@
 #include <YSI_Coding\y_hooks>
 
+static LastPickup[MAX_PLAYERS] = {0, ...};
+
 forward OnPlayerPickUpElementPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type);
 
 hook OnPlayerPickUpDynPickup(playerid, pickupid)
@@ -9,9 +11,9 @@ hook OnPlayerPickUpDynPickup(playerid, pickupid)
     new 
 	   elementid = PickupInfo[pickupid][elementID],
 	   E_ELEMENT_TYPE:type = PickupInfo[pickupid][elementType];
-
-	Character_SetLastPickup(playerid, pickupid);
     
+    LastPickup[playerid] = pickupid;
+
 	CallLocalFunction("OnPlayerPickUpElementPickup", "iiii", playerid, pickupid, elementid, _:type);
     return 1;
 }
@@ -55,4 +57,46 @@ stock Pickup_GetInfo(pickupid, &id, &E_ELEMENT_TYPE:type)
     id = PickupInfo[pickupid][elementID];
     type = PickupInfo[pickupid][elementType];
     return 1;
+}
+
+stock Character_GetNearestPickup(playerid, &elementid, &E_ELEMENT_TYPE:type)
+{
+    if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid) || LastPickup[playerid] == -1)
+        return 0;
+    
+    new Float:x, Float:y, Float:z, pickupid = LastPickup[playerid];
+    Pickup_GetPosition(pickupid, x, y, z);
+
+    if(GetPlayerDistanceFromPoint(playerid, x, y, z) >= 2.0)
+        return 0;
+    
+    elementid = PickupInfo[pickupid][elementID];
+    type = PickupInfo[pickupid][elementType];
+    return 1;
+}
+
+stock Character_IsNearPickupType(playerid, E_ELEMENT_TYPE:type)
+{
+    new e, E_ELEMENT_TYPE:t;
+    return Character_GetNearestPickup(playerid, e, t) && t == type;
+}
+
+// Is player near one of these pickup @types
+// Returns 0 if none provided.
+stock Character_IsNearPickupTypes(playerid, {E_ELEMENT_TYPE}:...)
+{
+    new args = numargs();
+    if(args > 1)
+    {
+        new elementId, E_ELEMENT_TYPE:t;
+        if(Character_GetNearestPickup(playerid, elementId, t))
+        {
+            for(new i = 1; i < args; ++i)
+            {
+                if(_:t == getarg(i))
+                    return 1;
+            }
+        }
+    }
+    return 0;
 }

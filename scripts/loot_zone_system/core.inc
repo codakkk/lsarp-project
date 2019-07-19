@@ -36,15 +36,12 @@ hook OnPlayerClearData(playerid)
 
 hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
-	if(PRESSED(KEY_WALK) && Character_IsAlive(playerid))
+	if(PRESSED(KEY_WALK) && Character_IsAlive(playerid)GetPlayerState(playerid) == PLAYER_STATE_ONFOOT)
 	{
-		if((new pickupid = Character_GetLastPickup(playerid)) != -1 && GetPlayerState(playerid) == PLAYER_STATE_ONFOOT)
+		new id, E_ELEMENT_TYPE:type;
+		if(Character_GetNearestPickup(playerid, id, type) && type == ELEMENT_TYPE_LOOTZONE)
 		{
-			new id, E_ELEMENT_TYPE:type;
-			if(Pickup_GetInfo(pickupid, id, type) && type == ELEMENT_TYPE_LOOTZONE && IsPlayerInRangeOfLootZone(playerid, id, 2.0))
-			{
-				LootZone_ShowItemsToPlayer(playerid, id);
-			}
+			LootZone_ShowItemsToPlayer(playerid, id);
 		}
 	}
 	return 1;

@@ -37,8 +37,8 @@ stock OnAccountCreated(playerid)
 
 stock CheckAccount(playerid)
 {
+	printf("CheckAccount called");
 	new 
-	   String:string,
 	   name[24];
     
     GetPlayerName(playerid, name, sizeof(name));
@@ -55,23 +55,30 @@ stock CheckAccount(playerid)
 
 	inline AccountCheckCallback()
     {
+		new 
+			String:string,
+			p_name[24];
+			
+		GetPlayerName(playerid, p_name, sizeof(p_name));
+		printf("AccountCheckCallback");
 		if(cache_num_rows() > 0)
 		{
 			new id;
 			cache_get_value_index_int(0, 0, id);
-			string = str_format("Ciao %s!\nIl tuo account risulta registrato.\nInserisci la password per effettuare il login.", name);
+			string = str_format("Ciao %s!\nIl tuo account risulta registrato.\nInserisci la password per effettuare il login.", p_name);
 			Dialog_Show_s(playerid, Dialog_Login, DIALOG_STYLE_PASSWORD, @("Login"), string, "Login", "Esci");
+			printf("Dialog_Login");
 		}
 		else
 		{
 			#if ALLOW_NEW_USERS
-				string = str_format("Benvenuto %s.\nQuesto account non risulta registrato.\nInserisci una password per registrarti!\nN.B: Minimo 6 caratteri. Massimo 16.", name);
+				string = str_format("Benvenuto %s.\nQuesto account non risulta registrato.\nInserisci una password per registrarti!\nN.B: Minimo 6 caratteri. Massimo 16.", p_name);
 				Dialog_Show_s(playerid, Dialog_Register, DIALOG_STYLE_PASSWORD, @("Account non registrato"), string, "Ok", "");
 			#else
 				Dialog_Show_s(playerid, Dialog_Register, DIALOG_STYLE_PASSWORD, @("Account non registrato"), @("Benvenuto.\nQuesto account non risulta registrato.\nAttualmente non è possibile effettuare l'accesso.\nSe fai parte del team dei tester, contatta Coda.\nBYE"), "Oh shit", "");
+				KickEx(playerid);
 			#endif
-			KickEx(playerid);
-			
+			printf("Dialog_Register ");
 		}
     }
     MySQL_TQueryInline(gMySQL, using inline AccountCheckCallback, "SELECT ID FROM accounts WHERE LOWER(Name) = LOWER('%e')", name);
@@ -85,11 +92,6 @@ hook OnPlayerFinishedDwnling(playerid, virtualworld)
 		SendClientMessage(playerid, -1, "Hai 60 secondi per registrarti o effettuare il login prima di essere kickato.");
 		gLoginTimer[playerid] = defer LoginKickTimer(playerid);
 	}
-	return 1;
-}
-
-hook OnPlayerConnect(playerid)
-{
 	return 1;
 }
 

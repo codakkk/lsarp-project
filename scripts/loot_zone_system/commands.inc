@@ -5,13 +5,11 @@ CMD:fruga(playerid, params[])
 	if(IsPlayerInAnyVehicle(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su un veicolo.");
 
-	if(Character_GetLastPickup(playerid) == -1)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non c'è nulla da frugare qui.");
-
 	new id, E_ELEMENT_TYPE:type;
-	Pickup_GetInfo(playerid, id, type);
-	if(type != ELEMENT_TYPE_LOOTZONE) 
+
+	if(!Character_GetNearestPickup(playerid, id, type) || type != ELEMENT_TYPE_LOOTZONE) 
 		return SendClientMessage(playerid, COLOR_ERROR, "Non c'è nulla da frugare qui.");
+		
 	LootZone_ShowItemsToPlayer(playerid, id);
 	return 1;
 }

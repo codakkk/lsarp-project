@@ -10,13 +10,13 @@ CMD:fazione(playerid, params[])
 	if(Faction_GetType(factionid) == FACTION_TYPE_OTHERS)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando in questa fazione.");
 	if(!Character_IsFactionOOCEnabled(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Hai disabilitato la chat OOC di fazione! Per attivarla usa /togf");
+		return SendClientMessage(playerid, COLOR_ERROR, "Hai disabilitato la chat OOC di fazione. Per attivarla usa /tog (f)chat");
 	
-	//new String:string = str_format("(( [FAZIONE]: %S %s (%d): %s ))", 
-		//Faction_GetRankNameStr(factionid, Character_GetRank(playerid)-1), 
-		//Character_GetOOCName(playerid), 
-		//playerid, params);
-	//Faction_SendMessageStr(playerid, COLOR_SLATEBLUE, string);
+	new String:string = str_format("(( [FAZIONE]: %S %s (%d): %s ))", 
+		Faction_GetRankNameStr(factionid, Character_GetRank(playerid)-1), 
+		Character_GetOOCName(playerid), 
+		playerid, params);
+	Faction_SendMessageStr(factionid, COLOR_SLATEBLUE, string);
 	return 1;
 }
 alias:fazione("f");
@@ -82,7 +82,7 @@ CMD:fedit(playerid, params[])
 flags:afactioncmds(CMD_DEVELOPER);
 CMD:afactioncmds(playerid, params[])
 {
-	SendClientMessage(playerid, COLOR_GREEN, "[FAZIONI]: /fcreate - /fedit - /setfaction - /afactionslist");
+	SendClientMessage(playerid, COLOR_GREEN, "[FAZIONI]: /fcreate - /fedit - /afactionslist");
 	return 1;
 }
 

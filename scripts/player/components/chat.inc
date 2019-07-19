@@ -39,7 +39,7 @@ hook OnPlayerText(playerid, text[])
 	{
 		if(Character_IsDead(playerid))
 			return Y_HOOKS_CONTINUE_RETURN_0;
-		if(Character_IsAlive(playerid) && !Character_IsCuffed(playerid) && !Character_IsFreezed(playerid) && !Character_IsStunned(playerid) && Character_GetChatStyle(playerid) > 0 && strlen(text) > 5)
+		if(Character_IsAlive(playerid) && !Character_CanInteract(playerid) && !Character_IsFreezed(playerid) && Character_GetChatStyle(playerid) > 0 && strlen(text) > 5)
 		{
 			switch(Character_GetChatStyle(playerid))
 			{

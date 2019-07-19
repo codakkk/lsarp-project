@@ -18,9 +18,11 @@ static enum e_DeathState
 	Text3D:pDeathText
 };
 
-static 
+static stock
 	PlayerDeathState[MAX_PLAYERS][e_DeathState],
-	pDeathState[MAX_PLAYERS char] // 0 = Not dead, 1 = Waiting for healing, 2 = Death
+	pDeathState[MAX_PLAYERS char], // 0 = Not dead, 1 = Waiting for healing, 2 = Death
+	pTempWeapons[MAX_PLAYERS][13],
+	pTempAmmo[MAX_PLAYERS][13]
 ;
 
 
@@ -129,13 +131,13 @@ hook OnCharacterDeath(playerid, killerid, reason)
 	PlayerDeathState[playerid][pDeathInt] = GetPlayerInterior(playerid);
 	PlayerDeathState[playerid][pDeathWorld] = Character_GetVirtualWorld(playerid);
 	PlayerDeathState[playerid][pDeathVehicle] = GetPlayerVehicleID(playerid);
-	new weapons[13], ammo[13];
+	/*new weapons[13], ammo[13];
 	for(new x = 0; x < 13; x++)
 	{
 		Character_GetWeaponData(playerid, x, weapons[x], ammo[x]);
 		pTempWeapons[playerid][x] = weapons[x];
 		pTempAmmo[playerid][x] = ammo[x];
-	}
+	}*/
 
 	if(deathState == DEATH_STATE_INJURED)
 	{
@@ -146,6 +148,7 @@ hook OnCharacterDeath(playerid, killerid, reason)
 	}
 	else if(deathState == DEATH_STATE_DEAD)
 	{
+		Character_SetFreezed(playerid, true);
 		Character_SetDeathTime(playerid, GetTickCount());
 		Character_OffDuty(playerid);
 	}
@@ -183,15 +186,15 @@ hook OnCharDeathFinished(playerid)
 			new Float:x, Float:y, Float:z, Float:a, interior, world;
 			
 			Character_GetDeathStateData(playerid, x, y, z, a, interior, world);
-			new vid = Character_GetDeathStateVehicle(playerid);
+			//new vid = Character_GetDeathStateVehicle(playerid);
 			/*if(vid > 0 && IsValidVehicle(vid) && Vehicle_GetHealth(vid) > 250.0)
 			{
 				PutPlayerInVehicle(playerid, vid, 0);
 			}
 			else
 			{*/
-				SetPlayerPos(playerid, x, y, z);
-				SetPlayerFacingAngle(playerid, a);
+			SetPlayerPos(playerid, x, y, z);
+			SetPlayerFacingAngle(playerid, a);
 
 			//}
 			SetPlayerInterior(playerid, interior);
@@ -373,15 +376,17 @@ static stock Internal_ApplyDeathAnim(playerid)
 	}
 	else
 	{
-		if(Character_IsInjured(playerid) && GetPlayerAnimationIndex(playerid) != 1537)
+		if( (Character_IsDead(playerid) || Character_IsInjured(playerid)) && GetPlayerAnimationIndex(playerid) != 1701)
 		{
-			ApplyAnimation(playerid, "SWEET", "Sweet_injuredloop", 4.1, 0, 0, 0, 1, 0, 1); // INDEX: 1537
+			ClearAnimationsEx(playerid, false);
+			ApplyAnimation(playerid, "WUZI", "CS_Dead_Guy", 4.0, 0, 0, 0, 1, 0, 1);
+			//ApplyAnimation(playerid, "SWEET", "Sweet_injuredloop", 4.1, 0, 0, 0, 1, 0, 1); // INDEX: 1537
 			printf("Applying 1");
 		}
-		else if(Character_IsDead(playerid) && GetPlayerAnimationIndex(playerid) != 1208)
+		/*else if(Character_IsDead(playerid) && GetPlayerAnimationIndex(playerid) != 1701) //1208 - ApplyAnimation(playerid, "PED", "KO_skid_back", 4.1, 1, 0, 0, 1, 0, 1);
 		{
-			ApplyAnimation(playerid, "PED", "KO_skid_back", 4.1, 0, 0, 0, 1, 0, 1);
+			ApplyAnimation(playerid, "WUZI", "CS_Dead_Guy", 4.0, 1, 0, 0, 1, 0, 1);
 			printf("Applying 2");
-		}
+		}*/
 	}
 }

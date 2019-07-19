@@ -1,13 +1,5 @@
 #include <YSI_Coding\y_hooks>
 
-static pLastPickup[MAX_PLAYERS];
-
-hook OnPlayerClearData(playerid)
-{
-	Character_SetLastPickup(playerid, -1);
-	return 1;
-}
-
 hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
 {
     if(type == ELEMENT_TYPE_BUILDING_ENTRANCE)
@@ -74,14 +66,4 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
 		Player_Info(playerid, "Premi ~y~~k~~PED_DUCK~~w~ per interagire", false);
 	}
     return 1;
-}
-
-stock Character_SetLastPickup(playerid, id)
-{
-	pLastPickup[playerid] = id;
-}
-
-stock Character_GetLastPickup(playerid)
-{
-	return pLastPickup[playerid];
 }

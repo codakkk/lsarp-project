@@ -82,3 +82,9 @@ stock Character_GetVirtualWorld(playerid)
 {
     return GetPlayerVirtualWorld(playerid);
 }
+
+// Returns true if character isn't stunned or other things
+stock Character_CanInteract(playerid)
+{
+	return !(Character_IsStunned(playerid) || Character_IsCuffed(playerid) || Character_IsDragged(playerid) || Character_IsDead(playerid));
+}

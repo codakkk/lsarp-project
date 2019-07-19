@@ -23,10 +23,11 @@ ptask OnCharacterCareUpdateTimer[1000](playerid)
 		Character_DecreaseCareTick(playerid);
 		if(Character_GetCareTicks(playerid) <= 0)
 		{
-			for(new i = 0; i < 13; ++i)
+			// With weapon-config, this isn't needed.
+			/*for(new i = 0; i < 13; ++i)
 			{
 				Character_GiveWeapon(playerid, pTempWeapons[playerid][i], pTempAmmo[playerid][i]);
-			}
+			}*/
 			SetCameraBehindPlayer(playerid);
 			Character_SetFreezed(playerid, false);
 			if(Character_IsCuffed(playerid))

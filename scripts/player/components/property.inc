@@ -4,19 +4,19 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
 	if(Account_HasHotKeysEnabled(playerid) && Character_IsAlive(playerid))
 	{
-		new elementId, E_ELEMENT_TYPE:type, pickupid = Character_GetLastPickup(playerid);
-		if(Pickup_GetInfo(pickupid, elementId, type) && !IsPlayerInAnyVehicle(playerid) && IsPlayerInRangeOfPickup(playerid, pickupid, 2.0))
+		new elementId, E_ELEMENT_TYPE:type;
+		if(Character_GetNearestPickup(playerid, elementId, type) && !IsPlayerInAnyVehicle(playerid))
 		{
 			if(PRESSED(KEY_YES))
 			{
 				// Should I write an "OnInteract" callback?
 				if(type == ELEMENT_TYPE_BUILDING_ENTRANCE || type == ELEMENT_TYPE_HOUSE_ENTRANCE)
 				{
-					Character_Enter(playerid, pickupid, elementId, type);
+					Character_Enter(playerid, elementId, type);
 				}
 				else if(type == ELEMENT_TYPE_BUILDING_EXIT || type == ELEMENT_TYPE_HOUSE_EXIT)
 				{
-					Character_Exit(playerid, pickupid, elementId, type);
+					Character_Exit(playerid, elementId, type);
 				}
 			}
 			else if(PRESSED(KEY_WALK))
@@ -36,9 +36,9 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-stock Character_Enter(playerid, pickupid, elementId, E_ELEMENT_TYPE:type)
+stock Character_Enter(playerid, elementId, E_ELEMENT_TYPE:type)
 {
-    if(!IsPlayerInRangeOfPickup(playerid, pickupid, 2.5) || (type != ELEMENT_TYPE_BUILDING_ENTRANCE && type != ELEMENT_TYPE_HOUSE_ENTRANCE))
+    if((type != ELEMENT_TYPE_BUILDING_ENTRANCE && type != ELEMENT_TYPE_HOUSE_ENTRANCE))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata di un edificio.");
     
     if(type == ELEMENT_TYPE_BUILDING_ENTRANCE)
@@ -146,9 +146,9 @@ static Internal_EnterHouse(playerid, houseid)
 	return 1;
 }
 
-stock Character_Exit(playerid, pickupid, elementId, E_ELEMENT_TYPE:type)
+stock Character_Exit(playerid, elementId, E_ELEMENT_TYPE:type)
 {
-    if(!IsPlayerInRangeOfPickup(playerid, pickupid, 2.5) || (type != ELEMENT_TYPE_BUILDING_EXIT && type != ELEMENT_TYPE_HOUSE_EXIT))
+    if((type != ELEMENT_TYPE_BUILDING_EXIT && type != ELEMENT_TYPE_HOUSE_EXIT))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'uscita di un edificio."), 0;
 
     if(type == ELEMENT_TYPE_BUILDING_EXIT)

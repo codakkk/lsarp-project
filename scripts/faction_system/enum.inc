@@ -65,7 +65,7 @@ new PoliceArrestPositions[][e_POLICE_ARREST] =
 stock IsPlayerNearAnyArrestPos(playerid)
 {
 	new id, E_ELEMENT_TYPE:type;
-	if(Pickup_GetInfo(Character_GetLastPickup(playerid), id, type) && type == ELEMENT_TYPE_ARREST && IsPlayerInRangeOfPickup(playerid, Character_GetLastPickup(playerid), 3.0))
+	if(Character_GetNearestPickup(playerid, id, type) && type == ELEMENT_TYPE_ARREST)
 	{
 		return 1;
 	}

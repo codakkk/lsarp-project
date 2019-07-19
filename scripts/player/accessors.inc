@@ -367,8 +367,8 @@ stock Character_GetNearHouseID(playerid, bool:inside = false)
 	}
 	else
 	{
-		new pickupid = Character_GetLastPickup(playerid), id, E_ELEMENT_TYPE:type;
-		if(Pickup_GetInfo(pickupid, id, type) && (type == ELEMENT_TYPE_HOUSE_ENTRANCE) && IsPlayerInRangeOfPickup(playerid, pickupid, 3.0))
+		new id, E_ELEMENT_TYPE:type;
+		if(Character_GetNearestPickup(playerid, id, type) && type == ELEMENT_TYPE_HOUSE_ENTRANCE)
 			return id;
 	}
 	return -1;
@@ -413,8 +413,8 @@ stock Character_GetNearBuilding(playerid, bool:inside)
 	}
 	else
 	{
-		new pickupid = Character_GetLastPickup(playerid), id, E_ELEMENT_TYPE:type;
-		if(Pickup_GetInfo(pickupid, id, type) && (type == ELEMENT_TYPE_BUILDING_ENTRANCE || type == ELEMENT_TYPE_BUILDING_EXIT) && IsPlayerInRangeOfPickup(playerid, pickupid, 3.0))
+		new id, E_ELEMENT_TYPE:type;
+		if(Character_GetNearestPickup(playerid, id, type) && (type == ELEMENT_TYPE_BUILDING_ENTRANCE || type == ELEMENT_TYPE_BUILDING_EXIT))
 			return id;
 	}
 	return -1;

@@ -82,6 +82,8 @@ hook OnGameModeInit()
 
 	gItem_MechanicalComponents = ServerItem_ManualInitializeItem(95, "Componenti Meccanici", ITEM_TYPE_MECHANICAL_COMPONENTS, 19577, 64);
 
+	gItem_Money = ServerItem_ManualInitializeItem(96, "Denaro", ITEM_TYPE_MONEY, 1212, cellmax-1);
+
     printf("Items loaded. N: %d\n", Iter_Count(ServerItems));
     return 1;
 }
@@ -169,6 +171,8 @@ stock ServerItem_IsDrink(itemid) return ServerItem_IsValid(itemid) && ServerItem
 stock ServerItem_IsMedik(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_MEDIK;
 stock ServerItem_IsBag(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_BAG;
 stock ServerItem_IsDrug(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_DRUG;
+stock ServerItem_IsMechanicalComp(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_MECHANICAL_COMPONENTS;
+stock ServerItem_IsMoney(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_MONEY;
 
 stock ServerItem_GetMaxStack(itemid) return ServerItem[itemid][sitemMaxStack];
 
@@ -189,14 +193,14 @@ stock ServerItem_GetExtra(itemid, extraid)
 
 stock ServerItem_GetTypeName(item_id)
 {
-    new string[MAX_ITEM_NAME] = "Invalid";
+    new string[MAX_ITEM_NAME] = "Sconosciuto";
     
     if(! (item_id < 0 || item_id >= MAX_ITEMS_IN_SERVER) && Iter_Contains(ServerItems, item_id))
     {
 	   switch(ServerItem[item_id][sitemType])
 	   {
 		  case ITEM_TYPE_NONE: string = "Niente";
-		  case ITEM_TYPE_MATERIAL: string = "Niente";
+		  case ITEM_TYPE_MATERIAL: string = "Materiali";
 		  case ITEM_TYPE_WEAPON: string = "Arma";
 		  case ITEM_TYPE_AMMO: string = "Munizioni";
 		  case ITEM_TYPE_FOOD: string = "Cibo";
@@ -204,6 +208,8 @@ stock ServerItem_GetTypeName(item_id)
 		  case ITEM_TYPE_MEDIK: string = "Medico";
 		  case ITEM_TYPE_BAG: string = "Zaino";
 		  case ITEM_TYPE_DRUG: string = "Droga";
+		  case ITEM_TYPE_MECHANICAL_COMPONENTS: string = "Componenti";
+		  case ITEM_TYPE_MONEY: string = "Denaro";
 	   }
     }
     return string;

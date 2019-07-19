@@ -123,8 +123,8 @@ CMD:ahousecmds(playerid, params[])
 flags:casa(CMD_ALIVE_USER);
 CMD:casa(playerid, params[])
 {
-	new pickupid = Character_GetLastPickup(playerid), id, E_ELEMENT_TYPE:type;
-	if(Pickup_GetInfo(pickupid, id, type) && IsPlayerInRangeOfPickup(playerid, pickupid, 2.0) && (type == ELEMENT_TYPE_HOUSE_ENTRANCE || type == ELEMENT_TYPE_HOUSE_EXIT))
+	new id, E_ELEMENT_TYPE:type;
+	if(Character_GetNearestPickup(playerid, id, type) && (type == ELEMENT_TYPE_HOUSE_ENTRANCE || type == ELEMENT_TYPE_HOUSE_EXIT))
 	{
 		if(House_GetOwnerID(id) == Character_GetID(playerid) || Account_IsAdminDuty(playerid))
 		{

@@ -638,9 +638,23 @@ stock Furniture_AddToInfoList(playerid, objectid)
     return 1;
 }
 
-stock Character_CanFurnish(playerid)
+stock Character_CanFurnish(playerid, bool:outsideCheck = false)
 {
     new currentHouse = Character_GetHouseID(playerid);
+    if(outsideCheck && currentHouse == -1)
+    {
+        new Float:x, Float:y, Float:z;
+        for(new i = 0, j = list_size(HouseList); i < j; ++i)
+        {
+            if(House_GetOwnerID(i) == Character_GetID(playerid) && Character_GetVirtualWorld(playerid) == House_GetEnterWorld(i) && GetPlayerInterior(playerid) == House_GetEnterInterior(i))
+            {
+                House_GetEnterPosition(houseid, x, y, z);
+                if(GetPlayerDistanceFromPoint(playerid, x, y, z) >= 15.0)
+                    continue;
+                return 1;
+            }
+        }
+    }
     if(currentHouse != -1 && House_GetOwnerID(currentHouse) == Character_GetID(playerid) && IsPlayerInRangeOfHouseExit(playerid, currentHouse, 50.0))
     {
         return 1;

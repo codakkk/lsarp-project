@@ -17,12 +17,12 @@ CMD:acmds(playerid, params[])
 	}
 	if(AccountInfo[playerid][aAdmin] >= 4)
 	{
-		SendClientMessage(playerid, -1, "[ADMIN]: /amm - /giveitem - /givevehicleitem - /apark - /vowner - /vsave - /vdespawn");
+		SendClientMessage(playerid, -1, "[ADMIN]: /amm - /setfaction - /giveitem - /givevehicleitem - /apark - /vowner - /vsave - /vdespawn");
 		SendClientMessage(playerid, -1, "[ADMIN]: /gotobuilding - /banaccount - /unbanaccount - /banofflineaccount - /banip");
 	}
 	if(AccountInfo[playerid][aAdmin] >= 5)
 	{
-		SendClientMessage(playerid, -1, "[DEVELOPER]: /update - /kickall");
+		SendClientMessage(playerid, -1, "[DEVELOPER]: /update - /kickall - /afactioncmds");
 		//SendClientMessage(playerid, -1, "[DEVELOPER]: /giveitem - /apark");
 	}
 	if(IsPlayerAdmin(playerid))
@@ -31,24 +31,6 @@ CMD:acmds(playerid, params[])
 		SendClientMessage(playerid, -1, "[RCON]: /abuildingcmds - /adealershipcmds - /ahousecmds");
 	}
     return 1;
-}
-
-flags:scmds(CMD_SUPPORTER);
-CMD:scmds(playerid, params[])
-{
-	SendClientMessage(playerid, -1, "[SUPPORTER]: /supp - ");
-	return 1;
-}
-
-flags:supp(CMD_SUPPORTER);
-CMD:supp(playerid, params[])
-{
-	if(pDisableAdminAlerts[playerid])
-		return SendClientMessage(playerid, COLOR_ERROR, "Hai disabilitato la chat supporter.");
-	if(isnull(params) || strlen(params) > 128)
-		return SendClientMessage(playerid, COLOR_ERROR, "/supp <testo>");
-	SendMessageToAdmins(0, COLOR_YELLOW, "[SUPPORTER-CHAT] %s (%s): %s", AccountInfo[playerid][aName], PlayerInfo[playerid][pName], params);
-	return 1;
 }
 
 flags:a(CMD_JR_MODERATOR);
@@ -658,7 +640,7 @@ CMD:invcheck(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
 	new str[64], Inventory:inv = Character_GetInventory(id);
 	format(str, sizeof(str), "Inventario di %s (%d/%d)",  Character_GetOOCName(id), Inventory_GetUsedSpace(inv), Inventory_GetSpace(inv));
-	Inventory_ShowInChat(Character_GetInventory(id), playerid, str);
+	Inventory_ShowInChat(inv, playerid, str);
 	// Inventory_ShowInChatStr(Character_GetInventory(id), playerid, Character_GetOOCNameStr(id));
 	return 1;
 }
@@ -836,6 +818,8 @@ CMD:ajail(playerid, params[])
 	if(time < 1)
 		return SendClientMessage(playerid, COLOR_ERROR, "Minuti non validi. (1 - +inf)");
 
+	Character_ResetDeathState(id);
+	
 	PlayerTextDrawShow(id, pJailTimeText[playerid]);
 	
 	SetCameraBehindPlayer(id);
@@ -843,8 +827,14 @@ CMD:ajail(playerid, params[])
 	ClearAnimations(id);
 	Character_OffDuty(id);
 
+
 	Character_SetJailTime(id, time);
 	Character_SetToJailPos(id);
+
+	Character_ResetWeapons(id);
+
+	AC_SetPlayerHealth(id, 100.0);
+	AC_SetPlayerArmour(id, 0.0);
 
 	SendFormattedMessage(id, COLOR_ERROR, "Sei stato jailato da %s (%d) per %d minuti. Motivo: %s", AccountInfo[playerid][aName], playerid, time, reason);
 

@@ -50,6 +50,8 @@ hook OnPlayerClearData(playerid)
 
 hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
+	if(Character_IsFactionDuty(playerid))
+		return 1;
 	new ammo = Character_GetAmmo(playerid);
 	if(Character_HasWeapon(playerid, weaponid) && ( /*(GetPlayerWeaponState(playerid) == WEAPONSTATE_LAST_BULLET || IsPlayerInAnyVehicle(playerid)) && */ /*AC_AntiWeaponCheck(playerid, weaponid, ammo) &&*/ ammo <= 1))
 	{
@@ -253,12 +255,34 @@ stock Character_UseInventoryItem(playerid, slotid)
 		SetPVarInt(playerid, "InventorySelect_CurrentWeaponItem", currentWeapon);
 		Dialog_Show(playerid, Dialog_InvSelectAddAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "Immetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}.", "Usa", "Annulla", ammos);
     }
+	else if(ServerItem_IsMoney(itemid))
+	{
+		new moneyQuant = Character_GetItemAmount(playerid, gItem_Money);
+		Dialog_Show(playerid, Dialog_InvUseMoney, DIALOG_STYLE_INPUT, "Inserisci la quantità", "Immetti la quantità di denaro che vuoi utilizzare.\nQuantità: {00FF00}${FFFFFF}%d.", "Usa", "Annulla", moneyQuant);
+	}
 	else
 	{
 		CallLocalFunction(#OnCharacterUseItem, "dd", playerid, slotid);
 	}
 	return 1;
 }
+
+Dialog:Dialog_InvUseMoney(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+		return 0;
+	new 
+		val = strval(inputtext),
+		amount = Character_GetItemAmount(playerid, gItem_Money)
+	;
+	if(val <= 0 || val > amount)
+		return Dialog_Show(playerid, Dialog_InvUseMoney, DIALOG_STYLE_INPUT, "Inserisci la quantità", "{FF0000}La quantità inserita non è valida.{FFFFFF}\nImmetti la quantità di denaro che vuoi utilizzare.\nQuantità: {00FF00}${FFFFFF}%d.", "Usa", "Annulla", amount);
+	Character_GiveMoney(playerid, val, "use_money");
+	Character_DecreaseItemAmount(playerid, gItem_Money, val);
+	Player_InfoStr(playerid, str_format("~g~$~w~%d", val), true, 2500);
+	return 1;
+}
+
 
 Dialog:Dialog_InventoryItemList(playerid, response, listitem, inputtext[])
 {
@@ -275,7 +299,7 @@ Dialog:Dialog_InventoryItemList(playerid, response, listitem, inputtext[])
 		;
 	if(itemid == 0)
 	{
-		return Dialog_Show(playerid, Dialog_InvEmptyItemAction, DIALOG_STYLE_LIST, "Slot Libero", "Deposita arma\nDisassembla arma", "Avanti", "Indietro");
+		return Dialog_Show(playerid, Dialog_InvEmptyItemAction, DIALOG_STYLE_LIST, "Slot Libero", "Deposita arma\nDisassembla arma\nDeposita denaro", "Avanti", "Indietro");
 	}
 	new 
 		extra = Character_GetSlotExtra(playerid, listitem),
@@ -307,10 +331,32 @@ Dialog:Dialog_InvEmptyItemAction(playerid, response, listitem, inputtext[])
 	{
 		pc_cmd_disassembla(playerid, "");
 	}
+	else if(listitem == 2)
+	{
+		return Dialog_Show(playerid, Dialog_DepositInvMoney, DIALOG_STYLE_INPUT, "Deposita denaro", "Inserisci la quantità di denaro che vuoi depositare\nall'interno del tuo inventario.", "Deposita", "Chiudi");
+	}
 	Character_ShowInventory(playerid, playerid);
 	return 1;
 }
 
+Dialog:Dialog_DepositInvMoney(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+		return 0;
+	new val = strval(inputtext);
+	if(val <= 0 || val > Character_GetMoney(playerid))
+		return Dialog_Show(playerid, Dialog_DepositInvMoney, DIALOG_STYLE_INPUT, "Deposita denaro", "{FF0000}Non possiedi la quantità inserita.{FFFFFF}\nInserisci la quantità di denaro che vuoi depositare\nall'interno del tuo inventario.", "Deposita", "Chiudi");
+	Character_DepositMoneyInInv(playerid, val);
+	return 1;
+}
+
+stock Character_DepositMoneyInInv(playerid, money)
+{
+	Character_GiveMoney(playerid, -money, "deposit_inv_money");
+	Character_GiveItem(playerid, gItem_Money, money, 0, true);
+	Player_InfoStr(playerid, str_format("Hai depositato: ~g~$~w~%d", money), true, 2500);
+	return 1;
+}
 
 Dialog:Dialog_InvItemAction(playerid, response, listitem, inputtext[])
 {

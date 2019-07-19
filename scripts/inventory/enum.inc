@@ -37,7 +37,8 @@ enum ITEM_TYPE
 	ITEM_TYPE_BAG,
 	ITEM_TYPE_FUEL,
 	ITEM_TYPE_DRUG,
-	ITEM_TYPE_MECHANICAL_COMPONENTS
+	ITEM_TYPE_MECHANICAL_COMPONENTS,
+	ITEM_TYPE_MONEY
 };
 
 enum EXTRA_TYPE_ID
@@ -143,5 +144,6 @@ new stock
 	gItem_OrangeJuice,
 	gItem_AppleJuice,
 
-	gItem_MechanicalComponents
+	gItem_MechanicalComponents,
+	gItem_Money
 ;

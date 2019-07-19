@@ -1,15 +1,25 @@
 #include <furniture_system\furnitures_list>
 
+/*
+    TODO: Must fix local ids (/furnitureid) when editing exteriors
+    Should I create a separate Map for exterior maps? NO
+    Exteriors are treated as interior objects. Just rely on current object's world id.
+*/
+
 #include <YSI_Coding\y_hooks>
 
 #define MAX_FURNITURE_PER_PAGE      (15)
+#define MAX_EXTERIOR_DISTANCE       (10.0)
+#define MAX_EXTERIOR_OBJECTS        (10)
 
 static 
     FurniturePage[MAX_PLAYERS char] = {0, ...},
     SelectedFurniture[MAX_PLAYERS] = {-1, ...},
+    FurnitureLinkedTo[MAX_PLAYERS] = {-1, ...}, // Used by exterior editing. Says which house/building the current furniture is linked to.
     //FurnitureListItem[MAX_PLAYERS][sizeof(BuyableFurnitures)],
     List:FurnitureListItem[MAX_PLAYERS],
     List:FurnitureLabels[MAX_PLAYERS],
+    ShowingLabelsForWorld[MAX_PLAYERS] = {-1, ...},
     Map:Furnitures // Map<houseid, Pool<objectid>>
 ;
 
@@ -22,6 +32,7 @@ static enum e_FurnitureCustomData
     FURNITURE_CREATED_BY_ACCOUNT,
     FURNITURE_LAST_EDIT_ACCOUNT,
     FURNITURE_LAST_EDIT_CHARACTER,
+    FURNITURE_LINKED_TO // Used by Exterior's furnitures.
 };
 static 
     FurnitureCustomData[e_FurnitureCustomData],
@@ -43,6 +54,8 @@ hook OnPlayerClearData(playerid)
 {
     FurniturePage{playerid} = 0;
     SelectedFurniture[playerid] = -1;
+    FurnitureLinkedTo[playerid] = -1;
+    ShowingLabelsForWorld[playerid] = -1;
     if(list_valid(FurnitureListItem[playerid]))
         list_delete(FurnitureListItem[playerid]);
     if(Furniture_IsShowingInfo(playerid))
@@ -80,6 +93,34 @@ hook OnPlyVirtualWorldChange(playerid, oldWorld, newWorld)
     return 1;
 }
 
+static stock Internal_ValidateObjectPos(objectid, Float:newX, Float:newY, Float:newZ)
+{
+    if(!IsValidDynamicObject(objectid))
+        return 0;
+    
+    Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+
+    new 
+        linked = FurnitureCustomData[FURNITURE_LINKED_TO],
+        Float:x, Float:y, Float:z
+    ;
+    
+    if(linked >= BUILDING_START_WORLD)
+    {
+        Building_GetEnterPos(linked - BUILDING_START_WORLD, x, y, z);
+    }
+    else if(linked >= HOUSE_START_WORLD)
+    {
+        House_GetEnterPosition(linked - HOUSE_START_WORLD, x, y, z);
+    }
+    new Float:dist = (x - newX) * (x - newX) + (y - newY) * (y - newY) + (z - newZ) * (z - newZ);
+    if(dist > MAX_EXTERIOR_DISTANCE * MAX_EXTERIOR_DISTANCE) //avoid floatsqrt call. So multiply MAX_EXTERIOR_DISTANCE by itself
+    {
+        return 0;
+    }
+    return 1;
+}
+
 hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz)
 {
     if(EditObject_GetType(playerid) == EDIT_TYPE_BUYING_FURNITURE)
@@ -92,6 +133,12 @@ hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float
         {
             SetDynamicObjectPos(objectid, x, y, z);
             SetDynamicObjectRot(objectid, rx, ry, rz);
+
+            if(!(Character_GetVirtualWorld(playerid) > HOUSE_START_WORLD || Character_GetVirtualWorld(playerid) > BUILDING_START_WORLD))
+            {
+                if(!Internal_ValidateObjectPos(objectid, x, y, z))
+                    return SendClientMessage(playerid, COLOR_ERROR, "Non puoi piazzare l'oggetto troppo lontano dalla tua casa."), Furniture_CancelBuy(playerid), 0;
+            }
 
             Furniture_FinishBuy(playerid, objectid);
         }
@@ -112,8 +159,17 @@ hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float
         }
         else if(response == EDIT_RESPONSE_FINAL)
         {
-            Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+            if(!(Character_GetVirtualWorld(playerid) > HOUSE_START_WORLD || Character_GetVirtualWorld(playerid) > BUILDING_START_WORLD))
+            {
+                if(!Internal_ValidateObjectPos(objectid, x, y, z))
+                {
+                    SetDynamicObjectPos(objectid, tx, ty, tz);
+                    SetDynamicObjectRot(objectid, trx, try, trz);
+                    return SendClientMessage(playerid, COLOR_ERROR, "Non puoi piazzare l'oggetto troppo lontano dalla tua casa."), 0;
+                }
+            }
 
+            Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
             SetDynamicObjectPos(objectid, x, y, z);
             SetDynamicObjectRot(objectid, rx, ry, rz);
             
@@ -178,79 +234,14 @@ Dialog:Dialog_FurnitureBuy(playerid, response, listitem, inputtext[])
     return 1;
 }
 
-stock Character_ShowFurnitures(playerid, page)
-{
-
-    FurniturePage{playerid} = page;
-
-    new world = Character_GetVirtualWorld(playerid);
-
-    new Pool:furnituresInWorld = Pool:map_get(Furnitures, world);
-    
-    if(!pool_valid(furnituresInWorld) || pool_size(furnituresInWorld) == 0)
-        return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono mobili.");
-    
-    new rows = pool_size(furnituresInWorld);
-    
-    new 
-        String:str = @("")    
-    ;
-
-    if(rows > page * MAX_FURNITURE_PER_PAGE)
-        str += String:str_format(">>> Pagina %d\n", page + 2);
-    else if(rows <= page * MAX_FURNITURE_PER_PAGE && !rows)
-        return SendClientMessage(playerid, COLOR_ERROR, "Non hai ancora piazzato nessun mobile.");
-
-    if(!list_valid(FurnitureListItem[playerid]))
-        FurnitureListItem[playerid] = list_new();
-
-    list_clear(FurnitureListItem[playerid]);
-
-    // MODIFICARE QUESTO PERCHE' CON LE POOL NON FUNZIONERA' MAI
-    //for(new i = page * MAX_FURNITURE_PER_PAGE; i < rows; ++i)
-    new 
-        objectid = 0,
-        counter = -1,
-        startIndex = page * MAX_FURNITURE_PER_PAGE,
-        lastIndex = startIndex + MAX_FURNITURE_PER_PAGE
-        ;
-    printf("Start: %d - Last: %d", startIndex, lastIndex);
-    for_pool(i : furnituresInWorld)
-    {
-
-        printf("counter: %d", counter);
-        if(counter < startIndex)
-        {
-            counter++;
-            continue;
-        }
-
-        if(counter == lastIndex)
-            break;
-
-        objectid = iter_get_value(i);
-
-        if(Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_WORLD_ID) != world)
-            continue;
-
-        Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
-        new modelid = Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_MODEL_ID);
-        str += str_format("%s [ID: %d - Model ID: %d]\n", FurnitureCustomData[FURNITURE_NAME], iter_get_key(i), modelid);
-
-        list_add(FurnitureListItem[playerid], objectid);
-        counter++;
-    }
-
-    Dialog_Show_s(playerid, Dialog_CharacterFurnitures, DIALOG_STYLE_LIST, @("Lista mobili piazzati"), str, "Modifica", "Indietro");
-    return 1;
-}
-
 Dialog:Dialog_CharacterFurnitures(playerid, response, listitem, inputtext[])
 {
     new 
-        slot = listitem - 1, 
-        selected = slot >= 0 ? list_get(FurnitureListItem[playerid], slot) : -1;
-    
+        slot = listitem, 
+        listSize = list_size(FurnitureListItem[playerid]),
+        selected = 0 <= slot < listSize ? list_get(FurnitureListItem[playerid], slot) : -1
+    ;
+    printf("List Size: %d", listSize);
     list_delete(FurnitureListItem[playerid]);
 
     if(!response)
@@ -260,8 +251,10 @@ Dialog:Dialog_CharacterFurnitures(playerid, response, listitem, inputtext[])
         else
             return Character_ShowFurnitures(playerid, FurniturePage{playerid}-1);
     }
-    if(listitem == 0)
+    if(listitem == listSize)
         return Character_ShowFurnitures(playerid, FurniturePage{playerid}+1);
+    else if(listitem == listSize+1)
+        return Character_ShowFurnitures(playerid, FurniturePage{playerid}-1);
     
     SelectedFurniture[playerid] = selected;
     Furniture_ShowOptions(playerid);
@@ -349,17 +342,18 @@ Dialog:Dialog_SellFurniture(playerid, response, listitem, inputtext[])
     return 1;
 }
 
-stock Furniture_CreateTemporary(modelid, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz, worldid, interior)
+stock Furniture_CreateTemporary(modelid, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz, worldid, interior, linked_to)
 {
     new objectid = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, worldid, interior);
     FurnitureCustomData[FURNITURE_DATABASE_ID] = 0;
     FurnitureCustomData[FURNITURE_PRICE] = 0;
+    FurnitureCustomData[FURNITURE_LINKED_TO] = linked_to;
     Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
     return objectid;
 }
 
 // CreatedBy = -1 means that Server created it.
-stock Furniture_Store(objectid, furnitureid, createdBy = -1)
+stock Furniture_Store(objectid, furnitureid, createdBy = -1, linked_to = -1)
 {
     if(Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData) && FurnitureCustomData[FURNITURE_DATABASE_ID] == 0)
     {
@@ -379,6 +373,8 @@ stock Furniture_Store(objectid, furnitureid, createdBy = -1)
         GetDynamicObjectPos(objectid, x, y, z);
         GetDynamicObjectRot(objectid, rx, ry, rz);
         
+        linked_to = linked_to == -1 ? Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_WORLD_ID) : linked_to;
+
         inline OnInsert()
         {
             new tname[64];
@@ -387,6 +383,7 @@ stock Furniture_Store(objectid, furnitureid, createdBy = -1)
             FurnitureCustomData[FURNITURE_PRICE] = BuyableFurniture_GetPrice(furnitureid);
             FurnitureCustomData[FURNITURE_LAST_EDIT_ACCOUNT] = FurnitureCustomData[FURNITURE_CREATED_BY_ACCOUNT] = account_id;
             FurnitureCustomData[FURNITURE_LAST_EDIT_CHARACTER] = FurnitureCustomData[FURNITURE_CREATED_BY_CHARACTER] = character_id;
+            FurnitureCustomData[FURNITURE_LINKED_TO] = linked_to;
             set(FurnitureCustomData[FURNITURE_NAME], tname);
             Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData);
 
@@ -395,8 +392,8 @@ stock Furniture_Store(objectid, furnitureid, createdBy = -1)
 
         MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO `furnitures` \
         (object_id, world, interior, model, price, pos_x, pos_y, pos_z, rot_x, rot_y, rot_z, name, \
-        created_by_account, created_by_character, last_edit_by_account, last_edit_by_character) \
-        VALUES('%d', '%d', '%d', '%d', '%d', '%f', '%f', '%f', '%f', '%f', '%f', '%e', '%d', '%d', '%d', '%d')",
+        created_by_account, created_by_character, last_edit_by_account, last_edit_by_character, linked_to) \
+        VALUES('%d', '%d', '%d', '%d', '%d', '%f', '%f', '%f', '%f', '%f', '%f', '%e', '%d', '%d', '%d', '%d', '%d')",
         objectid,
         Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_WORLD_ID),
         Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_INTERIOR_ID),
@@ -408,7 +405,8 @@ stock Furniture_Store(objectid, furnitureid, createdBy = -1)
         account_id,
         character_id,
         account_id,
-        character_id);
+        character_id,
+        linked_to);
 
 
         return 1;
@@ -459,6 +457,8 @@ stock Furniture_Load(worldid)
             cache_get_value_index_int(i, 15, FurnitureCustomData[FURNITURE_LAST_EDIT_ACCOUNT]);
             cache_get_value_index_int(i, 16, FurnitureCustomData[FURNITURE_LAST_EDIT_CHARACTER]);
 
+            cache_get_value_index_int(i, 17, FurnitureCustomData[FURNITURE_LINKED_TO]);
+
             new objectid = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, vw, interior);
 
             Furniture_LoadTextures(objectid);
@@ -503,7 +503,7 @@ stock Furniture_StartBuy(playerid, furnitureid)
 	GetPlayerPos(playerid, x, y, z);
     GetXYInFrontOfPlayer(playerid, x, y, 2);
     
-    new objectid = Furniture_CreateTemporary(BuyableFurniture_GetModel(furnitureid), x + 3.0, y, z + 1.0, 0.0, 0.0, 0.0, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid));
+    new objectid = Furniture_CreateTemporary(BuyableFurniture_GetModel(furnitureid), x + 3.0, y, z + 1.0, 0.0, 0.0, 0.0, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), FurnitureLinkedTo[playerid]);
     EditObject_Start(playerid, EDIT_TYPE_BUYING_FURNITURE, objectid, 0);
 
     SendClientMessage(playerid, -1, "Premi {FF6347}ESC{FFFFFF} per annullare e {FF6347}SPAZIO{FFFFFF} per spostare la visuale. Clicca sul {FF6347}FLOPPY{FFFFFF} per salvare.");
@@ -514,7 +514,7 @@ stock Furniture_FinishBuy(playerid, objectid)
 {
     new furnitureid = SelectedFurniture[playerid];
 
-    Furniture_Store(objectid, furnitureid, playerid);
+    Furniture_Store(objectid, furnitureid, playerid, FurnitureLinkedTo[playerid]);
 
     new name[64];
     BuyableFurniture_GetName(furnitureid, name);
@@ -592,8 +592,9 @@ stock Furniture_UpdateInfoList(playerid)
 {
     if(!Furniture_IsShowingInfo(playerid))
         return 0;
-
-    new Pool:furnitures = Pool:map_get(Furnitures, Character_GetVirtualWorld(playerid));
+    new world = Character_GetVirtualWorld(playerid),
+        Pool:furnitures = Pool:map_get(Furnitures, world);
+    
     if(!pool_valid(furnitures))
         return 0;
 
@@ -605,12 +606,26 @@ stock Furniture_UpdateInfoList(playerid)
     
     list_clear(FurnitureLabels[playerid]);
 
+    if(ShowingLabelsForWorld[playerid] == -1)
+    {
+        if(world == 0)
+            ShowingLabelsForWorld[playerid] = Internal_GetNearbyFurnableWorld(playerid);
+        else
+            ShowingLabelsForWorld[playerid] = world;
+
+    }
+
+    printf("Showing ids for world %d", ShowingLabelsForWorld[playerid]);
+
     new text[128 + MAX_PLAYER_NAME], Text3D:labelid;
     for_pool(i : furnitures)
     {
         new objectid = iter_get_value(i), index = iter_get_key(i);
 
         Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+
+        if(FurnitureCustomData[FURNITURE_LINKED_TO] != ShowingLabelsForWorld[playerid])
+            continue;
 
         new Float:x, Float:y, Float:z;
         GetDynamicObjectPos(objectid, x, y, z);
@@ -630,9 +645,23 @@ stock Furniture_UpdateInfoList(playerid)
     return 1;
 }
 
-stock Character_CanFurnish(playerid)
+stock Character_CanFurnish(playerid, bool:outsideCheck = false)
 {
     new currentHouse = Character_GetHouseID(playerid);
+    if(outsideCheck && currentHouse == -1)
+    {
+        new Float:x, Float:y, Float:z;
+        for(new i = 0, j = list_size(HouseList); i < j; ++i)
+        {
+            if(House_GetOwnerID(i) == Character_GetID(playerid) && Character_GetVirtualWorld(playerid) == House_GetEnterWorld(i) && GetPlayerInterior(playerid) == House_GetEnterInterior(i))
+            {
+                House_GetEnterPosition(i, x, y, z);
+                if(GetPlayerDistanceFromPoint(playerid, x, y, z) >= 15.0)
+                    continue;
+                return 1;
+            }
+        }
+    }
     if(currentHouse != -1 && House_GetOwnerID(currentHouse) == Character_GetID(playerid) && IsPlayerInRangeOfHouseExit(playerid, currentHouse, 50.0))
     {
         return 1;
@@ -674,11 +703,19 @@ stock Character_GetFurnitureCount(playerid)
 
 stock Furniture_Remove(playerid, objectid)
 {
+    if(Internal_RemoveFurniture(Character_GetVirtualWorld(playerid), objectid))
+    {
+        Player_Info(playerid, "Hai ~r~rimosso~w~ il mobile.", true, 5000);
+        Furniture_UpdateInfoList(playerid);
+    }
+    return 1;
+}
+
+stock Internal_RemoveFurniture(worldid, objectid)
+{
     if(!IsValidDynamicObject(objectid))
         return 0;
     Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
-
-    Player_Info(playerid, "Hai ~r~rimosso~w~ il mobile.", true, 5000);
 
     if(FurnitureCustomData[FURNITURE_DATABASE_ID] > 0)
     {
@@ -687,20 +724,17 @@ stock Furniture_Remove(playerid, objectid)
 
     new data[e_FurnitureCustomData];
     FurnitureCustomData = data;
-
     Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
 
     Furniture_RemoveTextures(objectid);
 
     DestroyDynamicObject(objectid);
 
-    if(map_has_key(Furnitures, Character_GetVirtualWorld(playerid)))
+    if(map_has_key(Furnitures, worldid))
     {
-        new Pool:pool = Pool:map_get(Furnitures, Character_GetVirtualWorld(playerid));
+        new Pool:pool = Pool:map_get(Furnitures, worldid);
         pool_remove(pool, objectid);
     }
-
-    Furniture_UpdateInfoList(playerid);
     return 1;
 }
 
@@ -836,4 +870,125 @@ stock Furniture_LoadTextures(objectid)
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM furniture_textures WHERE furniture_id = '%d';", FurnitureCustomData[FURNITURE_DATABASE_ID]);
     return 1;
+}
+
+stock Internal_GetNearbyFurnableWorld(playerid)
+{
+    new 
+        Float:x, Float:y, Float:z, 
+        Float:nearest = MAX_EXTERIOR_DISTANCE, 
+        Float:dist = 0.0,
+        linked_to = -1;
+    for(new i = 0, j = list_size(HouseList); i < j; ++i)
+    {
+        if(House_GetOwnerID(i) != Character_GetID(playerid) || House_GetEnterWorld(i) != Character_GetVirtualWorld(playerid))
+            continue;
+        House_GetEnterPosition(i, x, y, z);
+        dist = GetPlayerDistanceFromPoint(playerid, x, y, z);
+        if(dist > MAX_EXTERIOR_DISTANCE)
+            continue;
+        if(dist < nearest)
+        {
+            nearest = dist;
+            linked_to = House_GetExitWorld(i);
+        }
+    }
+    return linked_to;
+}
+
+stock Character_ShowFurnitures(playerid, page)
+{
+    if(page < 0)
+        return pc_cmd_arredamento(playerid, "");
+    
+    FurniturePage{playerid} = page;
+
+    new world = Character_GetVirtualWorld(playerid),
+        linked_to = world,
+        Pool:furnituresInWorld = Pool:map_get(Furnitures, world);
+    
+    if(!pool_valid(furnituresInWorld) || pool_size(furnituresInWorld) == 0)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono mobili.");
+    
+    if(world == 0) // Exterior?
+    {
+        // Find nearest house.
+        linked_to = Internal_GetNearbyFurnableWorld(playerid);
+        if(linked_to < HOUSE_START_WORLD)
+            return SendClientMessage(playerid, COLOR_ERROR, "Non sei nelle vicinanze di una tua abitazione.");
+    }
+    
+    FurnitureLinkedTo[playerid] = linked_to;
+    printf("LInked to: %d", linked_to);
+    new rows = pool_size(furnituresInWorld);
+    printf("Rows: %d", rows);
+    new 
+        String:str = @("")    
+    ;
+
+    
+    if(rows <= page * MAX_FURNITURE_PER_PAGE && !rows)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai ancora piazzato nessun mobile.");
+
+    if(!list_valid(FurnitureListItem[playerid]))
+        FurnitureListItem[playerid] = list_new();
+
+    list_clear(FurnitureListItem[playerid]);
+
+    // MODIFICARE QUESTO PERCHE' CON LE POOL NON FUNZIONERA' MAI
+    //for(new i = page * MAX_FURNITURE_PER_PAGE; i < rows; ++i)
+    new 
+        objectid = 0,
+        counter = 0,
+        startIndex = page * MAX_FURNITURE_PER_PAGE,
+        lastIndex = startIndex + MAX_FURNITURE_PER_PAGE,
+        playerFurnituresCount
+        ;
+    printf("Start: %d - Last: %d", startIndex, lastIndex);
+    for_pool(i : furnituresInWorld)
+    {
+        printf("counter: %d", counter);
+        if(counter < startIndex)
+        {
+            counter++;
+            continue;
+        }
+
+        if(counter == lastIndex)
+            break;
+
+        objectid = iter_get_value(i);
+        printf("Object id: %d", objectid);
+        if(Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_WORLD_ID) != world)
+            continue;
+
+        Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+
+        if(FurnitureCustomData[FURNITURE_LINKED_TO] != linked_to)
+            continue;
+
+        new modelid = Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_MODEL_ID);
+        str += str_format("%s [ID: %d - Model ID: %d]\n", FurnitureCustomData[FURNITURE_NAME], iter_get_key(i), modelid);
+
+        list_add(FurnitureListItem[playerid], objectid);
+        counter++;
+        playerFurnituresCount++;
+    }
+    
+    if(playerFurnituresCount <= 0)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono mobili piazzati.");
+
+    if(rows > page * MAX_FURNITURE_PER_PAGE + MAX_FURNITURE_PER_PAGE)
+        str += String:str_format(">>> Pagina %d\n", page + 2);
+    if(FurnitureLinkedTo[playerid] >= BUILDING_START_WORLD)
+        Dialog_Show_s(playerid, Dialog_CharacterFurnitures, DIALOG_STYLE_LIST, str_format("Lista mobili piazzati edificio %d", FurnitureLinkedTo[playerid] - BUILDING_START_WORLD), str, "Modifica", "Indietro");
+    else if(FurnitureLinkedTo[playerid] >= HOUSE_START_WORLD)
+        Dialog_Show_s(playerid, Dialog_CharacterFurnitures, DIALOG_STYLE_LIST, str_format("Lista mobili piazzati casa %d", FurnitureLinkedTo[playerid] - HOUSE_START_WORLD), str, "Modifica", "Indietro");
+    return 1;
+}
+
+stock Furniture_IsExterior(objectid)
+{
+    Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+    return FurnitureCustomData[FURNITURE_LINKED_TO] != Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_WORLD_ID);
 }

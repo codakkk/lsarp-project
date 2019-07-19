@@ -105,7 +105,7 @@ DEFINE_HOOK_REPLACEMENT(Element, Elm);
 DEFINE_HOOK_REPLACEMENT(Player, Ply);
 DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
 
-#define WC_DEBUG_SILENT true
+#define WC_DEBUG_SILENT false
 #include <weapon-config>
 
 #include <YSI_Coding\y_hooks> // Needed for NexAC
@@ -160,6 +160,9 @@ DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
 
 // ===== [ PICKUP SYSTEM ] =====
 #include <pickup\core>
+
+// ===== [ CHECKPOINT SYSTEM ] =====
+#include <checkpoint_system\core>
 
 // ===== [ INVENTORY SYSTEM ] =====
 #include <inventory\core>
@@ -280,7 +283,7 @@ forward OnCharacterDamageDone(playerid, Float:amount, issuerid, weaponid, bodypa
 public OnPlayerDamageDone(playerid, Float:amount, issuerid, weapon, bodypart)
 {
 	DamageSystem_Update(playerid, amount, issuerid, weapon, bodypart);
-	//CallLocalFunction(#OnCharacterDamageDone, "dfddd", playerid, amount, issuerid, weapon, bodypart);
+	CallLocalFunction(#OnCharacterDamageDone, "dfddd", playerid, amount, issuerid, weapon, bodypart);
 	return 1;
 }
 

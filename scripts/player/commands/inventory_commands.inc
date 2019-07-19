@@ -32,7 +32,7 @@ alias:inventario("inv");
 flags:usa(CMD_ALIVE_USER);
 CMD:usa(playerid, params[])
 {
-	if(!Character_IsAlive(playerid) || Character_IsStunned(playerid) || Character_IsCuffed(playerid))
+	if(!Character_CanInteract(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
@@ -49,14 +49,14 @@ CMD:usa(playerid, params[])
 flags:passa(CMD_ALIVE_USER);
 CMD:passa(playerid, params[])
 {
-	if(!Character_IsAlive(playerid) || Character_IsStunned(playerid) || Character_IsCuffed(playerid))
+	if(!Character_CanInteract(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	
 	if(Request_IsPending(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
 	new slotid, id, amount;
 	if(sscanf(params, "k<u>dD(1)", id, slotid, amount))
-		return SendClientMessage(playerid, COLOR_ERROR, "/passa <playerid/partofname> <slotid> <quantitï¿½ (default 1)>");
+		return SendClientMessage(playerid, COLOR_ERROR, "/passa <playerid/partofname> <slotid> <quantità (default 1)>");
 
 	Character_SendItemRequest(playerid, id, slotid, amount);
 	return 1;
@@ -65,7 +65,7 @@ CMD:passa(playerid, params[])
 flags:getta(CMD_ALIVE_USER);
 CMD:getta(playerid, params[])
 {
-	if(!Character_IsAlive(playerid) || Character_IsStunned(playerid) || Character_IsCuffed(playerid))
+	if(!Character_CanInteract(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	
 	if(Character_IsFactionDuty(playerid))
@@ -73,16 +73,29 @@ CMD:getta(playerid, params[])
 	
 	new slotid, amount;
 	if(sscanf(params, "dD(1)", slotid, amount))
-		return SendClientMessage(playerid, COLOR_ERROR, "/getta <slotid> <quantitï¿½ (default 1)>");
+		return SendClientMessage(playerid, COLOR_ERROR, "/getta <slotid> <quantità (default 1)>");
 	
 	Character_DropItem(playerid, slotid, amount);
 	return 1;
 }
 
+flags:depositadenaro(CMD_ALIVE_USER);
+CMD:depositadenaro(playerid, params[])
+{
+	new money;
+	if(sscanf(params, "d", money))
+		return SendClientMessage(playerid, COLOR_ERROR, "(/dep)osita(den)aro <ammontare>"), 0;
+	if(money < 0 || money > Character_GetMoney(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non hai questo ammontare di denaro.");
+	Character_DepositMoneyInInv(playerid, money);
+	return 1;
+}
+alias:depositadenaro("depden", "depositaden", "depdenaro");
+
 flags:deposita(CMD_ALIVE_USER);
 CMD:deposita(playerid, params[])
 {
-	if(!Character_IsAlive(playerid) || Character_IsStunned(playerid) || Character_IsCuffed(playerid))
+	if(!Character_CanInteract(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	
 	if(Character_IsFactionDuty(playerid))
@@ -93,7 +106,6 @@ CMD:deposita(playerid, params[])
 	
 	new itemid , ammo;
 	Character_GetWeaponData(playerid, Weapon_GetSlot(Character_GetWeapon(playerid)), itemid, ammo);
-	printf("Dep: %d - %d", itemid, ammo);
 	if(itemid == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma.");
 
@@ -121,7 +133,7 @@ alias:deposita("dep");
 flags:disassembla(CMD_ALIVE_USER);
 CMD:disassembla(playerid, params[])
 {
-	if(!Character_IsAlive(playerid) || Character_IsStunned(playerid) || Character_IsCuffed(playerid))
+	if(!Character_CanInteract(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	
 	if(Character_IsFactionDuty(playerid))
@@ -183,7 +195,7 @@ alias:disassembla("dis");
 flags:gettaarma(CMD_ALIVE_USER);
 CMD:gettaarma(playerid, params[])
 {
-	if(!Character_IsAlive(playerid))
+	if(!Character_CanInteract(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 
 	if(Character_IsFactionDuty(playerid))

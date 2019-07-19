@@ -427,7 +427,7 @@ Dialog:Dialog_WearObjectEdit(playerid, response, listitem, inputtext[])
         }
         case 2:
         {
-            return Dialog_Show(playerid, Dialog_WearObjectBone, DIALOG_STYLE_LIST, "Cambia osso", "Spina dorsale\nTesta\nBraccio sinistro\nBraccio destro\nMano destra\nMano sinistra\nCoscia sinistra\nCoscia destra\nPiede sinistro\nPiede destro\nPolpaccio destro\nPolpaccio sinistro\nAvambraccio sinistro\nAvambraccio destro\nSpalla (sinistra)\nSpalla (destra)\nCollo\nMascella", "Procedi", "Indietro");
+            return Dialog_Show(playerid, Dialog_WearObjectBone, DIALOG_STYLE_LIST, "Cambia osso", "Spina dorsale\nTesta\nBraccio sinistro\nBraccio destro\nMano sinistra\nMano destra\nCoscia sinistra\nCoscia destra\nPiede sinistro\nPiede destro\nPolpaccio destro\nPolpaccio sinistro\nAvambraccio sinistro\nAvambraccio destro\nSpalla (sinistra)\nSpalla (destra)\nCollo\nMascella", "Procedi", "Indietro");
         }
         case 3:
         {
@@ -565,7 +565,7 @@ stock WearObject_Use(playerid, slotid)
     return 1;
 }
 
-hook OnCharacterLoad(playerid)
+hook OnPlayerCharacterLoad(playerid)
 {
     Character_LoadWearObjects(playerid);
     return 1;
@@ -665,6 +665,7 @@ stock Character_LoadWearObjects(playerid)
             Float:rotx = 0.0, Float:roty = 0.0, Float:rotz = 0.0,
             Float:scalex = 0.0, Float:scaley = 0.0, Float:scalez = 0.0,
             color1 = 0, color2 = 0;
+        printf("Player %d Wear objects: %d", playerid, rows);
         for(new i = 0; i < rows; ++i)
         {
             if(i >= MAX_PLAYER_OBJECTS)
@@ -797,7 +798,6 @@ static Internal_AddWearObject(playerid, slotid, const name[], modelid, bone, Flo
             PlayerCustomObject[playerid][slotid][RotX], PlayerCustomObject[playerid][slotid][RotY], PlayerCustomObject[playerid][slotid][RotZ],
             PlayerCustomObject[playerid][slotid][ScaleX], PlayerCustomObject[playerid][slotid][ScaleY], PlayerCustomObject[playerid][slotid][ScaleZ],
             PlayerCustomObject[playerid][slotid][MaterialColor1], PlayerCustomObject[playerid][slotid][MaterialColor2]);
-    WearObject_Save(playerid, slotid);
     return 1;
 }
 

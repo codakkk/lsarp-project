@@ -44,8 +44,8 @@ flags:tog(CMD_USER);
 CMD:tog(playerid, params[])
 {
 	if(isnull(params) || strlen(params) > 16)
-		return SendClientMessage(playerid, COLOR_ERROR, "/tog <fchat - hud - pm - ooc>");
-	if(!strcmp(params, "fchat", true))
+		return SendClientMessage(playerid, COLOR_ERROR, "/tog <(f)chat - hud - pm - ooc>");
+	if(!strcmp(params, "fchat", true) || !strcmp(params, "f", true))
 	{
 		if(Character_GetFaction(playerid) == INVALID_FACTION_ID)
 			return SendClientMessage(playerid, COLOR_ERROR, "Non fai parte di una fazione.");
@@ -129,8 +129,9 @@ CMD:aiuto(playerid, params[])
     SendClientMessage(playerid, -1, "[GENERALE]: /info - /dom - /compra - /annulla - /sconosciuto");
     SendClientMessage(playerid, -1, "[GENERALE]: /rimuovi - /hotkeys - /arma - /id - /dp - /invmode");
 	SendClientMessage(playerid, -1, "[GENERALE]: /afk - /stilechat - /stilelotta - /stilecamminata");
+	SendClientMessage(playerid, -1, "[GENERALE]: /oggetto - /depositadenaro");
     SendClientMessage(playerid, -1, "[CHAT]: /b - /me - /ame - /low - /melow - /do - /dolow - (/s)hout");
-    SendClientMessage(playerid, -1, "[CHAT]: (/w)hisper - (/cw)hisper - /pm - /blockb - /blockpm");
+    SendClientMessage(playerid, -1, "[CHAT]: (/w)hisper - (/cw)hisper - /pm - /blockb - /blockpm - /cleaarchat");
     SendClientMessage(playerid, -1, "[ALTRO]: /animlist - /vcmds - /invcmds - /zpoints - /furniturecmds");
 	new factionid = Character_GetFaction(playerid);
 	if(factionid != -1)
@@ -139,7 +140,7 @@ CMD:aiuto(playerid, params[])
 			Faction_GetType(factionid) == FACTION_TYPE_MEDICAL ||
 			Faction_GetType(factionid) == FACTION_TYPE_GOVERNAMENT)
 		{
-			SendClientMessage(playerid, COLOR_SLATEBLUE, "[FAZIONE]: (/f)azione - /togf - /faiuto");
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "[FAZIONE]: (/f)azione - /faiuto");
 		}
 	}
 	if(AccountInfo[playerid][aAdmin] > 0)
@@ -247,8 +248,8 @@ CMD:lasciacarcere(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei in carcere");
 	if(Character_GetJailTime(playerid) > 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai ancora scontato la tua pena.");
-	new pickupid = Character_GetLastPickup(playerid), id, E_ELEMENT_TYPE:type;
-	if(!Pickup_GetInfo(pickupid, id, type) || type != ELEMENT_TYPE_JAIL_EXIT || !IsPlayerInRangeOfPickup(playerid, pickupid, 5.0))
+	new id, E_ELEMENT_TYPE:type;
+	if(!Character_GetNearestPickup(playerid, id, type) || type != ELEMENT_TYPE_JAIL_EXIT)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino all'uscita della prigione.");
 	
 	Character_SetJailTime(playerid, 0);
@@ -336,7 +337,7 @@ Dialog:Dialog_SetNewPassword(playerid, response, listitem, inputtext[])
 	if(!response)
 		return 0;
 	if(!IsValidPassword(inputtext))
-		return Dialog_Show(playerid, Dialog_SetNewPassword, DIALOG_STYLE_INPUT, "Nuova password", "La password inserita non è corretta.\nInserisci la nuova password.\nLa password deve contenere almeno:\n- 8 caratteri.\n- Almeno una lettera maiuscola.\n- Almeno un numero.\n- Almeno un carattere speciale.\nLa password non puo':\n- Cominciare o finire con uno spazio\n- Contenere come caratteri speciali: %, \\, ', `, \".", "Continua", "Annulla");
+		return Dialog_Show(playerid, Dialog_SetNewPassword, DIALOG_STYLE_INPUT, "Nuova password", "La password inserita non è corretta.\nInserisci la nuova password.\nLa password deve contenere almeno:\n- 8 caratteri.\n- Almeno una lettera maiuscola.\n- Almeno un numero.\n- Almeno un carattere speciale.\nLa password non puo':\n- Cominciare o finire con uno spazio\n- Contenere come caratteri speciali: %%, \\, ', `, \".", "Continua", "Annulla");
 	inline OnUpdate()
 	{
 		SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato la tua password con successo.");

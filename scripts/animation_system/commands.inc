@@ -6,7 +6,7 @@ CMD:animlist(playerid, params[])
 	SendClientMessage(playerid, COLOR_WHITE, "/carry - /crack - /sleep - /jump - /deal - /eating - /puke - /gsign - /chat - /crouch");
 	SendClientMessage(playerid, COLOR_WHITE, "/goggles - /spray - /throw - /swipe - /office - /kiss - /knife - /cpr - /scratch - /point");
 	SendClientMessage(playerid, COLOR_WHITE, "/cheer - /wave - /strip - /smoke - /reload - /taichi - /wank - /cower - /skate - /drunk");
-	SendClientMessage(playerid, COLOR_WHITE, "/cry - /tired - /sit - /crossarms - /fucku - /walk - /piss - /fall - /lean");
+	SendClientMessage(playerid, COLOR_WHITE, "/cry - /tired - /sit - /crossarms - /fucku - /walk - /piss - /fall - /lean - /attenti");
 
 	return 1;
 }
@@ -1033,5 +1033,14 @@ CMD:lean(playerid, params[])
 
 	ApplyAnimationEx(playerid,"GANGS","leanIDLE", 4.0, 1, 0, 0, 0, 0);
 
+	return 1;
+}
+
+flags:attenti(CMD_ALIVE_USER);
+CMD:attenti(playerid, params[])
+{
+	if(!AnimationCheck(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare un'animazione al momento.");
+	ApplyAnimationEx(playerid, "RAPPING","RAP_A_OUT", 4.1, 0, 0, 0, 0, 0);
 	return 1;
 }

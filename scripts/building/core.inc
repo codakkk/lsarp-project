@@ -73,7 +73,7 @@ stock Building_LoadAll()
 		BuildingInfo[i][bExists] = 1;
 
 		Building_CreateElements(i);
-		printf("Type: %d", BuildingInfo[i][bType]);
+		//printf("Type: %d", BuildingInfo[i][bType]);
 		Iter_Add(Buildings, i);
 	}
 	printf("Loaded %d buildings.\n", count);

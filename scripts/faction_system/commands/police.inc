@@ -91,6 +91,8 @@ CMD:trascina(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "/trascina <playerid/partofname>");
 	if(playerid == id || !Character_IsLogged(id) || IsPlayerNPC(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
+	if(!Character_IsAlive(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi trascinare questo giocatore.");
 	if(Character_IsJailed(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi trascinare un giocatore incarcerato.");
 	if(Character_IsDragging(playerid) && Character_IsDragged(id) && Character_GetDraggedBy(id) == playerid)
@@ -107,7 +109,7 @@ CMD:trascina(playerid, params[])
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 3.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
 
-	if(!Character_IsCuffed(id) && !Character_IsStunned(id))
+	if(!Character_CanInteract(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è ammanettato o stordito.");
 	
 	Character_SetDragged(id, true);
@@ -150,6 +152,49 @@ CMD:cura(playerid, params[])
 
 	SendFormattedMessage(id, COLOR_YELLOW, "%s vuole curarti. Digita \"/accetta cure\" per accettare.", Character_GetRolePlayName(playerid));
 	SendFormattedMessage(playerid, COLOR_YELLOW, "Richiesta di cure inviata a %s.", Character_GetRolePlayName(id));
+	return 1;
+}
+
+flags:perquisisci(CMD_ALIVE_USER); //flags:perquisisci(CMD_POLICE);
+CMD:perquisisci(playerid, params[])
+{
+	if(!Character_CanInteract(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+	new id;
+	if(sscanf(params, "k<u>d", id))
+		return SendClientMessage(playerid, COLOR_ERROR, "/perquisisci <playerid/partofname/#id>");
+
+	if(id == playerid)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso.");
+
+	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+
+	if(!IsPlayerInRangeOfPlayer(playerid, id, 5.0))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
+	
+	SendFormattedMessage(id, COLOR_ORANGE, "%s (%d) vuole perquisirti. Digita \"/accetta perquisizione\" per accettare.", Character_GetRolePlayName(playerid), playerid);
+	SendFormattedMessage(playerid, COLOR_ORANGE, "Richiesta di perquisizione inviata a %s (%d).", Character_GetRolePlayName(id), id);
+
+	Character_SetRequest(playerid, id, REQUEST_TYPE_SEARCH);
+	return 1;
+}
+
+stock Character_AcceptSearch(playerid)
+{
+	if(!Request_IsPending(playerid) || Request_GetType(playerid) != REQUEST_TYPE_SEARCH)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di perquisizione attiva."), 0;
+    if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid), 5.0))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
+	new senderid = Request_GetSender(playerid);
+
+	SendFormattedMessage(senderid, -1, "%s (%d) ha accettato la tua richiesta di perquisizione.", Character_GetRolePlayName(playerid), playerid);
+	SendFormattedMessage(playerid, -1, "Hai accettato la richiesta di perquisizione di %s (%d).", Character_GetRolePlayName(senderid), senderid);
+
+	new str[64], Inventory:inv = Character_GetInventory(playerid);
+	format(str, sizeof(str), "Inventario di %s (%d/%d)",  Character_GetRolePlayName(playerid), Inventory_GetUsedSpace(inv), Inventory_GetSpace(inv));
+	Inventory_ShowInChat(inv, senderid, str);
+	SendFormattedMessage(senderid, -1, "Denaro: $%d", Character_GetMoney(playerid));
 	return 1;
 }
 

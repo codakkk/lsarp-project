@@ -110,10 +110,9 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 	else
 	{
 		new
-			pickupid = Character_GetLastPickup(playerid),
 			eID,
 			E_ELEMENT_TYPE:eType;
-		if(PRESSED(KEY_WALK) && Pickup_GetInfo(pickupid, eID, eType) && eType == ELEMENT_TYPE_DEALERSHIP && IsPlayerInRangeOfPickup(playerid, pickupid, 2.0))
+		if(PRESSED(KEY_WALK) && Character_GetNearestPickup(playerid, eID, eType) && eType == ELEMENT_TYPE_DEALERSHIP)
 		{
 			Dealership_ShowVehiclesToPlayer(eID, playerid);
 		}
