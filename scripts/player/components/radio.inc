@@ -30,10 +30,10 @@ CMD:frequenza(playerid, params[])
     new inputFrequency;
 
     if(sscanf(params, "d", inputFrequency))
-    	return SendClientMessage(playerid, COLOR_WHITE, "/frequenza <numero> (0: SPENTA - 1/999).");
+    	return SendClientMessage(playerid, COLOR_ERROR, "/frequenza <numero> (0: SPENTA - 1/999).");
 
     if(!Character_SetRadioFrequency(playerid, inputFrequency))
-    	return SendClientMessage(playerid, COLOR_WHITE, "/frequenza <numero> (0: SPENTA - 1/999).");
+    	return SendClientMessage(playerid, COLOR_ERROR, "/frequenza <numero> (0: SPENTA - 1/999).");
 
     if(inputFrequency == 0)
     	SendClientMessage(playerid, COLOR_BLUE, "Hai spento la radio.");
@@ -52,7 +52,7 @@ CMD:radio(playerid, params[])
     	return SendClientMessage(playerid, COLOR_ERROR, "Non sei connesso ad una frequenza (/frequenza).");
 
     if(strlen(params) <= 0 || strlen(params) > 128)
-    	return SendClientMessage(playerid, COLOR_WHITE, "/r <testo>.");
+    	return SendClientMessage(playerid, COLOR_ERROR, "/r <testo>.");
 
     new frequency = Character_GetRadioFrequency(playerid);
 
@@ -71,7 +71,7 @@ stock SendMessageToRadio(frequency, color, const msg[], GLOBAL_TAG_TYPES:...)
 		if(!Character_HasItem(i, gItem_Radio) || Character_GetRadioFrequency(i) != frequency)
 			continue;
 
-		SendTwoLinesMessage(i, color, msg, ___2);
+		SendTwoLinesMessage(i, color, msg, ___3);
 	}	
     return 1;
 }

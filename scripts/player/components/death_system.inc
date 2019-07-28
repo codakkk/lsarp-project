@@ -53,7 +53,7 @@ hook OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
 }
 
 // Causes death system to get bugged
-ptask OnPlayerDeathSystemUpdate[1000](playerid)
+ptask OnPlayerDeathSystemUpdate[500](playerid)
 {
 	if(!Character_IsLogged(playerid))
 		return 0;
@@ -61,8 +61,11 @@ ptask OnPlayerDeathSystemUpdate[1000](playerid)
 	{
 
 		new Float:x, Float:y, Float:z, Float:a, interior, world;
+		GetPlayerPos(playerid, x, y, z);
+		printf("Current: %f - %f - %f", x, y, z);
 		Character_GetDeathStateData(playerid, x, y, z, a, interior, world);
-
+		printf("Death: %f - %f - %f", x, y, z);
+		printf("Dist: %f", GetPlayerDistanceFromPoint(playerid, x, y, z));
 		if(Character_IsInjured(playerid))
 		{
 			new deathTime = GetTickCount() - Character_GetDeathTime(playerid);
@@ -88,41 +91,34 @@ ptask OnPlayerDeathSystemUpdate[1000](playerid)
 			}
 			AC_SetPlayerHealth(playerid, 9999.0);
 		}
-
-		if(!IsPlayerInRangeOfPoint(playerid, 3.0, x, y, z) || GetPlayerInterior(playerid) != interior || Character_GetVirtualWorld(playerid) != world)
+		
+		if(GetPlayerDistanceFromPoint(playerid, x, y, z) > 3.0 || GetPlayerInterior(playerid) != interior || Character_GetVirtualWorld(playerid) != world)
 		{
-			new vid = Character_GetDeathStateVehicle(playerid);
-			if(vid > 0 && IsValidVehicle(vid) && Vehicle_GetHealth(vid) > 250.0)
-			{
-				PutPlayerInVehicle(playerid, vid, 0);
-			}
-			else
-			{
-				SetPlayerPos(playerid, x, y, z);
-				SetPlayerFacingAngle(playerid, a);
-
-			}
-
+			SetPlayerPos(playerid, x, y, z);
+			SetPlayerFacingAngle(playerid, a);
 			SetPlayerInterior(playerid, interior);
 			Character_SetVirtualWorld(playerid, world);
+			printf("Reset");
 		}
 
-		if(Character_GetDeathStateVehicle(playerid) > 0 && GetPlayerVehicleID(playerid) != Character_GetDeathStateVehicle(playerid))
-			PutPlayerInVehicle(playerid, Character_GetDeathStateVehicle(playerid), 1);
-		else if(GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) 
+		if(GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) 
 			RemovePlayerFromVehicle(playerid);
-		
-
 		
 		Internal_ApplyDeathAnim(playerid);
 	}
 	return 1;
 }
 
+hook OnCharDeathFinished(playerid)
+{
+	Internal_UpdateDeathState(playerid);
+	return 1;
+}
+
 hook OnCharacterDeath(playerid, killerid, reason)
 {
 	printf("OnCharacterDeathStart");
-	new deathState = Character_GetDeathState(playerid) < 2 ? Character_GetDeathState(playerid)+1 : 0;
+	new deathState = Character_GetDeathState(playerid) < 1 ? Character_GetDeathState(playerid)+1 : 0;
 	Character_SetDeathState(playerid, deathState);
 
 	GetPlayerPos(playerid, PlayerDeathState[playerid][pDeathX], PlayerDeathState[playerid][pDeathY], PlayerDeathState[playerid][pDeathZ]);
@@ -131,13 +127,6 @@ hook OnCharacterDeath(playerid, killerid, reason)
 	PlayerDeathState[playerid][pDeathInt] = GetPlayerInterior(playerid);
 	PlayerDeathState[playerid][pDeathWorld] = Character_GetVirtualWorld(playerid);
 	PlayerDeathState[playerid][pDeathVehicle] = GetPlayerVehicleID(playerid);
-	/*new weapons[13], ammo[13];
-	for(new x = 0; x < 13; x++)
-	{
-		Character_GetWeaponData(playerid, x, weapons[x], ammo[x]);
-		pTempWeapons[playerid][x] = weapons[x];
-		pTempAmmo[playerid][x] = ammo[x];
-	}*/
 
 	if(deathState == DEATH_STATE_INJURED)
 	{
@@ -148,17 +137,17 @@ hook OnCharacterDeath(playerid, killerid, reason)
 	}
 	else if(deathState == DEATH_STATE_DEAD)
 	{
-		Character_SetFreezed(playerid, true);
 		Character_SetDeathTime(playerid, GetTickCount());
 		Character_OffDuty(playerid);
 	}
 	else
 	{
 	}
+	Internal_UpdateDeathState(playerid);
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-hook OnCharDeathFinished(playerid)
+static Internal_UpdateDeathState(playerid)
 {
 	new deathState = Character_GetDeathState(playerid);
 	if(deathState > 0)
@@ -186,17 +175,9 @@ hook OnCharDeathFinished(playerid)
 			new Float:x, Float:y, Float:z, Float:a, interior, world;
 			
 			Character_GetDeathStateData(playerid, x, y, z, a, interior, world);
-			//new vid = Character_GetDeathStateVehicle(playerid);
-			/*if(vid > 0 && IsValidVehicle(vid) && Vehicle_GetHealth(vid) > 250.0)
-			{
-				PutPlayerInVehicle(playerid, vid, 0);
-			}
-			else
-			{*/
+
 			SetPlayerPos(playerid, x, y, z);
 			SetPlayerFacingAngle(playerid, a);
-
-			//}
 			SetPlayerInterior(playerid, interior);
 			Character_SetVirtualWorld(playerid, world);
 
@@ -227,24 +208,15 @@ hook OnCharDeathFinished(playerid)
 			
 			Character_GetDeathStateData(playerid, x, y, z, a, interior, world);
 			
-			/*new vid = Character_GetDeathStateVehicle(playerid);
-			if(vid > 0 && IsValidVehicle(vid) && Vehicle_GetHealth(vid) > 250.0)
-			{
-				PutPlayerInVehicle(playerid, vid, 0);
-			}
-			else
-			{*/
-				SetPlayerPos(playerid, x, y, z);
-				SetPlayerFacingAngle(playerid, a);
-
-			//}
-
+			SetPlayerPos(playerid, x, y, z);
+			SetPlayerFacingAngle(playerid, a);
 			SetPlayerInterior(playerid, interior);
 			Character_SetVirtualWorld(playerid, world);
 
 			//CallLocalFunction(#OnCharacterDeath, "d", playerid);
 		}
 		Internal_ApplyDeathAnim(playerid);
+		printf("After thaat");
 	}
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
@@ -260,6 +232,7 @@ stock Character_AcceptDeathState(playerid)
 
 	AC_SetPlayerHealth(playerid, 0.0);
 	Character_SetDeathTime(playerid, 0);
+	Internal_UpdateDeathState(playerid);
 	return 1;
 }
 
@@ -288,6 +261,7 @@ CMD:respawnme(playerid, params[])
 	if(death_time < DEATH_TIME_AS_SECONDS * 1000/*120000*/)
 		return SendFormattedMessage(playerid, COLOR_ERROR, "Devi aspettare ancora %d secondi prima di poter digitare il comando.", DEATH_TIME_AS_SECONDS - death_time/1000);
 	Character_ResetWeapons(playerid);
+	//WC_PlayerDeathRespawn(playerid);
 	Character_Spawn(playerid);
 	return 1;
 }
@@ -368,25 +342,10 @@ stock Character_SetDeathKillerID(playerid, killerid)
 
 static stock Internal_ApplyDeathAnim(playerid)
 {
-	/*new vehicle = GetPlayerVehicleID(playerid);
-	if(vehicle > 0 && !IsABike(vehicle) && !IsAMotorBike(vehicle) && (Character_IsInjured(playerid) || Character_IsDead(playerid)))
+	if( (Character_IsDead(playerid) || Character_IsInjured(playerid)) && GetPlayerAnimationIndex(playerid) != 1701)
 	{
-		if(GetPlayerAnimationIndex(playerid) != 1018)
-			ApplyAnimation(playerid, "PED", "CAR_DEAD_LHS", 4.1, 0, 0, 0, 1, 0, 1);
+		ClearAnimationsEx(playerid, false);
+		ApplyAnimation(playerid, "WUZI", "CS_Dead_Guy", 4.0, 0, 0, 0, 1, 0, 1);
+		printf("Internal_ApplyDeathAnim");
 	}
-	else
-	{*/
-		if( (Character_IsDead(playerid) || Character_IsInjured(playerid)) && GetPlayerAnimationIndex(playerid) != 1701)
-		{
-			ClearAnimationsEx(playerid, false);
-			ApplyAnimation(playerid, "WUZI", "CS_Dead_Guy", 4.0, 0, 0, 0, 1, 0, 1);
-			//ApplyAnimation(playerid, "SWEET", "Sweet_injuredloop", 4.1, 0, 0, 0, 1, 0, 1); // INDEX: 1537
-			printf("Applying 1");
-		}
-		/*else if(Character_IsDead(playerid) && GetPlayerAnimationIndex(playerid) != 1701) //1208 - ApplyAnimation(playerid, "PED", "KO_skid_back", 4.1, 1, 0, 0, 1, 0, 1);
-		{
-			ApplyAnimation(playerid, "WUZI", "CS_Dead_Guy", 4.0, 1, 0, 0, 1, 0, 1);
-			printf("Applying 2");
-		}*/
-	//}
 }

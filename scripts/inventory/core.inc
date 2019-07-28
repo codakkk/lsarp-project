@@ -296,11 +296,11 @@ stock Inventory_HasItem(Inventory:inventory, itemid, min = 1)
 	new item[E_ITEM_DATA];
 	for(new i = 0, j = list_size(inventory); i < j; ++i)
 	{
-		list_get_arr_safe(inventory, i, item);
+		Inventory_GetItemData(inventory, i, item);
 		if(item[gInvItem] == itemid && item[gInvAmount] >= min)
-			return i;
+			return 1;
 	}
-	return -1;
+	return 0;
 }
 
 // Returns a List with all slots that contains this itemid.
@@ -311,7 +311,7 @@ stock List:Inventory_HasItemBySlots(Inventory:inventory, itemid)
 	{
 		if(list_sizeof(inventory, i) == 0)
 			continue;
-		list_get_arr_safe(inventory, i, item);
+		Inventory_GetItemData(inventory, i, item);
 		if(item[gInvItem] == itemid && item[gInvAmount] > 0)
 			list_add(list, i);
 	}
