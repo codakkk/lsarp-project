@@ -29,7 +29,7 @@ hook OnCharacterUseItem(playerid, slotid, itemid)
         }
         else
         {
-            if(Character_HasItem(playerid, Weapon_GetAmmoType(itemid), 1) == -1)
+            if(!Character_HasItem(playerid, Weapon_GetAmmoType(itemid), 1))
                 SendClientMessage(playerid, COLOR_ERROR, "Non hai le munizioni necessarie.");
             else
             {

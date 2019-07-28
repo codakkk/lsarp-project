@@ -1,6 +1,9 @@
 #include <vehicles\accessors>
 #include <YSI_Coding\y_hooks>
 
+#define VEHICLE_MIN_HEALTH	250.0
+#define VEHICLE_MIN_HEALTH_FOR_ENGINE	350.0
+
 hook OnGameModeInit()
 {
 	mysql_tquery(gMySQL, "UPDATE `vehicles` SET Spawned = 0 WHERE 1;");
@@ -8,6 +11,20 @@ hook OnGameModeInit()
 	mysql_format(gMySQL, query, sizeof(query), "SELECT * FROM vehicles WHERE Faction != '%d';", INVALID_FACTION_ID);
 	mysql_tquery(gMySQL, query, #Vehicle_LoadAll);
 	return 1;
+}
+
+task OnVehicleUpdate[500]()
+{
+	foreach(new v : Vehicle)
+	{
+		if(!Vehicle_IsValid(v))
+			continue;
+		if(Vehicle_GetHealth(v) <= VEHICLE_MIN_HEALTH)
+		{
+			Vehicle_SetDestroyed(v, true);
+			Vehicle_Respawn(v);
+		}
+	}
 }
 
 task OnVehicleCheck[120000]() 
@@ -61,7 +78,7 @@ ptask OnPlayerVehicleCheck[1000 + 1](playerid)
 	{
 		
 		new Float:health = Vehicle_GetHealth(vehicleid);
-		if(health < 350.0 && !Account_IsAdminDuty(playerid))
+		if(health < VEHICLE_MIN_HEALTH_FOR_ENGINE && !Account_IsAdminDuty(playerid))
 		{
 			Vehicle_SetEngineOff(vehicleid);
 			SendClientMessage(playerid, COLOR_ERROR, "Il motore del veicolo si è spento poiché è danneggiato.");
@@ -100,7 +117,7 @@ stock Vehicle_Reload(vehicleid)
 	if(Vehicle_IsDestroyed(vehicleid))
 	{
 		Vehicle_SetDestroyed(vehicleid, false);
-		SetVehicleHealth(vehicleid, 350.0);
+		SetVehicleHealth(vehicleid, VEHICLE_MIN_HEALTH_FOR_ENGINE+50.0);
 	}
 	else
 	{
