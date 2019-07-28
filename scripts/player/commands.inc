@@ -126,13 +126,11 @@ CMD:afk(playerid, params[])
 flags:aiuto(CMD_USER);
 CMD:aiuto(playerid, params[])
 {
-    SendClientMessage(playerid, -1, "[GENERALE]: /info - /dom - /compra - /annulla - /sconosciuto");
-    SendClientMessage(playerid, -1, "[GENERALE]: /rimuovi - /hotkeys - /arma - /id - /dp - /invmode");
-	SendClientMessage(playerid, -1, "[GENERALE]: /afk - /stilechat - /stilelotta - /stilecamminata");
-	SendClientMessage(playerid, -1, "[GENERALE]: /oggetto - /depositadenaro");
-    SendClientMessage(playerid, -1, "[CHAT]: /b - /me - /ame - /low - /melow - /do - /dolow - (/s)hout");
-    SendClientMessage(playerid, -1, "[CHAT]: (/w)hisper - (/cw)hisper - /pm - /blockb - /blockpm - /cleaarchat");
-    SendClientMessage(playerid, -1, "[ALTRO]: /animlist - /vcmds - /invcmds - /zpoints - /furniturecmds");
+    SendClientMessage(playerid, -1, "[GENERALE]: /info - /dom - /compra - /annulla - /sconosciuto - /oggetto");
+    SendClientMessage(playerid, -1, "[GENERALE]: /rimuovi - /hotkeys - /arma - /id - /dp - /blindfold");
+	SendClientMessage(playerid, -1, "[GENERALE]: /afk - /stilechat - /stilelotta - /stilecamminata - /oggetto");
+	SendClientMessage(playerid, -1, "[GENERALE]: /onduty - /testers");
+    SendClientMessage(playerid, -1, "[ALTRO]: /chatcmds - /animlist - /vcmds - /invcmds - /zpoints - /furniturecmds");
 	new factionid = Character_GetFaction(playerid);
 	if(factionid != -1)
 	{
@@ -144,12 +142,21 @@ CMD:aiuto(playerid, params[])
 		}
 	}
 	if(AccountInfo[playerid][aAdmin] > 0)
-		SendClientMessage(playerid, COLOR_GREEN, "[SUPPORTER]: /scmds");
+		SendClientMessage(playerid, COLOR_GREEN, "[SUPPORTER]: /tcmds");
 	if(AccountInfo[playerid][aAdmin] > 1)
 		SendClientMessage(playerid, COLOR_GREEN, "[ADMIN]: /acmds");
     return 1;
 }
 alias:aiuto("cmds", "help");
+
+flags:chatcmds(CMD_USER);
+CMD:chatcmds(playerid, params[])
+{
+    SendClientMessage(playerid, -1, "[CHAT]: /b - /me - /ame - /low - /melow - /do - /dolow - (/s)hout");
+    SendClientMessage(playerid, -1, "[CHAT]: (/w)hisper - (/cw)hisper - /pm - /blockb - /blockpm - /cleaarchat");
+	return 1;
+}
+
 
 flags:faiuto(CMD_USER);
 CMD:faiuto(playerid, params[])
@@ -178,7 +185,7 @@ flags:invcmds(CMD_ALIVE_USER);
 CMD:invcmds(playerid, params[])
 {
 	SendClientMessage(playerid, -1, "[INVENTARIO]: (/inv)entario - (/dep)osita - (/dis)assembla - /gettaarma");
-	SendClientMessage(playerid, -1, "[INVENTARIO]: /invmode - /usa - /passa - /getta");
+	SendClientMessage(playerid, -1, "[INVENTARIO]: /invmode - /usa - /passa - /getta - /depositadenaro");
 	return 1;
 }
 
@@ -220,7 +227,7 @@ CMD:id(playerid, params[])
 		id = strval(params);
 		if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 			return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
-		SendFormattedMessage(playerid, -1, "%s (%d) - Livello: %d", Character_GetOOCName(id), id, Character_GetLevel(id));
+		SendFormattedMessage(playerid, -1, "%s (%d) - Livello: %d", Character_GetOOCName(id), id, Account_GetLevel(id));
 	}
 	else
 	{
@@ -231,7 +238,7 @@ CMD:id(playerid, params[])
 				continue;
 			if(strfind(Character_GetOOCName(i), params, true) != -1)
 			{
-				SendFormattedMessage(playerid, -1, "%s (%d) - Livello: %d", Character_GetOOCName(i), i, Character_GetLevel(i));
+				SendFormattedMessage(playerid, -1, "%s (%d) - Livello: %d", Character_GetOOCName(i), i, Account_GetLevel(i));
 				c++;
 			}
 		}
@@ -295,6 +302,24 @@ CMD:stilelotta(playerid, params[])
 	}
 	return 1;
 }
+
+flags:onduty(CMD_USER);
+CMD:onduty(playerid, params[])
+{
+	new count = 0, factionid = Character_GetFaction(playerid);
+	foreach(new i : Player)
+	{
+		if(!Character_IsLogged(i) || !Faction_IsValid(factionid) || Faction_GetType(factionid) != FACTION_TYPE_POLICE)
+			continue;
+		count++;
+	}
+	if(count == 0)
+		SendClientMessage(playerid, COLOR_ERROR, "Non ci sono membri della Guardia Nazionale in servizio.");
+	else 
+		SendFormattedMessage(playerid, COLOR_ERROR, "Attualmente ci sono %d membri in servizio della Guardia Nazionale.", count);
+	return 1;
+}
+
 
 flags:cambiapassword(CMD_USER);
 CMD:cambiapassword(playerid, params[])

@@ -116,23 +116,30 @@ CMD:hedit(playerid, params[])
 flags:ahousecmds(CMD_RCON);
 CMD:ahousecmds(playerid, params[])
 {
-    SendClientMessage(playerid, COLOR_WHITE, "[HOUSES]: /hcreate - /hedit");
+    SendClientMessage(playerid, COLOR_WHITE, "[HOUSES]: /hcreate - /hedit - /resethousefurnitures - /resethouseexterior");
     return 1;
 }
 
 flags:casa(CMD_ALIVE_USER);
 CMD:casa(playerid, params[])
+{	
+	return Character_ShowHouseDialog(playerid);
+}
+
+flags:resethousefurnitures(CMD_ADMIN);
+CMD:resethousefurnitures(playerid, params[])
 {
-	new id, E_ELEMENT_TYPE:type;
-	if(Character_GetNearestPickup(playerid, id, type) && (type == ELEMENT_TYPE_HOUSE_ENTRANCE || type == ELEMENT_TYPE_HOUSE_EXIT))
-	{
-		if(House_GetOwnerID(id) == Character_GetID(playerid) || Account_IsAdminDuty(playerid))
-		{
-			// REMEMBER TO EDIT THE HOTKEY PART IF THIS DIALOG IS EDITED
-			Dialog_Show(playerid, Dialog_House, DIALOG_STYLE_LIST, "Casa", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nCambia Interior", "Continua", "Chiudi");
-		}
-		else return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino ad una tua casa.");
-	}
-	else return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino ad una tua casa.");
-	return 1;
+    new houseid;
+    if(sscanf(params, "d", houseid))
+        return SendClientMessage(playerid, COLOR_ERROR, "/resethouseexterior <houseid>");
+    if(!House_IsValid(houseid))
+        return SendClientMessage(playerid, COLOR_ERROR, "La casa inserita non è valida.");
+    
+
+    if(House_RemoveAllfurnitures(houseid))
+        SendFormattedMessage(playerid, COLOR_GREEN, "Mobili rimossi dalla casa id %d", houseid);
+    else
+        SendFormattedMessage(playerid, COLOR_ERROR, "Non è stato possibile rimuovere i mobili dalla casa id %d", houseid);
+
+    return 1;
 }

@@ -641,9 +641,9 @@
 		"body": "ServerItem_IsDrink(${1:itemid})",
 		"description": ""
 	},
-	"lsarp_ServerItem_IsMedik": {
-		"prefix": "ServerItem_IsMedik",
-		"body": "ServerItem_IsMedik(${1:itemid})",
+	"lsarp_ServerItem_IsMedic": {
+		"prefix": "ServerItem_IsMedic",
+		"body": "ServerItem_IsMedic(${1:itemid})",
 		"description": ""
 	},
 	"lsarp_ServerItem_IsBag": {

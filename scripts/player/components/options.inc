@@ -6,7 +6,7 @@ hook OnCharacterSaveData(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-hook OnPlayerCharacterLoad(playerid)
+hook OnCharacterLoad(playerid)
 {
 	Player_LoadOptions(playerid);
 	return Y_HOOKS_CONTINUE_RETURN_1;

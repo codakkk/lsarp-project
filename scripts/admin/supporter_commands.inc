@@ -37,8 +37,8 @@ CMD:tchat(playerid, params[])
 	return 1;
 }
 
-flags:supporters(CMD_USER);
-CMD:supporters(playerid, params[])
+flags:testers(CMD_USER);
+CMD:testers(playerid, params[])
 {
 	foreach(new i : Player)
 	{

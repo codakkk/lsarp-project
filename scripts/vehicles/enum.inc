@@ -13,7 +13,8 @@ enum E_VEHICLE_DATA
     Float:vA,
 	vLastChopShopTime,
 	vFaction,
-	vSpawnExpiry
+	vSpawnExpiry,
+    vPlate[9]
 };
 
 new stock 

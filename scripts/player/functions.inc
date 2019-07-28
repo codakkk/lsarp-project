@@ -8,7 +8,7 @@ hook OnPlayerClearData(playerid)
 	return 1;
 }
 
-stock OnCharacterLoad(playerid)
+stock LoadCharacter(playerid)
 {
 	Character_SetLogged(playerid, true);
 
@@ -30,20 +30,19 @@ stock OnCharacterLoad(playerid)
 	}
 
     ResetPlayerMoney(playerid);
-    GivePlayerMoney(playerid, PlayerInfo[playerid][pMoney]);
+    GivePlayerMoney(playerid, Character_GetMoney(playerid));
 
-    SetPlayerScore(playerid, PlayerInfo[playerid][pLevel]);
+    SetPlayerScore(playerid, Account_GetLevel(playerid));
 
     SetPlayerName(playerid, PlayerInfo[playerid][pName]); // disable to avoid GTA restart everytime during "debugging"
     
     AC_SetPlayerHealth(playerid, 100);
 
-	
     SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
 	SpawnPlayer(playerid);
     
 
-    CallLocalFunction("OnPlayerCharacterLoad", "i", playerid);
+    CallLocalFunction("OnCharacterLoad", "i", playerid);
 
 	//Character_Spawn(playerid);
 	return 1;
@@ -65,61 +64,55 @@ stock LoadCharacterResult(playerid)
 		cache_get_value_index_int(0, 0, PlayerInfo[playerid][pID]);
 		cache_get_value_index(0, 2, PlayerInfo[playerid][pName]);
 		cache_get_value_index_int(0, 3, PlayerInfo[playerid][pMoney]);
-		cache_get_value_index_int(0, 4, PlayerInfo[playerid][pLevel]);
-		cache_get_value_index_int(0, 5, PlayerInfo[playerid][pAge]);
-		cache_get_value_index_int(0, 6, PlayerInfo[playerid][pSex]);
 
-		cache_get_value_index_float(0, 7, PlayerRestore[playerid][pLastX]);
-		cache_get_value_index_float(0, 8, PlayerRestore[playerid][pLastY]);
-		cache_get_value_index_float(0, 9, PlayerRestore[playerid][pLastZ]);
-		cache_get_value_index_int(0, 10, PlayerRestore[playerid][pLastInterior]);
-		cache_get_value_index_int(0, 11, PlayerRestore[playerid][pLastVirtualWorld]);
+		cache_get_value_index_float(0, 4, PlayerRestore[playerid][pLastX]);
+		cache_get_value_index_float(0, 5, PlayerRestore[playerid][pLastY]);
+		cache_get_value_index_float(0, 6, PlayerRestore[playerid][pLastZ]);
+		cache_get_value_index_int(0, 7, PlayerRestore[playerid][pLastInterior]);
+		cache_get_value_index_int(0, 8, PlayerRestore[playerid][pLastVirtualWorld]);
 
-		cache_get_value_index_int(0, 12, PlayerRestore[playerid][pFirstSpawn]);
+		cache_get_value_index_int(0, 9, PlayerRestore[playerid][pFirstSpawn]);
 
-		cache_get_value_index_float(0, 13, PlayerRestore[playerid][pLastHealth]);
-		cache_get_value_index_float(0, 14, PlayerRestore[playerid][pLastArmour]);
+		cache_get_value_index_float(0, 10, PlayerRestore[playerid][pLastHealth]);
+		cache_get_value_index_float(0, 11, PlayerRestore[playerid][pLastArmour]);
 
-		cache_get_value_index_int(0, 15, PlayerInfo[playerid][pSkin]);
+		cache_get_value_index_int(0, 12, PlayerInfo[playerid][pSkin]);
 
-		cache_get_value_index_float(0, 16, PlayerRestore[playerid][pLastAngle]);
-		cache_get_value_index_int(0, 17, PlayerRestore[playerid][pSpawned]);
+		cache_get_value_index_float(0, 13, PlayerRestore[playerid][pLastAngle]);
+		cache_get_value_index_int(0, 14, PlayerRestore[playerid][pSpawned]);
 
-		cache_get_value_index_int(0, 18, PlayerInfo[playerid][pPayDay]);
-		cache_get_value_index_int(0, 19, PlayerInfo[playerid][pExp]);
+		cache_get_value_index_int(0, 15, PlayerInfo[playerid][pBuildingKey]);
+		cache_get_value_index_int(0, 16, PlayerInfo[playerid][pHouseKey]);
 
-		cache_get_value_index_int(0, 20, PlayerInfo[playerid][pBuildingKey]);
-		cache_get_value_index_int(0, 21, PlayerInfo[playerid][pHouseKey]);
+		cache_get_value_index_int(0, 17, PlayerInfo[playerid][pFaction]);
+		cache_get_value_index_int(0, 18, PlayerInfo[playerid][pRank]);
 
-		cache_get_value_index_int(0, 22, PlayerInfo[playerid][pFaction]);
-		cache_get_value_index_int(0, 23, PlayerInfo[playerid][pRank]);
+		cache_get_value_index_int(0, 19, PlayerInfo[playerid][pJailTime]);
+		cache_get_value_index_int(0, 20, PlayerInfo[playerid][pJailIC]);
 
-		cache_get_value_index_int(0, 24, PlayerInfo[playerid][pJailTime]);
-		cache_get_value_index_int(0, 25, PlayerInfo[playerid][pJailIC]);
+		cache_get_value_index_int(0, 21, PlayerInfo[playerid][pPayCheck]);
 
-		cache_get_value_index_int(0, 26, PlayerInfo[playerid][pPayCheck]);
+		cache_get_value_index_int(0, 22, PlayerInfo[playerid][pFightStyle]);
+		cache_get_value_index_int(0, 23, PlayerInfo[playerid][pChatStyle]);
+		cache_get_value_index_int(0, 24, PlayerInfo[playerid][pWalkingStyle]);
 
-		cache_get_value_index_int(0, 27, PlayerInfo[playerid][pFightStyle]);
-		cache_get_value_index_int(0, 28, PlayerInfo[playerid][pChatStyle]);
-		cache_get_value_index_int(0, 29, PlayerInfo[playerid][pWalkingStyle]);
+		cache_get_value_index_int(0, 25, PlayerInfo[playerid][pBanned]);
+		cache_get_value_index_int(0, 26, PlayerInfo[playerid][pBanExpiry]);
 
-		cache_get_value_index_int(0, 30, PlayerInfo[playerid][pBanned]);
-		cache_get_value_index_int(0, 31, PlayerInfo[playerid][pBanExpiry]);
-
-		cache_get_value_index_int(0, 32, PlayerInfo[playerid][pLastChopShopTime]);
+		cache_get_value_index_int(0, 27, PlayerInfo[playerid][pLastChopShopTime]);
 
 		new tmp;
-		cache_get_value_index_int(0, 33, tmp);
+		cache_get_value_index_int(0, 28, tmp);
 		Character_SetHunger(playerid, tmp);
 
-		cache_get_value_index_int(0, 34, tmp);
+		cache_get_value_index_int(0, 29, tmp);
 		printf("Faction Duty: %d", tmp);
 		Character_SetFactionDuty(playerid, tmp ? true : false);
 
-		cache_get_value_index_int(0, 35, tmp);
+		cache_get_value_index_int(0, 30, tmp);
 		Character_SetSpawnPoint(playerid, tmp);
 
-		cache_get_value_index_int(0, 36, tmp);
+		cache_get_value_index_int(0, 31, tmp);
 		Character_SetSpawnPointExtraID(playerid, tmp);
 		return 1;
     }
@@ -155,9 +148,10 @@ stock Character_Save(playerid, spawned = true, disconnected = false)
 	}
     
 	mysql_tquery_f(gMySQL, "UPDATE `characters` SET \
-	   	Money = '%d', Level = '%d', Age = '%d', Sex = '%d', \
-	   	LastX = '%f', LastY = '%f', LastZ = '%f', LastAngle = '%f', LastInterior = '%d', LastVirtualWorld = '%d', Health = '%f', Armour = '%f', Skin = '%d', \
-	   	Spawned = '%d', PayDay = '%d', Exp = '%d',  \
+	   	Money = '%d', \
+	   	LastX = '%f', LastY = '%f', LastZ = '%f', LastAngle = '%f', \
+		LastInterior = '%d', LastVirtualWorld = '%d', Health = '%f', Armour = '%f', Skin = '%d', \
+	   	Spawned = '%d',  \
 	   	BuildingKey = '%d', HouseKey = '%d', \
 		Faction = '%d', FactionRank = '%d', \
 		JailTime = '%d', JailIC = '%d', \
@@ -170,10 +164,10 @@ stock Character_Save(playerid, spawned = true, disconnected = false)
 		SpawnPoint = '%d', \
 		SpawnPointExtraID = '%d' \
 	   	WHERE ID = '%d'", 
-	   	Character_GetMoney(playerid), Character_GetLevel(playerid), PlayerInfo[playerid][pAge], PlayerInfo[playerid][pSex], 
+	   	Character_GetMoney(playerid), 
 	   	_x, _y, _z, angle, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid),
 	   	hp, armour, PlayerInfo[playerid][pSkin],
-	   	isSpawned, PlayerInfo[playerid][pPayDay], Character_GetExp(playerid),
+	   	isSpawned,
 	   	Character_GetBuildingKey(playerid), Character_GetHouseKey(playerid),
 		Character_GetFaction(playerid), Character_GetRank(playerid),
 		Character_GetJailTime(playerid), Character_IsICJailed(playerid),
@@ -249,15 +243,14 @@ stock Character_ShowStats(playerid, targetid)
 	if(!Character_IsLogged(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
 	new
-		Float:hp, Float:armour,
-		expForNewLevel = (PlayerInfo[playerid][pLevel]+1) * 2;
+		Float:hp, Float:armour;
 	
     AC_GetPlayerHealth(playerid, hp);
     AC_GetPlayerArmour(playerid, armour);
 
     SendClientMessage(targetid, COLOR_GREEN, "_____________________[STATISTICHE]_____________________");
-	SendFormattedMessage(targetid, -1, "[Account] Account: %s - E-Mail: %s", AccountInfo[playerid][aName], AccountInfo[playerid][aEMail]);
-    SendFormattedMessage(targetid, -1, "[Personaggio] Nome: %s - Livello: %d - Skin: %d", Character_GetOOCName(playerid), Character_GetLevel(playerid), GetPlayerSkin(playerid));
+	SendFormattedMessage(targetid, -1, "[Account] Account: %s - Livello: %d - E-Mail: %s", AccountInfo[playerid][aName], Account_GetLevel(playerid), AccountInfo[playerid][aEMail]);
+    SendFormattedMessage(targetid, -1, "[Personaggio] Nome: %s - Skin: %d", Character_GetOOCName(playerid), GetPlayerSkin(playerid));
 	if(Character_GetFaction(playerid) != -1)
 		SendClientMessageStr(targetid, -1, str_format("[Personaggio] Fazione: %S - Rank: %S", Faction_GetNameStr(Character_GetFaction(playerid)), Faction_GetRankNameStr(Character_GetFaction(playerid), Character_GetRank(playerid)-1)));
     SendFormattedMessage(targetid, -1, "[Denaro] Soldi: $%d - Stipendio: $%d", Character_GetMoney(playerid), Character_GetPayCheck(playerid));
@@ -284,8 +277,8 @@ stock Character_ShowStats(playerid, targetid)
 	if(Account_GetAdminLevel(playerid) > 0)
 		SendFormattedMessage(targetid, COLOR_YELLOW, "[STAFFER]: %s", GetAdminLevelName(Account_GetAdminLevel(playerid)));
 
-	SendFormattedMessage(targetid, -1, "Ti mancano %d/%d punti esperienza per salire di livello.", Character_GetExp(playerid), expForNewLevel);
-    SendFormattedMessage(targetid, COLOR_YELLOW, "Tempo rimanente al PayDay: %d minuti", 60 - PlayerInfo[playerid][pPayDay]);
+	//SendFormattedMessage(targetid, -1, "Ti mancano %d/%d punti esperienza per salire di livello.", Character_GetExp(playerid), expForNewLevel);
+    SendFormattedMessage(targetid, COLOR_YELLOW, "Tempo rimanente al PayDay: %d minuti", 60 - AccountInfo[playerid][aPayDay]);
     SendClientMessage(targetid, COLOR_GREEN, "_______________________________________________________");
     return 1;
 }
@@ -346,6 +339,7 @@ timer LoadCharacterDataAfterTime[2000](playerid)
 	AC_SetPlayerHealth(playerid, PlayerRestore[playerid][pLastHealth]);
 	AC_SetPlayerArmour(playerid, PlayerRestore[playerid][pLastArmour]);
 	Character_LoadWeapons(playerid);
+	CallLocalFunction("OnCharacterLateLoad", "d", playerid);
 }
 
 // Mainly used by /aduty 

@@ -36,6 +36,8 @@ stock Faction_SetType(factionid, type)
 
 stock Faction_GetType(factionid)
 {
+	if(!Faction_IsValid(factionid))
+		return -1;
 	return FactionInfo[factionid][fType];
 }
 

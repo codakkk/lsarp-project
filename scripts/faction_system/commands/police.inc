@@ -13,15 +13,6 @@ ptask OnPlayerUniformSelectUpdate[1000](playerid)
 	return 1;
 }
 
-hook OnCharacterPreSaveData(playerid, disconnect)
-{
-	/*if(disconnect && Character_IsFactionDuty(playerid))
-	{
-		Character_OffDuty(playerid);
-	}*/
-	return 1;
-}
-
 flags:ammanetta(CMD_POLICE);
 CMD:ammanetta(playerid, params[])
 {
@@ -216,6 +207,10 @@ stock Character_OffDuty(playerid)
 	Character_SetSelectingUniform(playerid, false);
 
 	pTempSkin[playerid] = 0;
+	
+	Faction_SendMessageStr(Character_GetFaction(playerid), COLOR_SLATEBLUE, str_format("** HQ: %S %s non è più in servizio.", Faction_GetRankNameStr(Character_GetFaction(playerid), Character_GetRank(playerid)-1), Character_GetOOCName(playerid)));
+
+	SetPlayerColor(playerid, -1);
 
 	CallLocalFunction(#OnCharacterDutyChange, "dd", playerid, 0);
 	return 1;

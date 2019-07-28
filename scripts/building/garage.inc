@@ -23,8 +23,8 @@ CMD:ripara(playerid, params[])
     new garageid = Character_GetGarage(playerid);
     if(garageid == -1)
         return SendClientMessage(playerid, COLOR_ERROR, "Devi possedere un garage per utilizzare questo comando.");
-    if(Character_GetNearBuildingID(playerid) != garageid)
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'interno del tuo garage.");
+    if(Character_CanUseGarage(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi del tuo garage.");
     if(Character_GetItemAmount(playerid, gItem_MechanicalComponents) < MATERIALS_PER_REPAIR)
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza materiali meccanici per utilizzare questo comando.");
     new id, price;
@@ -59,7 +59,7 @@ CMD:vernicia(playerid, params[])
     if(garageid == -1)
         return SendClientMessage(playerid, COLOR_ERROR, "Devi possedere un garage per utilizzare questo comando.");
     if(Character_GetNearBuildingID(playerid) != garageid)
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'interno del tuo garage.");
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi del tuo garage.");
     if(Character_GetItemAmount(playerid, gItem_MechanicalComponents) < MATERIALS_PER_SPRAY)
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza materiali meccanici per utilizzare questo comando.");
     new id, price, color1, color2;
@@ -95,7 +95,7 @@ CMD:vernicia(playerid, params[])
 stock Character_AcceptVehicleSpray(playerid)
 {
     if(!Request_IsPending(playerid) || Request_GetType(playerid) != REQUEST_TYPE_REPAIR)
-        return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di riparazione attiva."), 0;
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di riverniciatura attiva."), 0;
     if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid), 5.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
     
@@ -183,4 +183,16 @@ stock Character_GetGarage(playerid)
             return b;
     }
     return -1;
+}
+
+stock Character_CanUseGarage(playerid)
+{
+    new garageid = Character_GetGarage(playerid);
+    if(Character_GetNearBuildingID(playerid) == garageid)
+        return 1;
+    new Float:x, Float:y, Float:z;
+    Building_GetEnterPos(garageid, x, y, z);
+    if(GetPlayerDistanceFromPoint(playerid, x, y, z) <= 25.0)
+        return 1;
+    return 0;
 }

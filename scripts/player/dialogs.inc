@@ -1,38 +1,14 @@
-Dialog:Dialog_InvSelectAmmo(playerid, response, listitem, inputtext[])
-{
-    if(!response)
-	   return 0;
-    new ammo = strval(inputtext), 
-	   itemid = GetPVarInt(playerid, "InventorySelect_WeaponItem"),
-	   ammoType = Weapon_GetAmmoType(itemid);
-    if(ammo <= 0 || ammo > Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType))
-	   return Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "{FF0000}Munizioni non valide!{FFFFFF}\nImmetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}", "Usa", "Annulla", 
-				Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType));
-    
-	Character_GiveWeapon(playerid, itemid, ammo);
-    
-	Character_DecreaseItemAmount(playerid, itemid, 1);
-    Character_DecreaseItemAmount(playerid, ammoType, ammo);
-
-	Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~", Weapon_GetName(itemid)), true);
-	//Character_AMe(playerid, "prende un'arma dall'inventario.");
-	Trigger_OnPlayerInvItemUse(playerid, itemid, 1, ITEM_TYPE_WEAPON);
-	Trigger_OnPlayerInvItemUse(playerid, ammoType, ammo, ITEM_TYPE_AMMO);
-    return 1;
-}
-
 
 Dialog:Dialog_House(playerid, response, listitem, inputtext[])
 {
     if(!response)
 	   return 0;
     
-	if(!Character_IsNearPickupTypes(playerid, ELEMENT_TYPE_HOUSE_ENTRANCE, ELEMENT_TYPE_HOUSE_EXIT))
-	   return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita della tua casa.");
+	new houseid = Character_GetNearHouseIDMenu(playerid);
 
-	new houseid = Character_GetHouseID(playerid);
-	if(houseid == -1)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'interno della tua casa.");
+	if(!Character_IsNearPickupTypes(playerid, ELEMENT_TYPE_HOUSE_ENTRANCE) && houseid == -1)
+	   return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno della tua casa.");
+
 	switch(listitem)
 	{
 		case 0: // Apri/Chiudi Porta
@@ -58,7 +34,7 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
 		}
 		case 4: // Vendi 
 		{
-			return Dialog_Show(playerid, Dialog_HouseSell, DIALOG_STYLE_MSGBOX, "Vendi", "Sei sicuro di voler vendere la tua casa per {00FF00}$%d{FFFFFF}", "Vendi", "Annulla", House_GetPrice(houseid)/2);
+			return Dialog_Show(playerid, Dialog_HouseSell, DIALOG_STYLE_MSGBOX, "Vendi", "Sei sicuro di voler vendere la tua casa per {00FF00}$%d{FFFFFF}\nUna volta venduta, tutti i mobili verranno rimossi.", "Vendi", "Annulla", House_GetPrice(houseid)/2);
 		}
 		case 5: // Vendi a giocatore
 		{
@@ -91,7 +67,8 @@ Dialog:Dialog_HouseDeposit(playerid, response, listitem, inputtext[])
     new amount = strval(inputtext);
     if(amount <= 0 || amount > Character_GetMoney(playerid))
 	   return Dialog_Show(playerid, Dialog_HouseDeposit, DIALOG_STYLE_INPUT, "Deposita soldi", "{FF0000}Ammontare non valido!\n{FFFFFF}Inserisci l'ammontare di soldi che vuoi depositare in casa.", "Deposita", "Annulla");
-    House_GiveMoney(houseid, amount);
+    Character_GiveMoney(playerid, -amount, "house_deposit");
+	House_GiveMoney(houseid, amount);
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai depositato $%d all'interno della tua casa.", amount);
     SendFormattedMessage(playerid, COLOR_GREEN, "Attuale: $%d", House_GetMoney(houseid));
 	House_Save(houseid);
@@ -119,14 +96,16 @@ Dialog:Dialog_HouseWithdraw(playerid, response, listitem, inputtext[])
 Dialog:Dialog_HouseSell(playerid, response, listitem, inputtext[])
 {
     if(!response)
-	   return 0;
+	   return Character_ShowHouseDialog(playerid);
 	new houseid = Character_GetNearHouseIDMenu(playerid);
+	printf("House ID: %d", houseid);
 	if(houseid == -1)
 		return 0;
     new sellPrice = House_GetPrice(houseid) / 2;
     Character_GiveMoney(playerid, sellPrice, "Dialog_HouseSell");
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai venduto la tua casa per $%d.", sellPrice);
 
+	House_RemoveAllfurnitures(houseid);
     House_ResetOwner(houseid);
     House_Save(houseid);
     return 1;
@@ -146,35 +125,5 @@ Dialog:Dialog_HouseInterior(playerid, response, listitem, inputtext[])
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato l'interno della tua casa. Nuovo interno: %d.", listitem);
     House_SetInterior(houseid, listitem);
     House_Save(houseid);
-    return 1;
-}
-
-Dialog:Dialog_InvSelectAddAmmo(playerid, response, listitem, inputtext[])
-{
-    if(!response)
-	{
-		DeletePVar(playerid, "InventorySelect_CurrentWeaponItem");
-		return 0;
-	}
-    new ammo = strval(inputtext), 
-		weaponid = GetPVarInt(playerid, "InventorySelect_CurrentWeaponItem"),
-		ammoType = Weapon_GetAmmoType(weaponid),
-		amount = Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType)
-	;
-    if(ammo <= 0 || ammo > amount)
-	   return Dialog_Show(playerid, Dialog_InvSelectAddAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", 
-					"{FF0000}Munizioni non valide!{FFFFFF}\nImmetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}", "Usa", "Annulla", 
-					amount);
-    Character_GiveWeapon(playerid, weaponid, ammo);
-    Character_DecreaseItemAmount(playerid, ammoType, ammo);
-	
-	Character_AMe(playerid, "prende delle munizioni e le inserisce nell'arma.");
-	
-	Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~~n~con ~g~%d~w~ proiettili.", Weapon_GetName(weaponid), ammo), true);
-
-	Trigger_OnPlayerInvItemUse(playerid, weaponid, 1, ITEM_TYPE_WEAPON);
-	Trigger_OnPlayerInvItemUse(playerid, ammoType, ammo, ITEM_TYPE_AMMO);
-	
-	DeletePVar(playerid, "InventorySelect_CurrentWeaponItem");
     return 1;
 }

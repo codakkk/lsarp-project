@@ -1,3 +1,9 @@
+#include <inventory\types\ammo>
+#include <inventory\types\bag>
+#include <inventory\types\fuel>
+#include <inventory\types\medic>
+#include <inventory\types\money>
+#include <inventory\types\weapon>
 #include <YSI_Coding\y_hooks>
 
 // Remember that we're using set instead of add for inventory size
@@ -409,7 +415,9 @@ stock Inventory_ShowInChatStr(Inventory:inventory, playerid, String:title)
 	//if(title != STRING_NULL || str_len(title) > 0)
 		//SendClientMessageStr(playerid, COLOR_GREEN, str_format("_______________[%S (%d/%d)]_______________", title, Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory)));
 	//else
-	SendClientMessageStr(playerid, COLOR_GREEN, str_format("_______________[%S]_______________", title));
+	new String:str = str_format("_______________[%S]_______________", title);
+
+	SendClientMessageStr(playerid, COLOR_GREEN, str);
 	
 	new tempItem[E_ITEM_DATA], slotid = -1;
 	for_inventory(i : inventory)
@@ -440,7 +448,13 @@ stock Inventory_ShowInChatStr(Inventory:inventory, playerid, String:title)
 		}
 		SendClientMessageStr(playerid, -1, s);
 	}
-	SendClientMessage(playerid, COLOR_GREEN, "__________________________________________");
+	// just a way to conform the underlines. It's useless
+	new String:s = @("________________________________");
+	for(new i = 0, j = str_len(title); i < j; ++i)
+	{
+		s += @("_");
+	}
+	SendClientMessageStr(playerid, COLOR_GREEN, s);
 	return 1;
 }
 

@@ -1,6 +1,6 @@
 #include <YSI_Coding\y_hooks>
 
-forward OnCharacterUseItem(playerid, slotid);
+forward OnCharacterUseItem(playerid, slotid, itemid);
 // #define Character_%0(%1, Inventory_%0(Character_GetInventory(%1), // It is a convenient way to call Inventory_Func with player inventory
 
 stock bool:Character_InitializeInventory(playerid)
@@ -27,10 +27,10 @@ hook OnCharacterSaveData(playerid)
 	return 1;
 }
 
-hook OnPlayerCharacterLoad(playerid)
+hook OnCharacterLoad(playerid)
 {
 	#if defined LSARP_DEBUG
-		printf("player_inventory.pwn/OnPlayerCharacterLoad");
+		printf("player_inventory.pwn/OnCharacterLoad");
 	#endif
 	Character_InitializeInventory(playerid);
 	Character_LoadInventory(playerid);
@@ -177,112 +177,9 @@ stock Character_ShowInventory(playerid, targetid)
 
 stock Character_UseInventoryItem(playerid, slotid)
 {
-	new 
-		itemid = Character_GetSlotItem(playerid, slotid),
-		amount = Character_GetSlotAmount(playerid, slotid),
-		extra = Character_GetSlotExtra(playerid, slotid);
-	if(ServerItem_IsBag(itemid))
-    {
-		// If character has bag
-		if(Character_HasBag(playerid))
-		{
-			SendClientMessage(playerid, COLOR_ERROR, "Stai già indossando uno zaino! Usa '/rimuovi zaino' per rimuoverlo.");
-			return 0;
-		}
-		Character_AMe(playerid, "indossa lo zaino.");
-		//SendFormattedMessage(playerid, COLOR_GREEN, "Stai indossando '%s'. Usa '/rimuovi zaino' per rimuoverlo.", ServerItem_GetName(item_id));
-		Character_SetBag(playerid, itemid);
-		Player_InfoStr(playerid, str_format("Stai indossando: ~g~%s", ServerItem_GetName(itemid)), false);
-		Character_DecreaseSlotAmount(playerid, slotid, 1);
-	}
-	else if(ServerItem_IsWeapon(itemid))
-	{
-		new 
-			weaponSlot = Weapon_GetSlot(itemid), 
-			weapon, 
-			ammo;
-		GetPlayerWeaponData(playerid, weaponSlot, weapon, ammo);
-		if(Character_HasWeaponInSlot(playerid, weaponSlot) && !Weapon_IsGrenade(weapon))
-		{
-			SendClientMessage(playerid, COLOR_ERROR, "Hai già un'arma equipaggiata in questo slot.");	
-			return 0;
-		}
-		if(Weapon_RequireAmmo(itemid))
-		{
-			if(extra > 0)
-			{
-				Character_GiveWeapon(playerid, itemid, extra);
-				//Character_DecreaseItemAmount(playerid, itemid, 1);
-				Character_DecreaseSlotAmount(playerid, slotid, 1);
-				Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~~n~con ~g~%d~w~ proiettili.", Weapon_GetName(itemid), extra), true);
-				//Character_AMe(playerid, "prende un'arma dall'inventario.");
-			}
-			else
-			{
-				if(Character_HasItem(playerid, Weapon_GetAmmoType(itemid), 1) == -1)
-					SendClientMessage(playerid, COLOR_ERROR, "Non hai le munizioni necessarie.");
-				else
-				{
-					SetPVarInt(playerid, "InventorySelect_WeaponItem", itemid);
-					new ammos = Inventory_GetItemAmount(Character_GetInventory(playerid), Weapon_GetAmmoType(itemid));
-					Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "Immetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}.", "Usa", "Annulla", ammos);
-				}
-			}
-		}
-		else
-		{
-			Character_GiveWeapon(playerid, itemid, amount);
-			Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~", Weapon_GetName(itemid)), true);
-			//Character_AMe(playerid, "prende un'arma dall'inventario.");
-			Character_DecreaseSlotAmount(playerid, slotid, amount);
-			Trigger_OnPlayerInvItemUse(playerid, itemid, amount, ITEM_TYPE_WEAPON);
-		}
-	}
-    else if(ServerItem_IsAmmo(itemid))
-    {
-		new currentWeapon = Character_GetWeapon(playerid);
-		if(currentWeapon == 0)
-		{
-			SendClientMessage(playerid, COLOR_ERROR, "Non hai armi equipaggiate.");
-			return 0;
-		} 
-		if(!Weapon_RequireAmmo(currentWeapon) || Weapon_GetAmmoType(currentWeapon) != itemid)
-		{
-			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare queste munizioni su quest'arma.");
-			return 0;
-		}
-		new ammos = Inventory_GetItemAmount(Character_GetInventory(playerid), itemid);
-		SetPVarInt(playerid, "InventorySelect_CurrentWeaponItem", currentWeapon);
-		Dialog_Show(playerid, Dialog_InvSelectAddAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "Immetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}.", "Usa", "Annulla", ammos);
-    }
-	else if(ServerItem_IsMoney(itemid))
-	{
-		new moneyQuant = Character_GetItemAmount(playerid, gItem_Money);
-		Dialog_Show(playerid, Dialog_InvUseMoney, DIALOG_STYLE_INPUT, "Inserisci la quantità", "Immetti la quantità di denaro che vuoi utilizzare.\nQuantità: {00FF00}${FFFFFF}%d.", "Usa", "Annulla", moneyQuant);
-	}
-	else
-	{
-		CallLocalFunction(#OnCharacterUseItem, "dd", playerid, slotid);
-	}
+	CallLocalFunction(#OnCharacterUseItem, "ddd", playerid, slotid, Character_GetSlotItem(playerid, slotid));
 	return 1;
 }
-
-Dialog:Dialog_InvUseMoney(playerid, response, listitem, inputtext[])
-{
-	if(!response)
-		return 0;
-	new 
-		val = strval(inputtext),
-		amount = Character_GetItemAmount(playerid, gItem_Money)
-	;
-	if(val <= 0 || val > amount)
-		return Dialog_Show(playerid, Dialog_InvUseMoney, DIALOG_STYLE_INPUT, "Inserisci la quantità", "{FF0000}La quantità inserita non è valida.{FFFFFF}\nImmetti la quantità di denaro che vuoi utilizzare.\nQuantità: {00FF00}${FFFFFF}%d.", "Usa", "Annulla", amount);
-	Character_GiveMoney(playerid, val, "use_money");
-	Character_DecreaseItemAmount(playerid, gItem_Money, val);
-	Player_InfoStr(playerid, str_format("~g~$~w~%d", val), true, 2500);
-	return 1;
-}
-
 
 Dialog:Dialog_InventoryItemList(playerid, response, listitem, inputtext[])
 {

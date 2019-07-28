@@ -20,7 +20,7 @@ CMD:servizio(playerid, params[])
 			AC_SetPlayerArmour(playerid, Faction_GetType(factionid) == FACTION_TYPE_POLICE ? 100.0 : 0.0);
 
 			pTempSkin[playerid] = GetPlayerSkin(playerid);
-
+			SetPlayerColor(playerid, COLOR_SLATEBLUE);
 			//Character_SetSelectingUniform(playerid, true);
 			Faction_SendMessageStr(factionid, COLOR_SLATEBLUE, str_format("** HQ: %S %s è entrato in servizio.", Faction_GetRankNameStr(factionid, Character_GetRank(playerid)-1), Character_GetOOCName(playerid)));
 			SendClientMessage(playerid, COLOR_GREEN, "Utilizza /uniforme <id> per cambiare uniforme.");

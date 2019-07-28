@@ -18,7 +18,9 @@ enum E_ACCOUNT_DATA
 	aCharactersSlot,
 	aCharactersCount,
 	aBanned,
-	aBanExpiry
+	aBanExpiry,
+	aLevel,
+	aPayDay
 };
 new 
 	AccountInfo[MAX_PLAYERS][E_ACCOUNT_DATA],

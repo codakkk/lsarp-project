@@ -157,6 +157,11 @@ stock Vehicle_SetFuel(vehicleid, Float:setValue)
 	VehicleFuel[vehicleid] = setValue;
 }
 
+stock Vehicle_AddFuel(vehicleid, Float:addValue)
+{
+	Vehicle_SetFuel(vehicleid, VehicleFuel[vehicleid] + addValue);
+}
+
 stock Vehicle_GiveFuel(vehicleid, Float:value)
 {
 	VehicleFuel[vehicleid] += value;

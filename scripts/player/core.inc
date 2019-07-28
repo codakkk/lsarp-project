@@ -26,11 +26,13 @@
 #include <player\components\desync_checker>
 #include <player\components\wear_objects>
 #include <player\components\privileges>
+#include <player\components\radio>
 // EFFECTS 
 #include <player\components\effects\mask>
 #include <player\components\effects\drag>
 #include <player\components\effects\stun>
 #include <player\components\effects\ame>
+#include <player\components\effects\blindfold>
 
 // OTHERS
 #include <player\components\spawn>

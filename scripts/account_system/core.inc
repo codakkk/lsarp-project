@@ -159,7 +159,7 @@ stock OnAccountLogin(playerid)
 	   //cache_get_row_count(AccountInfo[playerid][aCharactersCount]);
 	   Account_ShowCharactersList(playerid);
     }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT ID FROM characters WHERE AccountID = '%d'", AccountInfo[playerid][aID]);
+    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT ID FROM characters WHERE AccountID = '%d'", Account_GetID(playerid));
 	return 1;
 }
 
@@ -178,6 +178,8 @@ stock LoadAccountData(playerid)
 		cache_get_value_index_int(0, 9, AccountInfo[playerid][aCharactersSlot]);
 		cache_get_value_index_int(0, 10, AccountInfo[playerid][aBanned]);
 		cache_get_value_index_int(0, 11, AccountInfo[playerid][aBanExpiry]);
+		cache_get_value_index_int(0, 13, AccountInfo[playerid][aLevel]);
+		cache_get_value_index_int(0, 14, AccountInfo[playerid][aPayDay]);
 		return 1;
 	}
 	return 0;
@@ -195,7 +197,9 @@ stock Account_Save(playerid)
 		EMail = '%e', \
 		CharactersSlot = '%d', \
 		Banned = '%d', \
-		BanExpiry = '%d' \
+		BanExpiry = '%d', \
+		Level = '%d', \
+		PayDay = '%d' \
 		WHERE ID = '%d'", 
 		Account_GetAdminLevel(playerid), 
 		Account_GetPremiumLevel(playerid), Account_GetPremiumExpiry(playerid),
@@ -204,6 +208,8 @@ stock Account_Save(playerid)
 		Account_GetCharactersSlot(playerid),
 		Account_IsBanned(playerid),
 		Account_GetBanExpiry(playerid),
+		Account_GetLevel(playerid),
+		AccountInfo[playerid][aPayDay],
 		Account_GetID(playerid));
     
     mysql_tquery(gMySQL, query);

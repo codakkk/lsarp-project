@@ -42,20 +42,6 @@ CMD:furnitureid(playerid, params[])
 }
 alias:furnitureid("fid", "idmobili");
 
-flags:resethouseexterior(CMD_ADMIN);
-CMD:resethouseexterior(playerid, params[])
-{
-    new houseid;
-    if(sscanf(params, "d", houseid))
-        return SendClientMessage(playerid, COLOR_ERROR, "/resethouseexterior <houseid>");
-    if(!House_IsValid(houseid))
-        return SendClientMessage(playerid, COLOR_ERROR, "La casa inserita non è valida.");
-    new worldid = HOUSE_START_WORLD + houseid;
-    for(new i = 0)
-    Internal_RemoveFurniture(worldid, objectid)
-    return 1;
-}
-
 CMD:listaobject(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))

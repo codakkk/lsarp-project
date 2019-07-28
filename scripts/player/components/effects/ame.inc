@@ -12,7 +12,7 @@ hook OnPlayerClearData(playerid)
     return 1;
 }
 
-hook OnPlayerCharacterLoad(playerid)
+hook OnCharacterLoad(playerid)
 {
     PlayerAMe3DText[playerid] = CreateDynamic3DTextLabel(" ", 0xFFFFFFFF, 0.0, 0.0, 0.30, 15.0, playerid, _, 1);
     return 1;

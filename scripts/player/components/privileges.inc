@@ -1,6 +1,6 @@
 #include <YSI_Coding\y_hooks>
 
-hook OnPlayerCharacterLoad(playerid)
+hook OnCharacterLoad(playerid)
 {
     Character_LoadPrivileges(playerid);
     return 1;

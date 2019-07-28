@@ -3,7 +3,7 @@
 
 #include <YSI_Coding\y_hooks>
 
-enum E_SERVER_INFO
+static enum E_SERVER_INFO
 {
 	TimeAdd
 }

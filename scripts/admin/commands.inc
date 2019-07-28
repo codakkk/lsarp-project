@@ -3,27 +3,26 @@ CMD:acmds(playerid, params[])
 {
 	if(AccountInfo[playerid][aAdmin] >= 2)
 	{
-		SendClientMessage(playerid, -1, "[MODERATORE JR]: /a - /aduty - /goto - /gethere - /jetpack");
+		SendClientMessage(playerid, -1, "[MODERATORE JR]: /a - /aduty - /goto - /gethere - /jetpack - /staff");
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /gotopos - /check - /invcheck - /freeze - /unfreeze");
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /masks - /n - /setweather - /settimeadd - /resetinv");
-		SendClientMessage(playerid, -1, "[MODERATORE JR]: /resetdrugstats - /drugstats - /setvw - /kick - /slap");
+		SendClientMessage(playerid, -1, "[MODERATORE JR]: /resetdrugstats - /drugstats - /setvw - /kick - /aslap");
 		
 	}
 	if(AccountInfo[playerid][aAdmin] >= 3)
 	{
 		SendClientMessage(playerid, -1, "[MODERATORE]: /setskin - /sethp - /setvhp - /setarmour - /ajail - /unjail");
 		SendClientMessage(playerid, -1, "[MODERATORE]: /vcreate - /vdelete - (/fix)veh - /gotov - /getvhere - /avcolor");
-		SendClientMessage(playerid, -1, "[MODERATORE]: /bancharacter - /unbancharacter");
+		SendClientMessage(playerid, -1, "[MODERATORE]: /bancharacter - /unbancharacter - /apark");
 	}
 	if(AccountInfo[playerid][aAdmin] >= 4)
 	{
-		SendClientMessage(playerid, -1, "[ADMIN]: /amm - /setfaction - /giveitem - /givevehicleitem - /apark - /vowner - /vsave - /vdespawn");
+		SendClientMessage(playerid, -1, "[ADMIN]: /amm - /setfaction - /giveitem - /givevehicleitem  - /vowner - /vsave - /vdespawn");
 		SendClientMessage(playerid, -1, "[ADMIN]: /gotobuilding - /banaccount - /unbanaccount - /banofflineaccount - /banip");
 	}
 	if(AccountInfo[playerid][aAdmin] >= 5)
 	{
 		SendClientMessage(playerid, -1, "[DEVELOPER]: /update - /kickall - /afactioncmds");
-		//SendClientMessage(playerid, -1, "[DEVELOPER]: /giveitem - /apark");
 	}
 	if(IsPlayerAdmin(playerid))
 	{
@@ -96,6 +95,7 @@ CMD:aduty(playerid, params[])
 		//pc_cmd_jetpack(playerid, NULL);
 		SendMessageToAdmins(0, COLOR_ADMINCHAT, "[ADMIN] %s (%d) è in servizio.", AccountInfo[playerid][aName], playerid);
 		SetPlayerColor(playerid, 0xFF6347FF);
+		Character_ResetDeathState(playerid);
 		Character_EnableSomeAntiCheats(playerid, 0);
 	}
 	foreach(new i : Player)
@@ -463,7 +463,7 @@ CMD:getvhere(playerid, params[])
     return 1;
 }
 
-flags:apark(CMD_ADMIN);
+flags:apark(CMD_MODERATOR);
 CMD:apark(playerid, params[])
 {
     new vehicleid = GetPlayerVehicleID(playerid);
@@ -475,18 +475,21 @@ CMD:apark(playerid, params[])
     GetVehiclePos(vehicleid, x, y, z);
     GetVehicleZAngle(vehicleid, a);
     Vehicle_Park(vehicleid, x, y, z, a);
-    new pid = -1;
-    foreach(new i : Player)
-    {
-	   if(!Character_IsLogged(i) || PlayerInfo[i][pID] != VehicleInfo[vehicleid][vOwnerID])
-		  continue;
-	   pid = i;
-	   break;
-    }
-    new fixed[24];
-    FixName(PlayerInfo[pid][pName], fixed);
-    SendFormattedMessage(playerid, COLOR_GREEN, "[ADMIN] Hai parcheggiato qui il veicolo di %s [%d].", fixed, pid);
-    SendFormattedMessage(pid, COLOR_ERROR, "[ADMIN-ALERT]: %s [%d] ha parcheggiato il tuo veicolo altrove. Motivo: %s", AccountInfo[playerid][aName], playerid, params);
+	if(VehicleInfo[vehicleid][vOwnerID] > 0)
+	{
+		new pid = -1;
+		foreach(new i : Player)
+		{
+			if(!Character_IsLogged(i) || PlayerInfo[i][pID] != VehicleInfo[vehicleid][vOwnerID])
+				continue;
+			pid = i;
+			break;
+		}
+
+    	if(IsPlayerConnected(pid) && Character_IsLogged(pid))
+			SendFormattedMessage(pid, COLOR_ERROR, "[ADMIN-ALERT]: %s [%d] ha parcheggiato il tuo veicolo altrove. Motivo: %s", AccountInfo[playerid][aName], playerid, params);
+	}
+	SendFormattedMessage(playerid, COLOR_GREEN, "[ADMIN] Hai parcheggiato qui questo veicolo (%d).", vehicleid);
     Log(AccountInfo[playerid][aName], "", "/apark", vehicleid);
     return 1;
 }
@@ -904,8 +907,7 @@ CMD:settimeadd(playerid, params[])
 	new w = strval(params);
 	if(isnull(params) || w < 0 || w > 24)
 		return SendClientMessage(playerid, COLOR_ERROR, "/settimeadd <hour (0-24)>");
-	SendMessageToAdmins(true, COLOR_ADMIN, "%s ha utilizzato il comando /settimeadd. Orario: %d", AccountInfo[playerid][aName], w);
-	SetWorldTime(w);
+	SendMessageToAdmins(true, COLOR_ADMIN, "%s ha utilizzato il comando /settimeadd. Ore aggiunte: %d", AccountInfo[playerid][aName], w);
 	Server_SetTimeAdd(w);
 	return 1;
 }
@@ -918,9 +920,8 @@ CMD:setweather(playerid, params[])
 	new w = strval(params);
 	if(0 <= w <= 20)
 	{
-		SetWeather(w);
-		foreach(new i : Player)
-			SetPlayerWeather(i, w);
+		Server_SetNextWeather(w);
+		Server_UpdateWeather();
 		SendMessageToAdmins(false, COLOR_ADMIN, "%s (%d) ha cambiato il tempo metereologico. ID: %d.", AccountInfo[playerid][aName], playerid, w);
 	}
 	else 
@@ -947,12 +948,12 @@ Dialog:Dialog_AdminAnnounce(playerid, response, listitem, inputtext[])
 	return 1;
 }
 
-flags:slap(CMD_JR_MODERATOR);
-CMD:slap(playerid, params[])
+flags:aslap(CMD_JR_MODERATOR);
+CMD:aslap(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_ERROR, "/slap <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_ERROR, "/aslap <playerid/partofname>");
 	
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
@@ -975,7 +976,7 @@ CMD:kickall(playerid, params[])
 	if(strlen(params) <= 0 || strlen(params) > 90)
 		return SendClientMessage(playerid, COLOR_ERROR, "/kickall <motivo>");
 	
-	SendMessageToAdmins(true, COLOR_ADMIN, "L'admin %s ha kickato tutti. Motivo: %s", params);
+	SendMessageToAdmins(true, COLOR_ADMIN, "L'admin %s ha kickato tutti. Motivo: %s", AccountInfo[playerid][aName], params);
 
 	foreach(new i : Player)
 	{
@@ -1220,5 +1221,16 @@ CMD:getprivileges(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Giocatore non connesso.");
 	SendFormattedMessage(playerid, COLOR_ORANGE, "- Privilegi di %s -", Character_GetOOCName(id));
 	SendFormattedMessage(playerid, COLOR_ORANGE, "ChopShop: %s", (Character_HasChopShopPrivileges(id) ? ("Si") : ("No")));
+	return 1;
+}
+
+flags:staff(CMD_JR_MODERATOR);
+CMD:staff(playerid, params[])
+{
+	foreach(new i : Player)
+	{
+		if(Account_GetAdminLevel(i) > 0)
+			SendFormattedMessage(playerid, 0xa52a2aff, "(%s) %s [ID: %d]", AccountInfo[i][aName], Character_GetOOCName(i), i);
+	}	
 	return 1;
 }

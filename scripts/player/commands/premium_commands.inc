@@ -1,6 +1,6 @@
 
 #include <YSI_Coding\y_hooks>
-hook OnPlayerCharacterLoad(playerid)
+hook OnCharacterLoad(playerid)
 {
 	if(Account_GetPremiumLevel(playerid) > 0)
 	{
@@ -167,8 +167,8 @@ Dialog:Dialog_ZPointsBuyRewards(playerid, response, listitem, inputtext[])
 		}
 		case 7: // +1 Level
 		{
-			Character_IncreaseLevel(playerid, 1);
-			SetPlayerScore(playerid, Character_GetLevel(playerid));
+			Account_IncreaseLevel(playerid, 1);
+			SetPlayerScore(playerid, Account_GetLevel(playerid));
 		}
 	}
 	SendFormattedMessage(playerid, -1, "Hai acquistato \"{00AA00}%s{FFFFFF}\" per {AA0000}%d{FFFFFF} Z-Points.", RewardInfo[listitem][rdName], price);

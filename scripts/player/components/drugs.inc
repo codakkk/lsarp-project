@@ -108,7 +108,7 @@ hook OnCharacterSaveData(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-hook OnPlayerCharacterLoad(playerid)
+hook OnCharacterLoad(playerid)
 {
 	Character_LoadDrugAddiction(playerid);
 	return Y_HOOKS_CONTINUE_RETURN_1;
@@ -173,10 +173,8 @@ hook OnPlayerAddictionTimer(playerid)
 	return 1;
 }
 
-hook OnCharacterUseItem(playerid, slotid)
+hook OnCharacterUseItem(playerid, slotid, itemid)
 {
-	new itemid = Character_GetSlotItem(playerid, slotid);
-
 	if(!ServerItem_IsDrug(itemid))
 		return Y_HOOKS_CONTINUE_RETURN_1;
 	

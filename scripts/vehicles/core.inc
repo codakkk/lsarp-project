@@ -40,7 +40,7 @@ ptask OnPlayerVehicleFuelUpdate[15000](playerid)
 			//!IsAHelicopter(vehicleid) && !IsAPlane(vehicleid) && !IsABoat(vehicleid)
 			if(Vehicle_IsEngineOn(vehicleid) && !IsABike(vehicleid))
 			{
-				Vehicle_GiveFuel(vehicleid, -0.5);
+				Vehicle_GiveFuel(vehicleid, -0.25);
 			}
 		}
 		else
@@ -138,6 +138,17 @@ stock Vehicle_Reload(vehicleid)
 	ChangeVehicleColor(vehicleid, VehicleInfo[vehicleid][vColor1], VehicleInfo[vehicleid][vColor2]);
 }
 
+stock Vehicle_Respawn(vehicleid)
+{
+	SetVehicleToRespawn(vehicleid);
+	Vehicle_SetEngineOff(vehicleid);
+	Vehicle_SetLightState(vehicleid, false);
+	Vehicle_SetFuel(vehicleid, 100.0);
+	SetVehiclePos(vehicleid, VehicleInfo[vehicleid][vX], VehicleInfo[vehicleid][vY], VehicleInfo[vehicleid][vZ]);
+	SetVehicleZAngle(vehicleid, VehicleInfo[vehicleid][vA]);
+	return 1;
+}
+
 stock Vehicle_Create(modelid, Float:x, Float:y, Float:z, Float:rotation, color1, color2, respawn_delay, addsiren=0)
 {
     new vehicleid = CreateVehicle(modelid, x, y, z, rotation, color1, color2, respawn_delay, addsiren);
@@ -185,6 +196,7 @@ stock Vehicle_InsertInDatabase(vehicleid)
 		Vehicle_UpdateLockState(vehicleid);
 		Vehicle_SetTemporary(vehicleid, false);
 		Vehicle_InitializeInventory(vehicleid);
+		//Vehicle_GeneratePlate(vehicleid);
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO `vehicles` (OwnerID, Model, Color1, Color2, X, Y, Z, Angle, Locked, Faction) \
 		VALUES('%d', '%d', '%d', '%d', '%f', '%f', '%f', '%f', '0', '%d')",
@@ -470,6 +482,39 @@ stock String:Vehicle_GetOwnerNameStr(vehicleid)
 	return str_new(VehicleInfo[vehicleid][vOwnerName]);
 }
 
+// TODO: This doesn't work neither
+stock Vehicle_GeneratePlate(vehicleid)
+{
+	/*inline OnPlate(string:plate[])
+	{
+		if(cache_num_rows() > 0)
+			return Vehicle_GeneratePlate(vehicleid);
+		Vehicle_SetPlate(vehicleid, plate);
+		Vehicle_Respawn(vehicleid);
+		mysql_tquery_f(gMySQL, "UPDATE vehicles SET Plate = '%e' WHERE ID = '%d'", plate, Vehicle_GetID(vehicleid));
+	}
+
+	new query[128], tempPlate[9];
+
+	static const RandomLetters[26][5] = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
+	format(tempPlate, sizeof(tempPlate), "%d%s%s%s%d", random(10), RandomLetters[random(26)], RandomLetters[random(26)], RandomLetters[random(26)], vehicleid);
+	
+	format(query, sizeof(query), "SELECT ID FROM vehicles WHERE Plate = '%e'", tempPlate);
+	mysql_tquery_inline(gMySQL, query, using inline OnPlate, "s", tempPlate);*/
+}
+
+stock Vehicle_SetPlate(vehicleid, plate[])
+{
+	set(VehicleInfo[vehicleid][vPlate], plate);
+	return SetVehicleNumberPlate(vehicleid, plate);
+}
+
+stock Vehicle_UpdatePlate(vehicleid)
+{
+	SetVehicleNumberPlate(vehicleid, VehicleInfo[vehicleid][vPlate]);
+	return 1;
+}
+
 stock Vehicle_SetToDespawn(vehicleid, minutes)
 {
 	Vehicle_SetSpawnExpiry(vehicleid, gettime() + minutes * 60); // minutes * 60 because -> N miunutes * 60 seconds.
@@ -514,7 +559,7 @@ stock Vehicle_IsOwner(vehicleid, playerid, bool:onlyEffectiveOwner)
 forward Vehicle_LoadAll();
 public Vehicle_LoadAll()
 {
-	new count = 0, dbid = 0, modelid = 0, ownerid = 0, locked = 0;
+	new count = 0, dbid = 0, modelid = 0, ownerid = 0, locked = 0, plate[32];
 	cache_get_row_count(count);
 
 	for(new i = 0; i < count; ++i)
@@ -546,6 +591,7 @@ public Vehicle_LoadAll()
 		cache_get_value_index_float(i, 17, VehicleFuel[vehicleid]);	  
 		cache_get_value_index_int(i, 18, VehicleInfo[vehicleid][vFaction]);
 		cache_get_value_index_int(i, 19, VehicleInfo[vehicleid][vLastChopShopTime]);
+		cache_get_value_index_int(i, 20, VehicleInfo[vehicleid][vPlate]);
 		
 		Vehicle_SetEngineStatus(vehicleid, false);
 		Vehicle_SetDestroyed(vehicleid, false);
@@ -572,7 +618,7 @@ public Vehicle_LoadAll()
 				Vehicle_SetOwnerName(vehicleid, Character_GetNameFromDatabase(ownerid, true));
 			}
 		}
-		
+		Vehicle_UpdatePlate(vehicleid);
 		Vehicle_CancelDespawn(vehicleid);
 
 		mysql_tquery_f(gMySQL, "UPDATE `vehicles` SET Spawned = 1 WHERE ID = '%d';", dbid);

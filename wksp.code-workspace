@@ -23,6 +23,6 @@
 		"LineCount.includes": [
 			"**/scripts/*.inc",
 			"**/scripts/**"
-		]
+		],
 	}
 }

@@ -191,7 +191,7 @@ Dialog:Dialog_CharacterSelect(playerid, response, listitem, inputtext[])
 
 	inline OnLoad()
 	{
-		OnCharacterLoad(playerid);
+		LoadCharacter(playerid);
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM characters WHERE ID = '%d'", gCharacterSelected{playerid});
 	return 1;
@@ -210,8 +210,6 @@ Dialog:Dialog_CreateNewChar(playerid, response, listitem, inputtext[])
 		switch(gCharacterCreationStep{playerid})
 		{
 			case 0: return Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Crea nuovo personaggio", "Inserisci il nome del nuovo personaggio!\nEsempio: Mario Rossi", "Avanti", "Indietro");
-			case 1: return Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Età Personaggio", "Adesso inserisci l'età del nuovo personaggio!\nN.B: 16 - 75 anni.", "Avanti", "Indietro");
-			case 2: return Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_LIST, "Sesso Personaggio", "Maschio\nFemmina", "Crea", "Indietro");
 			default: return Account_ShowCharactersList(playerid);
 		}
 		return 1;
@@ -271,7 +269,7 @@ Dialog:Dialog_CreateNewChar(playerid, response, listitem, inputtext[])
 				return 1;
 			}
 		}
-	   case 1: // Age Selection
+	   /*case 1: // Age Selection
 	   {
 		  new val = strval(inputtext);
 		  if(val < 16 || val > 75)
@@ -297,22 +295,20 @@ Dialog:Dialog_CreateNewChar(playerid, response, listitem, inputtext[])
 
 		  Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_MSGBOX, "Riepilogo", "--- Informazioni ---\nNome: %s\nSesso: %s\nEtà: %d\nConfermi?", "Crea", "Annulla", fixedCharName, GetSexName(listitem), age);
 		  return 1;
-	   }
-	   case 3: // Over
+	   }*/
+	   case 1: // Over
 	   {
 		  if(AccountInfo[playerid][aCharactersCount] >= MAX_CHARACTERS) // Should I prompt this before?
 		  {
-			 return Dialog_Show(playerid, Dialog_ShowCharacters, DIALOG_STYLE_MSGBOX, "Personaggio Non Creato", "Non è stato possibile creare il personaggio!\nLimite (5) superato.", "Continua", "");
+			 return Dialog_Show(playerid, Dialog_ShowCharacters, DIALOG_STYLE_MSGBOX, "Creazione Personaggio Fallita", "Non è stato possibile creare il personaggio!\nLimite (5) superato.", "Continua", "");
 		  }
 		  new 
 			 query[256],
-			 age = GetPVarInt(playerid, "NewCharacter_Age"),
-			 sex = GetPVarInt(playerid, "NewCharacter_Sex"),
 			 characterName[MAX_PLAYER_NAME];
 		  
 		  GetPVarString(playerid, "NewCharacter_Name", characterName, sizeof(characterName));
 
-		  mysql_format(gMySQL, query, sizeof(query), "INSERT INTO `characters` (Name, AccountID, Sex, Age, FirstSpawn) VALUES('%e', '%d', '%d', '%d', '1')", characterName, AccountInfo[playerid][aID], sex, age);
+		  mysql_format(gMySQL, query, sizeof(query), "INSERT INTO `characters` (Name, AccountID, FirstSpawn) VALUES('%e', '%d', '1')", characterName, Account_GetID(playerid));
 		  mysql_tquery(gMySQL, query);
 
 		  Log(AccountInfo[playerid][aName], characterName, "CharacterCreation");

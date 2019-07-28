@@ -42,9 +42,8 @@ ptask OnPlayerHungerTimer[60000](playerid)
 	return 1;
 }
 
-hook OnCharacterUseItem(playerid, slotid)
+hook OnCharacterUseItem(playerid, slotid, itemid)
 {
-	new itemid = Character_GetSlotItem(playerid, slotid);
 	if(!ServerItem_IsFood(itemid))
 		return Y_HOOKS_CONTINUE_RETURN_1;
 	

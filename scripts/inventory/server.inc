@@ -35,9 +35,9 @@ hook OnGameModeInit()
 	gItem_RationK = ServerItem_InitializeFoodItem(59, "Razione K", 1575, 100, 100);
 
 	// Medical Objects
-	gItem_Morfine = ServerItem_InitializeMedikItem(60, "Siringa di Morfina", 2902, 30);
-	gItem_Bandages = ServerItem_InitializeMedikItem(61, "Bende", 11747, 15);
-	gItem_Medikit = ServerItem_InitializeMedikItem(62, "Kit Pronto Soccorso", 11738, 50);
+	gItem_Morfine = ServerItem_InitializeMedicItem(60, "Siringa di Morfina", 2902, 5, 30);
+	gItem_Bandages = ServerItem_InitializeMedicItem(61, "Bende", 11747, 5, 15);
+	gItem_Medikit = ServerItem_InitializeMedicItem(62, "Kit Pronto Soccorso", 11738, 2, 50);
 
 	gItem_SmallBackPack = ServerItem_ManualInitializeItem(63, "Zainetto", ITEM_TYPE:ITEM_TYPE_BAG, 		3026, 1, 1, 5);
     gItem_BigBackPack = ServerItem_ManualInitializeItem(64, "Zaino Grande", ITEM_TYPE:ITEM_TYPE_BAG, 	19559, 1, 1, 2);
@@ -84,6 +84,7 @@ hook OnGameModeInit()
 
 	gItem_Money = ServerItem_ManualInitializeItem(96, "Denaro", ITEM_TYPE_MONEY, 1212, cellmax-1);
 
+	gItem_Radio = ServerItem_ManualInitializeItem(97, "Radio", ITEM_TYPE_GENERAL, 1212, 1);
     printf("Items loaded. N: %d\n", Iter_Count(ServerItems));
     return 1;
 }
@@ -91,7 +92,7 @@ hook OnGameModeInit()
 // Useful for automatic items id
 stock ServerItem_InitializeItem(const name[], ITEM_TYPE:type, modelId = 0, maxStack = 1, ...)
 {
-    return ServerItem_ManualInitializeItem(Iter_Free(ServerItems), name, type, modelId, maxStack, ___5);
+    return ServerItem_ManualInitializeItem(Iter_Free(ServerItems), name, type, modelId, maxStack, ___4);
 }
 
 stock ServerItem_InitializeDrugItem(id, const name[], modelid = 0, amountForAddiction = 0, maxHealth = 100, healthGain = 0, effectTime = 0)
@@ -104,9 +105,9 @@ stock ServerItem_InitializeFoodItem(id, const name[], modelId, foodAmount, healt
 	return ServerItem_ManualInitializeItem(id, name, ITEM_TYPE_FOOD, modelId, 2, foodAmount, health);
 }
 
-stock ServerItem_InitializeMedikItem(id, const name[], modelId, healthAmount)
+stock ServerItem_InitializeMedicItem(id, const name[], modelId, maxStacks, healthAmount)
 {
-	return ServerItem_ManualInitializeItem(id, name, ITEM_TYPE:ITEM_TYPE_MEDIK, modelId, healthAmount);
+	return ServerItem_ManualInitializeItem(id, name, ITEM_TYPE:ITEM_TYPE_MEDIC, modelId, maxStacks, healthAmount);
 }
 
 stock ServerItem_InitializeDrinkItem(id, const name[], modelId, foodAmount)
@@ -164,15 +165,18 @@ stock ServerItem_ManualInitializeItem(itemid, const name[], ITEM_TYPE:type, mode
 }
 
 stock ITEM_TYPE:ServerItem_GetType(itemid) return ServerItem[itemid][sitemType];
+stock ServerItem_IsMaterial(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_MATERIAL;
 stock ServerItem_IsWeapon(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_WEAPON;
 stock ServerItem_IsAmmo(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_AMMO;
 stock ServerItem_IsFood(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_FOOD;
 stock ServerItem_IsDrink(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_DRINK;
-stock ServerItem_IsMedik(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_MEDIK;
+stock ServerItem_IsMedic(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_MEDIC;
 stock ServerItem_IsBag(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_BAG;
+stock ServerItem_IsFuel(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_FUEL;
 stock ServerItem_IsDrug(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_DRUG;
 stock ServerItem_IsMechanicalComp(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_MECHANICAL_COMPONENTS;
 stock ServerItem_IsMoney(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_MONEY;
+stock ServerItem_IsGeneral(itemid) return ServerItem_IsValid(itemid) && ServerItem[itemid][sitemType] == ITEM_TYPE:ITEM_TYPE_GENERAL;
 
 stock ServerItem_GetMaxStack(itemid) return ServerItem[itemid][sitemMaxStack];
 
@@ -191,13 +195,13 @@ stock ServerItem_GetExtra(itemid, extraid)
     return ServerItem[itemid][sitemExtraData][extraid];
 }
 
-stock ServerItem_GetTypeName(item_id)
+stock ServerItem_GetTypeName(itemid)
 {
     new string[MAX_ITEM_NAME] = "Sconosciuto";
     
-    if(! (item_id < 0 || item_id >= MAX_ITEMS_IN_SERVER) && Iter_Contains(ServerItems, item_id))
+    if(0 <= itemid < MAX_ITEMS_IN_SERVER && Iter_Contains(ServerItems, itemid))
     {
-	   switch(ServerItem[item_id][sitemType])
+	   switch(ServerItem[itemid][sitemType])
 	   {
 		  case ITEM_TYPE_NONE: string = "Niente";
 		  case ITEM_TYPE_MATERIAL: string = "Materiali";
@@ -205,11 +209,13 @@ stock ServerItem_GetTypeName(item_id)
 		  case ITEM_TYPE_AMMO: string = "Munizioni";
 		  case ITEM_TYPE_FOOD: string = "Cibo";
 		  case ITEM_TYPE_DRINK: string = "Bevanda";
-		  case ITEM_TYPE_MEDIK: string = "Medico";
+		  case ITEM_TYPE_MEDIC: string = "Medico";
 		  case ITEM_TYPE_BAG: string = "Zaino";
+		  case ITEM_TYPE_FUEL: string = "Carburante";
 		  case ITEM_TYPE_DRUG: string = "Droga";
 		  case ITEM_TYPE_MECHANICAL_COMPONENTS: string = "Componenti";
 		  case ITEM_TYPE_MONEY: string = "Denaro";
+		  case ITEM_TYPE_GENERAL: string = "Altro";
 	   }
     }
     return string;
@@ -231,6 +237,11 @@ stock ServerItem_GetBagSize(bagid)
 stock ServerItem_GetTankCapacity(itemid)
 {
 	return ServerItem[itemid][sitemExtraData][0];
+}
+
+stock MedicItem_GetHealthGain(itemid)
+{
+	return ServerItem_GetExtra(itemid, 0);
 }
 
 stock FoodItem_GetFoodValue(itemid)
@@ -266,4 +277,9 @@ stock DrugItem_GetHealthGain(itemid)
 stock DrugItem_GetEffectTime(itemid)
 {
 	return ServerItem_GetExtra(itemid, 3);
+}
+
+stock Float:FuelItem_GetAmount(itemid)
+{
+	return float(ServerItem_GetExtra(itemid, 0));
 }

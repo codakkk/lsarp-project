@@ -33,12 +33,13 @@ enum ITEM_TYPE
 	ITEM_TYPE_AMMO,
 	ITEM_TYPE_FOOD,
 	ITEM_TYPE_DRINK,
-	ITEM_TYPE_MEDIK,
+	ITEM_TYPE_MEDIC,
 	ITEM_TYPE_BAG,
 	ITEM_TYPE_FUEL,
 	ITEM_TYPE_DRUG,
 	ITEM_TYPE_MECHANICAL_COMPONENTS,
-	ITEM_TYPE_MONEY
+	ITEM_TYPE_MONEY,
+	ITEM_TYPE_GENERAL
 };
 
 enum EXTRA_TYPE_ID
@@ -145,5 +146,7 @@ new stock
 	gItem_AppleJuice,
 
 	gItem_MechanicalComponents,
-	gItem_Money
+	gItem_Money,
+
+	gItem_Radio
 ;

@@ -1,6 +1,6 @@
 #include <YSI_Coding\y_hooks>
 
-hook OnPlayerCharacterLoad(playerid)
+hook OnCharacterLoad(playerid)
 {
 	new query[256];
 	mysql_format(gMySQL, query, sizeof(query), "SELECT * FROM `vehicles` WHERE OwnerID = '%d' AND Spawned = 0;", Character_GetID(playerid));
@@ -32,9 +32,7 @@ ptask OnVehicleFuelTextDrawTimer[1000](playerid)
 	new vehicleid = GetPlayerVehicleID(playerid);
 	if(vehicleid > 0)
 	{
-		new string[18];
-		format(string, sizeof(string), "~y~%0.1f%s", Vehicle_GetFuel(vehicleid), "%");
-		PlayerTextDrawSetString(playerid, pVehicleFuelText[playerid], string);
+		Internal_UpdateFuelText(playerid, vehicleid);
 	}
 	return 1;
 }
@@ -102,6 +100,7 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
 		{
 			if(!IsABike(vehicleid))
 			{
+				Internal_UpdateFuelText(playerid, vehicleid);
 				PlayerTextDrawShow(playerid, pVehicleFuelText[playerid]);
 			}
 			if(Vehicle_GetOwnerID(vehicleid) > 0)
@@ -188,14 +187,13 @@ stock Character_AddOwnedVehicle(playerid, vehicleid)
 {
 	if(!Vehicle_IsValid(vehicleid) || Character_GetOwnedVehicleCount(playerid) == MAX_VEHICLES_PER_PLAYER)
 		return 0;
-	printf("Added");
+	
 	Vehicle_SetOwnerID(vehicleid, Character_GetID(playerid));
 	Vehicle_SetOwnerName(vehicleid, Character_GetOOCName(playerid));
 
 	// If vehicle is temporary
 	if(Vehicle_GetID(vehicleid) == 0 || Vehicle_IsTemporary(vehicleid))
 	{
-		printf("Is temporary");
 		Vehicle_InsertInDatabase(vehicleid);
 	}
 	Vehicle_Save(vehicleid);
@@ -228,4 +226,11 @@ stock Character_GetClosestVehicle(playerid, Float:radius)
 		}
 	}
     return 0;
+}
+
+static Internal_UpdateFuelText(playerid, vehicleid)
+{
+	new string[18];
+	format(string, sizeof(string), "~y~%0.1f%s", Vehicle_GetFuel(vehicleid), "%");
+	PlayerTextDrawSetString(playerid, pVehicleFuelText[playerid], string);
 }

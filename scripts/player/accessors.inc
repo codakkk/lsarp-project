@@ -84,36 +84,6 @@ stock Character_IsLogged(playerid)
 	return Bit_Get(gCharacterBitState[e_pCharacterLogged], playerid);
 }
 
-stock Character_SetLevel(playerid, level)
-{
-	PlayerInfo[playerid][pLevel] = level;
-}
-
-stock Character_IncreaseLevel(playerid, amount)
-{
-	PlayerInfo[playerid][pLevel] += amount;
-}
-
-stock Character_GetLevel(playerid)
-{
-	return PlayerInfo[playerid][pLevel];
-}
-
-stock Character_SetExp(playerid, value)
-{
-	PlayerInfo[playerid][pExp] = value;
-}
-
-stock Character_AddExp(playerid, value)
-{
-	PlayerInfo[playerid][pExp] += value;
-}
-
-stock Character_GetExp(playerid)
-{
-	return PlayerInfo[playerid][pExp];
-}
-
 stock Character_GetFaction(playerid)
 {
 	return PlayerInfo[playerid][pFaction];
@@ -376,13 +346,18 @@ stock Character_GetNearHouseID(playerid, bool:inside = false)
 
 stock Character_GetNearHouseIDMenu(playerid)
 {
-	new houseid = Character_GetNearHouseID(playerid);
+	new houseid = Character_GetNearHouseID(playerid, true);
 	if(houseid == -1)
-		return -1;
-	if(House_GetOwnerID(houseid) == Character_GetID(playerid))
-		return houseid;
-	if(House_GetID(houseid) == Character_GetHouseKey(playerid))
-		return houseid;
+		houseid = Character_GetNearHouseID(playerid, false);
+	if(houseid != -1)
+	{
+		if(Account_IsAdminDuty(playerid))
+			return houseid;
+		if(House_GetOwnerID(houseid) == Character_GetID(playerid))
+			return houseid;
+		if(House_GetID(houseid) == Character_GetHouseKey(playerid))
+			return houseid;
+	}
 	return -1;
 }
 

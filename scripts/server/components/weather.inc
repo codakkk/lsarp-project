@@ -1,23 +1,19 @@
 #include <YSI_Coding\y_hooks>
 
-new gCurrentWeather, gNextWeather;
+static gCurrentWeather, gNextWeather;
 
 hook OnGameModeInit()
 {
 	gCurrentWeather = 0;
 	gNextWeather = GenerateWeather();
+
+	Server_UpdateWeather(); 
 	return 1;
 }
 
 hook OnCharacterSpawn(playerid)
 {
-	new tmphour, tmpminute, tmpsecond;
-    gettime(tmphour, tmpminute, tmpsecond);
-    
-    tmphour += Server_GetTimeAdd();
-    
-    FixHour(tmphour);
-    SetPlayerTime(playerid, tmphour, tmpminute);
+	SetPlayerWeather(playerid, gCurrentWeather);
 	return 1;
 }
 
@@ -36,12 +32,6 @@ task OnWeatherUpdateTimer[1000 * 60 * 60]()
 			continue;
 		//if(!DrugWeather[i])
 		SetPlayerWeather(i, Server_GetCurrentWeather());
-		/*new tmphour, tmpminute, tmpsecond;
-		gettime(tmphour, tmpminute, tmpsecond);
-        tmphour += Server_GetTimeAdd();
-		FixHour(tmphour);
-		SetPlayerTime(i, tmphour, tmpminute);
-		SetPlayerWeather(i, Server_GetCurrentWeather());*/
 	}
 }
 
@@ -143,7 +133,9 @@ stock GenerateWeather()
 stock Server_UpdateWeather()
 {
 	Server_SetCurrentWeather(Server_GetNextWeather());
-	SetWeather(Server_GetCurrentWeather());
+	SetWeather(gCurrentWeather);
+	foreach(new i : Player)
+		SetPlayerWeather(i, gCurrentWeather);
 	Server_SetNextWeather(GenerateWeather());
 }
 
@@ -165,4 +157,10 @@ stock Server_SetNextWeather(weatherid)
 stock Server_GetNextWeather()
 {
 	return gNextWeather;
+}
+
+CMD:mercy(playerid, params[])
+{
+	SendClientMessage(playerid, COLOR_ERROR, "Ciao Mercy");
+	return 1;
 }

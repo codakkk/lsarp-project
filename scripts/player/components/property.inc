@@ -23,12 +23,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 			{
 				if(type == ELEMENT_TYPE_HOUSE_ENTRANCE || type == ELEMENT_TYPE_HOUSE_EXIT)
 				{
-					new houseid = elementId;
-					if(House_GetOwnerID(houseid) == PlayerInfo[playerid][pID])
-					{
-							// REMEMBER TO EDIT /casa IF THIS DIALOG IS EDITED
-						Dialog_Show(playerid, Dialog_House, DIALOG_STYLE_LIST, "Casa", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nCambia Interior", "Continua", "Chiudi");
-					}
+					Character_ShowHouseDialog(playerid);
 				}
 			}
 		}
@@ -296,4 +291,15 @@ stock Character_BuyHouse(playerid, houseid)
     House_Save(houseid);
     Character_Save(playerid);
     return 1;
+}
+
+stock Character_ShowHouseDialog(playerid)
+{
+	new houseid = Character_GetNearHouseIDMenu(playerid);
+	if(houseid != -1)
+	{
+		printf("HOuseID: %d", houseid);
+		return Dialog_Show(playerid, Dialog_House, DIALOG_STYLE_LIST, "Casa", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nCambia Interior", "Continua", "Chiudi");
+	}
+	return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno di casa tua."), 0;
 }

@@ -181,6 +181,21 @@ stock Account_GetBanExpiry(playerid)
 	return AccountInfo[playerid][aBanExpiry];
 }
 
+stock Account_SetLevel(playerid, level)
+{
+	AccountInfo[playerid][aLevel] = level;
+}
+
+stock Account_IncreaseLevel(playerid, amount)
+{
+	AccountInfo[playerid][aLevel] += amount;
+}
+
+stock Account_GetLevel(playerid)
+{
+	return AccountInfo[playerid][aLevel];
+}
+
 stock RewardInfo_GetPoints(rewardid)
 {
 	return RewardInfo[rewardid][rdPoints];

@@ -227,17 +227,17 @@ hook OnCharDeathFinished(playerid)
 			
 			Character_GetDeathStateData(playerid, x, y, z, a, interior, world);
 			
-			new vid = Character_GetDeathStateVehicle(playerid);
+			/*new vid = Character_GetDeathStateVehicle(playerid);
 			if(vid > 0 && IsValidVehicle(vid) && Vehicle_GetHealth(vid) > 250.0)
 			{
 				PutPlayerInVehicle(playerid, vid, 0);
 			}
 			else
-			{
+			{*/
 				SetPlayerPos(playerid, x, y, z);
 				SetPlayerFacingAngle(playerid, a);
 
-			}
+			//}
 
 			SetPlayerInterior(playerid, interior);
 			Character_SetVirtualWorld(playerid, world);
@@ -368,14 +368,14 @@ stock Character_SetDeathKillerID(playerid, killerid)
 
 static stock Internal_ApplyDeathAnim(playerid)
 {
-	new vehicle = GetPlayerVehicleID(playerid);
+	/*new vehicle = GetPlayerVehicleID(playerid);
 	if(vehicle > 0 && !IsABike(vehicle) && !IsAMotorBike(vehicle) && (Character_IsInjured(playerid) || Character_IsDead(playerid)))
 	{
 		if(GetPlayerAnimationIndex(playerid) != 1018)
 			ApplyAnimation(playerid, "PED", "CAR_DEAD_LHS", 4.1, 0, 0, 0, 1, 0, 1);
 	}
 	else
-	{
+	{*/
 		if( (Character_IsDead(playerid) || Character_IsInjured(playerid)) && GetPlayerAnimationIndex(playerid) != 1701)
 		{
 			ClearAnimationsEx(playerid, false);
@@ -388,5 +388,5 @@ static stock Internal_ApplyDeathAnim(playerid)
 			ApplyAnimation(playerid, "WUZI", "CS_Dead_Guy", 4.0, 1, 0, 0, 1, 0, 1);
 			printf("Applying 2");
 		}*/
-	}
+	//}
 }

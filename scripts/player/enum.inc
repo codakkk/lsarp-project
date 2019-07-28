@@ -9,12 +9,8 @@ enum E_PLAYER_DATA
     pID,
     pName[MAX_PLAYER_NAME],
     pMoney,
-    pLevel,
-    pExp,
-    pAge,
-    pSex,
+	
     pSkin,
-    pPayDay,
 
     Float:pHealth,
     Float:pArmour,

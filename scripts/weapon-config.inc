@@ -4810,7 +4810,7 @@ static PlayerDeath(playerid, animlib[32], animname[32], anim_lock = 0, respawn_t
 	FreezeSyncData(playerid, freeze_sync);
 
 	if (respawn_time == -1) {
-		respawn_time = 500;//s_RespawnTime;
+		respawn_time = 1;//s_RespawnTime;
 	}
 
 	if (animlib[0] && animname[0]) {

@@ -379,20 +379,20 @@ stock ProxDetectorS(Float:radius, playerid, targetid)
     return 0;
 }
 
-stock ProxDetectorStr(playerid, Float:radius, String:string, col1, col2, col3, col4, col5, ooc = false)
+stock ProxDetectorStr(playerid, Float:radius, String:string, col1, col2, col3, col4, col5, ooc = false, receiveSelf = true)
 {
     new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
     amx_to_ref(var, ptr);
     str_get(string, ptr[0], .size=size);
 
-    new result = ProxDetector(playerid, radius, ptr[0], col1, col2, col3, col4, col5, ooc);
+    new result = ProxDetector(playerid, radius, ptr[0], col1, col2, col3, col4, col5, ooc, receiveSelf);
 
     amx_free(var);
     amx_delete(var);
     return result;
 }
 
-stock ProxDetector(playerid, Float:radius, const string[], col1, col2, col3, col4, col5, ooc = false)
+stock ProxDetector(playerid, Float:radius, const string[], col1, col2, col3, col4, col5, ooc = false, receiveSelf = true)
 {
     if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))
 	   return 0;
@@ -404,6 +404,8 @@ stock ProxDetector(playerid, Float:radius, const string[], col1, col2, col3, col
 	GetPlayerPos(playerid, x, y, z);
 	foreach(new i : Player)
 	{
+		if(!receiveSelf && i == playerid)
+			continue;
 		if(GetPlayerInterior(i) != int || Character_GetVirtualWorld(i) != vw)
 			continue;
 		if( (!Account_HasOOCEnabled(i) || !Account_HasOOCEnabledForPlayer(i, playerid)) && ooc)
@@ -431,6 +433,7 @@ stock SendTwoLinesMessageStr(playerid, color, String:string)
 	return result;
 }
 
+// I must increase two lines characters.
 stock SendTwoLinesMessage(playerid, color, const message[], GLOBAL_TAG_TYPES:...)
 {
 	new string[256];
