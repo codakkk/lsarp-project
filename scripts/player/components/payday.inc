@@ -68,6 +68,16 @@ stock Character_PayDay(playerid)
 	   expForNewLevel = (Character_GetLevel(playerid)+1) * 2;
 	   SendFormattedMessage(playerid, COLOR_YELLOW, "Congratulazioni! Hai raggiunto il livello %d. Per il prossimo livello hai bisogno di %d punti esperienza.", Character_GetLevel(playerid), expForNewLevel);
     }*/
+	if(Character_HasBuildingKey(playerid))
+	{
+		new id = Character_GetBuildingKey(playerid);
+		if(Building_IsValid(id))
+		{
+			new price = Building_GetPrice(id)/100;
+			//Building_
+			SendFormattedMessage(playerid, COLOR_YELLOW, "Il tuo business ti ha fruttato $%d. Puoi trovarli all'interno della cassa.", price);
+		}
+	}
     SendClientMessage(playerid, COLOR_YELLOW, "____________________________________________________");
 	//Character_GiveMoney(playerid, paycheck, "paycheck");
     Character_Save(playerid);

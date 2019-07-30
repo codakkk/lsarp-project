@@ -333,7 +333,7 @@ hook OnCharacterSpawn(playerid)
 {
     for(new i = 0; i < MAX_PLAYER_OBJECTS; ++i)
     {
-        if(WearObject_IsUsed(playerid, i))
+        if(WearObject_IsWearing(playerid, i))
             Internal_WearObjectUse(playerid, i);
     }
     return 1;
@@ -722,6 +722,11 @@ stock WearObject_GetModelId(playerid, slotid)
 stock WearObject_GetBone(playerid, index)
 {
     return PlayerCustomObject[playerid][index][Bone];
+}
+
+stock WearObject_IsWearing(playerid, index)
+{
+    return WearObject_GetAttachedIndex(playerid, index) != -1;
 }
 
 //========================================= INTERNALS =====================================================

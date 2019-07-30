@@ -1442,6 +1442,9 @@ stock HexToInt(string[])
 // ===== [ FURNITURE SYSTEM ] =====
 #include <furniture_system\core_map>
 
+// ===== [ GATE SYSTEM ] =====
+#include <gate_system\core>
+
 // ========== [ COMMANDS ] ==========
 #include <commands>
 #include <player\commands>

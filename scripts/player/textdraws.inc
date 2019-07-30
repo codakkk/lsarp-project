@@ -49,7 +49,7 @@ hook OnPlayerConnect(playerid)
 	PlayerTextDrawSetProportional(playerid, pJailTimeText[playerid], 1);
 	PlayerTextDrawSetSelectable(playerid, pJailTimeText[playerid], 0);
 
-	pDeathTextDraw[playerid] = CreatePlayerTextDraw(playerid, 320.000000, 300.000000, "~n~~n~~g~TEMPO RIMANENTE:~w~~n~ 0 secondi");
+	pDeathTextDraw[playerid] = CreatePlayerTextDraw(playerid, 320.000000, 380.000000, "~n~~n~~g~TEMPO RIMANENTE:~w~~n~ 0 secondi");
 	PlayerTextDrawBackgroundColor(playerid, pDeathTextDraw[playerid], 255);
 	PlayerTextDrawAlignment(playerid, pDeathTextDraw[playerid], 2); // 2 Means centered.
 	PlayerTextDrawFont(playerid, pDeathTextDraw[playerid], 1);

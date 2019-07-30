@@ -129,7 +129,7 @@ CMD:aiuto(playerid, params[])
     SendClientMessage(playerid, -1, "[GENERALE]: /info - /dom - /compra - /annulla - /sconosciuto - /oggetto");
     SendClientMessage(playerid, -1, "[GENERALE]: /rimuovi - /hotkeys - /arma - /id - /dp - /blindfold");
 	SendClientMessage(playerid, -1, "[GENERALE]: /afk - /stilechat - /stilelotta - /stilecamminata - /oggetto");
-	SendClientMessage(playerid, -1, "[GENERALE]: /onduty - /testers");
+	SendClientMessage(playerid, -1, "[GENERALE]: /cancello - /onduty - /testers");
     SendClientMessage(playerid, -1, "[ALTRO]: /chatcmds - /animlist - /vcmds - /invcmds - /zpoints - /furniturecmds");
 	new factionid = Character_GetFaction(playerid);
 	if(factionid != -1)

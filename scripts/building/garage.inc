@@ -23,15 +23,20 @@ CMD:ripara(playerid, params[])
     new garageid = Character_GetGarage(playerid);
     if(garageid == -1)
         return SendClientMessage(playerid, COLOR_ERROR, "Devi possedere un garage per utilizzare questo comando.");
-    if(Character_CanUseGarage(playerid))
+    if(!Character_CanUseGarage(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi del tuo garage.");
     if(Character_GetItemAmount(playerid, gItem_MechanicalComponents) < MATERIALS_PER_REPAIR)
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza materiali meccanici per utilizzare questo comando.");
     new id, price;
     if(sscanf(params, "k<u>d", id, price))
         return SendClientMessage(playerid, COLOR_ERROR, "/ripara <playerid/partofname/#id> <prezzo>");
+
+    if(id == playerid)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso.");
+
     if(!IsPlayerConnected(id) || !Character_IsLogged(id))
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+
     if(!IsPlayerInRangeOfPlayer(playerid, id, 5.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
     
@@ -58,7 +63,7 @@ CMD:vernicia(playerid, params[])
     new garageid = Character_GetGarage(playerid);
     if(garageid == -1)
         return SendClientMessage(playerid, COLOR_ERROR, "Devi possedere un garage per utilizzare questo comando.");
-    if(Character_GetNearBuildingID(playerid) != garageid)
+    if(!Character_CanUseGarage(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi del tuo garage.");
     if(Character_GetItemAmount(playerid, gItem_MechanicalComponents) < MATERIALS_PER_SPRAY)
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza materiali meccanici per utilizzare questo comando.");
@@ -68,6 +73,9 @@ CMD:vernicia(playerid, params[])
     if(color1 < 0 || color1 > 255 || color2 < 0 || color2 > 255)
         return SendClientMessage(playerid, COLOR_ERROR, "Uno o più colori inseriti non sono validi.");
     
+    //if(id == playerid)
+        //return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso.");
+
     if(!IsPlayerConnected(id) || !Character_IsLogged(id))
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
 
@@ -94,7 +102,7 @@ CMD:vernicia(playerid, params[])
 
 stock Character_AcceptVehicleSpray(playerid)
 {
-    if(!Request_IsPending(playerid) || Request_GetType(playerid) != REQUEST_TYPE_REPAIR)
+    if(!Request_IsPending(playerid) || Request_GetType(playerid) != REQUEST_TYPE_VEHICLE_SPRAY)
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di riverniciatura attiva."), 0;
     if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid), 5.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
@@ -115,6 +123,9 @@ stock Character_AcceptVehicleSpray(playerid)
     SendFormattedMessage(playerid, COLOR_ORANGE, "%s ha verniciato il tuo veicolo (%s) per $%d.", Character_GetRolePlayName(senderid), Vehicle_GetName(vehicleid), price);
     
     Vehicle_SetColors(vehicleid, color1, color2);
+
+    ResetPendingRequest(playerid);
+    ResetPendingRequest(senderid);
     return 1;
 }
 
@@ -142,6 +153,9 @@ stock Character_AcceptRepair(playerid)
 
     RepairVehicle(vehicleid);
     SetVehicleHealth(vehicleid, 999.0);
+
+    ResetPendingRequest(playerid);
+    ResetPendingRequest(senderid);
     return 1;
 }
 

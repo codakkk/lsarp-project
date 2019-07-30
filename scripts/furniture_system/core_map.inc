@@ -207,6 +207,14 @@ Dialog:Dialog_CategorySelect(playerid, response, listitem, inputtext[])
     if(!response)
         return pc_cmd_arredamento(playerid, "");
     
+    if(listitem == 0) // Inserisci ID Manualmente
+    {
+        Dialog_Show(playerid, Dialog_ManualFurnitureID, DIALOG_STYLE_INPUT, "Inserisci l'ID dell'arredamento", "Inserisci l'objectid che vuoi piazzare.\nRicorda di seguire le regole e di evitare abusi.", "Piazza", "Annulla");
+        return 1;
+    }
+
+    listitem = listitem-1; // If category, they're choosen from id 0.
+
     if(!list_valid(FurnitureListItem[playerid]))
         FurnitureListItem[playerid] = list_new();
     
@@ -227,6 +235,19 @@ Dialog:Dialog_CategorySelect(playerid, response, listitem, inputtext[])
     return 1;
 }
 
+Dialog:Dialog_ManualFurnitureID(playerid, response, listitem, inputtext[])
+{
+    new objectid = strval(inputtext);
+    if(objectid <= 0)
+        return Dialog_Show(playerid, Dialog_ManualFurnitureID, DIALOG_STYLE_INPUT, "L'ID inserito non è valido.\nInserisci l'ID dell'arredamento", "Inserisci l'objectid che vuoi piazzare.\nRicorda di seguire le regole e di evitare abusi.", "Piazza", "Annulla");
+    
+    SelectedFurniture[playerid] = 0; // First
+
+    Furniture_StartBuy(playerid, objectid);
+    return 1;
+}
+
+
 Dialog:Dialog_FurnitureBuy(playerid, response, listitem, inputtext[])
 {
     new selected = list_get(FurnitureListItem[playerid], listitem);
@@ -234,7 +255,7 @@ Dialog:Dialog_FurnitureBuy(playerid, response, listitem, inputtext[])
     if(!response)
         return 0;
     SelectedFurniture[playerid] = selected;
-    Furniture_StartBuy(playerid, SelectedFurniture[playerid]);
+    Furniture_StartBuy(playerid, BuyableFurniture_GetModel(SelectedFurniture[playerid]));
     return 1;
 }
 
@@ -494,7 +515,7 @@ stock Furniture_SetObject(objectid, dbid)
     return 1;
 }
 
-stock Furniture_StartBuy(playerid, furnitureid)
+stock Furniture_StartBuy(playerid, modelid)
 {
     //if(Character_GetMoney(playerid) < BuyableFurniture_GetPrice(furnitureid))
         //return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza denaro per acquistare questo mobile.");
@@ -519,7 +540,7 @@ stock Furniture_StartBuy(playerid, furnitureid)
 	GetPlayerPos(playerid, x, y, z);
     GetXYInFrontOfPlayer(playerid, x, y, 2);
     
-    new objectid = Furniture_CreateTemporary(BuyableFurniture_GetModel(furnitureid), x + 3.0, y, z + 1.0, 0.0, 0.0, 0.0, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), FurnitureLinkedTo[playerid]);
+    new objectid = Furniture_CreateTemporary(modelid, x + 3.0, y, z + 1.0, 0.0, 0.0, 0.0, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), FurnitureLinkedTo[playerid]);
     EditObject_Start(playerid, EDIT_TYPE_BUYING_FURNITURE, objectid, 0);
 
     SendClientMessage(playerid, -1, "Premi {FF6347}ESC{FFFFFF} per annullare e {FF6347}SPAZIO{FFFFFF} per spostare la visuale. Clicca sul {FF6347}FLOPPY{FFFFFF} per salvare.");
@@ -787,7 +808,7 @@ stock Furniture_AddToWorld(objectid, worldid)
 
 stock Furniture_ShowCategoryList(playerid)
 {
-    static const info[] = "Mura e scale\nTavoli per cucine e salotti\nSedie da uffici e da cucina\nLetti singoli e matrimoniali\nDivani e poltrone\nDecorazioni\nElettronica\nVario\nCucina\nBagno\nBottiglie, bicchieri e tazze\nPorte\nVasi\nPoster e graffiti\nContenitori rifiuti\nVestiti\nBombole e barili\nOggetti per il mare\nQuadri\nScatole\nColonne\nCibo\nUtensili\nMeccanica\nSpeciali\nLavagne";
+    static const info[] = "Inserisci ID Manualmente\nMura e scale\nTavoli per cucine e salotti\nSedie da uffici e da cucina\nLetti singoli e matrimoniali\nDivani e poltrone\nDecorazioni\nElettronica\nVario\nCucina\nBagno\nBottiglie, bicchieri e tazze\nPorte\nVasi\nPoster e graffiti\nContenitori rifiuti\nVestiti\nBombole e barili\nOggetti per il mare\nQuadri\nScatole\nColonne\nCibo\nUtensili\nMeccanica\nSpeciali\nLavagne";
     Dialog_Show(playerid, Dialog_CategorySelect, DIALOG_STYLE_LIST, "Categoria", info, "Continua", "Indietro");
     return 1;
 }

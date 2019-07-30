@@ -2,9 +2,9 @@
 #include <YSI_Coding\y_hooks>
 
 static 
-    EditMode_Type[MAX_PLAYERS char] = {0},
-    EditMode_ObjectID[MAX_PLAYERS] = {0},
-    EditMode_CustomID[MAX_PLAYERS] = {0} // ID of the Type object (ex: Drop ID)
+    EditMode_Type[MAX_PLAYERS char] = {0, ...},
+    EditMode_ObjectID[MAX_PLAYERS] = {0, ...},
+    EditMode_CustomID[MAX_PLAYERS] = {0, ...} // ID of the Type object (ex: Drop ID)
 ;
 
 enum
@@ -13,7 +13,9 @@ enum
     EDIT_TYPE_DROP = 1,
     EDIT_TYPE_BUYING_FURNITURE,
     EDIT_TYPE_FURNITURE,
-    EDIT_TYPE_PLAYER_OBJECT
+    EDIT_TYPE_PLAYER_OBJECT,
+    EDIT_TYPE_GATE_START,
+    EDIT_TYPE_GATE_END
 }
 
 hook OnPlayerClearData(playerid)

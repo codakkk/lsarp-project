@@ -10,6 +10,7 @@ static enum E_FURNITURES
 
 new const BuyableFurnitures[][E_FURNITURES] =
 {
+	{-1, 0, "Sconosciuto", 0},
 	//Mura
 	{0, 9131, "Muretto beige", 100},
 	{0, 8175, "Muro biancastro", 200},

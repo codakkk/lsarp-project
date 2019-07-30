@@ -2,6 +2,13 @@
 #include <YSI_Coding\y_hooks>
 
 
+
+hook OnGameModeInit()
+{
+	Buildings = map_new(200);
+	return 1;
+}
+
 stock Building_Create(name[], Float:x, Float:y, Float:z, interior, world)
 {
     new freeid = Iter_Free(Buildings);

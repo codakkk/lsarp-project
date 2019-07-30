@@ -20,6 +20,7 @@ CMD:arredamento(playerid, params[])
 }
 alias:arredamento("arreda");
 
+flags:furnitureid(CMD_ALIVE_USER);
 CMD:furnitureid(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
@@ -42,6 +43,7 @@ CMD:furnitureid(playerid, params[])
 }
 alias:furnitureid("fid", "idmobili");
 
+flags:listaobject(CMD_ALIVE_USER);
 CMD:listaobject(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
@@ -54,6 +56,7 @@ CMD:listaobject(playerid, params[])
     return 1;
 }
 
+flags:piazzaobject(CMD_ALIVE_USER);
 CMD:piazzaobject(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
@@ -66,6 +69,7 @@ CMD:piazzaobject(playerid, params[])
     return 1;
 }
 
+flags:rinominaobject(CMD_ALIVE_USER);
 CMD:rinominaobject(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
@@ -87,6 +91,7 @@ CMD:rinominaobject(playerid, params[])
     return SendClientMessage(playerid, COLOR_ERROR, "Non è stato possibile rinominare l'oggetto. ID invalido.");
 }
 
+flags:spostaoggetto(CMD_ALIVE_USER);
 CMD:spostaoggetto(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
@@ -117,6 +122,7 @@ CMD:spostaoggetto(playerid, params[])
     return 1;
 }
 
+flags:textureoggetto(CMD_ALIVE_USER);
 CMD:textureoggetto(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
@@ -143,5 +149,12 @@ CMD:textureoggetto(playerid, params[])
         return SendClientMessage(playerid, COLOR_ERROR, "Sei troppo distante dall'oggetto.");
     
     Furniture_SetTexture(objectid, index, modelid, txd, texture, -1);
+    return 1;
+}
+
+flags:aplaceobject(CMD_MODERATOR);
+CMD:aplaceobject(playerid, params[])
+{
+    
     return 1;
 }

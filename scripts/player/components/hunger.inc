@@ -21,9 +21,15 @@ hook OnPlayerClearData(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
+hook OnCharacterLoad(playerid)
+{
+	pLastHungerAlert[playerid] = GetTickCount();
+	return 1;
+}
+
 ptask OnPlayerHungerTimer[60000](playerid)
 {
-	if(!Character_IsLogged(playerid))
+	if(!Character_IsLogged(playerid) || !Character_IsAlive(playerid))
 		return 0;
 	pHungerTime{playerid}++;
 	if(pHungerTime{playerid} >= HUNGER_DECREASE_TIME)
@@ -36,7 +42,7 @@ ptask OnPlayerHungerTimer[60000](playerid)
 		if(GetTickCount() - pLastHungerAlert[playerid] >= 1000 * 60 * HUNGER_ALERT_TIME) // An alert each 30 minutes
 		{
 			pLastHungerAlert[playerid] = GetTickCount();
-			SendClientMessage(playerid, -1, "La fame comincia a farsi sentire...");
+			SendClientMessage(playerid, -1, "La fame comincia a farsi sentire.");
 		}
 	}
 	return 1;

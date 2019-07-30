@@ -19,6 +19,7 @@ CMD:acmds(playerid, params[])
 	{
 		SendClientMessage(playerid, -1, "[ADMIN]: /amm - /setfaction - /giveitem - /givevehicleitem  - /vowner - /vsave - /vdespawn");
 		SendClientMessage(playerid, -1, "[ADMIN]: /gotobuilding - /banaccount - /unbanaccount - /banofflineaccount - /banip");
+		SendClientMessage(playerid, -1, "[ADMIN]: /gcreate - /gedit");
 	}
 	if(AccountInfo[playerid][aAdmin] >= 5)
 	{
@@ -875,7 +876,7 @@ CMD:freeze(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 	Character_SetFreezed(id, true);
 	SendClientMessage(id, COLOR_ERROR, "Sei stato freezato da un admin.");
-	SendClientMessage(id, COLOR_ERROR, "Hai freezato il giocatore.");
+	SendClientMessage(playerid, COLOR_ERROR, "Hai freezato il giocatore.");
 	return 1;
 }
 

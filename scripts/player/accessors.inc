@@ -60,6 +60,8 @@ stock Character_GetHouseKey(playerid)
 
 stock Character_GetID(playerid)
 {
+	if(!( 0 <= playerid < INVALID_PLAYER_ID))
+		return 0;
     return PlayerInfo[playerid][pID];
 }
 

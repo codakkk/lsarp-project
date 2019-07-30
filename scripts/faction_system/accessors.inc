@@ -6,6 +6,8 @@ stock Faction_IsValid(factionid)
 
 stock Faction_GetID(factionid)
 {
+	if(!Faction_IsValid(factionid))
+		return INVALID_FACTION_ID;
 	return FactionInfo[factionid][fID];
 }
 

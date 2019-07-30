@@ -111,7 +111,7 @@ ptask OnPlayerDeathSystemUpdate[500](playerid)
 
 hook OnCharDeathFinished(playerid)
 {
-	Internal_UpdateDeathState(playerid);
+	//Internal_UpdateDeathState(playerid);
 	return 1;
 }
 

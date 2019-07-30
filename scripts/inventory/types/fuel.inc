@@ -34,5 +34,7 @@ Dialog:Dialog_SelectVehicleForFuel(playerid, response, listitem, inputtext[])
 
     Character_DecreaseItemAmount(playerid, itemid, 1);
     Player_Info(playerid, "Veicolo rifornito.", true, 2500);
+
+    //Character_AMe(playerid, "riempie di benzina il veicolo.");
     return 1;
 }

@@ -43,5 +43,6 @@ enum E_BUILDING_INFO
 };
 
 new
+	Map:Buildings,
     BuildingInfo[MAX_BUILDINGS][E_BUILDING_INFO],
     Iterator:Buildings<MAX_BUILDINGS>;
