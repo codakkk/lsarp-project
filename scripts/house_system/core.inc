@@ -40,7 +40,7 @@ stock House_Create(Float:x, Float:y, Float:z, int, world, interiorid)
         id = cache_insert_id(),
         data[E_HOUSE_DATA]
     ;
-        
+    // we
     data[hID] = id;
     data[hOwnerID] = 0;
     data[hOwnerName] = "";
