@@ -23,20 +23,17 @@ CMD:gotobuilding(playerid, params[])
 	return 1;
 }
 
-/*flags:abcreate(CMD_RCON);
+flags:abcreate(CMD_RCON);
 CMD:abcreate(playerid, params[])
 {
-    new freeid = Iter_Free(Buildings);
-    if(freeid < 0)
-	   return SendClientMessage(playerid, COLOR_ERROR, "Sono stati creati troppi edifici.");
     
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
 
-    new id = Building_Create("SET_NAME", x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
+    new id = Building_Create(x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
     Log(AccountInfo[playerid][aName], "", "/abcreate", id);
     return 1;
-}*/
+}
 
 flags:abuildingfaction(CMD_RCON);
 CMD:abuildingfaction(playerid, params[])
@@ -116,7 +113,7 @@ CMD:abuildingentrance(playerid, params[])
 flags:abuildingname(CMD_RCON);
 CMD:abuildingname(playerid, params[])
 {
-    new id, name[64];
+    new id, name[MAX_BUILDING_NAME];
     if(sscanf(params, "is[64]", id, name))
 	   return SendClientMessage(playerid, COLOR_ERROR, "/abuildingname <buildingid> <name>");
     
@@ -198,7 +195,7 @@ CMD:abuildinglock(playerid, params[])
     if(!Building_IsValid(id))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Invalid Building ID");
 
-    BuildingInfo[id][bLocked] = (lock > 0) ? (1) : (0);
+    Building_SetLocked(id, (lock > 0) ? (1) : (0));
 	Building_Save(id);
     if(lock)
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai chiuso il building %d.", id);
@@ -231,7 +228,7 @@ CMD:abdelete(playerid, params[])
 flags:abuildingwelcome(CMD_RCON);
 CMD:abuildingwelcome(playerid, params[])
 {
-    new id, text[128];
+    new id, text[MAX_WELCOME_TEXT_LENGTH];
     if(sscanf(params, "is[128]", id, text) || strlen(text) >= MAX_WELCOME_TEXT_LENGTH)
 	   return SendClientMessage(playerid, COLOR_ERROR, "/abuildingwelcome <buildingid> <testo>");
     
@@ -242,7 +239,7 @@ CMD:abuildingwelcome(playerid, params[])
 	Building_Save(id);
 
 	SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il testo di benvenuto del building %d.", id);
-	SendFormattedMessage(playerid, COLOR_GREEN, "Testo: %s", BuildingInfo[id][bWelcomeText]);
+	SendFormattedMessage(playerid, COLOR_GREEN, "Testo: %s", text);
 
     return 1;
 }

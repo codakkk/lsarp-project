@@ -20,13 +20,15 @@ alias:gcmds("gcmd");
 flags:ripara(CMD_ALIVE_USER);
 CMD:ripara(playerid, params[])
 {
-    new garageid = Character_GetGarage(playerid);
-    if(garageid == -1)
+    if(!Character_HasGarage(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Devi possedere un garage per utilizzare questo comando.");
+
     if(!Character_CanUseGarage(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi del tuo garage.");
+
     if(Character_GetItemAmount(playerid, gItem_MechanicalComponents) < MATERIALS_PER_REPAIR)
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza materiali meccanici per utilizzare questo comando.");
+
     new id, price;
     if(sscanf(params, "k<u>d", id, price))
         return SendClientMessage(playerid, COLOR_ERROR, "/ripara <playerid/partofname/#id> <prezzo>");
@@ -60,21 +62,24 @@ CMD:ripara(playerid, params[])
 flags:vernicia(CMD_ALIVE_USER);
 CMD:vernicia(playerid, params[])
 {
-    new garageid = Character_GetGarage(playerid);
-    if(garageid == -1)
+    if(!Character_HasGarage(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Devi possedere un garage per utilizzare questo comando.");
+
     if(!Character_CanUseGarage(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi del tuo garage.");
+
     if(Character_GetItemAmount(playerid, gItem_MechanicalComponents) < MATERIALS_PER_SPRAY)
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza materiali meccanici per utilizzare questo comando.");
+    
     new id, price, color1, color2;
     if(sscanf(params, "dddd", id, price, color1, color2))
         return SendClientMessage(playerid, COLOR_ERROR, "/vernicia <playerid/partofname/#id> <prezzo> <colore 1> <colore 2>");
+    
     if(color1 < 0 || color1 > 255 || color2 < 0 || color2 > 255)
         return SendClientMessage(playerid, COLOR_ERROR, "Uno o più colori inseriti non sono validi.");
     
-    //if(id == playerid)
-        //return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso.");
+    if(id == playerid)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso.");
 
     if(!IsPlayerConnected(id) || !Character_IsLogged(id))
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
@@ -186,24 +191,29 @@ Dialog:Dialog_BuyMechComponents(playerid, response, listitem, inputtext[])
     return 1;
 }
 
-// Returns a garageid (buildingid) if any.
-stock Character_GetGarage(playerid)
+stock Character_HasGarage(playerid)
 {
-    foreach(new b : Buildings)
-    {
-        if(Building_GetType(b) != BUILDING_TYPE_GARAGE)
-            continue;
-        if(Building_GetOwnerID(b) == Character_GetID(playerid))
-            return b;
-    }
-    return -1;
+    new buildingid = Character_GetBuildingKey(playerid);
+    
+    if(buildingid <= 0)
+        return 0;
+    
+    if(Building_GetType(buildingid) != BUILDING_TYPE_GARAGE)
+        return 0;
+    
+    return 1;
 }
 
 stock Character_CanUseGarage(playerid)
 {
-    new garageid = Character_GetGarage(playerid);
+    if(!Character_HasGarage(playerid))
+        return 0;
+    
+    new garageid = Character_GetBuildingKey(playerid);
+    
     if(Character_GetNearBuildingID(playerid) == garageid)
         return 1;
+    
     new Float:x, Float:y, Float:z;
     Building_GetEnterPos(garageid, x, y, z);
     if(GetPlayerDistanceFromPoint(playerid, x, y, z) <= 25.0)

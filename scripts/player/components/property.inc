@@ -252,13 +252,16 @@ stock Character_BuyBuilding(playerid, buildingid)
     if(Character_GetMoney(playerid) < Building_GetPrice(buildingid))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi per acquistare questa proprietà.");
     
-    Character_GiveMoney(playerid, -BuildingInfo[buildingid][bPrice]);
+    Character_GiveMoney(playerid, -Building_GetPrice(buildingid));
     
     Building_SetOwner(buildingid, playerid);
     
-    PlayerInfo[playerid][pBuildingKey] = BuildingInfo[buildingid][bID];
+    Character_SetBuildingKey(playerid, buildingid);
 
-    SendFormattedMessage(playerid, COLOR_GREEN, "Hai acquistato questo edificio (%s) per $%d.", BuildingInfo[buildingid][bName], Building_GetPrice(buildingid));
+	new name[MAX_BUILDING_NAME];
+	Building_GetName(buildingid, name);
+
+    SendFormattedMessage(playerid, COLOR_GREEN, "Hai acquistato questo edificio (%s) per $%d.", name, Building_GetPrice(buildingid));
     Building_Save(buildingid);
     Character_Save(playerid);
     return 1;

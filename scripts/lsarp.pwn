@@ -192,7 +192,6 @@ main()
 	// Should I initialize them in a OnGameModeInit hook?
 	PlayerInventory = map_new();
 	VehicleInventory = map_new();
-	HouseList = list_new();
 	HouseInventory = map_new();
 }
 
@@ -219,7 +218,6 @@ hook OnGameModeInit()
 	Pickup_Create(1239, 0, 2649.7790, -1948.9510, -58.7273, ELEMENT_TYPE_JAIL_EXIT, .worldid = -1, .interiorid = 0);
 	CreateDynamic3DTextLabel("/lasciacarcere", COLOR_BLUE, 2649.7790, -1948.9510, -58.7273 + 0.55, 20.0, .worldid = -1, .interiorid = 0);
 
-	Building_LoadAll();
 	House_LoadAll();
 
 	Streamer_TickRate(30);
@@ -1440,7 +1438,7 @@ stock HexToInt(string[])
 #include <chopshop_system\commands>
 
 // ===== [ FURNITURE SYSTEM ] =====
-#include <furniture_system\core_map>
+#include <furniture_system\core>
 
 // ===== [ GATE SYSTEM ] =====
 #include <gate_system\core>

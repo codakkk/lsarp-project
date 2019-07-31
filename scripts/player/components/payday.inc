@@ -74,7 +74,7 @@ stock Character_PayDay(playerid)
 		if(Building_IsValid(id))
 		{
 			new price = Building_GetPrice(id)/100;
-			//Building_
+			Building_GiveMoney(id, price);
 			SendFormattedMessage(playerid, COLOR_YELLOW, "Il tuo business ti ha fruttato $%d. Puoi trovarli all'interno della cassa.", price);
 		}
 	}

@@ -688,11 +688,12 @@ stock Character_CanFurnish(playerid, bool:outsideCheck = false)
     if(outsideCheck && currentHouse == -1)
     {
         new Float:x, Float:y, Float:z;
-        for(new i = 0, j = list_size(HouseList); i < j; ++i)
+        for_map(i : GetHousesMap())
         {
-            if(House_GetOwnerID(i) == Character_GetID(playerid) && Character_GetVirtualWorld(playerid) == House_GetEnterWorld(i) && GetPlayerInterior(playerid) == House_GetEnterInterior(i))
+            new houseid = iter_get_key(i);
+            if(House_GetOwnerID(houseid) == Character_GetID(playerid) && Character_GetVirtualWorld(playerid) == House_GetEnterWorld(houseid) && GetPlayerInterior(playerid) == House_GetEnterInterior(houseid))
             {
-                House_GetEnterPosition(i, x, y, z);
+                House_GetEnterPosition(houseid, x, y, z);
                 if(GetPlayerDistanceFromPoint(playerid, x, y, z) >= 15.0)
                     continue;
                 return 1;
@@ -930,18 +931,19 @@ stock Internal_GetNearbyFurnableWorld(playerid)
         Float:nearest = MAX_EXTERIOR_DISTANCE, 
         Float:dist = 0.0,
         linked_to = -1;
-    for(new i = 0, j = list_size(HouseList); i < j; ++i)
+    for_map(i : GetHousesMap())
     {
-        if(House_GetOwnerID(i) != Character_GetID(playerid) || House_GetEnterWorld(i) != Character_GetVirtualWorld(playerid))
+        new houseid = iter_get_key(i);
+        if(House_GetOwnerID(houseid) != Character_GetID(playerid) || House_GetEnterWorld(houseid) != Character_GetVirtualWorld(playerid))
             continue;
-        House_GetEnterPosition(i, x, y, z);
+        House_GetEnterPosition(houseid, x, y, z);
         dist = GetPlayerDistanceFromPoint(playerid, x, y, z);
         if(dist > MAX_EXTERIOR_DISTANCE)
             continue;
         if(dist < nearest)
         {
             nearest = dist;
-            linked_to = House_GetExitWorld(i);
+            linked_to = House_GetExitWorld(houseid);
         }
     }
     return linked_to;

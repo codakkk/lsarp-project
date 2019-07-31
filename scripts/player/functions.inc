@@ -212,23 +212,24 @@ stock Character_Delete(playerid, character_db_id, character_name[])
     }
     MySQL_TQueryInline(gMySQL, using inline OnVehicles, "SELECT ID FROM `vehicles` WHERE OwnerID = '%d'", character_db_id);
 
-
-	foreach(new b : Buildings)
+	for_map(b : GetBuildingsMap())
 	{
-		if(Building_GetOwnerID(b) == character_db_id)
+		new key = iter_get_key(b);
+		if(Building_GetOwnerID(key) == Character_GetID(playerid))
 		{
-			Building_ResetOwner(b);
+			Building_ResetOwner(key);
 			break;
 		}
 	}
 
-	for(new i = 0; i < list_size(HouseList); ++i)
+	for_map(i : GetHousesMap())
 	{
-		new ownerid = House_GetOwnerID(i);
+		new houseid = iter_get_key(i);
+		new ownerid = House_GetOwnerID(houseid);
 		if(character_db_id == ownerid)
 		{
-			House_ResetOwner(i);
-			House_Save(i);
+			House_ResetOwner(houseid);
+			House_Save(houseid);
 			break;
 		}
 	}
@@ -289,7 +290,6 @@ stock Character_Clear(playerid)
     PlayerInfo[playerid] = CleanData;
 
 	PlayerInfo[playerid][pHouseKey] = -1;
-	PlayerInfo[playerid][pBuildingKey] = -1;
 
 	new CleanRestoreData[E_PLAYER_RESTORE_DATA];
 	PlayerRestore[playerid] = CleanRestoreData;

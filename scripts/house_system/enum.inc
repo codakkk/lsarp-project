@@ -1,5 +1,3 @@
-#define for_house(%0) for_list(%0:HouseList)
-
 #define HOUSE_START_WORLD 	(1000)
 
 enum _:E_HOUSE_DATA
@@ -32,9 +30,6 @@ enum _:E_HOUSE_DATA
     hExitPickup,
     Text3D:h3DText,
 };
-
-new 
-    List:HouseList;
 
 enum 
 {

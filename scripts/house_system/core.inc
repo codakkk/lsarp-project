@@ -1,45 +1,85 @@
 #include <YSI_Coding\y_hooks>
 
+static 
+    Map:Houses;
 
-stock Text3D:House_Get3DText(houseid)
+stock Map:GetHousesMap()
 {
-    return Text3D:list_get(HouseList, houseid, h3DText);
+    return Houses;
 }
+
+hook OnGameModeInit()
+{
+    Houses = map_new();
+    return 1;
+}
+
+hook OnCharacterLoad(playerid)
+{
+	new houseid = Character_GetHouseKey(playerid);
+	if(houseid > 0)
+	{
+		if(!House_IsValid(houseid))
+		{
+			SendClientMessage(playerid, COLOR_ERROR, "La casa di cui eri affittuario non esiste più.");
+			Character_SetHouseKey(playerid, 0);
+            Character_Save(playerid);
+		}
+	}
+	return 1;
+}
+
 
 stock House_Create(Float:x, Float:y, Float:z, int, world, interiorid)
 {
-    
-    inline OnInsert()
-    {
-	   new data[E_HOUSE_DATA];
-	   data[hID] = cache_insert_id();
-	   data[hOwnerID] = 0;
-	   data[hOwnerName] = "";
-	   data[hPrice] = 0;
-
-	   data[hEnterX] = x;
-	   data[hEnterY] = y;
-	   data[hEnterZ] = z;
-	   data[hEnterInterior] = int;
-	   data[hEnterWorld] = world;
-
-	   data[hExitX] = 0.0;
-	   data[hExitY] = 0.0;
-	   data[hExitZ] = 0.0;
-	   data[hExitInterior] = 0;
-
-	   data[hLocked] = 1;
-
-	   new id = list_add_arr(HouseList, data);
-
-	   House_SetInterior(id, interiorid);
-
-	   // House_CreateObjects(id); // Already called by House_SetInterior
-    }
-    MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO `houses` \
+    new Cache:result = mysql_query_f(gMySQL, true, "INSERT INTO `houses` \
     (OwnerID, OwnerName, EnterX, EnterY, EnterZ, EnterInterior, EnterWorld, Price, Locked) \
-    VALUES(0, '', %f, %f, %f, %d, %d, 0, 1)", 
-    x, y, z, int, world);
+    VALUES(0, '', %f, %f, %f, %d, %d, 0, 1)", x, y, z, int, world);
+
+    new 
+        id = cache_insert_id(),
+        data[E_HOUSE_DATA]
+    ;
+        
+    data[hID] = id;
+    data[hOwnerID] = 0;
+    data[hOwnerName] = "";
+    data[hPrice] = 0;
+
+    data[hEnterX] = x;
+    data[hEnterY] = y;
+    data[hEnterZ] = z;
+    data[hEnterInterior] = int;
+    data[hEnterWorld] = world;
+
+    data[hExitX] = 0.0;
+    data[hExitY] = 0.0;
+    data[hExitZ] = 0.0;
+    data[hExitInterior] = 0;
+
+    data[hLocked] = 1;
+
+    map_add_arr(Houses, id, data);
+
+    House_SetInterior(id, interiorid);
+    // House_CreateObjects(id); // Already called by House_SetInterior
+
+    cache_delete(result);
+    return id;
+}
+
+stock House_Delete(houseid)
+{
+    if(!House_IsValid(houseid))
+        return 0;
+
+    new query[64];
+    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `houses` WHERE ID = '%d'", houseid);
+    mysql_tquery(gMySQL, query);
+
+    House_DestroyObjects(houseid);
+    map_remove_deep(Houses, houseid);
+    return 1;
 }
 
 stock House_CreateObjects(houseid)
@@ -68,9 +108,9 @@ stock House_CreateObjects(houseid)
 	   exitPickupid = Pickup_Create(1007, houseid, ex, ey, ez, ELEMENT_TYPE_HOUSE_EXIT, exitWorld, einterior),
 	   Text3D:label = CreateDynamic3DTextLabel(zone, 0xFFFFFF, x, y, z + 0.55, 15.0, .worldid = enterWorld, .interiorid = interior, .testlos = 1);
     
-    list_set_cell(HouseList, houseid, hEnterPickup, enterPickupid);
-    list_set_cell(HouseList, houseid, hExitPickup, exitPickupid);
-    list_set_cell_safe(HouseList, houseid, h3DText, _:label);
+    map_set_cell(Houses, houseid, hEnterPickup, enterPickupid);
+    map_set_cell(Houses, houseid, hExitPickup, exitPickupid);
+    map_set_cell_safe(Houses, houseid, h3DText, _:label);
     return 1;
 }
 
@@ -94,64 +134,77 @@ stock House_DestroyObjects(houseid)
 
 stock House_IsValid(houseid)
 {
-    return 0 <= houseid < list_size(HouseList) && House_GetID(houseid) > 0 ;
+    return map_has_key(Houses, houseid);
 }
 
 stock House_IsCreated(houseid)
 {
-    return list_get(HouseList, houseid, hCreated);
+    if(!House_IsValid(houseid))
+        return 0;
+    return map_get(Houses, houseid, hCreated);
 }
 
 stock House_SetCreated(houseid, created)
 {
-    list_set_cell(HouseList, houseid, hCreated, created);
+    if(!House_IsValid(houseid))
+        return 0;
+    map_set_cell(Houses, houseid, hCreated, created);
+    return 1;
 }
 
 stock House_GetData(houseid, data[E_HOUSE_DATA])
 {
-    return list_get_arr_safe(HouseList, houseid, data);
+    if(!House_IsValid(houseid))
+        return 0;
+    return map_get_arr(Houses, houseid, data);
 }
 
 stock House_GetID(houseid)
 {
-    return list_get(HouseList, houseid, hID);
+    if(!House_IsValid(houseid))
+        return 0;
+    return map_get(Houses, houseid, hID);
 }
 
 stock House_SetOwner(houseid, playerid)
 {
-    if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid) || Character_HasHouseKey(playerid))
+    if(!House_IsValid(houseid) || !IsPlayerConnected(playerid) || !Character_IsLogged(playerid) || Character_HasHouseKey(playerid))
 	   return 0;
-    list_set_cell(HouseList, houseid, hOwnerID, PlayerInfo[playerid][pID]);
-    new Iter:it = list_iter(HouseList, houseid);
+    map_set_cell(Houses, houseid, hOwnerID, PlayerInfo[playerid][pID]);
+    new Iter:it = map_iter(Houses, houseid);
     iter_set_cells(it, hOwnerName, Character_GetOOCName(playerid));
-    /*new data[E_HOUSE_DATA];
-    list_get_arr(HouseList, houseid, data);
-    set(data[hOwnerName], Character_GetOOCName(playerid));
-    list_set_arr(HouseList, houseid, data);*/
     return 1;
 }
 
 stock House_ResetOwner(houseid)
 {
-    list_set_cell(HouseList, houseid, hOwnerID, 0);
-    new Iter:it = list_iter(HouseList, houseid);
+    if(!House_IsValid(houseid))
+        return 0;
+    map_set_cell(Houses, houseid, hOwnerID, 0);
+    new Iter:it = map_iter(Houses, houseid);
     iter_set_cells(it, hOwnerName, "");
     return 1;
 }
 
 stock House_GetOwnerID(houseid)
 {
-    return list_get(HouseList, houseid, hOwnerID);
+    if(!House_IsValid(houseid))
+        return 0;
+    return map_get(Houses, houseid, hOwnerID);
 }
 
 stock House_IsOwned(houseid)
 {
+    if(!House_IsValid(houseid))
+        return 0;
     return House_GetOwnerID(houseid) > 0;
 }
 
 stock bool:House_GetOwnerName(houseid, name[MAX_PLAYER_NAME])
 {
-    new Iter:it = list_iter(HouseList, houseid);
+    if(!House_IsValid(houseid))
+        return false;
+    new Iter:it = map_iter(Houses, houseid);
     iter_get_md_arr(it, {hOwnerName}, name);
     return true;
 }
@@ -167,78 +220,101 @@ stock String:House_GetOwnerNameStr(houseid)
 
 stock House_SetEnterPosition(houseid, Float:x, Float:y, Float:z)
 {
-    list_set_cell(HouseList, houseid, hEnterX, x);
-    list_set_cell(HouseList, houseid, hEnterY, y);
-    list_set_cell(HouseList, houseid, hEnterZ, z);
+    if(!House_IsValid(houseid))
+        return 0;
+    map_set_cell(Houses, houseid, hEnterX, x);
+    map_set_cell(Houses, houseid, hEnterY, y);
+    map_set_cell(Houses, houseid, hEnterZ, z);
     return 1;
 }
 
 stock House_GetEnterPosition(houseid, &Float:X, &Float:Y, &Float:Z)
 {
-    X = Float:list_get(HouseList, houseid, hEnterX);
-    Y = Float:list_get(HouseList, houseid, hEnterY);
-    Z = Float:list_get(HouseList, houseid, hEnterZ);
+    if(!House_IsValid(houseid))
+        return 0;
+    X = Float:map_get(Houses, houseid, hEnterX);
+    Y = Float:map_get(Houses, houseid, hEnterY);
+    Z = Float:map_get(Houses, houseid, hEnterZ);
     return 1;
 }
 
 stock House_SetEnterInterior(houseid, interior)
 {
-    list_set_cell(HouseList, houseid, hEnterInterior, interior);
+    if(!House_IsValid(houseid))
+        return 0;
+    map_set_cell(Houses, houseid, hEnterInterior, interior);
     return 1;
 }
 
 stock House_GetEnterInterior(houseid)
 {
-    return list_get(HouseList, houseid, hEnterInterior);
+    if(!House_IsValid(houseid))
+        return 0;
+    return map_get(Houses, houseid, hEnterInterior);
 }
 
 stock House_SetEnterWorld(houseid, world)
 {
-    list_set_cell(HouseList, houseid, hEnterWorld, world);
+    if(!House_IsValid(houseid))
+        return 0;
+    map_set_cell(Houses, houseid, hEnterWorld, world);
+    return 1;
 }
 
 stock House_GetEnterWorld(houseid)
 {
-    return list_get(HouseList, houseid, hEnterWorld);
+    if(!House_IsValid(houseid))
+        return 0;
+    return map_get(Houses, houseid, hEnterWorld);
 }
 
 stock House_GetExitWorld(houseid)
 {
-    return list_get(HouseList, houseid, hExitWorld);
+    if(!House_IsValid(houseid))
+        return 0;
+    return map_get(Houses, houseid, hExitWorld);
 }
 
 stock House_SetExitPosition(houseid, Float:x, Float:y, Float:z)
 {
-    list_set_cell(HouseList, houseid, hExitX, x);
-    list_set_cell(HouseList, houseid, hExitY, y);
-    list_set_cell(HouseList, houseid, hExitZ, z);
+    if(!House_IsValid(houseid))
+        return 0;
+    map_set_cell(Houses, houseid, hExitX, x);
+    map_set_cell(Houses, houseid, hExitY, y);
+    map_set_cell(Houses, houseid, hExitZ, z);
     return 1;
 }
 
 stock House_GetExitPosition(houseid, &Float:X, &Float:Y, &Float:Z)
 {
-    X = Float:list_get(HouseList, houseid, hExitX);
-    Y = Float:list_get(HouseList, houseid, hExitY);
-    Z = Float:list_get(HouseList, houseid, hExitZ);
+    if(!House_IsValid(houseid))
+        return 0;
+    X = Float:map_get(Houses, houseid, hExitX);
+    Y = Float:map_get(Houses, houseid, hExitY);
+    Z = Float:map_get(Houses, houseid, hExitZ);
     return 1;
 }
 
 stock House_SetExitInterior(houseid, interior)
 {
-    list_set_cell(HouseList, houseid, hExitInterior, interior);
+    if(!House_IsValid(houseid))
+        return 0;
+    map_set_cell(Houses, houseid, hExitInterior, interior);
     return 1;
 }
 
 stock House_GetExitInterior(houseid)
 {
-    return list_get(HouseList, houseid, hExitInterior);
+    if(!House_IsValid(houseid))
+        return 0;
+    return map_get(Houses, houseid, hExitInterior);
 }
 
 stock House_SetInterior(houseid, interiorid)
 {
     if(!House_IsValid(houseid))
 	   return 0;
-    list_set_cell(HouseList, houseid, hInterior, interiorid);
+    map_set_cell(Houses, houseid, hInterior, interiorid);
     House_SetExitPosition(houseid, allHouseInteriors[interiorid][iHouseX], allHouseInteriors[interiorid][iHouseY], allHouseInteriors[interiorid][iHouseZ]);
     House_SetExitInterior(houseid, allHouseInteriors[interiorid][iHouseInt]);
     House_CreateObjects(houseid);
@@ -248,47 +324,66 @@ stock House_SetInterior(houseid, interiorid)
 
 stock House_GetInteriorID(houseid)
 {
-    return list_get(HouseList, houseid, hInterior);
+    if(!House_IsValid(houseid))
+        return 0;
+    return map_get(Houses, houseid, hInterior);
 }
 
 stock House_GetEnterPickup(houseid)
 {
-    return list_get(HouseList, houseid, hEnterPickup);
+    if(!House_IsValid(houseid))
+        return 0;
+    return map_get(Houses, houseid, hEnterPickup);
 }
 
 stock House_GetExitPickup(houseid)
 {
-    return list_get(HouseList, houseid, hExitPickup);
+    if(!House_IsValid(houseid))
+        return 0;
+    return map_get(Houses, houseid, hExitPickup);
 }
 
 stock House_SetPrice(houseid, price)
 {
-    return list_set_cell(HouseList, houseid, hPrice, price);
+    if(!House_IsValid(houseid))
+        return 0;
+    return map_set_cell(Houses, houseid, hPrice, price);
 }
 
 stock House_GetPrice(houseid)
 {
-    return list_get(HouseList, houseid, hPrice);
+    if(!House_IsValid(houseid))
+        return 0;
+    return map_get(Houses, houseid, hPrice);
 }
 
 stock House_SetLocked(houseid, lock)
 {
-    list_set_cell(HouseList, houseid, hLocked, lock);
+    if(!House_IsValid(houseid))
+        return 0;
+    map_set_cell(Houses, houseid, hLocked, lock);
+    return 1;
 }
 
 stock House_IsLocked(houseid)
 {
-    return list_get(HouseList, houseid, hLocked);
+    if(!House_IsValid(houseid))
+        return 0;
+    return map_get(Houses, houseid, hLocked);
 }
 
 stock House_GetMoney(houseid)
 {
-    return list_get(HouseList, houseid, hMoney);
+    if(!House_IsValid(houseid))
+        return 0;
+    return map_get(Houses, houseid, hMoney);
 }
 
 stock House_GiveMoney(houseid, money)
 {
-    list_set_cell(HouseList, houseid, hMoney, House_GetMoney(houseid) + money);
+    if(!House_IsValid(houseid))
+        return 0;
+    map_set_cell(Houses, houseid, hMoney, House_GetMoney(houseid) + money);
     return 1;
 }
 
@@ -325,7 +420,7 @@ stock House_LoadAll()
 
             data[hExitWorld] = HOUSE_START_WORLD + i;
 
-			list_add_arr(HouseList, data);
+			map_add_arr(Houses, data[hID], data);
 			House_CreateObjects(i);
 			
 			CallLocalFunction(#OnHouseLoaded, "d", i);
@@ -368,6 +463,8 @@ stock House_Save(houseid)
 
 stock House_ShowInventory(houseid, playerid)
 {
+    if(!House_IsValid(houseid))
+        return 0;
     #pragma unused houseid, playerid
     new Inventory:inventory = House_GetInventory(houseid);
 	Inventory_ShowStr(inventory, playerid, str_format("Inventario Casa (%d/%d)", Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory)), Dialog_HouseInventory, "Avanti", "Chiudi");
@@ -395,4 +492,9 @@ stock IsPlayerInRangeOfHouseExit(playerid, houseid, Float:range = 2.5)
 		return 0;
 	new pickupid = House_GetExitPickup(houseid);
 	return IsPlayerInRangeOfPickup(playerid, pickupid, range);
+}
+
+stock Text3D:House_Get3DText(houseid)
+{
+    return Text3D:map_get(Houses, houseid, h3DText);
 }

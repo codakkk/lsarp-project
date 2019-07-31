@@ -48,6 +48,11 @@ stock Character_GetBuildingKey(playerid)
     return PlayerInfo[playerid][pBuildingKey];
 }
 
+stock Character_SetBuildingKey(playerid, buildingid)
+{
+    PlayerInfo[playerid][pBuildingKey] = buildingid;
+}
+
 stock Character_HasHouseKey(playerid)
 {
     return PlayerInfo[playerid][pHouseKey] > 0;
@@ -56,6 +61,11 @@ stock Character_HasHouseKey(playerid)
 stock Character_GetHouseKey(playerid)
 {
     return PlayerInfo[playerid][pHouseKey];
+}
+
+stock Character_SetHouseKey(playerid, houseid)
+{
+    PlayerInfo[playerid][pHouseKey] = houseid;
 }
 
 stock Character_GetID(playerid)
@@ -320,11 +330,11 @@ stock Character_SetChopShopPrivileges(playerid, bool:can)
 stock List:Character_GetOwnedHouses(playerid)
 {
 	new List:list = list_new();
-	for(new i = 0; i < list_size(HouseList); ++i)
+	for_map(i : GetHousesMap())
 	{
-		new owner = list_get(HouseList, i, hOwnerID);
-		if(owner == PlayerInfo[playerid][pID])
-			list_add(list, i);
+		new houseid = iter_get_key(i);
+		if(House_GetOwnerID(houseid) == Character_GetID(playerid))
+			list_add(list, houseid);
 	}
 	return list;
 }

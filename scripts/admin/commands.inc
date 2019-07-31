@@ -890,7 +890,7 @@ CMD:unfreeze(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 	Character_SetFreezed(id, false);
 	SendClientMessage(id, COLOR_ERROR, "Sei stato unfreezato da un admin.");
-	SendClientMessage(id, COLOR_ERROR, "Hai unfreezato il giocatore.");
+	SendClientMessage(playerid, COLOR_ERROR, "Hai unfreezato il giocatore.");
 	return 1;
 }
 

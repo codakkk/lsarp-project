@@ -64,13 +64,11 @@ stock Faction_Reset(factionid)
 	mysql_tquery_f(gMySQL, "UPDATE `characters` SET Faction = '-1', FactionRank = '0' WHERE Faction = '%d'", factionid);
 	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET Faction = '-1' WHERE Faction = '%d'", factionid);
 	
-	foreach(new b : Buildings)
+	for_map(b : GetBuildingsMap())
 	{
-		if(!Building_IsValid(b)) continue;
-		if(Building_GetFaction(b) == factionid)
-		{
-			Building_SetFaction(b, -1);
-		}
+		new key = iter_get_key(b);
+		if(Building_GetFaction(key) == factionid)
+			Building_SetFaction(key, -1);
 	}
 
 	foreach(new i : Player)

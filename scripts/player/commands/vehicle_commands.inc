@@ -18,7 +18,7 @@ CMD:vmenu(playerid, params[])
     memset(pVehicleListItem[playerid], 0);
     foreach(new v : Vehicle)
     {
-        if(VehicleInfo[v][vOwnerID] != PlayerInfo[playerid][pID])
+        if(Vehicle_GetOwnerID(v) != Character_GetID(playerid))
             continue;
         new Float:x, Float:y, Float:z;
         GetVehiclePos(v, x , y, z);

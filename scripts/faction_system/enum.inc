@@ -6,6 +6,7 @@
 #define MAX_FACTION_RANKS 		15
 #define MAX_FACTION_SKINS		15
 #define INVALID_FACTION_ID		(-1)
+
 enum // Faction Type
 {
 	FACTION_TYPE_POLICE = 0,
