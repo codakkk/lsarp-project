@@ -240,7 +240,7 @@ stock Dealership_DestroyElements(dealership_id)
 
 stock Dealership_ShowInternalVehicles(dealership_id, playerid)
 {
-    if(AccountInfo[playerid][aAdmin] < 2) // Safeness
+    if(Account_GetAdminLevel(playerid) < 2) // Safeness
 	   return 0;
     new
 	   string[1024],
@@ -266,7 +266,7 @@ stock Dealership_ShowInternalVehicles(dealership_id, playerid)
 
 stock Dealership_ShowList(playerid, params[]="")
 {
-    if(AccountInfo[playerid][aAdmin] < 2) // Safeness
+    if(Account_GetAdminLevel(playerid) < 2) // Safeness
 	   return 0;
     if(Iter_Count(Dealerships) == 0)
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non esistono concessionarie. Usa /acreateshowroom per crearne una.");

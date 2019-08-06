@@ -12,9 +12,12 @@ CMD:arredamento(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
-    if(!Character_CanFurnish(playerid, true))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei in una tua casa.");
     
+    new houseid = Character_CanFurnish(playerid, true);
+
+    if(!House_IsValid(houseid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei in una tua casa.");
+    Character_SetFurnitureLinkedTo(playerid, House_GetExitWorld(houseid));
     Dialog_Show(playerid, Dialog_Furniture, DIALOG_STYLE_LIST, "Arredamento", "Mobili piazzati\nPiazza", "Avanti", "Chiudi");
     return 1;
 }
@@ -62,9 +65,12 @@ CMD:piazzaobject(playerid, params[])
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
     
-    if(!Character_CanFurnish(playerid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei in una tua casa.");
+    new houseid = Character_CanFurnish(playerid, true);
 
+    if(!House_IsValid(houseid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei in una tua casa.");
+    
+    Character_SetFurnitureLinkedTo(playerid, House_GetExitWorld(houseid));
     Furniture_ShowCategoryList(playerid);
     return 1;
 }

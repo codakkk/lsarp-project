@@ -12,7 +12,7 @@ CMD:ritirastipendio(playerid, params[])
 	Character_GiveMoney(playerid, paycheck, "paycheck");
 	Character_SetPayCheck(playerid, 0);
 	Character_Save(playerid);
-	SendFormattedMessage(playerid, -1, "Hai ritirato il tuo stipendio! Ammontare: {85bb65}$%d{FFFFFF}", paycheck);
+	SendFormattedMessage(playerid, -1, "Hai ritirato il tuo stipendio. Ammontare: {85bb65}$%d{FFFFFF}", paycheck);
 	return 1;
 }
 
@@ -79,10 +79,10 @@ CMD:dai(playerid, params[])
 		if(Character_IsFactionDuty(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
 
-		SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto di dare l'arma (%s) con %d proiettili a %s.", Weapon_GetName(weapon), ammo, Character_GetRolePlayName(id));
-		SendClientMessage(playerid, -1, "Digita '{FF0000}/annulla arma{FFFFFF} per annullare.");
-		SendFormattedMessage(id, COLOR_GREEN, "%s vuole darti un'arma (%s) con %d proiettili.", Character_GetRolePlayName(playerid), Weapon_GetName(weapon), ammo);
-		SendClientMessage(id, -1, "Digita '{00FF00}/accetta arma{FFFFFF}' per accettare.");
+		SendFormattedMessage(playerid, COLOR_SEND_REQUEST, "Hai proposto di dare l'arma (%s) con %d proiettili a %s.", Weapon_GetName(weapon), ammo, Character_GetRolePlayName(id));
+		SendClientMessage(playerid, COLOR_SEND_REQUEST, "Digita '{FF0000}/annulla{FFFFFF} per annullare.");
+		SendFormattedMessage(id, COLOR_RECEIVE_REQUEST, "%s vuole darti un'arma (%s) con %d proiettili.", Character_GetRolePlayName(playerid), Weapon_GetName(weapon), ammo);
+		SendClientMessage(id, COLOR_RECEIVE_REQUEST, "Digita '{00FF00}/accetta arma{FFFFFF}' per accettare.");
 
 		Character_SetRequest(playerid, id, REQUEST_TYPE_WEAPON, weapon, 1, Weapon_GetSlot(weapon));
 	}
@@ -90,19 +90,6 @@ CMD:dai(playerid, params[])
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma");
 	}
-    /*if(!strcmp(text, "chiave", true))
-    {
-        new vehicleid = GetPlayerVehicleID(playerid);
-        if(vehicleid == 0 || VehicleInfo[vehicleid][vOwnerID] != PlayerInfo[playerid][pID]) 
-            return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un tuo veicolo.");
-        if(pGiveRequest[id] != -1)
-            return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta attiva.");
-        
-        SendFormattedMessage(id, COLOR_GREEN, "%s [%d] vuole darti la chiave del suo veicolo (%s).", Character_GetOOCName(playerid), playerid, Vehicle_GetName(vehicleid));
-        SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto a %s [%d] la chiave del tuo veicolo (%s).", Character_GetOOCName(id), id, Vehicle_GetName(vehicleid));
-
-        
-    }*/
     return 1;
 }
 
@@ -161,8 +148,8 @@ CMD:accetta(playerid, params[])
 				Character_RemoveWeapon(requestSender, weaponid);
 				Character_GiveWeapon(playerid, weaponid, ammo);
 				
-				SendFormattedMessage(playerid, COLOR_ORANGE, "Hai accettato l'arma (%s) con %d proiettili da %s.", Weapon_GetName(weaponid), ammo, Character_GetRolePlayName(requestSender));
-				SendFormattedMessage(requestSender, COLOR_ORANGE, "%s (%d) ha accettato la tua arma.", Character_GetRolePlayName(playerid), playerid);
+				SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "Hai accettato l'arma (%s) con %d proiettili da %s.", Weapon_GetName(weaponid), ammo, Character_GetRolePlayName(requestSender));
+				SendFormattedMessage(requestSender, COLOR_ACCEPT_REQUEST, "%s (%d) ha accettato la tua arma.", Character_GetRolePlayName(playerid), playerid);
 				
 				ResetPendingRequest(playerid);
 				ResetPendingRequest(requestSender);
@@ -172,10 +159,10 @@ CMD:accetta(playerid, params[])
 				Character_RemoveWeapon(requestSender, weaponid);
 				Character_GiveItem(playerid, weaponid, 1, ammo);
 
-				SendFormattedMessage(playerid, COLOR_ORANGE, "Hai accettato l'arma (%s) con %d proiettili da %s.", Weapon_GetName(weaponid), ammo, Character_GetRolePlayName(requestSender));
-				SendClientMessage(playerid, COLOR_ORANGE, "L'arma è stata messa nell'inventario poiché lo slot è occupato.");
+				SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "Hai accettato l'arma (%s) con %d proiettili da %s.", Weapon_GetName(weaponid), ammo, Character_GetRolePlayName(requestSender));
+				SendClientMessage(playerid, COLOR_ACCEPT_REQUEST, "L'arma è stata messa nell'inventario poiché lo slot è occupato.");
 
-				SendFormattedMessage(requestSender, COLOR_ORANGE, "%s (%d) ha accettato la tua arma.", Character_GetRolePlayName(playerid), playerid);
+				SendFormattedMessage(requestSender, COLOR_ACCEPT_REQUEST, "%s (%d) ha accettato la tua arma.", Character_GetRolePlayName(playerid), playerid);
 
 				ResetPendingRequest(playerid);
 				ResetPendingRequest(requestSender);
@@ -209,11 +196,10 @@ CMD:accetta(playerid, params[])
 				sellerid = pVehicleSeller[playerid];
 
 			new query[256];
-			mysql_format(gMySQL, query, sizeof(query), "UPDATE `vehicles` SET OwnerID = '%d' WHERE ID = '%d'", PlayerInfo[playerid][pID], VehicleInfo[vehicleid][vID]);
+			mysql_format(gMySQL, query, sizeof(query), "UPDATE `vehicles` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), Vehicle_GetID(vehicleid));
 			mysql_tquery(gMySQL, query);
 
-			VehicleInfo[vehicleid][vOwnerID] = PlayerInfo[playerid][pID];
-			set(VehicleInfo[vehicleid][vOwnerName], PlayerInfo[playerid][pName]);
+			Vehicle_SetOwner(vehicleid, playerid);
 
 			pVehicleSellingPrice[playerid] = pVehicleSellingPrice[sellerid] = 0;
 			pSellingVehicleID[playerid] = pSellingVehicleID[sellerid] = 0;
@@ -242,11 +228,16 @@ CMD:accetta(playerid, params[])
 		{
 			Character_AcceptSearch(playerid);
 		}
+		else if(!strcmp(params, "edificio", true) || !strcmp(params, "edi", true) || !strcmp(params, "biz", true))
+		{
+			Character_AcceptBuilding(playerid);
+		}
 	}
 	else
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "/accetta <oggetto>");
-		SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma, oggetto, morte, veicolo, (ripa)razione, (vern)iciatura, (perq)uisizione");
+		SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma, oggetto, morte, veicolo, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
+		SendClientMessage(playerid, COLOR_ERROR, "... edificio (biz)");
 	}
     return 1;
 }
@@ -267,14 +258,14 @@ CMD:annulla(playerid, params[])
 	;
 	if(toPlayer == playerid)
 	{
-		SendFormattedMessage(byPlayer, COLOR_ERROR, "%s ha rifiutato la tua richiesta (%s).", Character_GetRolePlayName(playerid), GetRequestTypeName(Request_GetType(playerid)));
-		SendFormattedMessage(playerid, COLOR_GREEN, "Hai rifiutato la richiesta (%s) di %s.", Character_GetRolePlayName(byPlayer), GetRequestTypeName(Request_GetType(playerid)));
+		SendFormattedMessage(byPlayer, COLOR_REJECT_REQUEST, "%s ha rifiutato la tua richiesta (%s).", Character_GetRolePlayName(playerid), GetRequestTypeName(Request_GetType(playerid)));
+		SendFormattedMessage(playerid, COLOR_REJECT_REQUEST, "Hai rifiutato la richiesta (%s) di %s.", Character_GetRolePlayName(byPlayer), GetRequestTypeName(Request_GetType(playerid)));
 		ResetPendingRequest(byPlayer);
 	}
 	else if(byPlayer == playerid)
 	{
-		SendFormattedMessage(toPlayer, COLOR_ERROR, "%s ha annullato la richiesta (%s).", Character_GetRolePlayName(playerid), GetRequestTypeName(Request_GetType(playerid)));
-		SendFormattedMessage(playerid, COLOR_GREEN, "Hai annullato la richiesta (%s) inviata a %s.", Character_GetRolePlayName(toPlayer), GetRequestTypeName(Request_GetType(playerid)));
+		SendFormattedMessage(toPlayer, COLOR_REJECT_REQUEST, "%s ha annullato la richiesta (%s).", Character_GetRolePlayName(playerid), GetRequestTypeName(Request_GetType(playerid)));
+		SendFormattedMessage(playerid, COLOR_REJECT_REQUEST, "Hai annullato la richiesta (%s) inviata a %s.", Character_GetRolePlayName(toPlayer), GetRequestTypeName(Request_GetType(playerid)));
 		ResetPendingRequest(toPlayer);
 	}
 	ResetPendingRequest(playerid);

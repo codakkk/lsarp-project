@@ -300,7 +300,7 @@ hook OnGameModeInit()
                          `mat_color_2` INT(11) DEFAULT 0, \
                          `wearing` INT(1) DEFAULT 0, \
                          PRIMARY KEY (`character_id`, `slot_id`), \
-						CONSTRAINT `CharacterWearObjects` FOREIGN KEY (`character_id`) REFERENCES `characters` (`ID`) ON DELETE CASCADE \
+						CONSTRAINT `CharacterWearObjects` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE \
 						) ENGINE=InnoDB DEFAULT CHARSET=latin1;", false);
     return 1;
 }
@@ -314,12 +314,6 @@ hook OnPlayerClearData(playerid)
         list_delete_deep(CategoryIndex[playerid]);
     for(new i = 0; i < 10; ++i)
         RemovePlayerAttachedObject(playerid, i);
-    return 1;
-}
-
-hook OnCharacterSaveData(playerid)
-{
-    WearObject_SaveAll(playerid);
     return 1;
 }
 
@@ -555,6 +549,7 @@ Dialog:Dialog_WearObjectColor2(playerid, response, listitem, inputtext[])
 		case 10: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor2] = HexToInt("000000ff");
 		case 11: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor2] = HexToInt("ffff00ff");
     }
+    WearObject_Save(playerid, SelectedIndex{playerid});
     Internal_UpdateWearObject(playerid, SelectedIndex{playerid});
     return 1;
 }
@@ -797,12 +792,13 @@ static Internal_AddWearObject(playerid, slotid, const name[], modelid, bone, Flo
     PlayerCustomObject[playerid][slotid][MaterialColor1] = matcolor1;
     PlayerCustomObject[playerid][slotid][MaterialColor2] = matcolor2;
 
-    printf("Custom object debug: %d - %d - %d - X: %f - Y: %f - Z: %f - RX: %f - RY: %f - RZ: %f - SX: %f - SY: %f - SZ: %f - MatCol1: %d - MatCol2: %d", 
+    /*printf("Custom object debug: %d - %d - %d - X: %f - Y: %f - Z: %f - RX: %f - RY: %f - RZ: %f - SX: %f - SY: %f - SZ: %f - MatCol1: %d - MatCol2: %d", 
             PlayerCustomObject[playerid][slotid][Used], PlayerCustomObject[playerid][slotid][Bone], PlayerCustomObject[playerid][slotid][ModelId],
             PlayerCustomObject[playerid][slotid][X], PlayerCustomObject[playerid][slotid][Y], PlayerCustomObject[playerid][slotid][Z],
             PlayerCustomObject[playerid][slotid][RotX], PlayerCustomObject[playerid][slotid][RotY], PlayerCustomObject[playerid][slotid][RotZ],
             PlayerCustomObject[playerid][slotid][ScaleX], PlayerCustomObject[playerid][slotid][ScaleY], PlayerCustomObject[playerid][slotid][ScaleZ],
             PlayerCustomObject[playerid][slotid][MaterialColor1], PlayerCustomObject[playerid][slotid][MaterialColor2]);
+    */
     return 1;
 }
 

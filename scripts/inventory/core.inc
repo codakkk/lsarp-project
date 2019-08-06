@@ -4,6 +4,7 @@
 #include <inventory\types\medic>
 #include <inventory\types\money>
 #include <inventory\types\weapon>
+#include <inventory\callbacks>
 #include <YSI_Coding\y_hooks>
 
 // Remember that we're using set instead of add for inventory size

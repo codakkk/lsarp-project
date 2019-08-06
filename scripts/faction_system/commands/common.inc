@@ -22,7 +22,10 @@ CMD:servizio(playerid, params[])
 			pTempSkin[playerid] = GetPlayerSkin(playerid);
 			SetPlayerColor(playerid, COLOR_SLATEBLUE);
 			//Character_SetSelectingUniform(playerid, true);
-			Faction_SendMessageStr(factionid, COLOR_SLATEBLUE, str_format("** HQ: %S %s è entrato in servizio.", Faction_GetRankNameStr(factionid, Character_GetRank(playerid)-1), Character_GetOOCName(playerid)));
+			new rankName[16];
+			Faction_GetRankName(factionid, Character_GetRank(playerid), rankName);
+			new String:message = str_format("** HQ: %s %s è entrato in servizio.", rankName, Character_GetOOCName(playerid));
+			Faction_SendMessageStr(factionid, COLOR_SLATEBLUE, message);
 			SendClientMessage(playerid, COLOR_GREEN, "Utilizza /uniforme <id> per cambiare uniforme.");
 			
 		} else Character_OffDuty(playerid);
@@ -49,7 +52,10 @@ CMD:uniforme(playerid, params[])
 		return 1;
 	}*/
 
-	new uniform_id;
+	new uniform_id,
+		List:factionSkins = Faction_GetSkins(fid);
+	if(list_size(factionSkins) <= 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono uniformi disponibili.");
 	if(sscanf(params, "d", uniform_id))
 	{
 		/*Character_SetSelectingUniform(playerid, true);
@@ -59,13 +65,13 @@ CMD:uniforme(playerid, params[])
 		SendClientMessage(playerid, COLOR_ERROR, "/uniforme <id uniforme>");
 		SendClientMessage(playerid, -1, "== {00FF00}Uniformi Disponibili{FFFFFF} ==");
 		new String:str;
-		for(new i = 0; i < MAX_FACTION_SKINS; ++i)
+		for(new i = 0, j = list_size(factionSkins); i < j; ++i)
 		{
-			new skinid = Faction_GetSkin(fid, i);
+			new skinid = list_get(factionSkins, i);
 			if(skinid != 0)
 			{
 				str += str_format("{00FF00}%d{FFFFFF}", skinid);
-				if(i < MAX_FACTION_SKINS-1)
+				if(i < j)
 					str += @(", ");
 			}
 		}
@@ -73,19 +79,11 @@ CMD:uniforme(playerid, params[])
 	}
 	else
 	{
-		if(uniform_id == 0)
-			return SendClientMessage(playerid, COLOR_ERROR, "L'uniforme inserita non è valida.");
-		for(new i = 0; i < MAX_FACTION_SKINS; ++i)
-		{
-			if(FactionSkins[fid][i] == uniform_id)
-			{
-				pTempSkin[playerid] = GetPlayerSkin(playerid);
-				SetPlayerSkin(playerid, uniform_id);
-				SendFormattedMessage(playerid, COLOR_GREEN, "Hai selezionato la nuova uniforme. ID: %d.", uniform_id);
-				return 1;
-			}
-		}
-		SendClientMessage(playerid, COLOR_ERROR, "L'uniforme inserita non è valida.");
+		if(list_find(factionSkins, uniform_id) == -1)
+			return SendClientMessage(playerid, COLOR_ERROR, "L'uniforme inserita non esiste.");
+		pTempSkin[playerid] = GetPlayerSkin(playerid);
+		SetPlayerSkin(playerid, uniform_id);
+		SendFormattedMessage(playerid, COLOR_GREEN, "Hai selezionato la nuova uniforme. ID: %d.", uniform_id);
 	}
 	return 1;
 }

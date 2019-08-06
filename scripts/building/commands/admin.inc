@@ -31,7 +31,7 @@ CMD:abcreate(playerid, params[])
     GetPlayerPos(playerid, x, y, z);
 
     new id = Building_Create(x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
-    Log(AccountInfo[playerid][aName], "", "/abcreate", id);
+    Log(Account_GetName(playerid), "", "/abcreate", id);
     return 1;
 }
 
@@ -42,7 +42,7 @@ CMD:abuildingfaction(playerid, params[])
 	if(sscanf(params, "dd", bid, fid))
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "/abuildingfaction <buildingid> <factionid>");
-		return SendClientMessage(playerid, COLOR_ERROR, "Utilizza -1 come factionid per rimuoverla.");
+		return SendFormattedMessage(playerid, COLOR_ERROR, "Utilizza %d come factionid per rimuoverla.", INVALID_FACTION_ID);
 	}
 	if(!Building_IsValid(bid))
 		return SendClientMessage(playerid, COLOR_ERROR, "L'edificio inserito non è valdio.");
@@ -54,7 +54,7 @@ CMD:abuildingfaction(playerid, params[])
 		SendFormattedMessage(playerid, COLOR_GREEN, "L'edificio %d non appartiene più alla fazione ID %d.", bid, fid);
 	else
 		SendClientMessageStr(playerid, COLOR_GREEN, str_format("Hai settato l'edificio %d appartenente alla fazione %S (%d).", bid, Faction_GetNameStr(fid), fid));
-	Log(AccountInfo[playerid][aName], "", "/abuildingfaction", bid);
+	Log(Account_GetName(playerid), "", "/abuildingfaction", bid);
 	return 1;
 }
 
@@ -75,7 +75,7 @@ CMD:abuildingexit(playerid, params[])
     {
 		Building_Save(id);
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato l'interior del building id %d.", id);
-		Log(AccountInfo[playerid][aName], "", "/abuildingexit", id);
+		Log(Account_GetName(playerid), "", "/abuildingexit", id);
     }
     else
     {
@@ -101,7 +101,7 @@ CMD:abuildingentrance(playerid, params[])
     {
 		Building_Save(id);
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai spostato il building %d.", id);
-		Log(AccountInfo[playerid][aName], "", "/abuildingentrance", id);
+		Log(Account_GetName(playerid), "", "/abuildingentrance", id);
     }
     else
     {
@@ -127,7 +127,7 @@ CMD:abuildingname(playerid, params[])
 	{
 		Building_Save(id);
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il nome del building %d. Nuovo nome: %s", id, name);
-		Log(AccountInfo[playerid][aName], "", "/abuildingname", id);
+		Log(Account_GetName(playerid), "", "/abuildingname", id);
 	}
     else
     {
@@ -153,7 +153,7 @@ CMD:abuildingownable(playerid, params[])
 			SendFormattedMessage(playerid, COLOR_GREEN, "Il building %d è ora acquistabile.", id);
 		else
 			SendFormattedMessage(playerid, COLOR_GREEN, "Il building %d non è più acquistabile.", id);
-		Log(AccountInfo[playerid][aName], "", "/abuildingownable", id);
+		Log(Account_GetName(playerid), "", "/abuildingownable", id);
     }
     else
     {
@@ -176,7 +176,7 @@ CMD:abuildingprice(playerid, params[])
     {
 		Building_Save(id);
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il prezzo del building %d. Nuovo Prezzo: $%d", id, price);
-		Log(AccountInfo[playerid][aName], "", "/abuildingprice", id);
+		Log(Account_GetName(playerid), "", "/abuildingprice", id);
     }
     else
     {
@@ -201,7 +201,7 @@ CMD:abuildinglock(playerid, params[])
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai chiuso il building %d.", id);
     else
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai aperto il building %d.", id);
-    Log(AccountInfo[playerid][aName], "", "/abuildinglock", id);
+    Log(Account_GetName(playerid), "", "/abuildinglock", id);
     return 1;
 }
 
@@ -218,7 +218,7 @@ CMD:abdelete(playerid, params[])
     if(Building_Delete(id))
     {
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai rimosso il building id %d definitivamente.", id);
-	   Log(AccountInfo[playerid][aName], "", "/abdelete", id);
+	   Log(Account_GetName(playerid), "", "/abdelete", id);
     }
     else
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Non è stato possibile eseguire il comando sul building id %d.", id);

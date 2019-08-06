@@ -147,7 +147,7 @@ CMD:b(playerid, params[])
     new String:string;
     if(Account_IsAdminDuty(playerid))
     {
-        string = str_format("{FFFFFF}(( {FF4500}%s{FFFFFF} [%d]: %s ))", AccountInfo[playerid][aName], playerid, params);
+        string = str_format("{FFFFFF}(( {FF4500}%s{FFFFFF} [%d]: %s ))", Account_GetName(playerid), playerid, params);
         //ProxDetectorStr(playerid, 15.0, string, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, true);
 		ProxDetectorStr(playerid, 15.0, string, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, true);
     }

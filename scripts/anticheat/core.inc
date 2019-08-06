@@ -25,7 +25,7 @@ public OnPlayerAirbreak(playerid)
 // probably yes, but still better than OnPlayerUpdate (called each tick)
 ptask AntiCheatTimer[250](playerid) 
 {
-	if(IsPlayerNPC(playerid) || !Character_IsLogged(playerid) /*|| AccountInfo[playerid][aAdmin] > 2*/)
+	if(IsPlayerNPC(playerid) || !Character_IsLogged(playerid) /*|| Account_GetAdminLevel(playerid) > 2*/)
 		return Y_HOOKS_BREAK_RETURN_1;
 
 	if(GetPlayerMoney(playerid) != Character_GetMoney(playerid))
@@ -95,7 +95,7 @@ ptask AntiCheatTimer[250](playerid)
 	}
 
 	// Anti-cheats we can pass-on if we're admins goes here.
-	if(AccountInfo[playerid][aAdmin] > 1)
+	if(Account_GetAdminLevel(playerid) > 1)
 		return Y_HOOKS_CONTINUE_RETURN_1;
 	
 	if(GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_USEJETPACK)

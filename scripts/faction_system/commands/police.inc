@@ -48,7 +48,7 @@ CMD:arresta(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "/arresta <playerid/partofname> <minuti>");
 	if(id == playerid || !Character_IsLogged(id) || IsPlayerNPC(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
-	if(Character_GetFaction(id) != -1 && Faction_GetType(Character_GetFaction(id)) == Faction_GetType(Character_GetFaction(playerid)))
+	if(Character_GetFaction(id) != INVALID_FACTION_ID && Faction_GetType(Character_GetFaction(id)) == Faction_GetType(Character_GetFaction(playerid)))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi arrestare questo giocatore.");
 	if(time < 0 || time > 720)
 		return SendClientMessage(playerid, COLOR_ERROR, "Il tempo di arresto va da 0 a 720.");
@@ -58,17 +58,23 @@ CMD:arresta(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei al punto di arresto.");
 
 	Character_SetJailTime(id, time);
-	Character_SetICJailed(id, 1);
+	Character_SetICJailed(id, true);
 
 	Character_SetToJailPos(id);
 
 	SendFormattedMessage(id, -1, "Sei stato arrestato da %s per {FF0000}%d{FFFFFF} minuti.", Character_GetOOCName(playerid));
 
+	new rankName[16];
+	Faction_GetRankName(Character_GetFaction(playerid), Character_GetRank(playerid), rankName);
+
+	new String:message = str_format("(( HQ: %s %s ha arrestato %s per %d minuti. ))", rankName, Character_GetOOCName(playerid), Character_GetOOCName(id), time);
+
 	foreach(new i : Player)
 	{
-		if(Character_GetFaction(i) != -1 && Character_GetFaction(i) == Character_GetFaction(playerid) && Character_IsFactionDuty(i))
-			SendClientMessageStr(i, COLOR_BLUE, str_format("HQ: %S %s ha arrestato %s per %d minuti.", 
-			Faction_GetRankNameStr(Character_GetFaction(playerid), Character_GetRank(playerid)-1), Character_GetOOCName(playerid), Character_GetOOCName(id), time));
+		if(Character_GetFaction(i) != INVALID_FACTION_ID && Character_GetFaction(i) == Character_GetFaction(playerid) && Character_IsFactionDuty(i))
+		{
+			SendClientMessageStr(i, COLOR_BLUE, message);
+		}
 	}
 	Log(Character_GetOOCName(playerid), Character_GetOOCName(id), "/arresta", time);
 	return 1;
@@ -164,8 +170,8 @@ CMD:perquisisci(playerid, params[])
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 5.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
 	
-	SendFormattedMessage(id, COLOR_ORANGE, "%s (%d) vuole perquisirti. Digita \"/accetta perquisizione\" per accettare.", Character_GetRolePlayName(playerid), playerid);
-	SendFormattedMessage(playerid, COLOR_ORANGE, "Richiesta di perquisizione inviata a %s (%d).", Character_GetRolePlayName(id), id);
+	SendFormattedMessage(id, COLOR_RECEIVE_REQUEST, "%s (%d) vuole perquisirti. Digita \"/accetta perquisizione\" per accettare o \"/annulla\" per rifiutare.", Character_GetRolePlayName(playerid), playerid);
+	SendFormattedMessage(playerid, COLOR_SEND_REQUEST, "Richiesta di perquisizione inviata a %s (%d).", Character_GetRolePlayName(id), id);
 
 	Character_SetRequest(playerid, id, REQUEST_TYPE_SEARCH);
 	return 1;
@@ -179,8 +185,8 @@ stock Character_AcceptSearch(playerid)
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
 	new senderid = Request_GetSender(playerid);
 
-	SendFormattedMessage(senderid, -1, "%s (%d) ha accettato la tua richiesta di perquisizione.", Character_GetRolePlayName(playerid), playerid);
-	SendFormattedMessage(playerid, -1, "Hai accettato la richiesta di perquisizione di %s (%d).", Character_GetRolePlayName(senderid), senderid);
+	SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s (%d) ha accettato la tua richiesta di perquisizione.", Character_GetRolePlayName(playerid), playerid);
+	SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "Hai accettato la richiesta di perquisizione di %s (%d).", Character_GetRolePlayName(senderid), senderid);
 
 	new str[64], Inventory:inv = Character_GetInventory(playerid);
 	format(str, sizeof(str), "Inventario di %s (%d/%d)",  Character_GetRolePlayName(playerid), Inventory_GetUsedSpace(inv), Inventory_GetSpace(inv));
@@ -208,7 +214,12 @@ stock Character_OffDuty(playerid)
 
 	pTempSkin[playerid] = 0;
 	
-	Faction_SendMessageStr(Character_GetFaction(playerid), COLOR_SLATEBLUE, str_format("** HQ: %S %s non è più in servizio.", Faction_GetRankNameStr(Character_GetFaction(playerid), Character_GetRank(playerid)-1), Character_GetOOCName(playerid)));
+	new rankName[16];
+	Faction_GetRankName(Character_GetFaction(playerid), Character_GetRank(playerid), rankName);
+
+	new String:message = str_format("(( ** HQ: %s %s non è più in servizio. ))", rankName, Character_GetOOCName(playerid));
+
+	Faction_SendMessageStr(Character_GetFaction(playerid), COLOR_SLATEBLUE, message);
 
 	SetPlayerColor(playerid, -1);
 

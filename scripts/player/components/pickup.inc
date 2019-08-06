@@ -6,7 +6,7 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
     {
 		new buildingid = elementid,
 			String:string;
-		if(AccountInfo[playerid][aAdmin] > 1)
+		if(Account_GetAdminLevel(playerid) > 1)
 		{
 			string += str_format("~r~ID:~w~ %d~n~", elementid);
 		}
@@ -37,7 +37,7 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
 	else if(type == ELEMENT_TYPE_HOUSE_ENTRANCE)
 	{
 		new houseid = elementid, String:string;
-		if(AccountInfo[playerid][aAdmin] > 1)
+		if(Account_GetAdminLevel(playerid) > 1)
 		{
 			string += str_format("~r~ID:~w~ %d~n~", houseid);
 		}
@@ -46,7 +46,7 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
 			//static name[MAX_PLAYER_NAME];
 			
 			string += str_format("~y~Proprietario: ~w~%s~n~", Character_GetNameFromDatabase(House_GetOwnerID(houseid), true));
-			if(House_GetOwnerID(houseid) == PlayerInfo[playerid][pID])
+			if(House_GetOwnerID(houseid) == Character_GetID(playerid))
 			{
 				if(Account_HasHotKeysEnabled(playerid))
 					string += @("Premi ~b~~k~~SNEAK_ABOUT~~w~ (/casa) per il menu.~n~");

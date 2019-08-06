@@ -1,8 +1,33 @@
+
 #include <YSI_Coding\y_hooks>
+
+static PlayerMoney[MAX_PLAYERS];
+
+hook OnCharacterLoad(playerid)
+{
+    inline OnLoad()
+    {
+        cache_get_value_index_int(0, 0, PlayerMoney[playerid]);
+        ResetPlayerMoney(playerid);
+        GivePlayerMoney(playerid, PlayerMoney[playerid]);
+    }
+    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT money FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
+    return 1;
+}
 
 stock Character_GetMoney(playerid)
 {
-	return PlayerInfo[playerid][pMoney];
+	return PlayerMoney[playerid];
+}
+
+stock Character_SetMoney(playerid, money)
+{
+    PlayerMoney[playerid] = money;
+    Internal_Save(playerid);
+
+    ResetPlayerMoney(playerid);
+    GivePlayerMoney(playerid, PlayerMoney[playerid]);
+    return 1;
 }
 
 stock Character_GiveMoney(playerid, money, reason[] = "")
@@ -10,8 +35,12 @@ stock Character_GiveMoney(playerid, money, reason[] = "")
 	#pragma unused reason
 	if(!Character_IsLogged(playerid))
 		return 0;
-	PlayerInfo[playerid][pMoney] += money;
+	PlayerMoney[playerid] += money;
+    Internal_Save(playerid);
+
 	ResetPlayerMoney(playerid);
+    GivePlayerMoney(playerid, PlayerMoney[playerid]);
+
 	new string[16];
 	if(money < 0)
 	{
@@ -30,7 +59,7 @@ stock Character_GiveMoney(playerid, money, reason[] = "")
 		PlayerTextDrawShow(playerid, pMoneyTD[playerid]);
 	}
 	MoneyTimer[playerid] = SetTimerEx(#HidepMoneyTD, 2000, false, "d", playerid);
-	return GivePlayerMoney(playerid, PlayerInfo[playerid][pMoney]);
+	return 1;
 }
 
 forward HidepMoneyTD(playerid);
@@ -42,11 +71,18 @@ public HidepMoneyTD(playerid)
 	return 1;
 }
 
-stock AC_ResetPlayerMoney(playerid, reason[]="")
+stock Character_ResetMoney(playerid, reason[]="")
 {
 	if(!Character_IsLogged(playerid))
 		return 0;
-	PlayerInfo[playerid][pMoney] = 0;
+	PlayerMoney[playerid] = 0;
+    Internal_Save(playerid);
 	ResetPlayerMoney(playerid);
 	return 1;
+}
+
+static Internal_Save(playerid)
+{
+    mysql_tquery_f(gMySQL, "UPDATE `characters` SET money = '%d' WHERE id = '%d'", Character_GetMoney(playerid), Character_GetID(playerid));
+    return 1;
 }

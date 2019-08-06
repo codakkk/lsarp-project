@@ -1,6 +1,15 @@
 #include <YSI_Coding\y_hooks>
 
-static LastPickup[MAX_PLAYERS] = {0, ...};
+static enum e_PICKUP_DATA
+{
+    ID,
+    E_ELEMENT_TYPE:Type
+};
+
+static 
+    TempData[e_PICKUP_DATA],
+    szTempData = e_PICKUP_DATA,
+    LastPickup[MAX_PLAYERS] = {0, ...};
 
 forward OnPlayerPickUpElementPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type);
 
@@ -8,13 +17,12 @@ hook OnPlayerPickUpDynPickup(playerid, pickupid)
 {
     if(!Character_IsLogged(playerid) || IsPlayerInRangeOfPoint(playerid, 5.0, 0.0, 0.0, 0.0))
 	   return Y_HOOKS_BREAK_RETURN_0;
-    new 
-	   elementid = PickupInfo[pickupid][elementID],
-	   E_ELEMENT_TYPE:type = PickupInfo[pickupid][elementType];
+    
+    Streamer_GetArrayData(STREAMER_TYPE_PICKUP, pickupid, E_STREAMER_EXTRA_ID, TempData, szTempData);
     
     LastPickup[playerid] = pickupid;
 
-	CallLocalFunction("OnPlayerPickUpElementPickup", "iiii", playerid, pickupid, elementid, _:type);
+	CallLocalFunction("OnPlayerPickUpElementPickup", "iiii", playerid, pickupid, TempData[ID], _:TempData[Type]);
     return 1;
 }
 
@@ -22,8 +30,9 @@ hook OnPlayerPickUpDynPickup(playerid, pickupid)
 stock Pickup_Create(modelid, eId, Float:x, Float:y, Float:z, E_ELEMENT_TYPE:eType = ELEMENT_TYPE_NONE, worldid = -1, interiorid = -1)
 {
     new pickupId = CreateDynamicPickup(modelid, 1, x, y, z, worldid, interiorid);
-    PickupInfo[pickupId][elementType] = eType;
-    PickupInfo[pickupId][elementID] = eId;
+    TempData[ID] = eId;
+    TempData[Type] = eType;
+    Streamer_SetArrayData(STREAMER_TYPE_PICKUP, pickupId, E_STREAMER_EXTRA_ID, TempData, szTempData);
     return pickupId;
 }
 
@@ -32,13 +41,13 @@ stock Pickup_Destroy(pickupid)
     if(!IsValidDynamicPickup(pickupid))
 	   return 0;
     DestroyDynamicPickup(pickupid);
-    PickupInfo[pickupid][elementType] = ELEMENT_TYPE_NONE;
-    PickupInfo[pickupid][elementID] = -1;
     return 1;
 }
 
 stock Pickup_GetPosition(pickupid, &Float:x, &Float:y, &Float:z)
 {
+    if(!IsValidDynamicPickup(pickupid))
+        return 0;
     Streamer_GetFloatData(STREAMER_TYPE_PICKUP, pickupid, E_STREAMER_X, x);
     Streamer_GetFloatData(STREAMER_TYPE_PICKUP, pickupid, E_STREAMER_Y, y);
     Streamer_GetFloatData(STREAMER_TYPE_PICKUP, pickupid, E_STREAMER_Z, z);
@@ -54,8 +63,9 @@ stock Pickup_GetInfo(pickupid, &id, &E_ELEMENT_TYPE:type)
 {
     if(pickupid == -1)
 	   return 0;
-    id = PickupInfo[pickupid][elementID];
-    type = PickupInfo[pickupid][elementType];
+    Streamer_GetArrayData(STREAMER_TYPE_PICKUP, pickupid, E_STREAMER_EXTRA_ID, TempData, szTempData);
+    id = TempData[ID];
+    type = TempData[Type];
     return 1;
 }
 
@@ -70,9 +80,7 @@ stock Character_GetNearestPickup(playerid, &elementid, &E_ELEMENT_TYPE:type)
     if(GetPlayerDistanceFromPoint(playerid, x, y, z) >= 2.0)
         return 0;
     
-    elementid = PickupInfo[pickupid][elementID];
-    type = PickupInfo[pickupid][elementType];
-    return 1;
+    return Pickup_GetInfo(pickupid, elementid, type);
 }
 
 stock Character_IsNearPickupType(playerid, E_ELEMENT_TYPE:type)

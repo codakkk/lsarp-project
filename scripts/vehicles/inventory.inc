@@ -1,15 +1,15 @@
 #include <YSI_Coding\y_hooks>
 
+static CurrentVehicleInventory[MAX_PLAYERS]; // Current Opened Vehicle Inventory Dialog
+
 hook OnPlayerClearData(playerid)
 {
-    pCurrentVehicleInventory[playerid] = 0;
+    CurrentVehicleInventory[playerid] = 0;
     return 1;
 }
 
 stock Inventory:Vehicle_InitializeInventory(vehicleid)
 {
-    //if(VehicleInfo[vehicleid][vModel] == 0)
-	   //return 0;
 	if(bool:map_has_key(VehicleInventory, vehicleid))
 	{
 		printf("Unable to initialize vehicle id %d inventory.", vehicleid);
@@ -151,7 +151,7 @@ stock bool:Vehicle_ShowInventory(vehicleid, playerid)
 {
     if(!Character_IsLogged(playerid))
 	   return false;
-	pCurrentVehicleInventory[playerid] = vehicleid;
+	CurrentVehicleInventory[playerid] = vehicleid;
     new Inventory:inventory = Vehicle_GetInventory(vehicleid);
 	Inventory_ShowStr(inventory, playerid, str_format("Inventario Veicolo (%d/%d)", Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory)), Dialog_VehicleInventory, "Avanti", "Chiudi");
 	return true;
@@ -159,7 +159,7 @@ stock bool:Vehicle_ShowInventory(vehicleid, playerid)
 
 Dialog:Dialog_VehicleInventory(playerid, response, listitem, inputtext[])
 {
-	new vehicleid = pCurrentVehicleInventory[playerid];
+	new vehicleid = CurrentVehicleInventory[playerid];
 	if(!response || vehicleid == 0)
 		return 0;
 	
@@ -194,9 +194,9 @@ Dialog:Dialog_VehicleInventory(playerid, response, listitem, inputtext[])
 Dialog:Dialog_VehicleInvAction(playerid, response, listitem, inputtext[])
 {
 	if(!response || pSelectedListItem[playerid] == -1)
-		return Vehicle_ShowInventory(pCurrentVehicleInventory[playerid], playerid);
+		return Vehicle_ShowInventory(CurrentVehicleInventory[playerid], playerid);
 	
-	new vehicleid = pCurrentVehicleInventory[playerid];
+	new vehicleid = CurrentVehicleInventory[playerid];
 
 	if(!IsPlayerInRangeOfVehicle(playerid, vehicleid, 5.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo.");
@@ -280,9 +280,9 @@ Dialog:Dialog_VehicleInvAction(playerid, response, listitem, inputtext[])
 Dialog:Dialog_VehInvAddDep(playerid, response, listitem, inputtext[])
 {
 	if(!response)
-		return Vehicle_ShowInventory(pCurrentVehicleInventory[playerid], playerid);
+		return Vehicle_ShowInventory(CurrentVehicleInventory[playerid], playerid);
 	new 
-		vehicleid = pCurrentVehicleInventory[playerid],
+		vehicleid = CurrentVehicleInventory[playerid],
 		amount = 1,
 		itemid = pSelectedListItem[playerid],
 		totalAmount = Inventory_GetItemAmount(Character_GetInventory(playerid), itemid);
@@ -312,9 +312,9 @@ Dialog:Dialog_VehInvAddDep(playerid, response, listitem, inputtext[])
 Dialog:ABC(playerid, response, listitem, inputtext[])
 {
 	if(!response)
-		return Vehicle_ShowInventory(pCurrentVehicleInventory[playerid], playerid);
+		return Vehicle_ShowInventory(CurrentVehicleInventory[playerid], playerid);
 	new 
-		vehicleid = pCurrentVehicleInventory[playerid],
+		vehicleid = CurrentVehicleInventory[playerid],
 		amount = 1, 
 		slotid = pSelectedListItem[playerid],
 		itemid = Character_GetSlotItem(playerid, slotid),
@@ -350,8 +350,8 @@ Dialog:ABC(playerid, response, listitem, inputtext[])
 Dialog:Dialog_CharInvDepInVeh(playerid, response, listitem, inputtext[])
 {
 	if(!response)
-		return Vehicle_ShowInventory(pCurrentVehicleInventory[playerid], playerid);
-	new vehicleid = pCurrentVehicleInventory[playerid];
+		return Vehicle_ShowInventory(CurrentVehicleInventory[playerid], playerid);
+	new vehicleid = CurrentVehicleInventory[playerid];
 	if(!IsPlayerInRangeOfVehicle(playerid, vehicleid, 5.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo.");
 	new itemid = Character_GetSlotItem(playerid, listitem);
@@ -382,10 +382,10 @@ Dialog:Dialog_CharInvDepInVeh(playerid, response, listitem, inputtext[])
 Dialog:D_VehInvItemAmount(playerid, response, listitem, inputtext[])
 {
     if(!response)
-	   return Vehicle_ShowInventory(pCurrentVehicleInventory[playerid], playerid);
+	   return Vehicle_ShowInventory(CurrentVehicleInventory[playerid], playerid);
 	new 
 		amount = 1, 
-		vehicleid = pCurrentVehicleInventory[playerid],
+		vehicleid = CurrentVehicleInventory[playerid],
 		slotid = pSelectedListItem[playerid],
 		itemid = Vehicle_GetSlotItem(vehicleid, slotid),
 		extra = Vehicle_GetSlotExtra(vehicleid, slotid),

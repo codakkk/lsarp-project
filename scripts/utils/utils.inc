@@ -28,7 +28,7 @@ timer KickTimer[100](playerid)
 	Kick(playerid);
 }
 
-stock FixName(src[], dst[])
+stock FixName(const src[], dst[])
 {
 	set(dst, src);
 	for(new i = 0, j = MAX_PLAYER_NAME; i < j; ++i)

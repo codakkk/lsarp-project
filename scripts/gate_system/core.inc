@@ -457,7 +457,7 @@ CMD:gdelete(playerid, params[])
         return SendClientMessage(playerid, COLOR_ERROR, "/gdelete <garage id>");
     if(Gate_Delete(val))
 	{
-		SendMessageToAdmins(true, COLOR_ORANGE, "AdmCmd: %s (%d) ha rimosso il cancello id %d.", AccountInfo[playerid][aName], playerid, val);
+		SendMessageToAdmins(true, COLOR_ORANGE, "AdmCmd: %s (%d) ha rimosso il cancello id %d.", Account_GetName(playerid), playerid, val);
 	}
 	else
 	{
@@ -525,7 +525,7 @@ CMD:gedit(playerid, params[])
         if(!IsPlayerConnected(id) || !Character_IsLogged(id))
             return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
         SendFormattedMessage(playerid, -1, "Hai settato %s (%d) proprietario del gate id %d.", Character_GetOOCName(id), id, gateid);
-        SendFormattedMessage(id, -1, "L'admin %s (%d) ti ha settato proprietario del cancello id %d.", AccountInfo[playerid][aName], playerid, gateid);
+        SendFormattedMessage(id, -1, "L'admin %s (%d) ti ha settato proprietario del cancello id %d.", Account_GetName(playerid), playerid, gateid);
         Gate_SetOwner(gateid, id);
         Gate_Save(gateid);
     }

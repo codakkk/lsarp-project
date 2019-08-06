@@ -567,8 +567,8 @@ stock Character_SendItemRequest(playerid, toPlayerId, slotid, amount)
 	
 	Character_SetRequest(playerid, toPlayerId, REQUEST_TYPE_ITEM, itemid, amount, slotid);
 	
-	SendFormattedMessage(playerid, COLOR_GREEN, "Hai proposto di dare l'oggetto (%s, Quantità: %d) a %s.", ServerItem_GetName(itemid), amount, Character_GetRolePlayName(toPlayerId));
-	SendFormattedMessage(toPlayerId, COLOR_GREEN, "%s vuole darti un oggetto (%s, Quantità: %d).", Character_GetRolePlayName(playerid), ServerItem_GetName(itemid), amount);
-	SendClientMessage(toPlayerId, COLOR_GREEN, "Digita \"/accetta oggetto\" per accettare oppure \"/annulla oggetto\" per rifiutare.");
+	SendFormattedMessage(playerid, COLOR_SEND_REQUEST, "Hai proposto di dare l'oggetto (%s, Quantità: %d) a %s.", ServerItem_GetName(itemid), amount, Character_GetRolePlayName(toPlayerId));
+	SendFormattedMessage(toPlayerId, COLOR_RECEIVE_REQUEST, "%s vuole darti un oggetto (%s, Quantità: %d).", Character_GetRolePlayName(playerid), ServerItem_GetName(itemid), amount);
+	SendClientMessage(toPlayerId, COLOR_RECEIVE_REQUEST, "Digita \"/accetta oggetto\" per accettare oppure \"/annulla\" per rifiutare.");
 	return 1;
 }

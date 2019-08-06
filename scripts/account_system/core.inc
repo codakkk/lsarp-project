@@ -1,19 +1,57 @@
-#include <account_system\accessors>
+#include <account_system\components\login>
+#include <account_system\components\register>
+#include <account_system\components\char_select>
+#include <reward_system\core>
+
 #include <YSI_Coding\y_hooks>
+
+forward OnAccountLogin(playerid);
+forward OnAccountCreated(playerid, account_db_id);
+forward OnCharacterCreated(playerid, character_db_id);
+
+static enum E_ACCOUNT_DATA
+{
+	ID,
+	Admin,
+	ZPoints,
+	Premium,
+	PremiumExpiry,
+	FirstCharacter,
+	CharactersSlot,
+	CharactersCount,
+	Banned,
+	BanExpiry,
+	Level,
+	PayDay
+};
+
+static enum e_Bit1_AccountData 
+{
+	e_pAccountLogged,
+    e_pTogglePMAll,
+    e_pToggleOOCAll,
+    e_pHotKeys,
+	e_pInvMode, // 0: Dialog - 1: Chat
+	e_pToggleHUD,
+	e_pAdminDuty,
+	e_pSupporterDuty
+};
+
+static 
+	AccountInfo[MAX_PLAYERS][E_ACCOUNT_DATA],
+	BitArray:gAccountBitState[e_Bit1_AccountData]<MAX_PLAYERS>,
+
+	AccountName[MAX_PLAYERS][MAX_PLAYER_NAME],
+	AccountEMail[MAX_PLAYERS][255],
+	CleanAccountData[E_ACCOUNT_DATA]
+;
 
 hook OnPlayerClearData(playerid)
 {
-    CharacterCreation_Reset(playerid);
-	gLoginTimer[playerid] = Timer:0;
 
-	new Data[E_ACCOUNT_DATA];
-	AccountInfo[playerid] = Data;
-
-	new rData[E_PLAYER_REWARD_DATA];
-	PlayerRewardData[playerid] = rData;
-
-	gAccountTempMail[playerid] = "";
-	gAccountEmailCode[playerid] = 0;
+	AccountName[playerid] = "";
+	AccountEMail[playerid] = "";
+	AccountInfo[playerid] = CleanAccountData;
 
 	// before everything, make sure to reset ToggleOOC and PM from players to this playerid
     foreach(new i : Player)
@@ -27,12 +65,8 @@ hook OnPlayerClearData(playerid)
     Iter_Clear(pToggleOOC[playerid]);
 
 	Account_ResetBitState(playerid);
+	
     return 1;
-}
-
-stock OnAccountCreated(playerid)
-{
-	#pragma unused playerid
 }
 
 stock CheckAccount(playerid)
@@ -45,7 +79,7 @@ stock CheckAccount(playerid)
 
 	foreach(new i : Player)
 	{
-		if(Account_IsLogged(i) && !strcmp(AccountInfo[i][aName], name, false))
+		if(Account_IsLogged(i) && !strcmp(Account_GetName(i), name, false))
 		{
 			KickEx(playerid);
 			SendClientMessage(playerid, COLOR_ERROR, "Questo account risulta già collegato nel server.");
@@ -81,24 +115,7 @@ stock CheckAccount(playerid)
 			printf("Dialog_Register ");
 		}
     }
-    MySQL_TQueryInline(gMySQL, using inline AccountCheckCallback, "SELECT ID FROM accounts WHERE LOWER(Name) = LOWER('%e')", name);
-	return 1;
-}
-
-hook OnPlayerFinishedDwnling(playerid, virtualworld)
-{
-	if(!Account_IsLogged(playerid))
-	{
-		SendClientMessage(playerid, -1, "Hai 60 secondi per registrarti o effettuare il login prima di essere kickato.");
-		gLoginTimer[playerid] = defer LoginKickTimer(playerid);
-	}
-	return 1;
-}
-
-hook OnPlayerDisconnect(playerid, reason)
-{
-	stop gLoginTimer[playerid];
-	gLoginTimer[playerid] = Timer:0;
+    MySQL_TQueryInline(gMySQL, using inline AccountCheckCallback, "SELECT id FROM accounts WHERE LOWER(name) = LOWER('%e')", name);
 	return 1;
 }
 
@@ -123,66 +140,15 @@ hook OnPlayerRequestClass(playerid, classid)
 	return 1;
 }
 
-stock Account_CreateCharacter(playerid)
+stock Account_CreateCharacter(playerid, const characterName[MAX_PLAYER_NAME])
 {
-
-}
-
-stock OnAccountLogin(playerid)
-{
-	Account_SetLogged(playerid, true);
-	stop gLoginTimer[playerid];
-	gLoginTimer[playerid] = Timer:0;
-    
-	if(Account_IsBanned(playerid))
-	{
-		if(!Account_GetBanExpiry(playerid) || gettime() < Account_GetBanExpiry(playerid))
-		{
-			Dialog_Show(playerid, DialogNull, DIALOG_STYLE_MSGBOX, "Account Bannato", "Questo account risulta bannato.\nSe pensi sia un errore, visita www.lsarp.it", "Ok", "");
-			KickEx(playerid);
-			return 0;
-		}
-		else
-		{
-			Account_SetBanned(playerid, 0);
-			Account_SetBanExpiry(playerid, 0);
-			Account_Save(playerid);
-		}
+	inline OnCreate()
+	{	
+		CallLocalFunction(#OnCharacterCreated, "dd", playerid, cache_insert_id());
 	}
-
-
-
-	Account_LoadRewards(playerid);
-
-    inline OnLoad()
-    {
-	   //cache_get_row_count(AccountInfo[playerid][aCharactersCount]);
-	   Account_ShowCharactersList(playerid);
-    }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT ID FROM characters WHERE AccountID = '%d'", Account_GetID(playerid));
+	MySQL_TQueryInline(gMySQL, using inline OnCreate, "INSERT INTO `characters` (name, account_id) VALUES('%e', '%d')", characterName, Account_GetID(playerid));
+	Log(Account_GetName(playerid), characterName, "CharacterCreation");
 	return 1;
-}
-
-stock LoadAccountData(playerid)
-{
-	if(cache_num_rows() > 0)
-	{
-		cache_get_value_index_int(0, 0, AccountInfo[playerid][aID]);
-		cache_get_value_index(0, 1, AccountInfo[playerid][aName]);
-		cache_get_value_index_int(0, 3, AccountInfo[playerid][aAdmin]);
-		cache_get_value_index_int(0, 4, AccountInfo[playerid][aPremium]);
-		cache_get_value_index_int(0, 5, AccountInfo[playerid][aPremiumExpiry]);
-		cache_get_value_index_int(0, 6, AccountInfo[playerid][aCharactersCount]);
-		cache_get_value_index(0, 7, AccountInfo[playerid][aEMail]);
-		cache_get_value_index_int(0, 8, AccountInfo[playerid][aZPoints]);
-		cache_get_value_index_int(0, 9, AccountInfo[playerid][aCharactersSlot]);
-		cache_get_value_index_int(0, 10, AccountInfo[playerid][aBanned]);
-		cache_get_value_index_int(0, 11, AccountInfo[playerid][aBanExpiry]);
-		cache_get_value_index_int(0, 13, AccountInfo[playerid][aLevel]);
-		cache_get_value_index_int(0, 14, AccountInfo[playerid][aPayDay]);
-		return 1;
-	}
-	return 0;
 }
 
 stock Account_Save(playerid)
@@ -191,116 +157,29 @@ stock Account_Save(playerid)
 	   return 0;
     new query[512];
     mysql_format(gMySQL, query, sizeof(query), "UPDATE `accounts` SET \
-		Admin = '%d', \
-		Premium = '%d', PremiumExpiry = '%d', \
-		CharactersCounter = '%d', \
-		EMail = '%e', \
-		CharactersSlot = '%d', \
-		Banned = '%d', \
-		BanExpiry = '%d', \
-		Level = '%d', \
-		PayDay = '%d' \
-		WHERE ID = '%d'", 
+		admin_level = '%d', \
+		premium = '%d', premium_expiry = '%d', \
+		characters_counter = '%d', \
+		email = '%e', \
+		characters_slot = '%d', \
+		banned = '%d', \
+		ban_expiry = '%d', \
+		level = '%d', \
+		payday = '%d' \
+		WHERE id = '%d'", 
 		Account_GetAdminLevel(playerid), 
 		Account_GetPremiumLevel(playerid), Account_GetPremiumExpiry(playerid),
 		Account_GetCharactersCount(playerid), 
-		AccountInfo[playerid][aEMail],
+		Account_GetEMail(playerid),
 		Account_GetCharactersSlot(playerid),
 		Account_IsBanned(playerid),
 		Account_GetBanExpiry(playerid),
 		Account_GetLevel(playerid),
-		AccountInfo[playerid][aPayDay],
+		Account_GetPayDay(playerid),
 		Account_GetID(playerid));
     
     mysql_tquery(gMySQL, query);
     return 1;
-}
-
-stock Account_SaveZPoints(playerid)
-{
-	new query[256];
-	mysql_format(gMySQL, query, sizeof(query), "UPDATE `accounts` SET ZPoints = '%d' WHERE ID = '%d'", 
-				Account_GetZPoints(playerid), Account_GetID(playerid));
-    
-    mysql_tquery(gMySQL, query);
-}
-
-stock Account_SaveRewards(playerid)
-{
-	new query[512];
-	mysql_format(gMySQL, query, sizeof(query), "INSERT INTO `account_rewards` \
-			(AccountID, ChangeName, BlockPM, BlockOOC) \
-			VALUES('%d', '%d', '%d', '%d') \
-			ON DUPLICATE KEY UPDATE \
-			ChangeName = VALUES(ChangeName), \
-			BlockPM = VALUES(BlockPM), \
-			BlockOOC = VALUES(BlockOOC)",
-			Account_GetID(playerid),
-			PlayerRewardData[playerid][rChangeName],
-			PlayerRewardData[playerid][rBlockPM],
-			PlayerRewardData[playerid][rBlockOOC]);
-    
-    mysql_tquery(gMySQL, query);
-}
-
-stock Account_LoadRewards(playerid)
-{
-	inline OnLoad()
-	{
-		if(cache_num_rows() > 0)
-		{
-			cache_get_value_index_int(0, 1, PlayerRewardData[playerid][rChangeName]);
-			cache_get_value_index_int(0, 2, PlayerRewardData[playerid][rBlockPM]);
-			cache_get_value_index_int(0, 3, PlayerRewardData[playerid][rBlockOOC]);
-		}
-	}
-	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `account_rewards` WHERE AccountID = '%d'", Account_GetID(playerid));
-}
-
-stock Account_ShowCharactersList(playerid)
-{
-    if(!Account_IsLogged(playerid))
-	   return 0;
-
-    inline OnLoad()
-    {
-		new count;
-		cache_get_row_count(count);
-
-		if(cache_num_rows() == 0)
-		{
-			gCharacterCreationStep{playerid} = 0;
-			Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Crea nuovo personaggio", "Attualmente non risultano personaggi creati!\nPer poter giocare, devi disporre di un personaggio.\nInserisci il nome del nuovo personaggio.\nEsempio: Mario Rossi", "Ok", "");
-			return 1;
-		}
-
-		new
-			list[24 * MAX_CHARACTERS] = "",
-			nameTemp[24];
-
-		if(count > MAX_CHARACTERS)
-			count = MAX_CHARACTERS;
-
-		for(new i = 0; i < count; ++i)
-		{
-			cache_get_value_index_int(i, 0, AccountInfo[playerid][aCharacters][i]);
-			cache_get_value_index(i, 1, nameTemp, sizeof(nameTemp));
-			format(list, sizeof(list), "%s%s\n", list, nameTemp);
-	   	}
-	   	return Dialog_Show(playerid, Dialog_CharacterSelect, DIALOG_STYLE_LIST, "Gestione Personaggi", "%s", "Utilizza", "Altro", list);
-    }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT ID, Name FROM characters WHERE AccountID = '%d'", AccountInfo[playerid][aID]);
-    return 1;
-}
-
-// Resets all variables created for CharacterCreationSteps
-stock CharacterCreation_Reset(playerid)
-{
-    gCharacterCreationStep{playerid} = -1;
-    DeletePVar(playerid, "NewCharacter_Sex");
-    DeletePVar(playerid, "NewCharacter_Age");
-    DeletePVar(playerid, "NewCharacter_Name");
-    DeletePVar(playerid, "DeleteCharacter_Code");
 }
 
 timer LoginKickTimer[1000 * 60](playerid) 
@@ -318,7 +197,7 @@ stock Account_GetNameFromDatabase(accountdbid)
 	if(accountdbid > 0)
 	{
 		new query[76];
-		mysql_format(gMySQL, query, sizeof(query), "SELECT Name FROM `accounts` WHERE ID = '%d';", accountdbid);
+		mysql_format(gMySQL, query, sizeof(query), "SELECT name FROM `accounts` WHERE id = '%d';", accountdbid);
 		new Cache:cache = mysql_query(gMySQL, query, true);
 		if(cache_num_rows() > 0)
 		{
@@ -327,4 +206,243 @@ stock Account_GetNameFromDatabase(accountdbid)
 		cache_delete(cache);
 	}
 	return tmpName;
+}
+
+stock LoadAccountData(playerid)
+{
+	if(cache_num_rows() > 0)
+	{
+		cache_get_value_index_int(0, 0, AccountInfo[playerid][ID]);
+		cache_get_value_index(0, 1, AccountName[playerid]);
+		cache_get_value_index_int(0, 3, AccountInfo[playerid][Admin]);
+		cache_get_value_index_int(0, 4, AccountInfo[playerid][Premium]);
+		cache_get_value_index_int(0, 5, AccountInfo[playerid][PremiumExpiry]);
+		cache_get_value_index_int(0, 6, AccountInfo[playerid][CharactersCount]);
+		cache_get_value_index(0, 7, AccountEMail[playerid]);
+		cache_get_value_index_int(0, 8, AccountInfo[playerid][CharactersSlot]);
+		cache_get_value_index_int(0, 9, AccountInfo[playerid][Banned]);
+		cache_get_value_index_int(0, 10, AccountInfo[playerid][BanExpiry]);
+		cache_get_value_index_int(0, 11, AccountInfo[playerid][Level]);
+		cache_get_value_index_int(0, 12, AccountInfo[playerid][PayDay]);
+		return 1;
+	}
+	return 0;
+}
+
+// ======================= ACCESSORS ========================================
+
+stock Account_ResetBitState(playerid)
+{
+	for(new i = 0; e_Bit1_AccountData:i < e_Bit1_AccountData; i++)
+	{
+		Bit_Set(gAccountBitState[e_Bit1_AccountData:i], playerid, false);
+	}
+}
+
+stock Account_GetName(playerid)
+{
+	return AccountName[playerid];
+}
+
+stock Account_SetEMail(playerid, email[])
+{
+	format(AccountEMail[playerid], 255, "%s", email);
+	return 1;
+}
+
+stock Account_GetEMail(playerid)
+{
+	return AccountEMail[playerid];
+}
+
+stock Account_GetPayDay(playerid)
+{
+	return AccountInfo[playerid][PayDay];
+}
+
+stock Account_AddPayDay(playerid, add)
+{
+	AccountInfo[playerid][PayDay] += add;
+}
+
+stock Account_SetLogged(playerid, bool:logged)
+{
+	Bit_Set(gAccountBitState[e_pAccountLogged], playerid, logged);
+}
+
+stock Account_IsLogged(playerid)
+{
+	return Bit_Get(gAccountBitState[e_pAccountLogged], playerid);
+}
+
+stock Account_SetPMAllEnabled(playerid, bool:enable)
+{
+	Bit_Set(gAccountBitState[e_pTogglePMAll], playerid, !enable);
+}
+
+stock Account_HasPMAllEnabled(playerid)
+{
+	return !Bit_Get(gAccountBitState[e_pTogglePMAll], playerid);
+}
+
+stock Account_SetHUDEnabled(playerid, bool:enable)
+{
+	Bit_Set(gAccountBitState[e_pToggleHUD], playerid, !enable);
+}
+
+stock Account_HasHUDEnabled(playerid)
+{
+	return !Bit_Get(gAccountBitState[e_pToggleHUD], playerid);
+}
+
+stock Account_SetOOCEnabled(playerid, bool:enable)
+{
+	Bit_Set(gAccountBitState[e_pToggleOOCAll], playerid, !enable);
+}
+
+stock Account_HasOOCEnabled(playerid)
+{
+	return !Bit_Get(gAccountBitState[e_pToggleOOCAll], playerid);
+}
+
+stock Account_HasOOCEnabledForPlayer(playerid, targetid)
+{
+	return !Iter_Contains(pToggleOOC[playerid], targetid);
+}
+
+stock Account_SetHotKeysEnabled(playerid, bool:enable)
+{
+	Bit_Set(gAccountBitState[e_pHotKeys], playerid, enable);
+}
+
+stock Account_HasHotKeysEnabled(playerid)
+{
+	return Bit_Get(gAccountBitState[e_pHotKeys], playerid);
+}
+
+stock Account_SetInvModeEnabled(playerid, bool:enable)
+{
+	Bit_Set(gAccountBitState[e_pInvMode], playerid, enable);
+}
+
+stock Account_HasInvModeEnabled(playerid)
+{
+	return Bit_Get(gAccountBitState[e_pInvMode], playerid);
+}
+
+stock Account_SetAdminDuty(playerid, bool:enable)
+{
+	Bit_Set(gAccountBitState[e_pAdminDuty], playerid, enable);
+}
+
+stock Account_IsAdminDuty(playerid)
+{
+	return Bit_Get(gAccountBitState[e_pAdminDuty], playerid);
+}
+
+stock Account_SetSupporterDuty(playerid, bool:enable)
+{
+	Bit_Set(gAccountBitState[e_pSupporterDuty], playerid, enable);
+}
+
+stock Account_IsSupporterDuty(playerid)
+{
+	return Bit_Get(gAccountBitState[e_pSupporterDuty], playerid);
+}
+
+stock Account_GetID(playerid)
+{
+	return AccountInfo[playerid][ID];
+}
+
+stock Account_SetAdminLevel(playerid, level)
+{
+	AccountInfo[playerid][Admin] = level;
+}
+
+stock Account_GetAdminLevel(playerid)
+{
+	return AccountInfo[playerid][Admin];
+}
+
+stock Account_SetPremiumLevel(playerid, level)
+{
+	AccountInfo[playerid][Premium] = level;
+}
+
+stock Account_GetPremiumLevel(playerid)
+{
+	return AccountInfo[playerid][Premium];
+}
+
+stock Account_SetPremiumExpiry(playerid, time)
+{
+	AccountInfo[playerid][PremiumExpiry] = time;
+}
+
+stock Account_GetPremiumExpiry(playerid)
+{
+	return AccountInfo[playerid][PremiumExpiry];
+}
+
+stock Account_GetCharactersSlot(playerid)
+{
+	return AccountInfo[playerid][CharactersSlot];
+}
+
+stock Account_SetCharactersSlot(playerid, setValue)
+{
+	AccountInfo[playerid][CharactersSlot] = setValue;
+}
+
+stock Account_IncreaseCharactersSlot(playerid, amount)
+{
+	AccountInfo[playerid][CharactersSlot] += amount;
+}
+
+stock Account_GetCharactersCount(playerid)
+{
+	return AccountInfo[playerid][CharactersCount];
+}
+
+stock Account_AddCharactersCount(playerid, add)
+{
+	AccountInfo[playerid][CharactersCount] += add;
+}
+
+stock Account_SetBanned(playerid, ban)
+{
+	AccountInfo[playerid][Banned] = ban;
+}
+
+stock Account_IsBanned(playerid)
+{
+	return AccountInfo[playerid][Banned];
+}
+
+stock Account_SetBanExpiry(playerid, time)
+{
+	AccountInfo[playerid][BanExpiry] = time;
+}
+
+stock Account_GetBanExpiry(playerid)
+{
+	return AccountInfo[playerid][BanExpiry];
+}
+
+stock Account_SetLevel(playerid, level)
+{
+	AccountInfo[playerid][Level] = level;
+	SetPlayerScore(playerid, level);
+	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET level = '%d' WHERE id = '%d'", level, Account_GetID(playerid));
+}
+
+stock Account_IncreaseLevel(playerid, amount)
+{
+	Account_SetLevel(playerid, Account_GetLevel(playerid) + amount);
+}
+
+stock Account_GetLevel(playerid)
+{
+	return AccountInfo[playerid][Level];
 }

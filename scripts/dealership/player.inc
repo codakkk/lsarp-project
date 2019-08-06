@@ -77,7 +77,7 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementId, E_ELEMENT_TYPE:type)
     if(type != ELEMENT_TYPE_DEALERSHIP)
 	   return 1;
     new dealership_id = elementId;
-    if(AccountInfo[playerid][aAdmin] > 1)
+    if(Account_GetAdminLevel(playerid) > 1)
     {
 	   new string[64];
 	   format(string, sizeof(string), "~g~%s~w~ [%d]", DealershipInfo[dealership_id][dsName], dealership_id);

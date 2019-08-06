@@ -12,10 +12,10 @@ CMD:fazione(playerid, params[])
 	if(!Character_IsFactionOOCEnabled(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Hai disabilitato la chat OOC di fazione. Per attivarla usa /tog (f)chat");
 	
-	new String:string = str_format("(( [FAZIONE]: %S %s (%d): %s ))", 
-		Faction_GetRankNameStr(factionid, Character_GetRank(playerid)-1), 
-		Character_GetOOCName(playerid), 
-		playerid, params);
+	new rankName[16];
+	Faction_GetRankName(factionid, Character_GetRank(playerid), rankName);
+	new String:string = str_format("(( [FAZIONE]: %s %s (%d): %s ))", 
+		rankName, Character_GetOOCName(playerid), playerid, params);
 	Faction_SendMessageStr(factionid, COLOR_SLATEBLUE, string);
 	return 1;
 }
@@ -25,12 +25,12 @@ alias:fazione("f");
 flags:fcreate(CMD_DEVELOPER);
 CMD:fcreate(playerid, params[])
 {
-	new type, name[32], shortName[8];
+	new type, name[MAX_FACTION_NAME], shortName[MAX_FACTION_SHORT_NAME];
 	if(sscanf(params, "ds[8]s[32]", type, shortName, name))
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "/fcreate <type> <short name> <name>");
-		SendClientMessage(playerid, COLOR_ERROR, "[TIPI]: 1: Forze dell'ordine - 2: Medico - 3: Governo - 4: Illegale Import Armi - 5: Illegale Import Droga");
-		return SendClientMessage(playerid, COLOR_ERROR, "[TIPI]: 6: Importo Cibo - 7: Altro");
+		SendClientMessage(playerid, COLOR_ERROR, "[TIPI]: 0: Forze dell'ordine - 1: Medico - 2: Governo - 3: Illegale Import Armi - 4: Illegale Import Droga");
+		return SendClientMessage(playerid, COLOR_ERROR, "[TIPI]: 4: Importo Cibo - 6: Altro");
 	}
 
 	if(type < 0 || type >= FACTION_TYPE_LAST)
@@ -40,16 +40,16 @@ CMD:fcreate(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "[TIPI]: 5: Importo Cibo - 6: Altro");
 	}
 
-	if(strlen(name) < 4 || strlen(name) > 32)
-		return SendClientMessage(playerid, COLOR_ERROR, "Il nome della fazione non puo' essere più lungo di 32 caratteri e più corto di 4 caratteri.");
+	if(strlen(name) < 4 || strlen(name) > MAX_FACTION_NAME)
+		return SendFormattedMessage(playerid, COLOR_ERROR, "Il nome della fazione non puo' essere più lungo di %d caratteri e più corto di 4 caratteri.", MAX_FACTION_NAME);
 
-	if(strlen(shortName) < 3 || strlen(shortName) > 8)
-		return SendClientMessage(playerid, COLOR_ERROR, "L'acronimo della fazione non puo' essere più lungo di 8 caratteri e più corto di 3 caratteri.");
+	if(strlen(shortName) < 3 || strlen(shortName) > MAX_FACTION_SHORT_NAME)
+		return SendFormattedMessage(playerid, COLOR_ERROR, "L'acronimo della fazione non puo' essere più lungo di %d caratteri e più corto di 3 caratteri.", MAX_FACTION_SHORT_NAME);
 
 	Faction_Create(name, shortName, type);
 
-	SendMessageToAdmins(true, COLOR_YELLOW, "[ADMIN-ALERT]: %s (%d) ha creato una nuova fazione. (Tipo: %d)", AccountInfo[playerid][aName], playerid, type);
-	Log(AccountInfo[playerid][aName], "", "/fcreate");
+	SendMessageToAdmins(true, COLOR_YELLOW, "[ADMIN-ALERT]: %s (%d) ha creato una nuova fazione. (Tipo: %d)", Account_GetName(playerid), playerid, type);
+	Log(Account_GetName(playerid), "", "/fcreate");
 	return 1;
 }
 
@@ -66,9 +66,11 @@ CMD:fedit(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "La fazione inserita non è valida o non è inizializzata.");
 	if(!strcmp(what, "spawn", true))
 	{
-		SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato le coordinate di spawn per la fazione %s qui.", FactionInfo[factionid][fName]);
-		SendMessageToAdmins(false, COLOR_ORANGE, "L'admin %s ha spostato le coordinate di spawn per la fazione %s (ID: %d).", AccountInfo[playerid][aName], FactionInfo[factionid][fName], factionid);
-		Log(AccountInfo[playerid][aName], "", "/fedit <spawn>", factionid);
+		new name[MAX_FACTION_NAME];
+		Faction_GetName(factionid, name);
+		SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato le coordinate di spawn per la fazione %s qui.", name);
+		SendMessageToAdmins(false, COLOR_ORANGE, "L'admin %s ha spostato le coordinate di spawn per la fazione %s (ID: %d).", Account_GetName(playerid), name, factionid);
+		Log(Account_GetName(playerid), "", "/fedit <spawn>", factionid);
 		new Float:x, Float:y, Float:z;
 		GetPlayerPos(playerid, x, y, z);
 
@@ -82,11 +84,11 @@ CMD:fedit(playerid, params[])
 flags:afactioncmds(CMD_DEVELOPER);
 CMD:afactioncmds(playerid, params[])
 {
-	SendClientMessage(playerid, COLOR_GREEN, "[FAZIONI]: /fcreate - /fedit - /afactionslist");
+	SendClientMessage(playerid, COLOR_GREEN, "[FAZIONI]: /fcreate - /fedit - /afactionskin - /afactionslist");
 	return 1;
 }
 
-flags:setfaction(CMD_ADMIN);
+flags:setfaction(CMD_MODERATOR);
 CMD:setfaction(playerid, params[])
 {
 	new id, factionid, rankid;
@@ -98,19 +100,49 @@ CMD:setfaction(playerid, params[])
 	}
 	if(!Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
+
 	if(!Faction_IsValid(factionid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Fazione non valida! Usa /afactionslist per una lista completa.");
-	if(rankid < 1 || rankid > 10)
-		return SendClientMessage(playerid, COLOR_ERROR, "Rank non valido. (1 - 10)");
+		return SendClientMessage(playerid, COLOR_ERROR, "Fazione non valida. Usa /afactionslist per una lista completa.");
+
+	if(!Faction_HasRank(factionid, rankid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Rank non valido.");
+	
 	Character_SetFaction(id, factionid);
 	Character_SetRank(id, rankid);
-	SendClientMessageStr(id, COLOR_GREEN, str_format("%s (%d) ti ha settato nella fazione %S.", AccountInfo[playerid][aName], playerid, Faction_GetNameStr(factionid)));
-	SendMessageToAdminsStr(0, COLOR_YELLOW, str_format("[ADMIN-ALERT] %s (%d) ha settato %s (%d) nella fazione %S.", AccountInfo[playerid][aName], playerid, Character_GetOOCName(id), id, Faction_GetNameStr(factionid)));
+
+	new name[MAX_FACTION_NAME];
+	Faction_GetName(factionid, name);
+
+	SendFormattedMessage(id, COLOR_GREEN, "%s (%d) ti ha settato nella fazione %s.", Account_GetName(playerid), playerid, name);
+	SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%d) ha settato %s (%d) nella fazione %s.", Account_GetName(playerid), playerid, Character_GetOOCName(id), id, name);
+	
 	Character_Save(id);
 	return 1;
 }
 
-flags:afactionslist(CMD_ADMIN);
+flags:factionkick(CMD_MODERATOR);
+CMD:factionkick(playerid, params[])
+{
+	new id, factionid, rankid;
+	if(sscanf(params, "k<u>dd", id, factionid, rankid))
+	{
+		SendClientMessage(playerid, COLOR_ERROR, "/factionkick <playerid/partofname>");
+		SendClientMessage(playerid, COLOR_ERROR, "Usa /afactionslist per una lista completa.");
+		return 1;	
+	}
+	if(!Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
+	if(Character_GetFaction(playerid) == INVALID_FACTION_ID)
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è in una fazione.");
+	Character_SetFaction(id, INVALID_FACTION_ID);
+	Character_SetRank(id, 0);
+	SendClientMessageStr(id, COLOR_GREEN, str_format("%s (%d) ti ha kickato dalla tua fazione.", Account_GetName(playerid), playerid));
+	SendMessageToAdminsStr(0, COLOR_YELLOW, str_format("[ADMIN-ALERT] %s (%d) ha kickato %s (%d) dalla sua fazione.", Account_GetName(playerid), playerid, Character_GetOOCName(id), id));
+	Character_Save(id);
+	return 1;
+}
+
+flags:afactionslist(CMD_MODERATOR);
 CMD:afactionslist(playerid, params[])
 {
 	return Faction_ShowList(playerid, false);

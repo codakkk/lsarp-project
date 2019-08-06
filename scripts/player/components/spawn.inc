@@ -1,5 +1,9 @@
 #include <YSI_Coding\y_hooks>
 
+#define DEFAULT_SPAWN_X 		1723.3232 
+#define DEFAULT_SPAWN_Y 		-1867.1775
+#define DEFAULT_SPAWN_Z 		13.5705
+
 enum
 {
 	SPAWN_POINT_TYPE_NONE = 0,
@@ -8,23 +12,49 @@ enum
 	SPAWN_POINT_TYPE_BUSINESS = 3
 }
 
-/*enum e_SPAWN_POINT
+static enum E_PLAYER_SPAWN_DATA
 {
-	spType,
-	spID
-}
-
+	Float:SpawnX,
+	Float:SpawnY,
+	Float:SpawnZ,
+	Float:SpawnA,
+	SpawnInterior,
+	SpawnVirtualWorld,
+    Float:LastX,
+    Float:LastY,
+    Float:LastZ,
+    Float:LastA,
+    LastInterior,
+    LastVirtualWorld,
+};
 static 
-	SpawnPoint[MAX_PLAYERS][e_SPAWN_POINT];*/// = {SPAWN_POINT_TYPE_NONE, ...};
+	PlayerSpawnData[MAX_PLAYERS][E_PLAYER_SPAWN_DATA],
+	CleanSpawnData[E_PLAYER_SPAWN_DATA],
 
-static 
+	bool:IsSpawned[MAX_PLAYERS char] = {false, ...},
+	bool:IsFirstSpawn[MAX_PLAYERS char] = {false, ...},
 	SpawnPoint[MAX_PLAYERS char] = {SPAWN_POINT_TYPE_NONE, ...},
-	SpawnPointExtraID[MAX_PLAYERS] = {-1, ...};
+	SpawnPointExtraID[MAX_PLAYERS] = {-1, ...}
+;
 
 hook OnPlayerClearData(playerid)
 {
+	IsSpawned{playerid} = IsFirstSpawn{playerid} = false;
 	SpawnPoint{playerid} = SPAWN_POINT_TYPE_NONE;
 	SpawnPointExtraID[playerid] = -1;
+	PlayerSpawnData[playerid] = CleanSpawnData;
+	return 1;
+}
+
+hook OnCharacterCreated(playerid, character_db_id)
+{
+	mysql_tquery_f(gMySQL, "INSERT INTO `character_spawn_data` (character_id, is_first_spawn, spawn_x, spawn_y, spawn_z, spawn_a, spawn_interior, spawn_world) VALUES('%d', 1, '%f', '%f', '%f', '0.0', '0', '0')", character_db_id, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
+	return 1;
+}
+
+hook OnCharacterLoad(playerid)
+{
+	Character_LoadSpawnData(playerid);
 	return 1;
 }
 
@@ -77,26 +107,30 @@ CMD:spawntest(playerid, params[])
 
 stock Character_HandleFirstSpawn(playerid)
 {
-	PlayerRestore[playerid][pFirstSpawn] = 0;
+	if(!IsFirstSpawn{playerid})
+		return 0;
+	
+	IsFirstSpawn{playerid} = false;
 
 	Character_SetSkin(playerid, 46);
 
 	SetPlayerPos(playerid, 1748.1887, -1860.0414, 13.5792);
-
-	if(AccountInfo[playerid][aCharactersCount] <= 2)
+	
+	if(Account_GetCharactersCount(playerid) <= 2)
 	{
+		new count = Account_GetCharactersCount(playerid);
 		static const characterFirstLoginMoney[] = {30000, 20000, 10000};
-		Character_GiveMoney(playerid, characterFirstLoginMoney[AccountInfo[playerid][aCharactersCount]], "FirstSpawn");
-		SendFormattedMessage(playerid, -1, "(( Ti sono stati dati {85bb65}$%d{FFFFFF} per cominciare. ))", characterFirstLoginMoney[AccountInfo[playerid][aCharactersCount]]);
+		Character_GiveMoney(playerid, characterFirstLoginMoney[count], "FirstSpawn");
+		SendFormattedMessage(playerid, -1, "(( Ti sono stati dati {85bb65}$%d{FFFFFF} per cominciare. ))", characterFirstLoginMoney[count]);
 	}
 	
 	new query[128];
-	mysql_format(gMySQL, query, sizeof(query), "UPDATE `characters` SET FirstSpawn = '0' WHERE ID = '%d'", PlayerInfo[playerid][pID]);
+	mysql_format(gMySQL, query, sizeof(query), "UPDATE `character_spawn_data` SET is_first_spawn = '0' WHERE character_id = '%d'", Character_GetID(playerid));
 	mysql_tquery(gMySQL, query);
 
-	AccountInfo[playerid][aCharactersCount]++;
-	
-	mysql_format(gMySQL, query, sizeof(query), "UPDATE `accounts` SET CharactersCounter = '%d' WHERE ID = '%d'", AccountInfo[playerid][aCharactersCount], AccountInfo[playerid][aID]);
+	Account_AddCharactersCount(playerid, 1);
+
+	mysql_format(gMySQL, query, sizeof(query), "UPDATE `accounts` SET characters_counter = '%d' WHERE id = '%d'", Account_GetCharactersCount(playerid), Account_GetID(playerid));
 	mysql_tquery(gMySQL, query);
 
 	Character_Save(playerid);
@@ -114,7 +148,7 @@ stock Character_Spawn(playerid)
 {
 	PreloadAnimations(playerid);
 	#if defined LSARP_DEBUG
-		if(!Account_IsAdminDuty(playerid) && !strcmp(AccountInfo[playerid][aName], "Coda", false))
+		if(!Account_IsAdminDuty(playerid) && !strcmp(Account_GetName(playerid), "Coda", false))
 		{
 			pc_cmd_aduty(playerid, "");
 		}
@@ -125,7 +159,7 @@ stock Character_Spawn(playerid)
 
 	Character_FreezeForTime(playerid, 2000);
 
-	if(PlayerRestore[playerid][pFirstSpawn]) // First Login/Spawn
+	if(IsFirstSpawn{playerid}) // First Login/Spawn
     {
 		Character_HandleFirstSpawn(playerid);
     }
@@ -134,13 +168,13 @@ stock Character_Spawn(playerid)
 		Character_SetToJailPos(playerid);
 		PlayerTextDrawShow(playerid, pJailTimeText[playerid]);
 	}
-    else if(PlayerRestore[playerid][pSpawned] && PlayerRestore[playerid][pLastX] != 0 && PlayerRestore[playerid][pLastY] != 0 && PlayerRestore[playerid][pLastZ] != 0)
+    else if(IsSpawned{playerid} && PlayerSpawnData[playerid][LastX] != 0.0 && PlayerSpawnData[playerid][LastY] != 0.0 && PlayerSpawnData[playerid][LastZ] != 0.0)
     {
-		PlayerRestore[playerid][pSpawned] = 0;
-		SetPlayerPos(playerid, PlayerRestore[playerid][pLastX], PlayerRestore[playerid][pLastY], PlayerRestore[playerid][pLastZ]);
-		SetPlayerFacingAngle(playerid, PlayerRestore[playerid][pLastAngle]);
-		SetPlayerInterior(playerid, PlayerRestore[playerid][pLastInterior]);
-		Character_SetVirtualWorld(playerid, PlayerRestore[playerid][pLastVirtualWorld]);
+		IsSpawned{playerid} = false;
+		SetPlayerPos(playerid, PlayerSpawnData[playerid][LastX], PlayerSpawnData[playerid][LastY], PlayerSpawnData[playerid][LastZ]);
+		SetPlayerFacingAngle(playerid, PlayerSpawnData[playerid][LastA]);
+		SetPlayerInterior(playerid, PlayerSpawnData[playerid][LastInterior]);
+		Character_SetVirtualWorld(playerid, PlayerSpawnData[playerid][LastVirtualWorld]);
 		defer LoadCharacterDataAfterTime(playerid);
     }
     else
@@ -172,7 +206,7 @@ stock Character_Spawn(playerid)
 		}
 		else
 		{
-			SetPlayerPos(playerid, 1723.3232, -1867.1775, 13.5705);
+			SetPlayerPos(playerid, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
 			SetPlayerInterior(playerid, 0);
 			Character_SetVirtualWorld(playerid, 0);
 		}
@@ -212,4 +246,55 @@ stock Character_GetSpawnPointExtraID(playerid)
 stock Character_GetSpawnPoint(playerid)
 {
 	return SpawnPoint{playerid};
+}
+
+static Character_SaveSpawnData(playerid)
+{
+	return 1;
+}
+
+static Character_LoadSpawnData(playerid)
+{
+	inline OnLoad()
+	{
+		new 
+			rows = cache_num_rows(),
+			temp = 0
+		;
+
+		if(rows <= 0)
+		{
+			mysql_tquery_f(gMySQL, "INSERT INTO `character_spawn_data` (character_id, is_first_spawn) VALUES('%d', 0)", Character_GetID(playerid));
+			return 1;
+		}
+
+		cache_get_value_index_int(0, 1, temp);
+		IsFirstSpawn{playerid} = temp ? true : false;
+
+		cache_get_value_index_int(0, 2, temp);
+		IsSpawned{playerid} = temp ? true : false;
+
+		cache_get_value_index_float(0, 3, PlayerSpawnData[playerid][LastX]);
+		cache_get_value_index_float(0, 4, PlayerSpawnData[playerid][LastY]);
+		cache_get_value_index_float(0, 5, PlayerSpawnData[playerid][LastZ]);
+		cache_get_value_index_float(0, 6, PlayerSpawnData[playerid][LastA]);
+		cache_get_value_index_int(0, 7, PlayerSpawnData[playerid][LastInterior]);
+		cache_get_value_index_int(0, 8, PlayerSpawnData[playerid][LastVirtualWorld]);
+
+		cache_get_value_index_float(0, 9, PlayerSpawnData[playerid][SpawnX]);
+		cache_get_value_index_float(0, 10, PlayerSpawnData[playerid][SpawnY]);
+		cache_get_value_index_float(0, 11, PlayerSpawnData[playerid][SpawnZ]);
+		cache_get_value_index_float(0, 12, PlayerSpawnData[playerid][SpawnA]);
+		cache_get_value_index_int(0, 13, PlayerSpawnData[playerid][SpawnInterior]);
+		cache_get_value_index_int(0, 14, PlayerSpawnData[playerid][SpawnVirtualWorld]);
+	
+	}
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `character_spawn_data` WHERE character_id = '%d'", Character_GetID(playerid));
+	return 1;
+}
+
+timer LoadCharacterDataAfterTime[2000](playerid)
+{
+	
+	CallLocalFunction("OnCharacterLateLoad", "d", playerid);
 }

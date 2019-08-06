@@ -10,7 +10,6 @@ new Text:txtAnimHelper,
 
 
 new
-	Timer:gLoginTimer[MAX_PLAYERS],
 	MoneyTimer[MAX_PLAYERS],
 	bool:pInfoBoxShown[MAX_PLAYERS char],
 	gLoginAttempts[MAX_PLAYERS char],

@@ -1,9 +1,12 @@
 #include <YSI_Coding\y_hooks>
 
-static Timer:pChatTimer[MAX_PLAYERS];
+static 
+	PlayerChatStyle[MAX_PLAYERS char],
+	Timer:pChatTimer[MAX_PLAYERS];
 
 hook OnPlayerClearData(playerid)
 {
+	PlayerChatStyle{playerid} = 0;
 	stop pChatTimer[playerid];
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
@@ -74,4 +77,18 @@ timer StopChatAnim[150 * len](playerid, len)
 	ApplyAnimation(playerid, "CARRY", "crry_prtial", 4.0, 0, 0, 0, 0, 0, 1);
 	stop pChatTimer[playerid];
 	pChatTimer[playerid] = Timer:0;
+}
+
+stock Character_SetChatStyle(playerid, style)
+{
+	if(!Character_IsLogged(playerid))
+		return 0;
+	PlayerChatStyle{playerid} = style;
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET chat_style = '%d' WHERE id = '%d'", Character_GetChatStyle(playerid), Character_GetID(playerid));
+	return 1;
+}
+
+stock Character_GetChatStyle(playerid)
+{
+	return PlayerChatStyle{playerid};
 }

@@ -12,6 +12,12 @@ hook OnCharacterSaveData(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
+hook OnCharacterLateLoad(playerid)
+{
+	Character_LoadWeapons(playerid);
+	return 1;
+}
+
 stock Character_SaveWeapons(playerid)
 {
 	mysql_tquery(gMySQL, "START TRANSACTION;");

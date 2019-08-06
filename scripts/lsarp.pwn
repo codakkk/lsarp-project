@@ -140,10 +140,8 @@ DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
 
 #include <server\core>
 //#include <anticheat\enum>
-#include <account_system\enum>
 #include <drop_system\enum>
 #include <player\enum>
-#include <vehicles\enum>
 #include <admin\enum>
 #include <dealership\enum>
 #include <inventory\enum>
@@ -177,12 +175,12 @@ DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
 #include <utils\utils>
 #include <utils\maths>
 
-
-#include <callbacks>
-
 //#include <anticheat\cheats\triggerbot>
 
 #include <YSI_Coding\y_hooks> // Place hooks after this. Everything included before this, is hooked first.
+
+
+forward OnCharacterDamageDone(playerid, Float:amount, issuerid, weaponid, bodypart);
 
 
 main()
@@ -217,8 +215,6 @@ hook OnGameModeInit()
 	// /lasciacarcere
 	Pickup_Create(1239, 0, 2649.7790, -1948.9510, -58.7273, ELEMENT_TYPE_JAIL_EXIT, .worldid = -1, .interiorid = 0);
 	CreateDynamic3DTextLabel("/lasciacarcere", COLOR_BLUE, 2649.7790, -1948.9510, -58.7273 + 0.55, 20.0, .worldid = -1, .interiorid = 0);
-
-	House_LoadAll();
 
 	Streamer_TickRate(30);
 	//Streamer_SetVisibleItems(STREAMER_TYPE_OBJECT, 900);
@@ -275,8 +271,6 @@ public OnPlayerDeath(playerid, killerid, reason)
 	return 1;
 }
 
-forward OnCharacterDamageDone(playerid, Float:amount, issuerid, weaponid, bodypart);
-
 
 public OnPlayerDamageDone(playerid, Float:amount, issuerid, weapon, bodypart)
 {
@@ -292,7 +286,7 @@ public OnPlayerPrepareDeath(playerid, animlib[32], animname[32], &anim_lock, &re
 
 public OnPlayerDamage(&playerid, &Float:amount, &issuerid, &weapon, &bodypart)
 {
-	if(Account_IsAdminDuty(playerid) && AccountInfo[playerid][aAdmin] > 1)
+	if(Account_IsAdminDuty(playerid) && Account_GetAdminLevel(playerid) > 1)
 		return 0;
 	if(Character_IsDead(playerid))
 		return 0;
@@ -319,11 +313,6 @@ hook OnPlayerRequestSpawn(playerid)
     if(!Character_IsLogged(playerid))
 	   return 0;
     return 1;
-}
-
-hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
-{
-	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
 hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ) 
@@ -371,642 +360,17 @@ hook OnPlayerExitVehicle(playerid, vehicleid)
 
 public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 {
+    
 	if(!Character_IsLogged(playerid))
 		return 0;
-	//printf("Packet Loss: %f", NetStats_PacketLossPercent(playerid));
-	//if(NetStats_PacketLossPercent(playerid) > 2.0)
+
+    
 	if(!IsPlayerSynced(playerid) || GetPacketLoss(playerid) > 2.0)
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Non risulti syncato, rilogga per continuare a giocare.");
 		SendClientMessage(playerid, COLOR_ERROR, "Pertanto, alcuni comandi ti sono stati bloccati.");
 		return 0;
 	}
-	/*printf("%s", cmd);
-	static const banned_commands[] = {
-		"/.spam","/r2info","/pos","/placebomb","/detonate","/fakenick", "/fakeskin","/ro","/follow","/safk","/bcinfo","/tpc","/skr","/be_chat","/be_anon","/be_id","/be_name","/name","/connect",
-		"/servers","/ct.slap","/ct.up","/ct.down","/ct.ray","/ct.gh","/vert","/reaper","/training","/troff","/tr","/fr","/.shotrepeater","/.pos","/.flip","/ecol","/tb.cmds","/cfake","/usm","/gjp",
-		"/tc","/find","/cbug","/tb.killall","/tb.slag","/tb.fire","/tb.panic","/tb.flip","/tb.fly","/tb.load","/tb.pop","/tb.color","/tb.ocean","/tb.jack","/tb.tpto","/tb.heaven","/tb.kick",
-		"/tb.ground","/tb.kill","/tb.magnet","/tb.random","/cc","/stopfind","/master","/hmo","/setampl","/kill","/ton","/off","/non","/noff","/spy","/incar","/weap","/sc","/so","/react","/fd","/fb",
-		"/go","/coords","/note","/line","/get","/set","/top","/dgun","/.slp","/.slpv","/.tel","/slapall","/eject","/st","/kc","/rel","/target","/rfast","/rind","/aim","/.addfriend","/.delfriend","/.friends","/tinfo","/trollinfo","/dpos","/r2","/fw","/ccars","/hp","/hpu","/tp","/sm","/showid","/showcarid","/s1","/sswitch","/lag","/col","/fwh","/bm","/reu","/tpall","/hpall","/thr","/small","/smallc","/safe","/ohelp","/oy","/or","/ob","/ov","/og","/ow","/oreset","/opos","/osize","/oalign","/oshowid","/.rec","/.stoprec","/.play","/.stop","/fstop","/sd","/sdpos","/sdsize","/sdalign","/sdflags","/sdzone","/sdping","/sdfps","/aoff","/aafk","/.silentaim","/copdetect","/vhfinder","/vb","/vehiclebugger","/akb","/fdeagle","/wpinfo","/spec","/cardance","/vhinfo","/spinfo","/skin_hack","/ts.troll","/ts.me","/ts.pin","/invis","/rpc","/pkt","/ppoint","/ptracers","/schat","/clearc","/pskin","/csk","/wc","/set_chat","/set_time","/vers","/.e","/visionhelp","/vision1","/vision2","/.cl","/invdon","/.bot_say","/.bot_anim","/.bot_fanim","/gbc","/ak","/.ra","/.range","/.allowwep","/myfind","/matrunbot",
-		"/matrunbothelp","/refresh","/vehiclerecordingloop","/rpay","/kcmds","/hme","/kme","/ufme","/spme","/team","/act","/up","/down","/irun","/fx","/fp","/mynrg","/antibf","/ccolor","/scars","/pcars","/cwater","/spack","/fpack","/ppack","/getw","/ammo","/rw","/rwall","/.ls","/.sf","/.lv","/market","/sl","/lp","/cash","/pinfo","/noint","/fdeath","/fdamage","/.time","/.weather","/rejoin","/be","/nametag","/splayers","/.cc","/ntp","/dnt","/dhp","/awr","/trollskin","/whack","/.w1","/sp","/carc","/carcontrol","/gcc","/cboom","/js","/sfucker","/wh","/afix","/mini","/checkcon","/cp","/setcarhp","/si","/sipos","/sisize","/simax","/uc","/cg","/cgpos","/cgsize","/cgline","/vape","/bcm","/chp","/spc","/coordz","/chelp","/cfind","/cfind2","/creset","/cpos","/csize","/calign","/togptb","/nodrive","/nodrive_looplength","/cn","/cnt","/cnd","/csload","/.comandos","/.mark","/.tp","/.jack","/.up","/.down","/.hme","/.ame","/.gint","/.sint","/.fix","/.getw","/lockstatus","/ireload","/infobar","/iset","/k","/aimka","/df","/witch","/ms","/qq","/tcp","/ggun","/ttp","/setclass","/scar","/sskin","/fkill","/nick","/bs_func","/bs_cmd","/akill","/br","/fskin","/warm","/whelp","/setwep","/slp","/lagon","/lagoff","/adeath","/dstop","/plines","/bc","/bcc","/ctp","/crp","/mrp","/cinfo","/pid",
-		"/cid","/kicker","/attack","/chudpos","/pz_radius","/pz","/gravon","/gravoff","/cgrav","/dgrav","/gravhelp","/hud","/sk","/take","/troll","/write","/co","/.sp","/.w","/rs","/.420","/.fz","/gkick","/nospread","/checkcode","/getmats","/oncemats","/massmatson","/massmatsoff","/goback","/matsmasterhelp","/.goto","/ck","/mow","/kp","/4find","/carhelp","/vr","/ah","/chase","/gun","/ph","/vh","/gc","/cb","/jack","/pjack","/mondie","/x","/autosay","/autosaystop","/autosayreset","/setdelay","/setpoint","/antiafk","/dk","/gh","/sob","/reconnect","/spawncars","/fastspawn","/fuckcars","/ftext","/bubble","/.setcolor","/controlcar","/raininfo","/rain","/rainfew","/count","/rainpos","/carpos","/delpos","/.godmodeon","/.godmodeoff","/clearchate","/editpi","/editpic","/pimod","/.spec","/commander","/getplayerid","/getcarid","/getcoord","/autoshot","/frieze","/stan","/load","/tf","/mp3on","/sgm","/cartp","/carclear","/relog","/fcord","/ncmd","/c1save","/c2save","/c3save","/c4save","/c5save","/c1load","/c2load","/c3load","/c4load","/c5load","/crasher","/mq","/pickup","/rem","/maprecord","/vehiclerecording","/gping",
-		"/c.showcmds","/c.changeserver","/c.currentserver","/c.pickup","/c.skin","/c.name","/c.warp","/c.fakekill","/c.infotr","/c.pos","/c.rs","/c.gskin","/c.uncar","/.cmds","/.friend","/.delfriends","/.ik","/.ib","/.cr","/.c","/.troll","/.pmall","/.fps","/.sd","/.sd2","/.crash","/.bot_ping","/.fake_fps","/.ol_cmds","/.find_chat","/.stop_find","/.bot_nick","/.bot_steal_nick","/.add_friend","/.stick","//stick","//warp","//adm","//friend","//rename","//slap","//skin","//bot_connect","//bot_disconnect","/.addm","/.addf","/cserv","/sendpic","/fakekill","/warp","/vadd","/fpay","/dkick","/gcheck","/boom","/tpm","/vhadd","/retime","/dialoghide","/del","/paint","/getcar","/sendcheck","/shp","/gguns","/gotocheck","/fcuff","/bbiz","/.nick","/.rnick","/.sortmoney","/.search","/.warp","/.pmcrash","/.aimfriend","/.delaimfriend","/.delaimfriends","/.derpcar","/.minigun","/.sendcars","/.incar","/.vsearch","/.vssearch","/.cc_all","/.del_all","/.onfire_all","/.connectbot","/.removebot","/.bot_add","/.bot_remove","/.bot_removeall","/.npc","/.exploit","/clmrad","/ptroll","/carslap","/toggle","/nigger","/fakebulletsync","/syncinvi","/invi","/crashdebug","/crash","/agm","/recfg","/loading","/afakedamage","/togpl","/acheats.ru","/rend","/topic","/toobj","/toveh","/spawncar","/airb","/airp","/pr","/spam","/fkick","/flood","/cm_help","/cm_tp","/cm_tcar","/spectate","/hdialog","/shot","/stazer","/fcheck","/paintjob","/fpick","/ghere","/vehadd","/ghp","/svhp","/ccw","/ucw","/parsenicks","/coordcw","/takecar","/stcar","/lagtroll"
-		};
-	if(strlen(cmd) >= 3)
-	{
-		new f_cmd[32];
-		format(f_cmd, sizeof(f_cmd), "/%s", cmd);
-		for(new i = 0, j = sizeof(banned_commands); i < j; ++i)
-		{
-			if(!strcmp(f_cmd, banned_commands[i]))
-			{
-				SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-ALERT] Il giocatore %s (%d) ha utilizzato un comando proibito. Comando: %s.", Character_GetOOCName(playerid), playerid, cmd);
-				return 0;
-			}
-		}
-	}*/
-	/*switch(YHash(cmdtext, false))
-	{
-        case _I(.,s,p,a,m):
-        case _I(r,2,i,n,f,o):
-        case _I(p,o,s):
-        case _I(p,l,a,c,e,b,o,m,b):
-        case _I(d,e,t,o,n,a,t,e):
-        case _I(f,a,k,e,n,i,c,k):
-        case _I(f,a,k,e,s,k,i,n):
-        case _I(r,o):
-        case _I(f,o,l,l,o,w):
-        case _I(s,a,f,k):
-        case _I(b,c,i,n,f,o):
-        case _I(t,p,c):
-        case _I(s,k,r):
-        case _I(b,e,_,c,h,a,t):
-        case _I(b,e,_,a,n,o,n):
-        case _I(b,e,_,i,d):
-        case _I(b,e,_,n,a,m,e):
-        case _I(n,a,m,e):
-        case _I(c,o,n,n,e,c,t):
-        case _I(s,e,r,v,e,r,s):
-        case _I(c,t,.,s,l,a,p):
-        case _I(c,t,.,u,p):
-        case _I(c,t,.,d,o,w,n):
-        case _I(c,t,.,r,a,y):
-        case _I(c,t,.,g,h):
-        case _I(v,e,r,t):
-        case _I(r,e,a,p,e,r):
-        case _I(t,r,a,i,n,i,n,g):
-        case _I(t,r,o,f,f):
-        case _I(t,r):
-        case _I(f,r):
-        case _I(.,s,h,o,t,r,e,p,e,a,t,e,r):
-        case _I(.,p,o,s):
-        case _I(.,f,l,i,p):
-        case _I(e,c,o,l):
-        case _I(t,b,.,c,m,d,s):
-        case _I(c,f,a,k,e):
-        case _I(u,s,m):
-        case _I(g,j,p):
-        case _I(t,c):
-        case _I(f,i,n,d):
-        case _I(c,b,u,g):
-        case _I(t,b,.,k,i,l,l,a,l,l):
-        case _I(t,b,.,s,l,a,g):
-        case _I(t,b,.,f,i,r,e):
-        case _I(t,b,.,p,a,n,i,c):
-        case _I(t,b,.,f,l,i,p):
-        case _I(t,b,.,f,l,y):
-        case _I(t,b,.,l,o,a,d):
-        case _I(t,b,.,p,o,p):
-        case _I(t,b,.,c,o,l,o,r):
-        case _I(t,b,.,o,c,e,a,n):
-        case _I(t,b,.,j,a,c,k):
-        case _I(t,b,.,t,p,t,o):
-        case _I(t,b,.,h,e,a,v,e,n):
-        case _I(t,b,.,k,i,c,k):
-        case _I(t,b,.,g,r,o,u,n,d):
-        case _I(t,b,.,k,i,l,l):
-        case _I(t,b,.,m,a,g,n,e,t):
-        case _I(t,b,.,r,a,n,d,o,m):
-        case _I(c,c):
-        case _I(s,t,o,p,f,i,n,d):
-        case _I(m,a,s,t,e,r):
-        case _I(h,m,o):
-        case _I(s,e,t,a,m,p,l):
-        case _I(k,i,l,l):
-        case _I(t,o,n):
-        case _I(o,f,f):
-        case _I(n,o,n):
-        case _I(n,o,f,f):
-        case _I(s,p,y):
-        case _I(i,n,c,a,r):
-        case _I(w,e,a,p):
-        case _I(s,c):
-        case _I(s,o):
-        case _I(r,e,a,c,t):
-        case _I(f,d):
-        case _I(f,b):
-        case _I(g,o):
-        case _I(c,o,o,r,d,s):
-        case _I(n,o,t,e):
-        case _I(l,i,n,e):
-        case _I(g,e,t):
-        case _I(s,e,t):
-        case _I(t,o,p):
-        case _I(d,g,u,n):
-        case _I(.,s,l,p):
-        case _I(.,s,l,p,v):
-        case _I(.,t,e,l):
-        case _I(s,l,a,p,a,l,l):
-        case _I(e,j,e,c,t):
-        case _I(s,t):
-        case _I(k,c):
-        case _I(r,e,l):
-        case _I(t,a,r,g,e,t):
-        case _I(r,f,a,s,t):
-        case _I(r,i,n,d):
-        case _I(a,i,m):
-        case _I(.,a,d,d,f,r,i,e,n,d):
-        case _I(.,d,e,l,f,r,i,e,n,d):
-        case _I(.,f,r,i,e,n,d,s):
-        case _I(t,i,n,f,o):
-        case _I(t,r,o,l,l,i,n,f,o):
-        case _I(d,p,o,s):
-        case _I(r,2):
-        case _I(f,w):
-        case _I(c,c,a,r,s):
-        case _I(h,p):
-        case _I(h,p,u):
-        case _I(t,p):
-        case _I(s,m):
-        case _I(s,h,o,w,i,d):
-        case _I(s,h,o,w,c,a,r,i,d):
-        case _I(s,1):
-        case _I(s,s,w,i,t,c,h):
-        case _I(l,a,g):
-        case _I(c,o,l):
-        case _I(f,w,h):
-        case _I(b,m):
-        case _I(r,e,u):
-        case _I(t,p,a,l,l):
-        case _I(h,p,a,l,l):
-        case _I(t,h,r):
-        case _I(s,m,a,l,l):
-        case _I(s,m,a,l,l,c):
-        case _I(s,a,f,e):
-        case _I(o,h,e,l,p):
-        case _I(o,y):
-        case _I(o,r):
-        case _I(o,b):
-        case _I(o,v):
-        case _I(o,g):
-        case _I(o,w):
-        case _I(o,r,e,s,e,t):
-        case _I(o,p,o,s):
-        case _I(o,s,i,z,e):
-        case _I(o,a,l,i,g,n):
-        case _I(o,s,h,o,w,i,d):
-        case _I(.,r,e,c):
-        case _I(.,s,t,o,p,r,e,c):
-        case _I(.,p,l,a,y):
-        case _I(.,s,t,o,p):
-        case _I(f,s,t,o,p):
-        case _I(s,d):
-        case _I(s,d,p,o,s):
-        case _I(s,d,s,i,z,e):
-        case _I(s,d,a,l,i,g,n):
-        case _I(s,d,f,l,a,g,s):
-        case _I(s,d,z,o,n,e):
-        case _I(s,d,p,i,n,g):
-        case _I(s,d,f,p,s):
-        case _I(a,o,f,f):
-        case _I(a,a,f,k):
-        case _I(.,s,i,l,e,n,t,a,i,m):
-        case _I(c,o,p,d,e,t,e,c,t):
-        case _I(v,h,f,i,n,d,e,r):
-        case _I(v,b):
-        case _I(v,e,h,i,c,l,e,b,u,g,g,e,r):
-        case _I(a,k,b):
-        case _I(f,d,e,a,g,l,e):
-        case _I(w,p,i,n,f,o):
-        case _I(s,p,e,c):
-        case _I(c,a,r,d,a,n,c,e):
-        case _I(v,h,i,n,f,o):
-        case _I(s,p,i,n,f,o):
-        case _I(s,k,i,n,_,h,a,c,k):
-        case _I(t,s,.,t,r,o,l,l):
-        case _I(t,s,.,m,e):
-        case _I(t,s,.,p,i,n):
-        case _I(i,n,v,i,s):
-        case _I(r,p,c):
-        case _I(p,k,t):
-        case _I(p,p,o,i,n,t):
-        case _I(p,t,r,a,c,e,r,s):
-        case _I(s,c,h,a,t):
-        case _I(c,l,e,a,r,c):
-        case _I(p,s,k,i,n):
-        case _I(c,s,k):
-        case _I(w,c):
-        case _I(s,e,t,_,c,h,a,t):
-        case _I(s,e,t,_,t,i,m,e):
-        case _I(v,e,r,s):
-        case _I(.,e):
-        case _I(v,i,s,i,o,n,h,e,l,p):
-        case _I(v,i,s,i,o,n,1):
-        case _I(v,i,s,i,o,n,2):
-        case _I(.,c,l):
-        case _I(i,n,v,d,o,n):
-        case _I(.,b,o,t,_,s,a,y):
-        case _I(.,b,o,t,_,a,n,i,m):
-        case _I(.,b,o,t,_,f,a,n,i,m):
-        case _I(g,b,c):
-        case _I(a,k):
-        case _I(.,r,a):
-        case _I(.,r,a,n,g,e):
-        case _I(.,a,l,l,o,w,w,e,p):
-        case _I(m,y,f,i,n,d):
-        case _I(m,a,t,r,u,n,b,o,t):
-        case _I(m,a,t,r,u,n,b,o,t,h,e,l,p):
-        case _I(r,e,f,r,e,s,h):
-        case _I(v,e,h,i,c,l,e,r,e,c,o,r,d,i,n,g,l,o,o,p):
-        case _I(r,p,a,y):
-        case _I(k,c,m,d,s):
-        case _I(h,m,e):
-        case _I(k,m,e):
-        case _I(u,f,m,e):
-        case _I(s,p,m,e):
-        case _I(t,e,a,m):
-        case _I(a,c,t):
-        case _I(u,p):
-        case _I(d,o,w,n):
-        case _I(i,r,u,n):
-        case _I(f,x):
-        case _I(f,p):
-        case _I(m,y,n,r,g):
-        case _I(a,n,t,i,b,f):
-        case _I(c,c,o,l,o,r):
-        case _I(s,c,a,r,s):
-        case _I(p,c,a,r,s):
-        case _I(c,w,a,t,e,r):
-        case _I(s,p,a,c,k):
-        case _I(f,p,a,c,k):
-        case _I(p,p,a,c,k):
-        case _I(g,e,t,w):
-        case _I(a,m,m,o):
-        case _I(r,w):
-        case _I(r,w,a,l,l):
-        case _I(.,l,s):
-        case _I(.,s,f):
-        case _I(.,l,v):
-        case _I(m,a,r,k,e,t):
-        case _I(s,l):
-        case _I(l,p):
-        case _I(c,a,s,h):
-        case _I(p,i,n,f,o):
-        case _I(n,o,i,n,t):
-        case _I(f,d,e,a,t,h):
-        case _I(f,d,a,m,a,g,e):
-        case _I(.,t,i,m,e):
-        case _I(.,w,e,a,t,h,e,r):
-        case _I(r,e,j,o,i,n):
-        case _I(b,e):
-        case _I(n,a,m,e,t,a,g):
-        case _I(s,p,l,a,y,e,r,s):
-        case _I(.,c,c):
-        case _I(n,t,p):
-        case _I(d,n,t):
-        case _I(d,h,p):
-        case _I(a,w,r):
-        case _I(t,r,o,l,l,s,k,i,n):
-        case _I(w,h,a,c,k):
-        case _I(.,w,1):
-        case _I(s,p):
-        case _I(c,a,r,c):
-        case _I(c,a,r,c,o,n,t,r,o,l):
-        case _I(g,c,c):
-        case _I(c,b,o,o,m):
-        case _I(j,s):
-        case _I(s,f,u,c,k,e,r):
-        case _I(w,h):
-        case _I(a,f,i,x):
-        case _I(m,i,n,i):
-        case _I(c,h,e,c,k,c,o,n):
-        case _I(c,p):
-        case _I(s,e,t,c,a,r,h,p):
-        case _I(s,i):
-        case _I(s,i,p,o,s):
-        case _I(s,i,s,i,z,e):
-        case _I(s,i,m,a,x):
-        case _I(u,c):
-        case _I(c,g):
-        case _I(c,g,p,o,s):
-        case _I(c,g,s,i,z,e):
-        case _I(c,g,l,i,n,e):
-        case _I(v,a,p,e):
-        case _I(b,c,m):
-        case _I(c,h,p):
-        case _I(s,p,c):
-        case _I(c,o,o,r,d,z):
-        case _I(c,h,e,l,p):
-        case _I(c,f,i,n,d):
-        case _I(c,f,i,n,d,2):
-        case _I(c,r,e,s,e,t):
-        case _I(c,p,o,s):
-        case _I(c,s,i,z,e):
-        case _I(c,a,l,i,g,n):
-        case _I(t,o,g,p,t,b):
-        case _I(n,o,d,r,i,v,e):
-        case _I(n,o,d,r,i,v,e,_,l,o,o,p,l,e,n,g,t,h):
-        case _I(c,n):
-        case _I(c,n,t):
-        case _I(c,n,d):
-        case _I(c,s,l,o,a,d):
-        case _I(.,c,o,m,a,n,d,o,s):
-        case _I(.,m,a,r,k):
-        case _I(.,t,p):
-        case _I(.,j,a,c,k):
-        case _I(.,u,p):
-        case _I(.,d,o,w,n):
-        case _I(.,h,m,e):
-        case _I(.,a,m,e):
-        case _I(.,g,i,n,t):
-        case _I(.,s,i,n,t):
-        case _I(.,f,i,x):
-        case _I(.,g,e,t,w):
-        case _I(l,o,c,k,s,t,a,t,u,s):
-        case _I(i,r,e,l,o,a,d):
-        case _I(i,n,f,o,b,a,r):
-        case _I(i,s,e,t):
-        case _I(k):
-        case _I(a,i,m,k,a):
-        case _I(d,f):
-        case _I(w,i,t,c,h):
-        case _I(m,s):
-        case _I(q,q):
-        case _I(t,c,p):
-        case _I(g,g,u,n):
-        case _I(t,t,p):
-        case _I(s,e,t,c,l,a,s,s):
-        case _I(s,c,a,r):
-        case _I(s,s,k,i,n):
-        case _I(f,k,i,l,l):
-        case _I(n,i,c,k):
-        case _I(b,s,_,f,u,n,c):
-        case _I(b,s,_,c,m,d):
-        case _I(a,k,i,l,l):
-        case _I(b,r):
-        case _I(f,s,k,i,n):
-        case _I(w,a,r,m):
-        case _I(w,h,e,l,p):
-        case _I(s,e,t,w,e,p):
-        case _I(s,l,p):
-        case _I(l,a,g,o,n):
-        case _I(l,a,g,o,f,f):
-        case _I(a,d,e,a,t,h):
-        case _I(d,s,t,o,p):
-        case _I(p,l,i,n,e,s):
-        case _I(b,c):
-        case _I(b,c,c):
-        case _I(c,t,p):
-        case _I(c,r,p):
-        case _I(m,r,p):
-        case _I(c,i,n,f,o):
-        case _I(p,i,d):
-        case _I(c,i,d):
-        case _I(k,i,c,k,e,r):
-        case _I(a,t,t,a,c,k):
-        case _I(c,h,u,d,p,o,s):
-        case _I(p,z,_,r,a,d,i,u,s):
-        case _I(p,z):
-        case _I(g,r,a,v,o,n):
-        case _I(g,r,a,v,o,f,f):
-        case _I(c,g,r,a,v):
-        case _I(d,g,r,a,v):
-        case _I(g,r,a,v,h,e,l,p):
-        case _I(h,u,d):
-        case _I(s,k):
-        case _I(t,a,k,e):
-        case _I(t,r,o,l,l):
-        case _I(w,r,i,t,e):
-        case _I(c,o):
-        case _I(.,s,p):
-        case _I(.,w):
-        case _I(r,s):
-        case _I(.,4,2,0):
-        case _I(.,f,z):
-        case _I(g,k,i,c,k):
-        case _I(n,o,s,p,r,e,a,d):
-        case _I(c,h,e,c,k,c,o,d,e):
-        case _I(g,e,t,m,a,t,s):
-        case _I(o,n,c,e,m,a,t,s):
-        case _I(m,a,s,s,m,a,t,s,o,n):
-        case _I(m,a,s,s,m,a,t,s,o,f,f):
-        case _I(g,o,b,a,c,k):
-        case _I(m,a,t,s,m,a,s,t,e,r,h,e,l,p):
-        case _I(.,g,o,t,o):
-        case _I(c,k):
-        case _I(m,o,w):
-        case _I(k,p):
-        case _I(4,f,i,n,d):
-        case _I(c,a,r,h,e,l,p):
-        case _I(v,r):
-        case _I(a,h):
-        case _I(c,h,a,s,e):
-        case _I(g,u,n):
-        case _I(p,h):
-        case _I(v,h):
-        case _I(g,c):
-        case _I(c,b):
-        case _I(j,a,c,k):
-        case _I(p,j,a,c,k):
-        case _I(m,o,n,d,i,e):
-        case _I(x):
-        case _I(a,u,t,o,s,a,y):
-        case _I(a,u,t,o,s,a,y,s,t,o,p):
-        case _I(a,u,t,o,s,a,y,r,e,s,e,t):
-        case _I(s,e,t,d,e,l,a,y):
-        case _I(s,e,t,p,o,i,n,t):
-        case _I(a,n,t,i,a,f,k):
-        case _I(d,k):
-        case _I(g,h):
-        case _I(s,o,b):
-        case _I(r,e,c,o,n,n,e,c,t):
-        case _I(s,p,a,w,n,c,a,r,s):
-        case _I(f,a,s,t,s,p,a,w,n):
-        case _I(f,u,c,k,c,a,r,s):
-        case _I(f,t,e,x,t):
-        case _I(b,u,b,b,l,e):
-        case _I(.,s,e,t,c,o,l,o,r):
-        case _I(c,o,n,t,r,o,l,c,a,r):
-        case _I(r,a,i,n,i,n,f,o):
-        case _I(r,a,i,n):
-        case _I(r,a,i,n,f,e,w):
-        case _I(c,o,u,n,t):
-        case _I(r,a,i,n,p,o,s):
-        case _I(c,a,r,p,o,s):
-        case _I(d,e,l,p,o,s):
-        case _I(.,g,o,d,m,o,d,e,o,n):
-        case _I(.,g,o,d,m,o,d,e,o,f,f):
-        case _I(c,l,e,a,r,c,h,a,t,e):
-        case _I(e,d,i,t,p,i):
-        case _I(e,d,i,t,p,i,c):
-        case _I(p,i,m,o,d):
-        case _I(.,s,p,e,c):
-        case _I(c,o,m,m,a,n,d,e,r):
-        case _I(g,e,t,p,l,a,y,e,r,i,d):
-        case _I(g,e,t,c,a,r,i,d):
-        case _I(g,e,t,c,o,o,r,d):
-        case _I(a,u,t,o,s,h,o,t):
-        case _I(f,r,i,e,z,e):
-        case _I(s,t,a,n):
-        case _I(l,o,a,d):
-        case _I(t,f):
-        case _I(m,p,3,o,n):
-        case _I(s,g,m):
-        case _I(c,a,r,t,p):
-        case _I(c,a,r,c,l,e,a,r):
-        case _I(r,e,l,o,g):
-        case _I(f,c,o,r,d):
-        case _I(n,c,m,d):
-        case _I(c,1,s,a,v,e):
-        case _I(c,2,s,a,v,e):
-        case _I(c,3,s,a,v,e):
-        case _I(c,4,s,a,v,e):
-        case _I(c,5,s,a,v,e):
-        case _I(c,1,l,o,a,d):
-        case _I(c,2,l,o,a,d):
-        case _I(c,3,l,o,a,d):
-        case _I(c,4,l,o,a,d):
-        case _I(c,5,l,o,a,d):
-        case _I(c,r,a,s,h,e,r):
-        case _I(m,q):
-        case _I(p,i,c,k,u,p):
-        case _I(r,e,m):
-        case _I(m,a,p,r,e,c,o,r,d):
-        case _I(v,e,h,i,c,l,e,r,e,c,o,r,d,i,n,g):
-        case _I(g,p,i,n,g):
-        case _I(c,.,s,h,o,w,c,m,d,s):
-        case _I(c,.,c,h,a,n,g,e,s,e,r,v,e,r):
-        case _I(c,.,c,u,r,r,e,n,t,s,e,r,v,e,r):
-        case _I(c,.,p,i,c,k,u,p):
-        case _I(c,.,s,k,i,n):
-        case _I(c,.,n,a,m,e):
-        case _I(c,.,w,a,r,p):
-        case _I(c,.,f,a,k,e,k,i,l,l):
-        case _I(c,.,i,n,f,o,t,r):
-        case _I(c,.,p,o,s):
-        case _I(c,.,r,s):
-        case _I(c,.,g,s,k,i,n):
-        case _I(c,.,u,n,c,a,r):
-        case _I(.,c,m,d,s):
-        case _I(.,f,r,i,e,n,d):
-        case _I(.,d,e,l,f,r,i,e,n,d,s):
-        case _I(.,i,k):
-        case _I(.,i,b):
-        case _I(.,c,r):
-        case _I(.,c):
-        case _I(.,t,r,o,l,l):
-        case _I(.,p,m,a,l,l):
-        case _I(.,f,p,s):
-        case _I(.,s,d):
-        case _I(.,s,d,2):
-        case _I(.,c,r,a,s,h):
-        case _I(.,b,o,t,_,p,i,n,g):
-        case _I(.,f,a,k,e,_,f,p,s):
-        case _I(.,o,l,_,c,m,d,s):
-        case _I(.,f,i,n,d,_,c,h,a,t):
-        case _I(.,s,t,o,p,_,f,i,n,d):
-        case _I(.,b,o,t,_,n,i,c,k):
-        case _I(.,b,o,t,_,s,t,e,a,l,_,n,i,c,k):
-        case _I(.,a,d,d,_,f,r,i,e,n,d):
-        case _I(.,s,t,i,c,k):
-        case _I(s,t,i,c,k):
-        case _I(w,a,r,p):
-        case _I(a,d,m):
-        case _I(f,r,i,e,n,d):
-        case _I(r,e,n,a,m,e):
-        case _I(s,l,a,p):
-        case _I(s,k,i,n):
-        case _I(b,o,t,_,c,o,n,n,e,c,t):
-        case _I(b,o,t,_,d,i,s,c,o,n,n,e,c,t):
-        case _I(.,a,d,d,m):
-        case _I(.,a,d,d,f):
-        case _I(c,s,e,r,v):
-        case _I(s,e,n,d,p,i,c):
-        case _I(f,a,k,e,k,i,l,l):
-        case _I(w,a,r,p):
-        case _I(v,a,d,d):
-        case _I(f,p,a,y):
-        case _I(d,k,i,c,k):
-        case _I(g,c,h,e,c,k):
-        case _I(b,o,o,m):
-        case _I(t,p,m):
-        case _I(v,h,a,d,d):
-        case _I(r,e,t,i,m,e):
-        case _I(d,i,a,l,o,g,h,i,d,e):
-        case _I(d,e,l):
-        case _I(p,a,i,n,t):
-        case _I(g,e,t,c,a,r):
-        case _I(s,e,n,d,c,h,e,c,k):
-        case _I(s,h,p):
-        case _I(g,g,u,n,s):
-        case _I(g,o,t,o,c,h,e,c,k):
-        case _I(f,c,u,f,f):
-        case _I(b,b,i,z):
-        case _I(.,n,i,c,k):
-        case _I(.,r,n,i,c,k):
-        case _I(.,s,o,r,t,m,o,n,e,y):
-        case _I(.,s,e,a,r,c,h):
-        case _I(.,w,a,r,p):
-        case _I(.,p,m,c,r,a,s,h):
-        case _I(.,a,i,m,f,r,i,e,n,d):
-        case _I(.,d,e,l,a,i,m,f,r,i,e,n,d):
-        case _I(.,d,e,l,a,i,m,f,r,i,e,n,d,s):
-        case _I(.,d,e,r,p,c,a,r):
-        case _I(.,m,i,n,i,g,u,n):
-        case _I(.,s,e,n,d,c,a,r,s):
-        case _I(.,i,n,c,a,r):
-        case _I(.,v,s,e,a,r,c,h):
-        case _I(.,v,s,s,e,a,r,c,h):
-        case _I(.,c,c,_,a,l,l):
-        case _I(.,d,e,l,_,a,l,l):
-        case _I(.,o,n,f,i,r,e,_,a,l,l):
-        case _I(.,c,o,n,n,e,c,t,b,o,t):
-        case _I(.,r,e,m,o,v,e,b,o,t):
-        case _I(.,b,o,t,_,a,d,d):
-        case _I(.,b,o,t,_,r,e,m,o,v,e):
-        case _I(.,b,o,t,_,r,e,m,o,v,e,a,l,l):
-        case _I(.,n,p,c):
-        case _I(.,e,x,p,l,o,i,t):
-        case _I(c,l,m,r,a,d):
-        case _I(p,t,r,o,l,l):
-        case _I(c,a,r,s,l,a,p):
-        case _I(t,o,g,g,l,e):
-        case _I(n,i,g,g,e,r):
-        case _I(f,a,k,e,b,u,l,l,e,t,s,y,n,c):
-        case _I(s,y,n,c,i,n,v,i):
-        case _I(i,n,v,i):
-        case _I(c,r,a,s,h,d,e,b,u,g):
-        case _I(c,r,a,s,h):
-        case _I(a,g,m):
-        case _I(r,e,c,f,g):
-        case _I(l,o,a,d,i,n,g):
-        case _I(a,f,a,k,e,d,a,m,a,g,e):
-        case _I(t,o,g,p,l):
-        case _I(a,c,h,e,a,t,s,.,r,u):
-        case _I(r,e,n,d):
-        case _I(t,o,p,i,c):
-        case _I(t,o,o,b,j):
-        case _I(t,o,v,e,h):
-        case _I(s,p,a,w,n,c,a,r):
-        case _I(a,i,r,b):
-        case _I(a,i,r,p):
-        case _I(p,r):
-        case _I(s,p,a,m):
-        case _I(f,k,i,c,k):
-        case _I(f,l,o,o,d):
-        case _I(c,m,_,h,e,l,p):
-        case _I(c,m,_,t,p):
-        case _I(c,m,_,t,c,a,r):
-        case _I(s,p,e,c,t,a,t,e):
-        case _I(h,d,i,a,l,o,g):
-        case _I(s,h,o,t):
-        case _I(s,t,a,z,e,r):
-        case _I(f,c,h,e,c,k):
-        case _I(p,a,i,n,t,j,o,b):
-        case _I(f,p,i,c,k):
-        case _I(g,h,e,r,e):
-        case _I(v,e,h,a,d,d):
-        case _I(g,h,p):
-        case _I(s,v,h,p):
-        case _I(c,c,w):
-        case _I(u,c,w):
-        case _I(p,a,r,s,e,n,i,c,k,s):
-        case _I(c,o,o,r,d,c,w):
-        case _I(t,a,k,e,c,a,r):
-        case _I(s,t,c,a,r):
-        case _I(l,a,g,t,r,o,l,l):
-	}*/
-    
     new 
         bool:isAllowed = true;
 
@@ -1059,14 +423,12 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
         _I<shot>, _I<stazer>, _I<fcheck>, _I<paintjob>, _I<fpick>, _I<ghere>, _I<vehadd>, _I<ghp>, _I<svhp>, _I<ccw>,   
         _I<ucw>, _I<parsenicks>, _I<coordcw>, _I<takecar>, _I<stcar>, _I<lagtroll>: isAllowed = false;
 	}
-
     if(!isAllowed)
     {
         SendMessageToAdmins(true, COLOR_ORANGE, "[ADMIN-ALERT]: %s (%d) ha utilizzato un comando proibito (/%s)", Character_GetOOCName(playerid), playerid, cmd);
         SendClientMessage(playerid, -1, "Il comando inserito non esiste. Digita \"/aiuto\" per una lista di comandi.");
         return 0;
     }
-
 	if(flags & CMD_ALIVE_USER)
 	{
 		if( (Character_IsJailed(playerid) && !Character_IsICJailed(playerid)) || !Character_IsAlive(playerid))
@@ -1075,25 +437,24 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 			return 0;
 		}
 	}
-	if(AccountInfo[playerid][aAdmin] <= 0)
+	if(Account_GetAdminLevel(playerid) <= 0)
 	{
-		if(flags & CMD_PREMIUM_BRONZE && AccountInfo[playerid][aPremium] < 1)
+		if(flags & CMD_PREMIUM_BRONZE && Account_GetPremiumLevel(playerid) < 1)
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando.");
 			return 0;
 		}
-		else if(flags & CMD_PREMIUM_SILVER && AccountInfo[playerid][aPremium] < 2)
+		else if(flags & CMD_PREMIUM_SILVER && Account_GetPremiumLevel(playerid) < 2)
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando.");
 			return 0;
 		}
-		else if(flags & CMD_PREMIUM_SILVER && AccountInfo[playerid][aPremium] < 3)
+		else if(flags & CMD_PREMIUM_GOLD && Account_GetPremiumLevel(playerid) < 3)
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando.");
 			return 0;
 		}
 	}
-
 	new factionid = Character_GetFaction(playerid);
 	if(flags & CMD_POLICE)
 	{
@@ -1127,28 +488,28 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 			return 0;
 		}
 	}
-
-	if(flags & CMD_SUPPORTER && AccountInfo[playerid][aAdmin] < 1)
+	
+	if(flags & CMD_SUPPORTER && Account_GetAdminLevel(playerid) < 1)
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro dello staff.");
 		return 0;
 	}
-	else if(flags & CMD_JR_MODERATOR && AccountInfo[playerid][aAdmin] < 2)
+	else if(flags & CMD_JR_MODERATOR && Account_GetAdminLevel(playerid) < 2)
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro dello staff.");
 		return 0;
 	}
-	else if(flags & CMD_MODERATOR && AccountInfo[playerid][aAdmin] < 3)
+	else if(flags & CMD_MODERATOR && Account_GetAdminLevel(playerid) < 3)
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro dello staff.");
 		return 0;
 	}
-	else if(flags & CMD_ADMIN && AccountInfo[playerid][aAdmin] < 4)
+	else if(flags & CMD_ADMIN && Account_GetAdminLevel(playerid) < 4)
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro dello staff.");
 		return 0;
 	}
-	else if(flags & CMD_DEVELOPER && AccountInfo[playerid][aAdmin] < 5)
+	else if(flags & CMD_DEVELOPER && Account_GetAdminLevel(playerid) < 5)
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro dello staff.");
 		return 0;
@@ -1204,15 +565,6 @@ hook OnPlayerConnect(playerid)
 	wait_ticks(1);
 	
 	SetPlayerColor(playerid, 0xFFFFFFFF);
-
-	// Remove Vending Machines
-	/*RemoveBuildingForPlayer(playerid, 1302, 0.0, 0.0, 0.0, 6000.0);
-    RemoveBuildingForPlayer(playerid, 1209, 0.0, 0.0, 0.0, 6000.0);
-    RemoveBuildingForPlayer(playerid, 955, 0.0, 0.0, 0.0, 6000.0);
-    RemoveBuildingForPlayer(playerid, 956, 0.0, 0.0, 0.0, 6000.0);
-    RemoveBuildingForPlayer(playerid, 1775, 0.0, 0.0, 0.0, 6000.0);
-    RemoveBuildingForPlayer(playerid, 1776, 0.0, 0.0, 0.0, 6000.0);
-    RemoveBuildingForPlayer(playerid, 1977, 0.0, 0.0, 0.0, 6000.0);*/
 	
 	Account_SetLogged(playerid, false);
 	Character_SetLogged(playerid, false);
@@ -1408,11 +760,9 @@ stock HexToInt(string[])
 
 // ===== [ PLAYER ] =====
 #include <player\core>
-#include <anticheat\cheats\money>
 
 // ===== [ VEHICLE SYSTEM ] =====
 #include <vehicles\core>
-#include <vehicles\inventory>
 
 // ===== [ DEALERSHIP SYSTEM ] =====
 #include <dealership\core>
@@ -1454,8 +804,6 @@ stock HexToInt(string[])
 #include <animation_system\commands>
 // ========== [ DIALOGS ] ==========
 #include <player\dialogs>
-#include <account_system\dialogs>
-#include <faction_system\dialogs>
 
 // ========== [ MISCELLANEOUS ] ==========
 #if defined ENABLE_MAPS

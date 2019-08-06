@@ -90,10 +90,10 @@ CMD:dom(playerid, params[])
 {
     if(isnull(params))
 	   return SendClientMessage(playerid, COLOR_ERROR, "/dom <testo>");
-    new seconds = (AccountInfo[playerid][aPremium] > 0) ? 10 : 30;
+    new seconds = (Account_GetPremiumLevel(playerid) > 0) ? 10 : 30;
     if(GetTickCount() - pLastAdminQuestionTime[playerid] < 1000 * seconds)
 	   return SendFormattedMessage(playerid, COLOR_ERROR, "Puoi inviare una domanda ogni %d secondi.", seconds);
-    if(AccountInfo[playerid][aPremium])
+    if(Account_GetPremiumLevel(playerid) > 0)
     {
 	   SendMessageToAdmins(0, 0xEA7500FF, "(( [PREMIUM] %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);
 	   SendClientMessage(playerid, -1, "La domanda è stata inviata ai moderatori online. Attendi.");
@@ -141,13 +141,13 @@ CMD:aiuto(playerid, params[])
 			SendClientMessage(playerid, COLOR_SLATEBLUE, "[FAZIONE]: (/f)azione - /faiuto");
 		}
 	}
-	if(AccountInfo[playerid][aAdmin] > 0)
+	if(Account_GetAdminLevel(playerid) > 0)
 		SendClientMessage(playerid, COLOR_GREEN, "[SUPPORTER]: /tcmds");
-	if(AccountInfo[playerid][aAdmin] > 1)
+	if(Account_GetAdminLevel(playerid) > 1)
 		SendClientMessage(playerid, COLOR_GREEN, "[ADMIN]: /acmds");
     return 1;
 }
-alias:aiuto("cmds", "help");
+alias:aiuto("cmds", "help", "comandi");
 
 flags:chatcmds(CMD_USER);
 CMD:chatcmds(playerid, params[])
@@ -260,7 +260,8 @@ CMD:lasciacarcere(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino all'uscita della prigione.");
 	
 	Character_SetJailTime(playerid, 0);
-	Character_SetICJailed(playerid, 0);
+	Character_SetICJailed(playerid, false);
+	
 	//Character_Spawn(playerid);
 	SetPlayerPos(playerid, 1313.0187, -2063.6877, 57.1440);
 	SendClientMessage(playerid, COLOR_GREEN, "Hai lasciato il carcere.");
@@ -353,7 +354,7 @@ Dialog:Dialog_ChangePassword(playerid, response, listitem, inputtext[])
 	new 
 		psw[WHIRLPOOL_LEN];
 	WP_Hash(psw, sizeof(psw), inputtext);
-	MySQL_TQueryInline(gMySQL, using inline OnCheck, "SELECT * FROM accounts WHERE ID = '%d' AND Password = '%e'", Account_GetID(playerid), psw);
+	MySQL_TQueryInline(gMySQL, using inline OnCheck, "SELECT * FROM accounts WHERE id = '%d' AND password = '%e'", Account_GetID(playerid), psw);
 	return 1;
 }
 
@@ -370,7 +371,7 @@ Dialog:Dialog_SetNewPassword(playerid, response, listitem, inputtext[])
 	new 
 		psw[WHIRLPOOL_LEN];
 	WP_Hash(psw, sizeof(psw), inputtext);
-	MySQL_TQueryInline(gMySQL, using inline OnUpdate, "UPDATE `accounts` SET Password = '%e' WHERE ID = '%d';", psw, Account_GetID(playerid));
+	MySQL_TQueryInline(gMySQL, using inline OnUpdate, "UPDATE `accounts` SET password = '%e' WHERE id = '%d';", psw, Account_GetID(playerid));
 	return 1;
 }
 

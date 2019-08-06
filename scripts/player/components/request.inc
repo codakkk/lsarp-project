@@ -159,13 +159,13 @@ stock Character_AcceptItemRequest(playerid)
 
 	if(ServerItem_GetType(itemid) == ITEM_TYPE_WEAPON)
 	{
-		SendFormattedMessage(senderid, COLOR_GREEN, "Hai dato l'arma (%s) con %d proiettili a %s.", ServerItem_GetName(itemid), extra, Character_GetRolePlayName(playerid));
-		SendFormattedMessage(playerid, COLOR_GREEN, "%s ti ha dato un'arma (%s) con %d proiettili.", Character_GetRolePlayName(senderid), ServerItem_GetName(itemid), extra);
+		SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "Hai dato l'arma (%s) con %d proiettili a %s.", ServerItem_GetName(itemid), extra, Character_GetRolePlayName(playerid));
+		SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "%s ti ha dato un'arma (%s) con %d proiettili.", Character_GetRolePlayName(senderid), ServerItem_GetName(itemid), extra);
 	}
 	else
 	{
-		SendFormattedMessage(senderid, COLOR_GREEN, "Hai dato l'oggetto (%s, %d) a %s.", ServerItem_GetName(itemid), amount, Character_GetRolePlayName(playerid));
-		SendFormattedMessage(playerid, COLOR_GREEN, "%s ti ha dato un oggetto (%s, %d).", Character_GetRolePlayName(senderid), ServerItem_GetName(itemid), amount);
+		SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "Hai dato l'oggetto (%s, %d) a %s.", ServerItem_GetName(itemid), amount, Character_GetRolePlayName(playerid));
+		SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "%s ti ha dato un oggetto (%s, %d).", Character_GetRolePlayName(senderid), ServerItem_GetName(itemid), amount);
 	}
 	Character_AMe(senderid, "prende degli oggetti e li da a %s.", Character_GetRolePlayName(playerid));
 

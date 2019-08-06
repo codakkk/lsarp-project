@@ -1,9 +1,12 @@
+
+#include <vehicles\inventory>
+
 #include <YSI_Coding\y_hooks>
 
 hook OnCharacterLoad(playerid)
 {
 	new query[256];
-	mysql_format(gMySQL, query, sizeof(query), "SELECT * FROM `vehicles` WHERE OwnerID = '%d' AND Spawned = 0;", Character_GetID(playerid));
+	mysql_format(gMySQL, query, sizeof(query), "SELECT * FROM `vehicles` WHERE owner_id = '%d' AND spawned = 0;", Character_GetID(playerid));
 	mysql_tquery(gMySQL, query, #Vehicle_LoadAll);
 	foreach(new i : Vehicle)
 	{
@@ -96,7 +99,7 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
 	if(newstate == PLAYER_STATE_DRIVER)
     {
 		new vehicleid = GetPlayerVehicleID(playerid);
-		if(VehicleInfo[vehicleid][vModel] != 0) // Probably a useless check
+		if(Vehicle_GetModel(vehicleid) != 0) // Probably a useless check
 		{
 			if(!IsABike(vehicleid))
 			{
@@ -108,13 +111,9 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
 				new despawnTime = Vehicle_GetSpawnExpiry(vehicleid);
 				if(Vehicle_IsDespawn(vehicleid) && gettime() < despawnTime && Vehicle_GetFaction(vehicleid) == INVALID_FACTION_ID)
 				{
-					SendTwoLinesMessage(playerid, COLOR_ERROR, "(( Attenzione: Il proprietario del veicolo (%s) si è disconnesso. Il veicolo verrà despawnato in %d minuti. ))", VehicleInfo[vehicleid][vOwnerName], (despawnTime - gettime())/60);
+					SendTwoLinesMessage(playerid, COLOR_ERROR, "(( Attenzione: Il proprietario del veicolo si è disconnesso. Il veicolo verrà despawnato in %d minuti. ))", (despawnTime - gettime())/60);
 				}
-				new
-					playerName[MAX_PLAYER_NAME];
-				
-				FixName(VehicleInfo[vehicleid][vOwnerName], playerName);
-				SendFormattedMessage(playerid, COLOR_GREEN, "(( Questo veicolo (%s) appartiene a %s ))", Vehicle_GetName(vehicleid), playerName);
+				SendFormattedMessage(playerid, COLOR_GREEN, "(( Questo veicolo (%s) appartiene a %s ))", Vehicle_GetName(vehicleid), Vehicle_GetOwnerName(vehicleid));
 			}
 		}
 		SetPlayerArmedWeapon(playerid, 0);
@@ -188,8 +187,7 @@ stock Character_AddOwnedVehicle(playerid, vehicleid)
 	if(!Vehicle_IsValid(vehicleid) || Character_GetOwnedVehicleCount(playerid) == MAX_VEHICLES_PER_PLAYER)
 		return 0;
 	
-	Vehicle_SetOwnerID(vehicleid, Character_GetID(playerid));
-	Vehicle_SetOwnerName(vehicleid, Character_GetOOCName(playerid));
+	Vehicle_SetOwner(vehicleid, playerid);
 
 	// If vehicle is temporary
 	if(Vehicle_GetID(vehicleid) == 0 || Vehicle_IsTemporary(vehicleid))
@@ -204,7 +202,7 @@ stock Character_SaveAllVehicles(playerid)
 {
 	foreach(new i : Vehicle)
 	{
-		if(!VehicleInfo[i][vID] || VehicleInfo[i][vModel] == 0 || VehicleInfo[i][vOwnerID] != PlayerInfo[playerid][pID])
+		if(!Vehicle_GetID(i) || Vehicle_GetModel(i) == 0 || Vehicle_GetOwnerID(i) != Character_GetID(playerid))
 			continue;
 		Vehicle_Save(i);
 	}

@@ -1,8 +1,10 @@
 #include <YSI_Coding\y_hooks>
 
-static Timer:pWalkTimer[MAX_PLAYERS];
+static
+	PlayerWalkStyle[MAX_PLAYERS],
+	Timer:pWalkTimer[MAX_PLAYERS];
 
-enum 
+static enum 
 {
 	WALK_DEFAULT = 0,
  	WALK_NORMAL,
@@ -22,6 +24,22 @@ enum
 	WALK_LAST
 }
 
+hook OnCharacterLoad(playerid)
+{
+	inline OnLoad()
+	{
+		cache_get_value_index_int(0, 0, PlayerWalkStyle[playerid]);
+	}
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT walk_style FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
+	return 1;
+}
+
+static Internal_Save(playerid)
+{
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET walk_style = '%d' WHERE id = '%d'", PlayerWalkStyle[playerid], Character_GetID(playerid));
+	return 1;
+}
+
 flags:stilecamminata(CMD_ALIVE_USER);
 CMD:stilecamminata(playerid, params[])
 {
@@ -30,7 +48,18 @@ CMD:stilecamminata(playerid, params[])
 		return SendFormattedMessage(playerid, COLOR_ERROR, "/stilecamminata <style (1 - %d)> (0 per disattivare).", WALK_LAST);
 	Character_SetWalkingStyle(playerid, style);
 	SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo stile camminata. Stile: %d", style+1);
-	Character_Save(playerid);
+	return 1;
+}
+
+stock Character_GetWalkingStyle(playerid)
+{
+	return PlayerWalkStyle[playerid];
+}
+
+stock Character_SetWalkingStyle(playerid, style)
+{
+	PlayerWalkStyle[playerid] = style;
+	Internal_Save(playerid);
 	return 1;
 }
 

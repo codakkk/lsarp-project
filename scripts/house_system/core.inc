@@ -11,6 +11,8 @@ stock Map:GetHousesMap()
 hook OnGameModeInit()
 {
     Houses = map_new();
+
+    House_LoadAll();
     return 1;
 }
 
@@ -41,6 +43,7 @@ stock House_Create(Float:x, Float:y, Float:z, int, world, interiorid)
         data[E_HOUSE_DATA]
     ;
     // we
+    data[hCreated] = 1;
     data[hID] = id;
     data[hOwnerID] = 0;
     data[hOwnerName] = "";
@@ -170,8 +173,8 @@ stock House_SetOwner(houseid, playerid)
 {
     if(!House_IsValid(houseid) || !IsPlayerConnected(playerid) || !Character_IsLogged(playerid) || Character_HasHouseKey(playerid))
 	   return 0;
-    map_set_cell(Houses, houseid, hOwnerID, PlayerInfo[playerid][pID]);
-    new Iter:it = map_iter(Houses, houseid);
+    map_set_cell(Houses, houseid, hOwnerID, Character_GetID(playerid));
+    new Iter:it = map_iter_at(Houses, houseid);
     iter_set_cells(it, hOwnerName, Character_GetOOCName(playerid));
     return 1;
 }
@@ -181,7 +184,7 @@ stock House_ResetOwner(houseid)
     if(!House_IsValid(houseid))
         return 0;
     map_set_cell(Houses, houseid, hOwnerID, 0);
-    new Iter:it = map_iter(Houses, houseid);
+    new Iter:it = map_iter_at(Houses, houseid);
     iter_set_cells(it, hOwnerName, "");
     return 1;
 }
@@ -204,7 +207,7 @@ stock bool:House_GetOwnerName(houseid, name[MAX_PLAYER_NAME])
 {
     if(!House_IsValid(houseid))
         return false;
-    new Iter:it = map_iter(Houses, houseid);
+    new Iter:it = map_iter_at(Houses, houseid);
     iter_get_md_arr(it, {hOwnerName}, name);
     return true;
 }
@@ -418,12 +421,13 @@ stock House_LoadAll()
 
             cache_get_value_index_int(i, 17, data[hCreated]);
 
-            data[hExitWorld] = HOUSE_START_WORLD + i;
+            data[hExitWorld] = HOUSE_START_WORLD + data[hID];
+            data[hCreated] = 1;
 
 			map_add_arr(Houses, data[hID], data);
-			House_CreateObjects(i);
+			House_CreateObjects(data[hID]);
 			
-			CallLocalFunction(#OnHouseLoaded, "d", i);
+			CallLocalFunction(#OnHouseLoaded, "d", data[hID]);
 	   }
 	   printf("%d houses loaded.", count);
     }

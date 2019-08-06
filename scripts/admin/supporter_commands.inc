@@ -15,12 +15,12 @@ CMD:tduty(playerid, params[])
     if(Account_IsSupporterDuty(playerid))
 	{
 		SetPlayerColor(playerid, 0xa52a2aff);
-		SendMessageToTesters(0, 0xa52a2aff, "[TESTERS]: %s è ora in servizio.", Character_GetOOCName(playerid));
+		SendMessageToTesters(0, 0xa52a2aff, "[TESTERS]: %s ï¿½ ora in servizio.", Character_GetOOCName(playerid));
 	}
 	else
 	{
 		SetPlayerColor(playerid, 0xFFFFFFFF);
-		SendMessageToTesters(0, 0xa52a2aff, "[TESTERS]: %s non è più in servizio.", Character_GetOOCName(playerid));
+		SendMessageToTesters(0, 0xa52a2aff, "[TESTERS]: %s non ï¿½ piï¿½ in servizio.", Character_GetOOCName(playerid));
 	}
     return 1;
 }
@@ -33,7 +33,7 @@ CMD:tchat(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Hai disabilitato la chat supporter.");
 	if(isnull(params) || strlen(params) > 128)
 		return SendClientMessage(playerid, COLOR_ERROR, "/tchat <testo>");
-	SendMessageToAdmins(0, COLOR_YELLOW, "[TESTER-CHAT] %s (%s): %s", AccountInfo[playerid][aName], Character_GetOOCName(playerid), params);
+	SendMessageToAdmins(0, COLOR_YELLOW, "[TESTER-CHAT] %s (%s): %s", Account_GetName(playerid), Character_GetOOCName(playerid), params);
 	return 1;
 }
 
@@ -43,7 +43,7 @@ CMD:testers(playerid, params[])
 	foreach(new i : Player)
 	{
 		if(Account_GetAdminLevel(i) == 1 && Account_IsSupporterDuty(i))
-			SendFormattedMessage(playerid, 0xa52a2aff, "(%s) %s [ID: %d]", AccountInfo[i][aName], Character_GetOOCName(i), i);
+			SendFormattedMessage(playerid, 0xa52a2aff, "(%s) %s [ID: %d]", Account_GetName(i), Character_GetOOCName(i), i);
 	}	
 	return 1;
 }
@@ -54,6 +54,6 @@ CMD:chiediaiuto(playerid, params[])
 	if(isnull(params) || strlen(params) > 128)
 		return SendClientMessage(playerid, COLOR_ERROR, "/chiediaiuto <testo>");
 	
-	//SendMessageToTesters(1, color, str[], Float, _:...})
+	
 	return 1;
 }

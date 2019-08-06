@@ -301,7 +301,6 @@ stock Character_ShowHouseDialog(playerid)
 	new houseid = Character_GetNearHouseIDMenu(playerid);
 	if(houseid != -1)
 	{
-		printf("HOuseID: %d", houseid);
 		return Dialog_Show(playerid, Dialog_House, DIALOG_STYLE_LIST, "Casa", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nCambia Interior", "Continua", "Chiudi");
 	}
 	return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno di casa tua."), 0;

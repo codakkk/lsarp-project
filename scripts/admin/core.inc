@@ -3,7 +3,7 @@
 
 hook OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
 {
-    if(AccountInfo[playerid][aAdmin] <= 0 || !Account_IsAdminDuty(playerid))
+    if(Account_GetAdminLevel(playerid) <= 0 || !Account_IsAdminDuty(playerid))
 	   return 0;
     SetPlayerPos(playerid, fX, fY, fZ);
     return 1;
@@ -73,7 +73,7 @@ stock SendMessageToAdmins(forceAlert, color, str[], {Float,_}:...)
 
 	   foreach(new i : Player)
 	   {
-		  if(!Character_IsLogged(i) || AccountInfo[i][aAdmin] < 2 || (pDisableAdminAlerts[i] && !forceAlert))
+		  if(!Character_IsLogged(i) || Account_GetAdminLevel(i) < 2 || (pDisableAdminAlerts[i] && !forceAlert))
 			 continue;
 		  SendTwoLinesMessage(i, color, string);
 	   }
@@ -82,7 +82,7 @@ stock SendMessageToAdmins(forceAlert, color, str[], {Float,_}:...)
     
     foreach(new i : Player)
     {
-	   if(!Character_IsLogged(i) || AccountInfo[i][aAdmin] < 2 || (pDisableAdminAlerts[i] && !forceAlert))
+	   if(!Character_IsLogged(i) || Account_GetAdminLevel(i) < 2 || (pDisableAdminAlerts[i] && !forceAlert))
 		  continue;
 	   SendTwoLinesMessage(i, color, str);
     }
@@ -125,7 +125,7 @@ stock SendMessageToTesters(forceAlert, color, str[], {Float,_}:...)
 
 	   foreach(new i : Player)
 	   {
-		  if(!Character_IsLogged(i) || AccountInfo[i][aAdmin] < 1 || (pDisableAdminAlerts[i] && !forceAlert))
+		  if(!Character_IsLogged(i) || Account_GetAdminLevel(i) < 1 || (pDisableAdminAlerts[i] && !forceAlert))
 			 continue;
 		  SendTwoLinesMessage(i, color, string);
 	   }
@@ -134,7 +134,7 @@ stock SendMessageToTesters(forceAlert, color, str[], {Float,_}:...)
     
     foreach(new i : Player)
     {
-	   if(!Character_IsLogged(i) || AccountInfo[i][aAdmin] < 1 || (pDisableAdminAlerts[i] && !forceAlert))
+	   if(!Character_IsLogged(i) || Account_GetAdminLevel(i) < 1 || (pDisableAdminAlerts[i] && !forceAlert))
 		  continue;
 	   SendTwoLinesMessage(i, color, str);
     }

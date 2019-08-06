@@ -4,8 +4,8 @@
 forward OnCharacterHungerChange(playerid);
 
 static 
-	pHunger[MAX_PLAYERS char],
-	pHungerTime[MAX_PLAYERS char],
+	PlayerHunger[MAX_PLAYERS char],
+	PlayerHungerTime[MAX_PLAYERS char],
 	pLastHungerAlert[MAX_PLAYERS];
 
 static 
@@ -16,14 +16,19 @@ static
 hook OnPlayerClearData(playerid)
 {
 	pLastHungerAlert[playerid] = 0;
-	pHungerTime{playerid} = 0;
+	PlayerHungerTime{playerid} = 0;
 	Character_SetHunger(playerid, 0, false);
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
 hook OnCharacterLoad(playerid)
 {
-	pLastHungerAlert[playerid] = GetTickCount();
+	inline OnLoad()
+	{
+		cache_get_value_index_int(0, 0, PlayerHunger[playerid]);
+		pLastHungerAlert[playerid] = GetTickCount();
+	}
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT hunger FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
 	return 1;
 }
 
@@ -31,10 +36,10 @@ ptask OnPlayerHungerTimer[60000](playerid)
 {
 	if(!Character_IsLogged(playerid) || !Character_IsAlive(playerid))
 		return 0;
-	pHungerTime{playerid}++;
-	if(pHungerTime{playerid} >= HUNGER_DECREASE_TIME)
+	PlayerHungerTime{playerid}++;
+	if(PlayerHungerTime{playerid} >= HUNGER_DECREASE_TIME)
 	{
-		pHungerTime{playerid} = 0;
+		PlayerHungerTime{playerid} = 0;
 		Character_AddHunger(playerid, -1, true);
 	}
 	if(Character_GetHunger(playerid) < 20)
@@ -92,19 +97,22 @@ stock Character_SetHunger(playerid, Hunger, bool:triggerCallback = false)
 		Hunger = 100;
 	else if(Hunger < 0)
 		Hunger = 0;
-	pHunger{playerid} = Hunger;
+	PlayerHunger{playerid} = Hunger;
+	
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET hunger = '%d' WHERE id = '%d'", Character_GetHunger(playerid), Character_GetID(playerid));
+
 	if(triggerCallback)
 		CallLocalFunction(#OnCharacterHungerChange, "d", playerid);
 }
 
 stock Character_AddHunger(playerid, amount, bool:triggerCallback = false)
 {
-	Character_SetHunger(playerid, pHunger{playerid} + amount, triggerCallback);
+	Character_SetHunger(playerid, PlayerHunger{playerid} + amount, triggerCallback);
 }
 
 stock Character_GetHunger(playerid)
 {
-	return pHunger{playerid};
+	return PlayerHunger{playerid};
 }
 
 stock bool:Character_IsRunning(playerid)

@@ -395,7 +395,7 @@ Dialog:Dialog_VehicleList(playerid, response, listitem, inputtext[])
         return 0;
     new 
         vehicle_id = pVehicleListItem[playerid][listitem];
-    if(vehicle_id == 0 || VehicleInfo[vehicle_id][vID] == 0 || VehicleInfo[vehicle_id][vOwnerID] != PlayerInfo[playerid][pID])
+    if(vehicle_id == 0 || Vehicle_GetID(vehicle_id) == 0 || Vehicle_GetOwnerID(vehicle_id) != Character_GetID(playerid))
         return 0;
     pSelectedVehicleListItem[playerid] = vehicle_id;
     new string[64];

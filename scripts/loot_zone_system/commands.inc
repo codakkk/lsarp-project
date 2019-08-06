@@ -58,7 +58,7 @@ CMD:refreshlootzone(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "[LOOT_ZONE] Loot Zone non valida.");
 
 	LootZone_Refresh(zone_id);
-	SendMessageToAdmins(false, COLOR_ADMIN, "[ADM-CMD] %s ha refreshato la loot zone ID %d.", AccountInfo[playerid][aName], zone_id);
+	SendMessageToAdmins(false, COLOR_ADMIN, "[ADM-CMD] %s ha refreshato la loot zone ID %d.", Account_GetName(playerid), zone_id);
 	SendFormattedMessage(playerid, COLOR_ADMIN, "[LOOT-ZONE] Hai refreshato la Loot Zone ID %d.", zone_id);
 	//Log(playerid, "LootZone_Refresh", zone_id);
 	return 1;
@@ -68,7 +68,7 @@ flags:refreshlootzoneall(CMD_DEVELOPER);
 CMD:refreshlootzoneall(playerid, params[])
 {
 	LootZone_RefreshAll();
-	SendMessageToAdmins(false, COLOR_ADMIN, "[ADM-CMD] %s ha refreshato tutte le loot zone.", AccountInfo[playerid][aName]);
+	SendMessageToAdmins(false, COLOR_ADMIN, "[ADM-CMD] %s ha refreshato tutte le loot zone.", Account_GetName(playerid));
 	SendFormattedMessage(playerid, COLOR_ADMIN, "[LOOT-ZONE] Hai refreshato tutte le lootzone.");
 	// Log(playerid, "LootZone_RefreshAll", -1);
 	return 1;
@@ -87,7 +87,7 @@ CMD:removealllootzone(playerid, params[])
 		}
 	}
 	// Log(playerid, "Remove All Loot zone", -1);
-	SendMessageToAdmins(false, COLOR_ADMIN, "[ADM-CMD] %s ha refreshato tutte le loot zone.", AccountInfo[playerid][aName]);
+	SendMessageToAdmins(false, COLOR_ADMIN, "[ADM-CMD] %s ha refreshato tutte le loot zone.", Account_GetName(playerid));
 	SendFormattedMessage(playerid, COLOR_ADMIN, "[LOOT-ZONE] Hai refreshato tutte le lootzone.");
 	return 1;
 }

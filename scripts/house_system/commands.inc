@@ -36,7 +36,7 @@ CMD:hcreate(playerid, params[])
 		return 0;
 	
     SendFormattedMessage(playerid, COLOR_GREEN, "Casa id %d creata. Interno: %d.", id, interior);
-	SendMessageToAdmins(true, COLOR_ORANGE, "L'admin %s (%d) ha creato la casa id %d. Interno: %d", AccountInfo[playerid][aName], playerid, id, interior);
+	SendMessageToAdmins(true, COLOR_ORANGE, "L'admin %s (%d) ha creato la casa id %d. Interno: %d", Account_GetName(playerid), playerid, id, interior);
     return 1;
 }
 
@@ -48,7 +48,7 @@ CMD:hdelete(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "/hdelete <house id>");
 	if(House_Delete(houseid))
 	{
-		SendMessageToAdmins(true, COLOR_ORANGE, "AdmCmd: %s (%d) ha rimosso la casa id %d.", AccountInfo[playerid][aName], playerid, houseid);
+		SendMessageToAdmins(true, COLOR_ORANGE, "AdmCmd: %s (%d) ha rimosso la casa id %d.", Account_GetName(playerid), playerid, houseid);
 	}
 	else
 	{

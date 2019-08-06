@@ -102,12 +102,16 @@ static stock Internal_ValidateObjectPos(objectid, Float:newX, Float:newY, Float:
     if(!IsValidDynamicObject(objectid))
         return 0;
     
+    if(!Furniture_IsExterior(objectid))
+        return 1;
+
     Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
 
     new 
         linked = FurnitureCustomData[FURNITURE_LINKED_TO],
         Float:x, Float:y, Float:z
     ;
+    printf("Linked: %d - House id: %d", linked, linked - HOUSE_START_WORLD);
     
     if(linked >= BUILDING_START_WORLD)
     {
@@ -138,11 +142,8 @@ hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float
             SetDynamicObjectPos(objectid, x, y, z);
             SetDynamicObjectRot(objectid, rx, ry, rz);
 
-            if(!(Character_GetVirtualWorld(playerid) > HOUSE_START_WORLD || Character_GetVirtualWorld(playerid) > BUILDING_START_WORLD))
-            {
-                if(!Internal_ValidateObjectPos(objectid, x, y, z))
-                    return SendClientMessage(playerid, COLOR_ERROR, "Non puoi piazzare l'oggetto troppo lontano dalla tua casa."), Furniture_CancelBuy(playerid), 0;
-            }
+            if(!Internal_ValidateObjectPos(objectid, x, y, z))
+                return SendClientMessage(playerid, COLOR_ERROR, "Non puoi piazzare l'oggetto troppo lontano dalla tua casa."), Furniture_CancelBuy(playerid), 0;
 
             Furniture_FinishBuy(playerid, objectid);
         }
@@ -163,14 +164,11 @@ hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float
         }
         else if(response == EDIT_RESPONSE_FINAL)
         {
-            if(!(Character_GetVirtualWorld(playerid) > HOUSE_START_WORLD || Character_GetVirtualWorld(playerid) > BUILDING_START_WORLD))
+            if(!Internal_ValidateObjectPos(objectid, x, y, z))
             {
-                if(!Internal_ValidateObjectPos(objectid, x, y, z))
-                {
-                    SetDynamicObjectPos(objectid, tx, ty, tz);
-                    SetDynamicObjectRot(objectid, trx, try, trz);
-                    return SendClientMessage(playerid, COLOR_ERROR, "Non puoi piazzare l'oggetto troppo lontano dalla tua casa."), 0;
-                }
+                SetDynamicObjectPos(objectid, tx, ty, tz);
+                SetDynamicObjectRot(objectid, trx, try, trz);
+                return SendClientMessage(playerid, COLOR_ERROR, "Non puoi piazzare l'oggetto troppo lontano dalla tua casa."), 0;
             }
 
             Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
@@ -682,6 +680,7 @@ stock Furniture_UpdateInfoList(playerid)
     return 1;
 }
 
+// Returns furning house
 stock Character_CanFurnish(playerid, bool:outsideCheck = false)
 {
     new currentHouse = Character_GetHouseID(playerid);
@@ -696,19 +695,14 @@ stock Character_CanFurnish(playerid, bool:outsideCheck = false)
                 House_GetEnterPosition(houseid, x, y, z);
                 if(GetPlayerDistanceFromPoint(playerid, x, y, z) >= 15.0)
                     continue;
-                return 1;
+                return houseid;
             }
         }
     }
     if(currentHouse != -1 && House_GetOwnerID(currentHouse) == Character_GetID(playerid) && IsPlayerInRangeOfHouseExit(playerid, currentHouse, 50.0))
     {
-        return 1;
+        return currentHouse;
     }
-    /*for_house(h)
-    {
-        if(House_GetOwnerID(h) == Character_GetID(playerid) && IsPlayerInRangeOfHouseEntrance(playerid, h, 5.0))
-            return 1;
-    }*/
     return 0;
 }
 
@@ -730,7 +724,7 @@ stock Character_GetFurnitureSlot(playerid)
 
 stock Character_GetExtFurnitureSlot(playerid)
 {
-    static const limit[] = {5, 5, 20, 600};
+    static const limit[] = {5, 5, 20, 30};
     return limit[Account_GetPremiumLevel(playerid)];
 }
 
@@ -934,10 +928,13 @@ stock Internal_GetNearbyFurnableWorld(playerid)
     for_map(i : GetHousesMap())
     {
         new houseid = iter_get_key(i);
+        printf("House id: %d", houseid);
         if(House_GetOwnerID(houseid) != Character_GetID(playerid) || House_GetEnterWorld(houseid) != Character_GetVirtualWorld(playerid))
             continue;
+        printf("Owner id: %d", House_GetOwnerID(houseid));
         House_GetEnterPosition(houseid, x, y, z);
         dist = GetPlayerDistanceFromPoint(playerid, x, y, z);
+        printf("Dist: %f", dist);
         if(dist > MAX_EXTERIOR_DISTANCE)
             continue;
         if(dist < nearest)
@@ -946,6 +943,7 @@ stock Internal_GetNearbyFurnableWorld(playerid)
             linked_to = House_GetExitWorld(houseid);
         }
     }
+    printf("Linked _to: %d", linked_to);
     return linked_to;
 }
 
@@ -1095,34 +1093,6 @@ stock House_RemoveAllfurnitures(houseid)
     return 1;
 }
 
-/* Remember to delete returned List. (list_delete)
-stock List:Furniture_GetAllLinkedToWorld(linkedToWorld)
-{
-    new 
-        worldid = Character_GetVirtualWorld(playerid),
-        List:all = list_new();
-    if(map_has_key(Furnitures, worldid))
-    {
-        new Pool:pool = Pool:map_get(Furnitures, worldid);
-        if(worldid == 0) // So exterior
-        {
-            new 
-                objectid;
-            for_pool(i : pool)
-            {
-                objectid = iter_get_value(i);
-                if(objectid <= 0)
-                    continue;
-                Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);  
-                if(FurnitureCustomData[FURNITURE_LINKED_TO] != linkedToWorld)
-                    continue;
-                list_add(all, objectid);
-            }
-        }
-    }
-    return list;
-}
-*/
 stock Furniture_GetExtCount(linkedtoWorld)
 {
     new 
@@ -1140,4 +1110,15 @@ stock Furniture_GetExtCount(linkedtoWorld)
         count++;
     }
     return count;
+}
+
+stock Character_SetFurnitureLinkedTo(playerid, worldid)
+{
+    FurnitureLinkedTo[playerid] = worldid;
+    return 1;
+}
+
+stock Character_GetFurnitureLinkedTo(playerid)
+{
+    return FurnitureLinkedTo[playerid];
 }

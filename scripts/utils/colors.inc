@@ -26,3 +26,7 @@
 #define COLOR_SLATEBLUE	    		(0x6A5ACDFF)
 #define COLOR_ADMINDUTY			  	(0x0000FFFF)
 #define COLOR_BLUE 					(0x3366FFFF)
+#define COLOR_SEND_REQUEST          (0xEA7500FF) // Color used by the requester
+#define COLOR_RECEIVE_REQUEST       (0xEA7500FF) // Color for the received request message
+#define COLOR_REJECT_REQUEST        (0xEA7500FF)
+#define COLOR_ACCEPT_REQUEST        (0xEA7500FF)

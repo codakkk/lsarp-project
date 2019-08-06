@@ -4,40 +4,7 @@
 #define MAX_DAMAGES_PER_PLAYER			(24)
 #define PENDING_REQUEST_TIME			1
 
-enum E_PLAYER_DATA
-{
-    pID,
-    pName[MAX_PLAYER_NAME],
-    pMoney,
-	
-    pSkin,
-
-    Float:pHealth,
-    Float:pArmour,
-
-    pBuildingKey,
-    pHouseKey,
-
-	pFaction,
-	pRank,
-
-	pPayCheck,
-	pJailTime,
-	pJailIC,
-
-	pFightStyle,
-	pChatStyle,
-	pWalkingStyle,
-	
-	pBanned,
-	pBanExpiry,
-
-	pLastChopShopTime,
-
-    pLootZone, // MUST REMOVE FROM HERE SOON
-};
-new stock
-	PlayerInfo[MAX_PLAYERS][E_PLAYER_DATA],
+new
 	// probably Iterators aren't worth for this.
 	Iterator:pTogglePM[MAX_PLAYERS]<MAX_PLAYERS>,
 	Iterator:pToggleOOC[MAX_PLAYERS]<MAX_PLAYERS>,
@@ -45,21 +12,6 @@ new stock
 	pSelectedUniformSlot[MAX_PLAYERS char],
 	pLastPMTime[MAX_PLAYERS]
 ;
-
-enum E_PLAYER_RESTORE_DATA
-{
-    pSpawned,
-    pFirstSpawn,
-    Float:pLastX,
-    Float:pLastY,
-    Float:pLastZ,
-    Float:pLastAngle,
-    Float:pLastHealth,
-    Float:pLastArmour,
-    pLastInterior,
-    pLastVirtualWorld,
-};
-new PlayerRestore[MAX_PLAYERS][E_PLAYER_RESTORE_DATA];
 
 enum e_Bit1_Data 
 {
@@ -96,7 +48,8 @@ enum _:e_PendingType
 	REQUEST_TYPE_ITEM,
 	REQUEST_TYPE_REPAIR,
 	REQUEST_TYPE_VEHICLE_SPRAY,
-	REQUEST_TYPE_SEARCH
+	REQUEST_TYPE_SEARCH,
+	REQUEST_TYPE_BUILDING
 }
 
 stock GetRequestTypeName(type)
@@ -108,6 +61,8 @@ stock GetRequestTypeName(type)
 	   case REQUEST_TYPE_ITEM: l = "Oggetto";
 	   case REQUEST_TYPE_REPAIR: l = "Riparazione";
 	   case REQUEST_TYPE_VEHICLE_SPRAY: l = "Verniciatura";
+	   case REQUEST_TYPE_SEARCH: l = "Perquisizione";
+	   case REQUEST_TYPE_BUILDING: l = "Edificio";
 	   default: l = "Sconosciuto";
     }
     return l; //unreachable

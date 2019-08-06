@@ -72,8 +72,8 @@ stock Character_AcceptCare(playerid)
 	
 	PlayerTextDrawHide(playerid, pDeathTextDraw[playerid]);
 
-	SendFormattedMessage(playerid, COLOR_GREEN, "Hai accettato le cure di %s.", Character_GetRolePlayName(senderid));
-	SendFormattedMessage(senderid, COLOR_GREEN, "%s ha accettato le tue cure.", Character_GetRolePlayName(playerid));
+	SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "Hai accettato le cure di %s.", Character_GetRolePlayName(senderid));
+	SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s ha accettato le tue cure.", Character_GetRolePlayName(playerid));
 	Log(Character_GetOOCName(senderid), Character_GetOOCName(playerid), "/accetta cure");
 	return 1;
 }

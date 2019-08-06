@@ -4,10 +4,11 @@ ptask OnPlayerPayDayMinute[60000](playerid) //
 {
 	if(!Character_IsLogged(playerid))
 		return 1;
-	AccountInfo[playerid][aPayDay]++;
-	if(AccountInfo[playerid][aPayDay] >= 60) // Pay Day Time in minutes
+	Account_AddPayDay(playerid, 1);
+	
+	if(Account_GetPayDay(playerid) >= 60) // Pay Day Time in minutes
 	{
-		AccountInfo[playerid][aPayDay] -= 60;
+		Account_AddPayDay(playerid, -60);
 		Character_PayDay(playerid);
 	}
 	return 1;
@@ -26,9 +27,9 @@ stock Character_PayDay(playerid)
 		SendFormattedMessage(playerid, COLOR_YELLOW, "Hai ricevuto $%d aggiuntivi come bonus Premium.", paycheck);
 	}
 	new factionid = Character_GetFaction(playerid);
-	if(factionid != -1)
+	if(factionid != INVALID_FACTION_ID)
 	{
-		new salary = Faction_GetRankSalary(factionid, Character_GetRank(playerid)-1);
+		new salary = Faction_GetRankSalary(factionid, Character_GetRank(playerid));
 		if(salary > 0)
 		{
 			paycheck += salary;
@@ -50,6 +51,7 @@ stock Character_PayDay(playerid)
 
 	Character_AddPayCheck(playerid, paycheck);
 	SendFormattedMessage(playerid, COLOR_YELLOW, "Stipendio: $%d.", Character_GetPayCheck(playerid));
+
 	if(paycheck > 0)
 		SendClientMessage(playerid, COLOR_YELLOW, "Dirigiti verso NOMEPOSTO per ritirare il tuo stipendio.");
     
