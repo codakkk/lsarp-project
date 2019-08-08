@@ -156,6 +156,17 @@ CMD:cura(playerid, params[])
 	return 1;
 }
 
+flags:megafono(CMD_POLICE);
+CMD:megafono(playerid, params[])
+{
+	if(isnull(params) || strlen(params) >= 256)
+		return SendClientMessage(playerid, COLOR_ERROR, "(/m)egafono <testo>");
+	new String:str = str_format("[MEGAFONO] %s: %s", Character_GetRolePlayName(playerid), params);
+	ProxDetectorStr(playerid, 50.0, str, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW);	
+	return 1;
+}
+alias:megafono("m");
+
 flags:perquisisci(CMD_ALIVE_USER); //flags:perquisisci(CMD_POLICE);
 CMD:perquisisci(playerid, params[])
 {
@@ -176,32 +187,24 @@ CMD:perquisisci(playerid, params[])
 	
 	SendFormattedMessage(id, COLOR_RECEIVE_REQUEST, "%s (%d) vuole perquisirti. Digita \"/accetta perquisizione\" per accettare o \"/annulla\" per rifiutare.", Character_GetRolePlayName(playerid), playerid);
 	SendFormattedMessage(playerid, COLOR_SEND_REQUEST, "Richiesta di perquisizione inviata a %s (%d).", Character_GetRolePlayName(id), id);
-
 	Character_SetRequest(playerid, id, REQUEST_TYPE_SEARCH);
-	return 1;
-}
 
-flags:megafono(CMD_POLICE);
-CMD:megafono(playerid, params[])
-{
-	if(isnull(params) || strlen(params) >= 256)
-		return SendClientMessage(playerid, COLOR_ERROR, "(/m)egafono <testo>");
-	new String:str = str_format("[MEGAFONO] %s: %s", Character_GetRolePlayName(playerid), params);
-	ProxDetectorStr(playerid, 50.0, str, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW);	
 	return 1;
 }
-alias:megafono("m");
 
 stock Character_AcceptSearch(playerid)
 {
-	if(!Request_IsPending(playerid) || Request_GetType(playerid) != REQUEST_TYPE_SEARCH)
+	if(!Request_IsPending(playerid, REQUEST_TYPE_SEARCH))
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di perquisizione attiva."), 0;
-    if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid), 5.0))
+    if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_SEARCH), 5.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
-	new senderid = Request_GetSender(playerid);
+	new senderid = Request_GetSender(playerid, REQUEST_TYPE_SEARCH);
 
 	SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s (%d) ha accettato la tua richiesta di perquisizione.", Character_GetRolePlayName(playerid), playerid);
 	SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "Hai accettato la richiesta di perquisizione di %s (%d).", Character_GetRolePlayName(senderid), senderid);
+
+	ResetPendingRequest(playerid, REQUEST_TYPE_SEARCH);
+	ResetPendingRequest(senderid, REQUEST_TYPE_SEARCH);
 
 	ShowInspectingInventory(senderid, playerid);
 	return 1;

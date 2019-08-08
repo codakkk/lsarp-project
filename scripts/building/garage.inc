@@ -107,16 +107,16 @@ CMD:vernicia(playerid, params[])
 
 stock Character_AcceptVehicleSpray(playerid)
 {
-    if(!Request_IsPending(playerid) || Request_GetType(playerid) != REQUEST_TYPE_VEHICLE_SPRAY)
+    if(!Request_IsPending(playerid, REQUEST_TYPE_VEHICLE_SPRAY))
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di riverniciatura attiva."), 0;
-    if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid), 5.0))
+    if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_VEHICLE_SPRAY), 5.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
     
-    new senderid = Request_GetSender(playerid),
-        color1 = Request_GetItem(playerid),
-        color2 = Request_GetSlot(playerid),
-        price = Request_GetAmount(playerid),
-        vehicleid = GetPlayerVehicleID(playerid)
+    new senderid = Request_GetSender(playerid, REQUEST_TYPE_VEHICLE_SPRAY),
+        color1 = Request_GetItem(playerid, REQUEST_TYPE_VEHICLE_SPRAY),
+        color2 = Request_GetSlot(playerid, REQUEST_TYPE_VEHICLE_SPRAY),
+        price = Request_GetAmount(playerid, REQUEST_TYPE_VEHICLE_SPRAY),
+        vehicleid = GetPlayerVehicleID(playerid, REQUEST_TYPE_VEHICLE_SPRAY)
     ;
 
     Character_GiveMoney(playerid, -price, "spray");
@@ -129,21 +129,21 @@ stock Character_AcceptVehicleSpray(playerid)
     
     Vehicle_SetColors(vehicleid, color1, color2);
 
-    ResetPendingRequest(playerid);
-    ResetPendingRequest(senderid);
+    ResetPendingRequest(playerid, REQUEST_TYPE_VEHICLE_SPRAY);
+    ResetPendingRequest(senderid, REQUEST_TYPE_VEHICLE_SPRAY);
     return 1;
 }
 
 stock Character_AcceptRepair(playerid)
 {
-    if(!Request_IsPending(playerid) || Request_GetType(playerid) != REQUEST_TYPE_REPAIR)
+    if(!Request_IsPending(playerid, REQUEST_TYPE_REPAIR))
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di riparazione attiva."), 0;
-    if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid), 5.0))
+    if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_REPAIR), 5.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
 
-    new senderid = Request_GetSender(playerid),
-        price = Request_GetAmount(playerid),
-        vehicleid = GetPlayerVehicleID(playerid)
+    new senderid = Request_GetSender(playerid, REQUEST_TYPE_REPAIR),
+        price = Request_GetAmount(playerid, REQUEST_TYPE_REPAIR),
+        vehicleid = GetPlayerVehicleID(playerid, REQUEST_TYPE_REPAIR)
     ;
 
     Character_GiveMoney(playerid, -price, "repair");
@@ -159,8 +159,8 @@ stock Character_AcceptRepair(playerid)
     RepairVehicle(vehicleid);
     SetVehicleHealth(vehicleid, 999.0);
 
-    ResetPendingRequest(playerid);
-    ResetPendingRequest(senderid);
+    ResetPendingRequest(playerid, REQUEST_TYPE_REPAIR);
+    ResetPendingRequest(senderid, REQUEST_TYPE_REPAIR);
     return 1;
 }
 

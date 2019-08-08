@@ -13,42 +13,45 @@ static enum e_RequestData
 	Slot,
 };
 
-static 
-	PendingRequestInfo[MAX_PLAYERS][e_RequestData]
+static // Should I use PawnPlus MAp or List? mh
+	PendingRequestInfo[MAX_PLAYERS][REQUEST_TYPE_LAST][e_RequestData]
 	;
 
 
-stock ResetPendingRequest(playerid)
+stock ResetPendingRequest(playerid, type)
 {
-	PendingRequestInfo[playerid][Pending] = 0;
-	PendingRequestInfo[playerid][ByPlayer] = -1;
-	PendingRequestInfo[playerid][ToPlayer] = -1;
-	PendingRequestInfo[playerid][Time] = 0;
-	PendingRequestInfo[playerid][Item] = 0;
-	PendingRequestInfo[playerid][Amount] = 0;
-	PendingRequestInfo[playerid][Extra] = 0;
-	PendingRequestInfo[playerid][Type] = REQUEST_TYPE_NONE;
-	PendingRequestInfo[playerid][Slot] = 0;
+	PendingRequestInfo[playerid][type][Pending] = 0;
+	PendingRequestInfo[playerid][type][ByPlayer] = -1;
+	PendingRequestInfo[playerid][type][ToPlayer] = -1;
+	PendingRequestInfo[playerid][type][Time] = 0;
+	PendingRequestInfo[playerid][type][Item] = 0;
+	PendingRequestInfo[playerid][type][Amount] = 0;
+	PendingRequestInfo[playerid][type][Extra] = 0;
+	PendingRequestInfo[playerid][type][Type] = REQUEST_TYPE_NONE;
+	PendingRequestInfo[playerid][type][Slot] = 0;
 }
 
 hook OnPlayerClearData(playerid)
 {
-	if(Request_IsPending(playerid))
+	for(new i = 0; i < REQUEST_TYPE_LAST; ++i)
 	{
-		new toPlayer = PendingRequestInfo[playerid][ToPlayer],
-			fromPlayer = PendingRequestInfo[playerid][ByPlayer];
-		if(PendingRequestInfo[toPlayer][Pending] && PendingRequestInfo[toPlayer][ByPlayer] == playerid)
+		if(Request_IsPending(playerid, i))
 		{
-			SendFormattedMessage(toPlayer, COLOR_ERROR, "La richiesta di %s è stata annullata poiché si è disconnesso.", Character_GetRolePlayName(playerid));
-			ResetPendingRequest(toPlayer);
+			new toPlayer = PendingRequestInfo[playerid][i][ToPlayer],
+				fromPlayer = PendingRequestInfo[playerid][i][ByPlayer];
+			if(PendingRequestInfo[toPlayer][i][Pending] && PendingRequestInfo[toPlayer][i][ByPlayer] == playerid)
+			{
+				SendFormattedMessage(toPlayer, COLOR_ERROR, "La richiesta (%s) di %s è stata annullata poiché si è disconnesso.", GetRequestTypeName(i), Character_GetRolePlayName(playerid));
+				ResetPendingRequest(toPlayer);
+			}
+			else if(PendingRequestInfo[fromPlayer][i][Pending] && PendingRequestInfo[fromPlayer][i][ToPlayer] == playerid)
+			{
+				SendFormattedMessage(fromPlayer, COLOR_ERROR, "La richiesta (%s) inviata a %s è stata annullata poiché si è disconnesso.", GetRequestTypeName(i), Character_GetRolePlayName(playerid));
+				ResetPendingRequest(fromPlayer);
+			}
 		}
-		else if(PendingRequestInfo[fromPlayer][Pending] && PendingRequestInfo[fromPlayer][ToPlayer] == playerid)
-		{
-			SendFormattedMessage(fromPlayer, COLOR_ERROR, "La richiesta inviata a %s è stata annullata poiché si è disconnesso.", Character_GetRolePlayName(playerid));
-			ResetPendingRequest(fromPlayer);
-		}
+		ResetPendingRequest(playerid, i);
 	}
-	ResetPendingRequest(playerid);
     return 1;
 }
 
@@ -56,16 +59,19 @@ ptask OnRequestUpdateTimer[1000](playerid)
 {
 	if(!Character_IsLogged(playerid))
 		return 0;
-	if(Request_IsPending(playerid))
+	for(new i = 0; i < REQUEST_TYPE_LAST; ++i)
 	{
-		if(GetTickCount() - PendingRequestInfo[playerid][Time] > PENDING_REQUEST_TIME * 60 * 1000) // 60 seconds
+		if(Request_IsPending(playerid, i))
 		{
-			new byPlayer = PendingRequestInfo[playerid][ByPlayer];
-			SendFormattedMessage(playerid, COLOR_ERROR, "La richiesta da %s è scaduta.", Character_GetRolePlayName(byPlayer), byPlayer);
-			ResetPendingRequest(playerid);
-	
-			SendFormattedMessage(byPlayer, COLOR_ERROR, "La richiesta inviata a %s è scaduta.", Character_GetRolePlayName(playerid), playerid);
-			ResetPendingRequest(byPlayer);
+			if(GetTickCount() - PendingRequestInfo[playerid][i][Time] > PENDING_REQUEST_TIME * 60 * 1000) // 60 seconds
+			{
+				new byPlayer = PendingRequestInfo[playerid][i][ByPlayer];
+				SendFormattedMessage(playerid, COLOR_ERROR, "La richiesta (%s) da %s è scaduta.", GetRequestTypeName(i), Character_GetRolePlayName(byPlayer), byPlayer);
+				ResetPendingRequest(playerid, i);
+		
+				SendFormattedMessage(byPlayer, COLOR_ERROR, "La richiesta (%s) inviata a %s è scaduta.", GetRequestTypeName(i), Character_GetRolePlayName(playerid), playerid);
+				ResetPendingRequest(byPlayer, i);
+			}
 		}
 	}
 	return 1;
@@ -73,62 +79,68 @@ ptask OnRequestUpdateTimer[1000](playerid)
 
 stock Character_SetRequest(byPlayer, toPlayer, type, item = 0, amount = 0, slot = -1)
 {
-	PendingRequestInfo[byPlayer][Pending] = PendingRequestInfo[toPlayer][Pending] = 1;
+	if(! (REQUEST_TYPE_NONE < type < REQUEST_TYPE_LAST))
+		return 1;
+	
+	PendingRequestInfo[byPlayer][type][Pending] = PendingRequestInfo[toPlayer][type][Pending] = 1;
 
-	PendingRequestInfo[byPlayer][ToPlayer] = toPlayer;
-	PendingRequestInfo[toPlayer][ByPlayer] = byPlayer;
+	PendingRequestInfo[byPlayer][type][ToPlayer] = toPlayer;
+	PendingRequestInfo[toPlayer][type][ByPlayer] = byPlayer;
 
-	PendingRequestInfo[byPlayer][Time] = PendingRequestInfo[toPlayer][Time] = GetTickCount();
+	PendingRequestInfo[byPlayer][type][Time] = PendingRequestInfo[toPlayer][type][Time] = GetTickCount();
 
-	PendingRequestInfo[byPlayer][Item] = PendingRequestInfo[toPlayer][Item] = item;
+	PendingRequestInfo[byPlayer][type][Item] = PendingRequestInfo[toPlayer][type][Item] = item;
 
-	PendingRequestInfo[byPlayer][Slot] = PendingRequestInfo[toPlayer][Slot] = slot;
+	PendingRequestInfo[byPlayer][type][Slot] = PendingRequestInfo[toPlayer][type][Slot] = slot;
 
-	PendingRequestInfo[byPlayer][Amount] = PendingRequestInfo[toPlayer][Amount] = amount;
+	PendingRequestInfo[byPlayer][type][Amount] = PendingRequestInfo[toPlayer][type][Amount] = amount;
 
-	PendingRequestInfo[byPlayer][Type] = PendingRequestInfo[toPlayer][Type] = type;
+	PendingRequestInfo[byPlayer][type][Type] = PendingRequestInfo[toPlayer][type][Type] = type;
+	return 1;
 }
 
 //stock Character_SetPendingRequest(playerid, bool:)
 
-stock Request_IsPending(playerid)
+stock Request_IsPending(playerid, type)
 {
-	return PendingRequestInfo[playerid][Pending];
+	if(! (REQUEST_TYPE_NONE < type < REQUEST_TYPE_LAST))
+		return 1;
+	return PendingRequestInfo[playerid][type][Pending];
 }
 
-stock Request_GetItem(playerid)
+stock Request_GetItem(playerid, reqType)
 {
-	return PendingRequestInfo[playerid][Item];
+	return PendingRequestInfo[playerid][reqType][Item];
 }
 
-stock Request_GetAmount(playerid)
+stock Request_GetAmount(playerid, reqType)
 {
-	return PendingRequestInfo[playerid][Amount];
+	return PendingRequestInfo[playerid][reqType][Amount];
 }
 
-stock Request_GetSlot(playerid)
+stock Request_GetSlot(playerid, reqType)
 {
-	return PendingRequestInfo[playerid][Slot];
+	return PendingRequestInfo[playerid][reqType][Slot];
 }
 
-stock Request_GetType(playerid)
+stock Request_GetType(playerid, reqType)
 {
-	return PendingRequestInfo[playerid][Type];
+	return PendingRequestInfo[playerid][reqType][Type];
 }
 
-stock Request_GetSender(playerid)
+stock Request_GetSender(playerid, reqType)
 {
-	return PendingRequestInfo[playerid][ByPlayer];
+	return PendingRequestInfo[playerid][reqType][ByPlayer];
 }
 
-stock Request_GetReceiver(playerid)
+stock Request_GetReceiver(playerid, reqType)
 {
-	return PendingRequestInfo[playerid][ToPlayer];
+	return PendingRequestInfo[playerid][reqType][ToPlayer];
 }
 
 stock Character_AcceptItemRequest(playerid)
 {
-	if(!Request_IsPending(playerid) || Request_GetType(playerid) != REQUEST_TYPE_ITEM)
+	if(!Request_IsPending(playerid, REQUEST_TYPE_ITEM))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta attiva.");
 
 	if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid), 5.0))
