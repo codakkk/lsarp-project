@@ -293,3 +293,4 @@ Dialog:Dialog_ZPointsBuyRewards(playerid, response, listitem, inputtext[])
 	Character_Save(playerid);
 	return 1;
 }
+//we
