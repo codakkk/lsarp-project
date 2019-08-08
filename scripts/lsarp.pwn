@@ -140,7 +140,6 @@ DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
 
 #include <server\core>
 
-#include <player\enum>
 #include <admin\enum>
 #include <dealership\enum>
 #include <inventory\enum>
@@ -173,7 +172,6 @@ DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
 #include <utils\utils>
 #include <utils\maths>
 
-//#include <anticheat\cheats\triggerbot>
 
 #include <YSI_Coding\y_hooks> // Place hooks after this. Everything included before this, is hooked first.
 
