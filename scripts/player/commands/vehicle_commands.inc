@@ -203,8 +203,8 @@ alias:vbagagliaio("vtrunk", "vinventario", "vinv");
 flags:vdeposita(CMD_ALIVE_USER);
 CMD:vdeposita(playerid, params[])
 {
-	if(Request_IsPending(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
+	if(Request_IsPending(playerid, REQUEST_TYPE_WEAPON))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'arma attiva.");
 	
 	if(Character_IsFactionDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
@@ -255,8 +255,8 @@ alias:vdeposita("vdep");
 flags:vdisassembla(CMD_ALIVE_USER);
 CMD:vdisassembla(playerid, params[])
 {
-	if(Request_IsPending(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
+	if(Request_IsPending(playerid, REQUEST_TYPE_WEAPON))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'arma attiva.");
 	new 
 		slotid, itemid, ammo;
 	new vehicleid = Character_GetClosestVehicle(playerid, 3.0);

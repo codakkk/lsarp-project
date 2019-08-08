@@ -28,8 +28,6 @@ CMD:esci(playerid, params[])
 flags:dai(CMD_ALIVE_USER);
 CMD:dai(playerid, params[])
 {
-	if(Request_IsPending(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
     new
         id,
         text[128];
@@ -49,14 +47,19 @@ CMD:dai(playerid, params[])
     if(!IsPlayerInRangeOfPlayer(playerid, id, 3.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
     
-	if(Request_IsPending(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta attiva.");
+	
 	
 	if(!Character_IsAlive(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
 
 	if(!strcmp(text, "arma", true))
 	{
+		if(Request_IsPending(playerid, REQUEST_TYPE_WEAPON))
+			return SendClientMessage(playerid, COLOR_ERROR, "Hai già una richiesta d'arma attiva.");
+		
+		if(Request_IsPending(id, REQUEST_TYPE_WEAPON))
+			return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta d'arma attiva.");	
+		
 		new weapon = Character_GetWeapon(playerid);
 		new ammo = Character_GetAmmo(playerid);
 		if(weapon == 0 || ammo <= 0)
@@ -110,20 +113,23 @@ CMD:accetta(playerid, params[])
 			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 		if(!strcmp(params, "arma", true))
 		{
-			if(!Request_IsPending(playerid) || Request_GetType(playerid) != REQUEST_TYPE_WEAPON)
+			if(!Request_IsPending(playerid, REQUEST_TYPE_WEAPON))
 				return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta d'arma attiva.");
-			if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid), 5.0))
+
+			if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_WEAPON), 5.0))
 				return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
-			new slotid = Request_GetSlot(playerid),
-				weaponid = Request_GetItem(playerid),
+
+			new slotid = Request_GetSlot(playerid, REQUEST_TYPE_WEAPON),
+				weaponid = Request_GetItem(playerid, REQUEST_TYPE_WEAPON),
 				tempWeapon = 0,
 				ammo = 0,
-				requestSender = Request_GetSender(playerid);
+				requestSender = Request_GetSender(playerid, REQUEST_TYPE_WEAPON);
+			
 			GetPlayerWeaponData(requestSender, slotid, tempWeapon, ammo);
 			if(weaponid != tempWeapon || ammo == 0)
 			{
-				ResetPendingRequest(playerid);
-				ResetPendingRequest(requestSender);
+				ResetPendingRequest(playerid, REQUEST_TYPE_WEAPON);
+				ResetPendingRequest(requestSender, REQUEST_TYPE_WEAPON);
 				SendClientMessage(playerid, COLOR_ERROR, "Non possiedi più l'arma. La richiesta è stata annullata.");
 				return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non possiede più l'arma, pertanto non puoi più accettare.");	
 			}
@@ -137,8 +143,8 @@ CMD:accetta(playerid, params[])
 				SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "Hai accettato l'arma (%s) con %d proiettili da %s.", Weapon_GetName(weaponid), ammo, Character_GetRolePlayName(requestSender));
 				SendFormattedMessage(requestSender, COLOR_ACCEPT_REQUEST, "%s (%d) ha accettato la tua arma.", Character_GetRolePlayName(playerid), playerid);
 				
-				ResetPendingRequest(playerid);
-				ResetPendingRequest(requestSender);
+				ResetPendingRequest(playerid, REQUEST_TYPE_WEAPON);
+				ResetPendingRequest(requestSender, REQUEST_TYPE_WEAPON);
 			}
 			else if(Character_HasSpaceForItem(playerid, weaponid, ammo))
 			{
@@ -150,8 +156,8 @@ CMD:accetta(playerid, params[])
 
 				SendFormattedMessage(requestSender, COLOR_ACCEPT_REQUEST, "%s (%d) ha accettato la tua arma.", Character_GetRolePlayName(playerid), playerid);
 
-				ResetPendingRequest(playerid);
-				ResetPendingRequest(requestSender);
+				ResetPendingRequest(playerid, REQUEST_TYPE_WEAPON);
+				ResetPendingRequest(requestSender, REQUEST_TYPE_WEAPON);
 			}
 			else
 				SendClientMessage(playerid, COLOR_ERROR, "Hai già un'arma e non hai abbastanza spazio nell'inventario.");

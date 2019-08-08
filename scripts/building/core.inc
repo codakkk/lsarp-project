@@ -549,29 +549,29 @@ stock Character_ShowBuildingDialog(playerid)
 
 stock Character_AcceptBuilding(playerid)
 {
-	if(!Request_IsPending(playerid) || Request_GetType(playerid) != REQUEST_TYPE_REPAIR)
+	if(!Request_IsPending(playerid, REQUEST_TYPE_REPAIR))
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di riparazione attiva."), 0;
 	
-    if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid), 5.0))
+    if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_REPAIR), 5.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
 	
-	new senderid = Request_GetSender(playerid),
-		buildingid = Request_GetItem(playerid),
-        price = Request_GetAmount(playerid)
+	new senderid = Request_GetSender(playerid, REQUEST_TYPE_REPAIR),
+		buildingid = Request_GetItem(playerid, REQUEST_TYPE_REPAIR),
+        price = Request_GetAmount(playerid, REQUEST_TYPE_REPAIR)
     ;
 
 	if(buildingid == -1)
 	{
-		ResetPendingRequest(playerid);
-		ResetPendingRequest(senderid);
+		ResetPendingRequest(playerid, REQUEST_TYPE_REPAIR);
+		ResetPendingRequest(senderid, REQUEST_TYPE_REPAIR);
 		return 0;
 	}
 
 	if(Building_GetOwnerID(buildingid) != Character_GetID(senderid))
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Il giocatore che ti ha inviato la richiesta non è più proprietario dell'edificio.");
-		ResetPendingRequest(playerid);
-		ResetPendingRequest(senderid);
+		ResetPendingRequest(playerid, REQUEST_TYPE_REPAIR);
+		ResetPendingRequest(senderid, REQUEST_TYPE_REPAIR);
 		return 0;
 	}
 
@@ -581,8 +581,8 @@ stock Character_AcceptBuilding(playerid)
     SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s ha accettato la tua richiesta di vendita del tuo edificio. Hai guadagnato $%d.", Character_GetRolePlayName(playerid), price);
     SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "%s ti ha venduto il suo edificio per $%d.", Character_GetRolePlayName(senderid), price);
 
-    ResetPendingRequest(playerid);
-    ResetPendingRequest(senderid);
+    ResetPendingRequest(playerid, REQUEST_TYPE_REPAIR);
+    ResetPendingRequest(senderid, REQUEST_TYPE_REPAIR);
 	return 1;
 }
 

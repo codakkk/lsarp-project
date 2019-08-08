@@ -29,8 +29,8 @@ CMD:usa(playerid, params[])
 {
 	if(!Character_CanInteract(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
-	if(Request_IsPending(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
+	if(Request_IsPending(playerid, REQUEST_TYPE_ITEM))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'oggetto attiva.");
 	new slotid;
 	if(sscanf(params, "d", slotid))
 		return SendClientMessage(playerid, COLOR_ERROR, "/usa <slotid>");
@@ -47,8 +47,9 @@ CMD:passa(playerid, params[])
 	if(!Character_CanInteract(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	
-	if(Request_IsPending(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
+	if(Request_IsPending(playerid, REQUEST_TYPE_ITEM))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'oggetto attiva.");
+
 	new slotid, id, amount;
 	if(sscanf(params, "k<u>dD(1)", id, slotid, amount))
 		return SendClientMessage(playerid, COLOR_ERROR, "/passa <playerid/partofname> <slotid> <quantità (default 1)>");
@@ -66,6 +67,9 @@ CMD:getta(playerid, params[])
 	if(Character_IsFactionDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
 	
+	if(Request_IsPending(playerid, REQUEST_TYPE_ITEM))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'oggetto attiva.");
+
 	new slotid, amount;
 	if(sscanf(params, "dD(1)", slotid, amount))
 		return SendClientMessage(playerid, COLOR_ERROR, "/getta <slotid> <quantità (default 1)>");
@@ -96,8 +100,8 @@ CMD:deposita(playerid, params[])
 	if(Character_IsFactionDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
 
-	if(Request_IsPending(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
+	if(Request_IsPending(playerid, REQUEST_TYPE_WEAPON))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'arma attiva.");
 	
 	new itemid , ammo;
 	Character_GetWeaponData(playerid, Weapon_GetSlot(Character_GetWeapon(playerid)), itemid, ammo);
@@ -134,8 +138,8 @@ CMD:disassembla(playerid, params[])
 	if(Character_IsFactionDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
 
-	if(Request_IsPending(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
+	if(Request_IsPending(playerid, REQUEST_TYPE_WEAPON))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'arma attiva.");
 
 	new 
 		slotid, itemid, ammo;
@@ -196,8 +200,8 @@ CMD:gettaarma(playerid, params[])
 	if(Character_IsFactionDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
 
-	if(Request_IsPending(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta attiva.");
+	if(Request_IsPending(playerid, REQUEST_TYPE_WEAPON))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'arma attiva.");
 	new 
 		weaponid, 
 		ammo;
