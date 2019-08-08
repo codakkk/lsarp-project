@@ -24,7 +24,7 @@ static enum E_ACCOUNT_DATA
 	Level,
 	PayDay
 };
-
+//TTTTT
 static enum e_Bit1_AccountData 
 {
 	e_pAccountLogged,
