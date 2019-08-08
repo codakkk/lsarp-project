@@ -18,7 +18,6 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
 				SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso la porta della casa.");
 			else
 				SendClientMessage(playerid, COLOR_GREEN, "Hai aperto la porta della casa.");
-			House_Save(houseid);
 		}
 		case 1: // Show Inv
 		{
@@ -71,7 +70,6 @@ Dialog:Dialog_HouseDeposit(playerid, response, listitem, inputtext[])
 	House_GiveMoney(houseid, amount);
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai depositato $%d all'interno della tua casa.", amount);
     SendFormattedMessage(playerid, COLOR_GREEN, "Attuale: $%d", House_GetMoney(houseid));
-	House_Save(houseid);
     return 1;
 }
 
@@ -89,7 +87,6 @@ Dialog:Dialog_HouseWithdraw(playerid, response, listitem, inputtext[])
     Character_GiveMoney(playerid, amount, "Dialog_HouseWithdraw");
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai ritirato $%d dalla tua casa.", amount);
     SendFormattedMessage(playerid, COLOR_GREEN, "Attuale: $%d", House_GetMoney(houseid));
-	House_Save(houseid);
     return 1;
 }
 
@@ -107,7 +104,6 @@ Dialog:Dialog_HouseSell(playerid, response, listitem, inputtext[])
 
 	House_RemoveAllfurnitures(houseid);
     House_ResetOwner(houseid);
-    House_Save(houseid);
     return 1;
 }
 
@@ -124,6 +120,5 @@ Dialog:Dialog_HouseInterior(playerid, response, listitem, inputtext[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi selezionare questo interno per questa casa.");
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato l'interno della tua casa. Nuovo interno: %d.", listitem);
     House_SetInterior(houseid, listitem);
-    House_Save(houseid);
     return 1;
 }

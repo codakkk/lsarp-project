@@ -110,6 +110,7 @@ hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float
                 Gate_SetEndPos(gateid, x, y, z);
                 Gate_SetEndRot(gateid, rx, ry, rz);
 
+                // Reset Pos
                 new Float:tx, Float:ty, Float:tz,
                     Float:trx, Float:try, Float:trz;
                 Gate_GetStartPos(gateid, tx, ty, tz);
@@ -119,7 +120,6 @@ hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float
 
                 SendFormattedMessage(playerid, -1, "Hai settato la posizione di arrivo per il gateid %d.", gateid);
             }
-			Gate_Save(gateid);
             Log(Character_GetOOCName(playerid), "", "Edit Gate", gateid);
 
 			EditObject_End(playerid);
@@ -219,32 +219,6 @@ stock Gate_LoadAll()
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `gates` ORDER BY id DESC");
 }
 
-stock Gate_Save(gateid)
-{
-    new Float:x, Float:y, Float:z,
-        Float:rx, Float:ry, Float:rz,
-        Float:ex, Float:ey, Float:ez,
-        Float:erx, Float:ery, Float:erz;
-    Gate_GetStartPos(gateid, x, y, z);
-    Gate_GetStartRot(gateid, rx, ry, rz);
-    Gate_GetEndPos(gateid, ex, ey, ez);
-    Gate_GetEndRot(gateid, erx, ery, erz);
-    mysql_tquery_f(gMySQL, "UPDATE `gates` SET \
-                            start_x = '%f', start_y = '%f', start_z = '%f', \
-                            start_rot_x = '%f', start_rot_y = '%f', start_rot_z = '%f', \
-                            end_x = '%f', end_y = '%f', end_z = '%f', \
-                            end_rot_x = '%f', end_rot_y = '%f', end_rot_z = '%f', \
-                            faction_id = '%d', owner_id = '%d' WHERE ID = '%d'",
-                            x, y, z,
-                            rx, ry, rz,
-                            ex, ey, ez,
-                            erx, ery, erz,
-                            Gate_GetFaction(gateid),
-                            Gate_GetOwner(gateid),
-                            Gate_GetID(gateid));    
-    return 1;
-}
-
 stock Gate_Open(gateid)
 {
     if(!Gate_IsValid(gateid) || GateState{gateid} == true)
@@ -298,6 +272,8 @@ stock Gate_SetFaction(gateid, factionid)
     if(!Gate_IsValid(gateid))
         return 0;
     map_set_cell(Gates, gateid, FactionID, Faction_GetID(factionid));
+
+    mysql_tquery_f(gMySQL, "UPDATE `gates` SET faction_id = '%d' WHERE id = '%d'", Faction_GetID(factionid), Gate_GetID(gateid));
     return 1;
 }
 
@@ -313,6 +289,8 @@ stock Gate_SetOwner(gateid, playerid)
     if(!Gate_IsValid(gateid))
         return 0;
     map_set_cell(Gates, gateid, OwnerID, Character_GetID(playerid));
+
+    mysql_tquery_f(gMySQL, "UPDATE `gates` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), Gate_GetID(gateid));
     return 1;
 }
 
@@ -323,6 +301,16 @@ stock Gate_GetOwner(gateid)
     return map_get(Gates, gateid, OwnerID);
 }
 
+stock Gate_ResetOwner(gateid)
+{
+    if(!Gate_IsValid(gateid))
+        return 0;
+    map_set_cell(Gates, gateid, OwnerID, 0);
+
+    mysql_tquery_f(gMySQL, "UPDATE `gates` SET owner_id = '0' WHERE id = '%d'", Gate_GetID(gateid));
+    return 1;
+}
+
 stock Gate_SetStartPos(gateid, Float:x, Float:y, Float:z)
 {
     if(!Gate_IsValid(gateid))
@@ -330,6 +318,9 @@ stock Gate_SetStartPos(gateid, Float:x, Float:y, Float:z)
     map_set_cell(Gates, gateid, StartX, x);
     map_set_cell(Gates, gateid, StartY, y);
     map_set_cell(Gates, gateid, StartZ, z);
+
+    mysql_tquery_f(gMySQL, "UPDATE `gates` SET start_x = '%f', start_y = '%f', start_z = '%f' WHERE id = '%d'", 
+                            x, y, z, Gate_GetID(gateid));
     return 1;
 }
 
@@ -350,6 +341,9 @@ stock Gate_SetStartRot(gateid, Float:x, Float:y, Float:z)
     map_set_cell(Gates, gateid, StartRotX, x);
     map_set_cell(Gates, gateid, StartRotY, y);
     map_set_cell(Gates, gateid, StartRotZ, z);
+
+    mysql_tquery_f(gMySQL, "UPDATE `gates` SET start_rot_x = '%f', start_rot_y = '%f', start_rot_z = '%f' WHERE id = '%d'", 
+                            x, y, z, Gate_GetID(gateid));
     return 1;
 }
 
@@ -370,6 +364,9 @@ stock Gate_SetEndPos(gateid, Float:x, Float:y, Float:z)
     map_set_cell(Gates, gateid, EndX, x);
     map_set_cell(Gates, gateid, EndY, y);
     map_set_cell(Gates, gateid, EndZ, z);
+
+    mysql_tquery_f(gMySQL, "UPDATE `gates` SET end_x = '%f', end_y = '%f', end_z = '%f' WHERE id = '%d'", 
+                            x, y, z, Gate_GetID(gateid));
     return 1;
 }
 
@@ -390,6 +387,9 @@ stock Gate_SetEndRot(gateid, Float:x, Float:y, Float:z)
     map_set_cell(Gates, gateid, EndRotX, x);
     map_set_cell(Gates, gateid, EndRotY, y);
     map_set_cell(Gates, gateid, EndRotZ, z);
+
+    mysql_tquery_f(gMySQL, "UPDATE `gates` SET end_rot_x = '%f', end_rot_y = '%f', end_rot_z = '%f' WHERE id = '%d'", 
+                            x, y, z, Gate_GetID(gateid));
     return 1;
 }
 
@@ -508,13 +508,12 @@ CMD:gedit(playerid, params[])
         if(factionid == INVALID_FACTION_ID)
         {
             Gate_SetFaction(gateid, INVALID_FACTION_ID);
-            Gate_Save(gateid);
             return SendFormattedMessage(playerid, -1, "Hai rimosso il cancello alla fazione precedente (Gate id: %d).", gateid);
         }
         if(!Faction_IsValid(factionid))
             return SendClientMessage(playerid, COLOR_ERROR, "La fazione inserita non esiste.");
         Gate_SetFaction(gateid, factionid);
-        Gate_Save(gateid);
+
         SendFormattedMessage(playerid, -1, "Hai settato il gate id %d alla fazione %d.", gateid, factionid);
     }
     else if(!strcmp(command, "owner", true))
@@ -527,13 +526,11 @@ CMD:gedit(playerid, params[])
         SendFormattedMessage(playerid, -1, "Hai settato %s (%d) proprietario del gate id %d.", Character_GetOOCName(id), id, gateid);
         SendFormattedMessage(id, -1, "L'admin %s (%d) ti ha settato proprietario del cancello id %d.", Account_GetName(playerid), playerid, gateid);
         Gate_SetOwner(gateid, id);
-        Gate_Save(gateid);
     }
     else if(!strcmp(command, "rmowner", true))
     {
         SendFormattedMessage(playerid, COLOR_GREEN, "Hai rimosso il proprietario del gate id %d.", gateid);
         map_set_cell(Gates, gateid, OwnerID, 0);
-        Gate_Save(gateid);
     }
     else 
         return SendClientMessage(playerid, COLOR_ERROR, "/gedit <gateid> <startpos - endpos - faction - owner>");

@@ -2,6 +2,8 @@
 
 forward bool:Character_CollectDrop(playerid, dropid);
 
+static SelectedDrop[MAX_PLAYERS] = {-1, ...};
+
 CMD:raccogli(playerid, params[])
 {
 	new eID, E_ELEMENT_TYPE:eType;
@@ -41,7 +43,7 @@ stock bool:Character_CollectDrop(playerid, dropid)
 	   title = str_format("%s (%S: %d)", ServerItem_GetName(itemid), (ServerItem_IsWeapon(itemid) ? @("Munizioni") : @("Quantità")), (ServerItem_IsWeapon(itemid) ? Drop_GetItemExtra(dropid) : Drop_GetItemAmount(dropid)));
 	   if(ServerItem_IsWeapon(itemid))
 		  content += @("\n{FFFFFF}Equipaggia{FFFFFF}");
-	   SetPVarInt(playerid, "Player_DropID", dropid);
+	   SelectedDrop[playerid] = dropid;
 	   Dialog_Show_s(playerid, Dialog_ItemDropAction, DIALOG_STYLE_LIST, title, content, "Continua", "Chiudi");
 	   return true;
     }
@@ -51,11 +53,11 @@ stock bool:Character_CollectDrop(playerid, dropid)
 Dialog:Dialog_ItemDropAction(playerid, response, listitem, inputtext[])
 {
     new 
-		dropid = GetPVarInt(playerid, "Player_DropID"),
+		dropid = SelectedDrop[playerid],
     	itemid, amount, extra;
     if(!response || !Drop_GetItemData(dropid, itemid, amount, extra) || !Drop_IsPlayerInRangeOf(playerid, dropid, 2.5))
     {
-	   DeletePVar(playerid, "Player_DropID");
+	   SelectedDrop[playerid] = -1;
 	   return 0;   
     }
     switch(listitem)
@@ -121,6 +123,5 @@ Dialog:Dialog_ItemDropEquipWeapon(playerid, response, listitem, inputtext[])
 	Character_GiveWeapon(playerid, itemid, extra + ammo);
 	Character_DecreaseItemAmount(playerid, ammoType, ammo);
 	Drop_Destroy(dropid);
-	Character_Save(playerid);
 	return 1;
 }

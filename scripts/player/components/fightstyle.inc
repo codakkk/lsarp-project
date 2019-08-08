@@ -22,7 +22,7 @@ hook OnCharacterSpawn(playerid)
     return 1;
 }
 
-stock Internal_Save(playerid)
+static Internal_Save(playerid)
 {
     mysql_tquery_f(gMySQL, "UPDATE `characters` SET fight_style = '%d' WHERE id = '%d'", Character_GetFightingStyle(playerid), Character_GetID(playerid));
 }

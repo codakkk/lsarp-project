@@ -115,8 +115,6 @@ CMD:setfaction(playerid, params[])
 
 	SendFormattedMessage(id, COLOR_GREEN, "%s (%d) ti ha settato nella fazione %s.", Account_GetName(playerid), playerid, name);
 	SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%d) ha settato %s (%d) nella fazione %s.", Account_GetName(playerid), playerid, Character_GetOOCName(id), id, name);
-	
-	Character_Save(id);
 	return 1;
 }
 
@@ -138,7 +136,6 @@ CMD:factionkick(playerid, params[])
 	Character_SetRank(id, 0);
 	SendClientMessageStr(id, COLOR_GREEN, str_format("%s (%d) ti ha kickato dalla tua fazione.", Account_GetName(playerid), playerid));
 	SendMessageToAdminsStr(0, COLOR_YELLOW, str_format("[ADMIN-ALERT] %s (%d) ha kickato %s (%d) dalla sua fazione.", Account_GetName(playerid), playerid, Character_GetOOCName(id), id));
-	Character_Save(id);
 	return 1;
 }
 

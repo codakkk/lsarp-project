@@ -1,12 +1,6 @@
 #include <YSI_Coding\y_hooks>
 
-CMD:info2(playerid, params[])
-{
-	SendFormattedMessage(playerid, COLOR_GREEN, "Weapon: %d - AC Weapon: %d", GetPlayerWeapon(playerid), AntiCheatGetWeapon(playerid));
-	return 1;
-}
-
-hook OnCharacterSaveData(playerid)
+hook OnCharacterDisconnected(playerid)
 {
 	Character_SaveWeapons(playerid);
 	return Y_HOOKS_CONTINUE_RETURN_1;
@@ -125,7 +119,9 @@ stock Character_GiveWeapon(playerid, weaponid, ammo)
 {
 	if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))
 		return 0;
-	return GivePlayerWeapon(playerid, weaponid, ammo);
+	GivePlayerWeapon(playerid, weaponid, ammo);
+	Character_SaveWeapons(playerid);
+	return 1;
 }
 
 stock Character_GetWeapon(playerid)
@@ -160,6 +156,7 @@ stock Character_SetWeaponAmmo(playerid, weaponid, ammo)
 		return 0;
 	new slotid = Weapon_GetSlot(weaponid);
 	SetPlayerAmmo(playerid, weaponid, ammo);
+	Character_SaveWeapons(playerid);
 	return 1;
 }
 

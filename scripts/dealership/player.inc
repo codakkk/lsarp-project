@@ -38,17 +38,14 @@ ptask OnPlayerDealerShipTimer[1000](playerid)
     return 1;
 }
 
-hook OnCharacterPreSaveData(playerid, disconnect)
+hook OnCharacterDisconnected(playerid)
 {
-	if(disconnect)
+	if(Character_IsBuyingVehicle(playerid))
 	{
-		if(Character_IsBuyingVehicle(playerid))
-		{
-			SetPlayerInterior(playerid, 0);
-			Character_SetVirtualWorld(playerid, 0);
-		}
+		SetPlayerInterior(playerid, 0);
+		Character_SetVirtualWorld(playerid, 0);
 	}
-    return 1;
+	return 1;
 }
 
 hook OnPlayerClearData(playerid)

@@ -1,5 +1,18 @@
 #include <YSI_Coding\y_hooks>
 
+#define MAX_DPS_PER_PLAYER 		(5)
+
+static enum E_DP_DATA
+{
+	Exists,
+	Float:X,
+	Float:Y,
+	Float:Z,
+	Text3D:Text3D,
+	Timer:Timer
+};
+static DPInfo[MAX_PLAYERS][MAX_DPS_PER_PLAYER][E_DP_DATA];
+
 flags:dp(CMD_ALIVE_USER);
 CMD:dp(playerid, params[])
 {
@@ -7,7 +20,7 @@ CMD:dp(playerid, params[])
 	new max_slots = (Account_GetPremiumLevel(playerid) > 1) ? MAX_DPS_PER_PLAYER : 3;
 	if(!sscanf(params, "ds[128]", slotid, text) && slotid-- && 0 <= slotid < max_slots)
 	{
-		if(DPInfo[playerid][slotid][dpExists])
+		if(DPInfo[playerid][slotid][Exists])
 			return SendClientMessage(playerid, COLOR_ERROR, "Hai già utilizzato questo slot.");
 		if(strlen(text) > 128)
 		{
@@ -21,7 +34,7 @@ CMD:dp(playerid, params[])
 	}
 	else if(!sscanf(params, "d", slotid) && slotid-- && 0 <= slotid < max_slots)
 	{
-		if(!DPInfo[playerid][slotid][dpExists])
+		if(!DPInfo[playerid][slotid][Exists])
 			return SendClientMessage(playerid, COLOR_ERROR, "Non hai utilizzato questo slot.");
 		DP_Destroy(playerid, slotid);
 		SendFormattedMessage(playerid, -1, "Hai rimosso il DP %d.", slotid+1);
@@ -35,7 +48,7 @@ hook OnPlayerClearData(playerid)
 {
 	for(new i = 0; i < MAX_DPS_PER_PLAYER; ++i)
 	{
-		if(!DPInfo[playerid][i][dpExists])
+		if(!DPInfo[playerid][i][Exists])
 			continue;
 		DP_Destroy(playerid, i);
 	}
@@ -44,12 +57,12 @@ hook OnPlayerClearData(playerid)
 
 stock DP_Create(playerid, slotid, const text[], Float:x, Float:y, Float:z)
 {
-	if(slotid < 0 || slotid >= MAX_DPS_PER_PLAYER || DPInfo[playerid][slotid][dpExists])
+	if(slotid < 0 || slotid >= MAX_DPS_PER_PLAYER || DPInfo[playerid][slotid][Exists])
 		return 0;
-	DPInfo[playerid][slotid][dpExists] = 1;
-	DPInfo[playerid][slotid][dpX] = x;
-	DPInfo[playerid][slotid][dpY] = y;
-	DPInfo[playerid][slotid][dpZ] = z;
+	DPInfo[playerid][slotid][Exists] = 1;
+	DPInfo[playerid][slotid][X] = x;
+	DPInfo[playerid][slotid][Y] = y;
+	DPInfo[playerid][slotid][Z] = z;
 
 	new string[256], rowCounter = 0;
 	format(string, sizeof(string), "%s\n{FFFFFF}#%07d-%d", ColouredText(text), Character_GetID(playerid), slotid+1);
@@ -65,21 +78,21 @@ stock DP_Create(playerid, slotid, const text[], Float:x, Float:y, Float:z)
 		}
 	}
 
-	DPInfo[playerid][slotid][dpText3D] = CreateDynamic3DTextLabel(string, -1, x, y, z, 30.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), -1);
-	DPInfo[playerid][slotid][dpTimer] = defer Timer_DestroyDP(playerid, slotid);
+	DPInfo[playerid][slotid][Text3D] = CreateDynamic3DTextLabel(string, -1, x, y, z, 30.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), -1);
+	DPInfo[playerid][slotid][Timer] = defer Timer_DestroyDP(playerid, slotid);
 	return 1;
 }
 
 stock DP_Destroy(playerid, slotid)
 {
-	DPInfo[playerid][slotid][dpExists] = 0;
-	DPInfo[playerid][slotid][dpX] = 0.0;
-	DPInfo[playerid][slotid][dpY] = 0.0;
-	DPInfo[playerid][slotid][dpZ] = 0.0;
+	DPInfo[playerid][slotid][Exists] = 0;
+	DPInfo[playerid][slotid][X] = 0.0;
+	DPInfo[playerid][slotid][Y] = 0.0;
+	DPInfo[playerid][slotid][Z] = 0.0;
 
-	stop DPInfo[playerid][slotid][dpTimer];
-	DPInfo[playerid][slotid][dpTimer] = Timer:0;
-	DestroyDynamic3DTextLabelEx(DPInfo[playerid][slotid][dpText3D]);
+	stop DPInfo[playerid][slotid][Timer];
+	DPInfo[playerid][slotid][Timer] = Timer:0;
+	DestroyDynamic3DTextLabelEx(DPInfo[playerid][slotid][Text3D]);
 }
 
 timer Timer_DestroyDP[6000000](playerid, slotid) 

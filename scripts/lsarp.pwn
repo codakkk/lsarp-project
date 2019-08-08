@@ -139,8 +139,7 @@ DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
 #include <pickup\enum>
 
 #include <server\core>
-//#include <anticheat\enum>
-#include <drop_system\enum>
+
 #include <player\enum>
 #include <admin\enum>
 #include <dealership\enum>
@@ -149,7 +148,6 @@ DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
 #include <weapon_system\enum>
 #include <house_system\enum>
 #include <faction_system\enum>
-#include <dp_system\enum>
 
 #include <database\core>
 

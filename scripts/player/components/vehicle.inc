@@ -16,12 +16,6 @@ hook OnCharacterLoad(playerid)
 	return 1;
 }
 
-hook OnCharacterSaveData(playerid)
-{
-	Character_SaveAllVehicles(playerid);
-	return 1;
-}
-
 hook OnPlayerClearData(playerid)
 {
 	PlayerTextDrawHide(playerid, pVehicleFuelText[playerid]);	
@@ -42,6 +36,7 @@ ptask OnVehicleFuelTextDrawTimer[1000](playerid)
 
 hook OnCharacterDisconnected(playerid)
 {
+	Character_SaveAllVehicles(playerid);
 	foreach(new v : Vehicle)
 	{
 		if(!Vehicle_GetID(v) || Vehicle_GetOwnerID(v) != Character_GetID(playerid) || Vehicle_GetModel(v) == 0 || Vehicle_GetFaction(v) != INVALID_FACTION_ID)
@@ -129,7 +124,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
 	if(!Character_IsAlive(playerid))
 		return Y_HOOKS_CONTINUE_RETURN_0;
-	if(Account_HasHotKeysEnabled(playerid))
+	if(Player_HasHotKeysEnabled(playerid))
 	{
 		if(!Character_IsBuyingVehicle(playerid))
 		{

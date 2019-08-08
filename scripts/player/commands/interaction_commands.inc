@@ -1,20 +1,6 @@
 #include <YSI_Coding\y_hooks>
 
-flags:ritirastipendio(CMD_ALIVE_USER);
-CMD:ritirastipendio(playerid, params[])
-{
-	if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_PAYCHECK))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei al punto esatto per ritirare lo stipendio.");
-	new paycheck = Character_GetPayCheck(playerid);
-	if(paycheck <= 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non hai uno stipendio da ritirare.");
-	
-	Character_GiveMoney(playerid, paycheck, "paycheck");
-	Character_SetPayCheck(playerid, 0);
-	Character_Save(playerid);
-	SendFormattedMessage(playerid, -1, "Hai ritirato il tuo stipendio. Ammontare: {85bb65}$%d{FFFFFF}", paycheck);
-	return 1;
-}
+
 
 // RISOLVERE
 flags:entra(CMD_ALIVE_USER);

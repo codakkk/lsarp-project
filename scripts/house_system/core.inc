@@ -1,5 +1,36 @@
 #include <YSI_Coding\y_hooks>
 
+static enum _:E_HOUSE_DATA
+{
+    ID,
+
+	Created,
+
+    OwnerID,
+    OwnerName[MAX_PLAYER_NAME],
+    Price,
+    Locked,
+	Money,
+
+    Float:EnterX,
+    Float:EnterY,
+    Float:EnterZ,
+    EnterInterior,
+    EnterWorld,
+
+    Float:ExitX,
+    Float:ExitY,
+    Float:ExitZ,
+    ExitInterior,
+    ExitWorld,
+	
+	Interior,
+
+    EnterPickup,
+    ExitPickup,
+    Text3D:h3DText,
+};
+
 static 
     Map:Houses;
 
@@ -25,7 +56,6 @@ hook OnCharacterLoad(playerid)
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "La casa di cui eri affittuario non esiste più.");
 			Character_SetHouseKey(playerid, 0);
-            Character_Save(playerid);
 		}
 	}
 	return 1;
@@ -43,24 +73,24 @@ stock House_Create(Float:x, Float:y, Float:z, int, world, interiorid)
         data[E_HOUSE_DATA]
     ;
     // we
-    data[hCreated] = 1;
-    data[hID] = id;
-    data[hOwnerID] = 0;
-    data[hOwnerName] = "";
-    data[hPrice] = 0;
+    data[Created] = 1;
+    data[ID] = id;
+    data[OwnerID] = 0;
+    data[OwnerName] = "";
+    data[Price] = 0;
 
-    data[hEnterX] = x;
-    data[hEnterY] = y;
-    data[hEnterZ] = z;
-    data[hEnterInterior] = int;
-    data[hEnterWorld] = world;
+    data[EnterX] = x;
+    data[EnterY] = y;
+    data[EnterZ] = z;
+    data[EnterInterior] = int;
+    data[EnterWorld] = world;
 
-    data[hExitX] = 0.0;
-    data[hExitY] = 0.0;
-    data[hExitZ] = 0.0;
-    data[hExitInterior] = 0;
+    data[ExitX] = 0.0;
+    data[ExitY] = 0.0;
+    data[ExitZ] = 0.0;
+    data[ExitInterior] = 0;
 
-    data[hLocked] = 1;
+    data[Locked] = 1;
 
     map_add_arr(Houses, id, data);
 
@@ -77,7 +107,7 @@ stock House_Delete(houseid)
         return 0;
 
     new query[64];
-    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `houses` WHERE ID = '%d'", houseid);
+    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `houses` WHERE id = '%d'", houseid);
     mysql_tquery(gMySQL, query);
 
     House_DestroyObjects(houseid);
@@ -111,8 +141,8 @@ stock House_CreateObjects(houseid)
 	   exitPickupid = Pickup_Create(1007, houseid, ex, ey, ez, ELEMENT_TYPE_HOUSE_EXIT, exitWorld, einterior),
 	   Text3D:label = CreateDynamic3DTextLabel(zone, 0xFFFFFF, x, y, z + 0.55, 15.0, .worldid = enterWorld, .interiorid = interior, .testlos = 1);
     
-    map_set_cell(Houses, houseid, hEnterPickup, enterPickupid);
-    map_set_cell(Houses, houseid, hExitPickup, exitPickupid);
+    map_set_cell(Houses, houseid, EnterPickup, enterPickupid);
+    map_set_cell(Houses, houseid, ExitPickup, exitPickupid);
     map_set_cell_safe(Houses, houseid, h3DText, _:label);
     return 1;
 }
@@ -144,14 +174,16 @@ stock House_IsCreated(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
-    return map_get(Houses, houseid, hCreated);
+    return map_get(Houses, houseid, Created);
 }
 
 stock House_SetCreated(houseid, created)
 {
     if(!House_IsValid(houseid))
         return 0;
-    map_set_cell(Houses, houseid, hCreated, created);
+    map_set_cell(Houses, houseid, Created, created);
+
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET created = '%d' WHERE id = '%d'", created, House_GetID(houseid));
     return 1;
 }
 
@@ -166,16 +198,18 @@ stock House_GetID(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
-    return map_get(Houses, houseid, hID);
+    return map_get(Houses, houseid, ID);
 }
 
 stock House_SetOwner(houseid, playerid)
 {
     if(!House_IsValid(houseid) || !IsPlayerConnected(playerid) || !Character_IsLogged(playerid) || Character_HasHouseKey(playerid))
 	   return 0;
-    map_set_cell(Houses, houseid, hOwnerID, Character_GetID(playerid));
+    map_set_cell(Houses, houseid, OwnerID, Character_GetID(playerid));
     new Iter:it = map_iter_at(Houses, houseid);
-    iter_set_cells(it, hOwnerName, Character_GetOOCName(playerid));
+    iter_set_cells(it, OwnerName, Character_GetOOCName(playerid));
+
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET owner_id = '%d', owner_name = '%e' WHERE id = '%d'", Character_GetID(playerid), Character_GetOOCName(playerid), House_GetID(houseid));
     return 1;
 }
 
@@ -183,9 +217,12 @@ stock House_ResetOwner(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
-    map_set_cell(Houses, houseid, hOwnerID, 0);
+    map_set_cell(Houses, houseid, OwnerID, 0);
     new Iter:it = map_iter_at(Houses, houseid);
-    iter_set_cells(it, hOwnerName, "");
+    iter_set_cells(it, OwnerName, "");
+
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET owner_id = '0', owner_name = '' WHERE id = '%d'", House_GetID(houseid));
+    
     return 1;
 }
 
@@ -193,7 +230,7 @@ stock House_GetOwnerID(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
-    return map_get(Houses, houseid, hOwnerID);
+    return map_get(Houses, houseid, OwnerID);
 }
 
 stock House_IsOwned(houseid)
@@ -208,7 +245,7 @@ stock bool:House_GetOwnerName(houseid, name[MAX_PLAYER_NAME])
     if(!House_IsValid(houseid))
         return false;
     new Iter:it = map_iter_at(Houses, houseid);
-    iter_get_md_arr(it, {hOwnerName}, name);
+    iter_get_md_arr(it, {OwnerName}, name);
     return true;
 }
 
@@ -225,9 +262,11 @@ stock House_SetEnterPosition(houseid, Float:x, Float:y, Float:z)
 {
     if(!House_IsValid(houseid))
         return 0;
-    map_set_cell(Houses, houseid, hEnterX, x);
-    map_set_cell(Houses, houseid, hEnterY, y);
-    map_set_cell(Houses, houseid, hEnterZ, z);
+    map_set_cell(Houses, houseid, EnterX, x);
+    map_set_cell(Houses, houseid, EnterY, y);
+    map_set_cell(Houses, houseid, EnterZ, z);
+
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET enter_x = '%f', enter_y = '%f', enter_z = '%f' WHERE id = '%d'", x, y, z, House_GetID(houseid));
     return 1;
 }
 
@@ -235,9 +274,9 @@ stock House_GetEnterPosition(houseid, &Float:X, &Float:Y, &Float:Z)
 {
     if(!House_IsValid(houseid))
         return 0;
-    X = Float:map_get(Houses, houseid, hEnterX);
-    Y = Float:map_get(Houses, houseid, hEnterY);
-    Z = Float:map_get(Houses, houseid, hEnterZ);
+    X = Float:map_get(Houses, houseid, EnterX);
+    Y = Float:map_get(Houses, houseid, EnterY);
+    Z = Float:map_get(Houses, houseid, EnterZ);
     return 1;
 }
 
@@ -245,7 +284,9 @@ stock House_SetEnterInterior(houseid, interior)
 {
     if(!House_IsValid(houseid))
         return 0;
-    map_set_cell(Houses, houseid, hEnterInterior, interior);
+    map_set_cell(Houses, houseid, EnterInterior, interior);
+
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET enter_interior = '%d' WHERE id = '%d'", interior, House_GetID(houseid));
     return 1;
 }
 
@@ -253,14 +294,16 @@ stock House_GetEnterInterior(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
-    return map_get(Houses, houseid, hEnterInterior);
+    return map_get(Houses, houseid, EnterInterior);
 }
 
 stock House_SetEnterWorld(houseid, world)
 {
     if(!House_IsValid(houseid))
         return 0;
-    map_set_cell(Houses, houseid, hEnterWorld, world);
+    map_set_cell(Houses, houseid, EnterWorld, world);
+
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET enter_world = '%d' WHERE id = '%d'", world, House_GetID(houseid));
     return 1;
 }
 
@@ -268,23 +311,25 @@ stock House_GetEnterWorld(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
-    return map_get(Houses, houseid, hEnterWorld);
+    return map_get(Houses, houseid, EnterWorld);
 }
 
 stock House_GetExitWorld(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
-    return map_get(Houses, houseid, hExitWorld);
+    return map_get(Houses, houseid, ExitWorld);
 }
 
 stock House_SetExitPosition(houseid, Float:x, Float:y, Float:z)
 {
     if(!House_IsValid(houseid))
         return 0;
-    map_set_cell(Houses, houseid, hExitX, x);
-    map_set_cell(Houses, houseid, hExitY, y);
-    map_set_cell(Houses, houseid, hExitZ, z);
+    map_set_cell(Houses, houseid, ExitX, x);
+    map_set_cell(Houses, houseid, ExitY, y);
+    map_set_cell(Houses, houseid, ExitZ, z);
+
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET exit_x = '%f', exit_y = '%f', exit_z = '%f' WHERE id = '%d'", x, y, z, House_GetID(houseid));
     return 1;
 }
 
@@ -292,9 +337,9 @@ stock House_GetExitPosition(houseid, &Float:X, &Float:Y, &Float:Z)
 {
     if(!House_IsValid(houseid))
         return 0;
-    X = Float:map_get(Houses, houseid, hExitX);
-    Y = Float:map_get(Houses, houseid, hExitY);
-    Z = Float:map_get(Houses, houseid, hExitZ);
+    X = Float:map_get(Houses, houseid, ExitX);
+    Y = Float:map_get(Houses, houseid, ExitY);
+    Z = Float:map_get(Houses, houseid, ExitZ);
     return 1;
 }
 
@@ -302,7 +347,9 @@ stock House_SetExitInterior(houseid, interior)
 {
     if(!House_IsValid(houseid))
         return 0;
-    map_set_cell(Houses, houseid, hExitInterior, interior);
+    map_set_cell(Houses, houseid, ExitInterior, interior);
+
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET exit_interior = '%d' WHERE id = '%d'", interior, House_GetID(houseid));
     return 1;
 }
 
@@ -310,18 +357,17 @@ stock House_GetExitInterior(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
-    return map_get(Houses, houseid, hExitInterior);
+    return map_get(Houses, houseid, ExitInterior);
 }
 
 stock House_SetInterior(houseid, interiorid)
 {
     if(!House_IsValid(houseid))
 	   return 0;
-    map_set_cell(Houses, houseid, hInterior, interiorid);
+    map_set_cell(Houses, houseid, Interior, interiorid);
     House_SetExitPosition(houseid, allHouseInteriors[interiorid][iHouseX], allHouseInteriors[interiorid][iHouseY], allHouseInteriors[interiorid][iHouseZ]);
     House_SetExitInterior(houseid, allHouseInteriors[interiorid][iHouseInt]);
     House_CreateObjects(houseid);
-    House_Save(houseid);
     return 1;
 }
 
@@ -329,42 +375,45 @@ stock House_GetInteriorID(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
-    return map_get(Houses, houseid, hInterior);
+    return map_get(Houses, houseid, Interior);
 }
 
 stock House_GetEnterPickup(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
-    return map_get(Houses, houseid, hEnterPickup);
+    return map_get(Houses, houseid, EnterPickup);
 }
 
 stock House_GetExitPickup(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
-    return map_get(Houses, houseid, hExitPickup);
+    return map_get(Houses, houseid, ExitPickup);
 }
 
 stock House_SetPrice(houseid, price)
 {
     if(!House_IsValid(houseid))
         return 0;
-    return map_set_cell(Houses, houseid, hPrice, price);
+    map_set_cell(Houses, houseid, Price, price);
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET price = '%d' WHERE id = '%d'", price, House_GetID(houseid));
+    return 1;
 }
 
 stock House_GetPrice(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
-    return map_get(Houses, houseid, hPrice);
+    return map_get(Houses, houseid, Price);
 }
 
 stock House_SetLocked(houseid, lock)
 {
     if(!House_IsValid(houseid))
         return 0;
-    map_set_cell(Houses, houseid, hLocked, lock);
+    map_set_cell(Houses, houseid, Locked, lock);
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET locked = '%d' WHERE id = '%d'", lock, House_GetID(houseid));
     return 1;
 }
 
@@ -372,21 +421,30 @@ stock House_IsLocked(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
-    return map_get(Houses, houseid, hLocked);
+    return map_get(Houses, houseid, Locked);
 }
 
 stock House_GetMoney(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
-    return map_get(Houses, houseid, hMoney);
+    return map_get(Houses, houseid, Money);
 }
 
 stock House_GiveMoney(houseid, money)
 {
     if(!House_IsValid(houseid))
         return 0;
-    map_set_cell(Houses, houseid, hMoney, House_GetMoney(houseid) + money);
+    House_SetMoney(houseid, House_GetMoney(houseid) + money);
+    return 1;
+}
+
+stock House_SetMoney(houseid, amount)
+{
+    if(!House_IsValid(houseid))
+        return 0;
+    map_set_cell(Houses, houseid, Money, amount);
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET money = '%d' WHERE id = '%d'", amount, House_GetID(houseid));
     return 1;
 }
 
@@ -398,71 +456,40 @@ stock House_LoadAll()
 	   new count = cache_num_rows(), data[E_HOUSE_DATA];
 	   for(new i = 0; i < count; ++i)
 	   {
-			cache_get_value_index_int(i, 0, data[hID]);
-			cache_get_value_index_int(i, 1, data[hOwnerID]);
-			cache_get_value_index(i, 2, data[hOwnerName]);
+			cache_get_value_name_int(i, "id", data[ID]);
+			cache_get_value_name_int(i, "owner_id", data[OwnerID]);
+			cache_get_value_name(i, "owner_name", data[OwnerName]);
 
-			cache_get_value_index_float(i, 3, data[hEnterX]);
-			cache_get_value_index_float(i, 4, data[hEnterY]);
-			cache_get_value_index_float(i, 5, data[hEnterZ]);
-			cache_get_value_index_int(i, 6, data[hEnterInterior]);
-			cache_get_value_index_int(i, 7, data[hEnterWorld]);
+			cache_get_value_name_float(i, "enter_x", data[EnterX]);
+			cache_get_value_name_float(i, "enter_y", data[EnterY]);
+			cache_get_value_name_float(i, "enter_z", data[EnterZ]);
+			cache_get_value_name_int(i, "enter_interior", data[EnterInterior]);
+			cache_get_value_name_int(i, "enter_world", data[EnterWorld]);
 
-			cache_get_value_index_float(i, 8, data[hExitX]);
-			cache_get_value_index_float(i, 9, data[hExitY]);
-			cache_get_value_index_float(i, 10, data[hExitZ]);
-			cache_get_value_index_int(i, 11, data[hExitInterior]);
-            //cache_get_value_index_int(i, 12, data[hExitWorld]);
+			cache_get_value_name_float(i, "exit_x", data[ExitX]);
+			cache_get_value_name_float(i, "exit_y", data[ExitY]);
+			cache_get_value_name_float(i, "exit_z", data[ExitZ]);
+			cache_get_value_name_int(i, "exit_interior", data[ExitInterior]);
+            //cache_get_value_name_int(i, 12, data[ExitWorld]);
 
-			cache_get_value_index_int(i, 13, data[hPrice]);
-			cache_get_value_index_int(i, 14, data[hLocked]);
-			cache_get_value_index_int(i, 15, data[hMoney]);
-			cache_get_value_index_int(i, 16, data[hInterior]);
+			cache_get_value_name_int(i, "price", data[Price]);
+			cache_get_value_name_int(i, "locked", data[Locked]);
+			cache_get_value_name_int(i, "money", data[Money]);
+			cache_get_value_name_int(i, "interior", data[Interior]);
 
-            cache_get_value_index_int(i, 17, data[hCreated]);
+            cache_get_value_name_int(i, "created", data[Created]);
 
-            data[hExitWorld] = HOUSE_START_WORLD + data[hID];
-            data[hCreated] = 1;
+            data[ExitWorld] = HOUSE_START_WORLD + data[ID];
+            data[Created] = 1;
 
-			map_add_arr(Houses, data[hID], data);
-			House_CreateObjects(data[hID]);
+			map_add_arr(Houses, data[ID], data);
+			House_CreateObjects(data[ID]);
 			
-			CallLocalFunction(#OnHouseLoaded, "d", data[hID]);
+			CallLocalFunction(#OnHouseLoaded, "d", data[ID]);
 	   }
 	   printf("%d houses loaded.", count);
     }
-    MySQL_PQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `houses` ORDER BY ID");
-}
-
-stock House_Save(houseid)
-{
-    if(!House_IsValid(houseid) || !House_IsCreated(houseid))
-	   return 0;
-    inline OnSave()
-    {
-	   //printf("House %d saved successfully.", houseid);
-    }
-    new 
-        Float:x, Float:y, Float:z, Float:ex, Float:ey, Float:ez,
-        name[MAX_PLAYER_NAME];
-    
-    House_GetEnterPosition(houseid, x, y, z);
-    House_GetExitPosition(houseid, ex, ey, ez);
-    House_GetOwnerName(houseid, name);
-
-    MySQL_TQueryInline(gMySQL, using inline OnSave, "UPDATE `houses` SET \
-    OwnerID = '%d', OwnerName = '%e', \
-    EnterX = '%f', EnterY = '%f', EnterZ = '%f', EnterInterior = '%d', EnterWorld = '%d', \
-    ExitX = '%f', ExitY = '%f', ExitZ = '%f', ExitInterior = '%d', \
-    Price = '%d', Locked = '%d', Money = '%d', Interior = '%d', Created = '%d' \
-    WHERE ID = '%d'", 
-    House_GetOwnerID(houseid), name, 
-    x, y, z, House_GetEnterInterior(houseid), House_GetEnterWorld(houseid),
-    ex, ey, ez, House_GetExitInterior(houseid),
-    House_GetPrice(houseid), House_IsLocked(houseid), House_GetMoney(houseid), House_GetInteriorID(houseid),
-    House_IsCreated(houseid),
-	House_GetID(houseid));
-    return 1;
+    MySQL_PQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `houses` ORDER BY id");
 }
 
 stock House_ShowInventory(houseid, playerid)

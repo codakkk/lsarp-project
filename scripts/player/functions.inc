@@ -10,20 +10,7 @@ stock Character_LoadData(playerid)
 		CallLocalFunction(#OnCharacterLoad, "i", playerid);
 		
 
-		if(Character_IsBanned(playerid))
-		{
-			if(gettime() < Character_GetBanExpiry(playerid))
-			{
-				Dialog_Show(playerid, DialogNull, DIALOG_STYLE_MSGBOX, "Personaggio Bannato", "Questo personaggio risulta bannato.\nData di scadenza: %s.\nSe pensi sia stato un errore, visita www.lsarp.it", "Ok", "", date(Character_GetBanExpiry(playerid)));
-				KickEx(playerid);
-				return 0;
-			}
-			else
-			{
-				Character_SetBanned(playerid, 0),
-				Character_SetBanExpiry(playerid, 0);
-			}
-		}
+		
 
 		SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
 		SpawnPlayer(playerid);
@@ -38,48 +25,6 @@ hook OnPlayerRequestClass(playerid, classid)
 {
 	SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
 	return 1;
-}
-
-stock Character_Save(playerid, disconnected = false)
-{
-    // This should never happen.
-    if(!Character_IsLogged(playerid))
-	   return 0;
-    
-    CallLocalFunction("OnCharacterPreSaveData", "ii", playerid, disconnected ? 1 : 0);
-    
-    new
-		Float:_x, Float:_y, Float:_z,
-		Float:angle,
-		Float:hp, Float:armour
-	;
-
-    GetPlayerPos(playerid, _x, _y, _z);
-    GetPlayerFacingAngle(playerid, angle);
-    AC_GetPlayerHealth(playerid, hp);
-    AC_GetPlayerArmour(playerid, armour);
-
-	if(Account_IsAdminDuty(playerid))
-	{
-		hp = 100.0;
-		armour = 0.0;
-	}
-    
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET \
-		health = '%f', armour = '%f', \
-		paycheck = '%d', \
-		banned = '%d', ban_expiry = '%d', \
-		faction_duty = '%d' \
-	   	WHERE id = '%d'",
-	   	hp, armour,
-		Character_GetFaction(playerid), Character_GetRank(playerid),
-		Character_GetPayCheck(playerid),
-		Character_IsBanned(playerid), Character_GetBanExpiry(playerid),
-		Character_IsFactionDuty(playerid),
-	   	Character_GetID(playerid));
-    // Save A' Mammt
-    CallLocalFunction(#OnCharacterSaveData, "d", playerid);
-    return 1;
 }
 
 stock Character_Delete(playerid, character_db_id, character_name[])
@@ -126,7 +71,6 @@ stock Character_Delete(playerid, character_db_id, character_name[])
 		if(character_db_id == ownerid)
 		{
 			House_ResetOwner(houseid);
-			House_Save(houseid);
 			break;
 		}
 	}

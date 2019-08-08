@@ -5,14 +5,33 @@
 #define CHOPSHOP_Y						(-1606.4154)
 #define CHOPSHOP_Z						(10.9219)
 */
+
 #define CHOPSHOP_PLAYER_TIME            (60 * 1) // Delay between each sold car to chopshop. (In minutes)
 #define CHOPSHOP_VEHICLE_PERCENTAGE		(30)
+
+static PlayerLastChopShopTime[MAX_PLAYERS];
 
 hook OnGameModeInit()
 {
     Pickup_Create(1239, 0, CHOPSHOP_X, CHOPSHOP_Y, CHOPSHOP_Z, ELEMENT_TYPE_CHOPSHOP, 0, 0);
     CreateDynamic3DTextLabel("ChopShop", COLOR_GREY, CHOPSHOP_X, CHOPSHOP_Y, CHOPSHOP_Z + 0.55, 20.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, 0, 0);
     return 1;
+}
+
+hook OnPlayerClearData(playerid)
+{
+	PlayerLastChopShopTime[playerid] = 0;
+	return 1;
+}
+
+hook OnCharacterLoad(playerid)
+{
+	inline OnLoad()
+	{
+		cache_get_value_index_int(0, 0, PlayerLastChopShopTime[playerid]);
+	}
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT last_chop_shop_time FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
+	return 1;
 }
 
 stock Vehicle_CanBeSoldToChopShop(vehicleid)
@@ -66,7 +85,6 @@ stock ChopShop_Sell(playerid, vehicleid)
     Character_SetLastChopShopTime(playerid, gettime());
 	Vehicle_SetLastChopShopTime(vehicleid, gettime());
 
-    Character_Save(playerid);
 	Vehicle_Save(vehicleid); // Remember to update the code for pLastChopShopTime
 	new Float:x, Float:y, Float:z;
 	GetPlayerPos(playerid, x, y, z);
@@ -80,5 +98,19 @@ stock ChopShop_RespawnVehicle(vehicleid)
 {
 	Vehicle_SetDestroyed(vehicleid, true);
 	SetVehicleToRespawn(vehicleid);
+	return 1;
+}
+
+stock Character_GetLastChopShopTime(playerid)
+{
+	return PlayerLastChopShopTime[playerid];
+}
+
+stock Character_SetLastChopShopTime(playerid, time)
+{
+	if(!Character_IsLogged(playerid))
+		return 0;
+	PlayerLastChopShopTime[playerid] = time;
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET last_chop_shop_time = '%d' WHERE id = '%d'", time, Character_GetID(playerid));
 	return 1;
 }

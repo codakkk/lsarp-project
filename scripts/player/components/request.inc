@@ -2,15 +2,15 @@
 
 static enum e_RequestData
 {
-	rdPending,
-	rdByPlayer,
-	rdToPlayer,
-	rdTime,
-	rdItem,
-	rdAmount,
-	rdExtra,
-	rdType,
-	rdSlot,
+	Pending,
+	ByPlayer,
+	ToPlayer,
+	Time,
+	Item,
+	Amount,
+	Extra,
+	Type,
+	Slot,
 };
 
 static 
@@ -20,29 +20,29 @@ static
 
 stock ResetPendingRequest(playerid)
 {
-	PendingRequestInfo[playerid][rdPending] = 0;
-	PendingRequestInfo[playerid][rdByPlayer] = -1;
-	PendingRequestInfo[playerid][rdToPlayer] = -1;
-	PendingRequestInfo[playerid][rdTime] = 0;
-	PendingRequestInfo[playerid][rdItem] = 0;
-	PendingRequestInfo[playerid][rdAmount] = 0;
-	PendingRequestInfo[playerid][rdExtra] = 0;
-	PendingRequestInfo[playerid][rdType] = REQUEST_TYPE_NONE;
-	PendingRequestInfo[playerid][rdSlot] = 0;
+	PendingRequestInfo[playerid][Pending] = 0;
+	PendingRequestInfo[playerid][ByPlayer] = -1;
+	PendingRequestInfo[playerid][ToPlayer] = -1;
+	PendingRequestInfo[playerid][Time] = 0;
+	PendingRequestInfo[playerid][Item] = 0;
+	PendingRequestInfo[playerid][Amount] = 0;
+	PendingRequestInfo[playerid][Extra] = 0;
+	PendingRequestInfo[playerid][Type] = REQUEST_TYPE_NONE;
+	PendingRequestInfo[playerid][Slot] = 0;
 }
 
 hook OnPlayerClearData(playerid)
 {
 	if(Request_IsPending(playerid))
 	{
-		new toPlayer = PendingRequestInfo[playerid][rdToPlayer],
-			fromPlayer = PendingRequestInfo[playerid][rdByPlayer];
-		if(PendingRequestInfo[toPlayer][rdPending] && PendingRequestInfo[toPlayer][rdByPlayer] == playerid)
+		new toPlayer = PendingRequestInfo[playerid][ToPlayer],
+			fromPlayer = PendingRequestInfo[playerid][ByPlayer];
+		if(PendingRequestInfo[toPlayer][Pending] && PendingRequestInfo[toPlayer][ByPlayer] == playerid)
 		{
 			SendFormattedMessage(toPlayer, COLOR_ERROR, "La richiesta di %s è stata annullata poiché si è disconnesso.", Character_GetRolePlayName(playerid));
 			ResetPendingRequest(toPlayer);
 		}
-		else if(PendingRequestInfo[fromPlayer][rdPending] && PendingRequestInfo[fromPlayer][rdToPlayer] == playerid)
+		else if(PendingRequestInfo[fromPlayer][Pending] && PendingRequestInfo[fromPlayer][ToPlayer] == playerid)
 		{
 			SendFormattedMessage(fromPlayer, COLOR_ERROR, "La richiesta inviata a %s è stata annullata poiché si è disconnesso.", Character_GetRolePlayName(playerid));
 			ResetPendingRequest(fromPlayer);
@@ -58,9 +58,9 @@ ptask OnRequestUpdateTimer[1000](playerid)
 		return 0;
 	if(Request_IsPending(playerid))
 	{
-		if(GetTickCount() - PendingRequestInfo[playerid][rdTime] > PENDING_REQUEST_TIME * 60 * 1000) // 60 seconds
+		if(GetTickCount() - PendingRequestInfo[playerid][Time] > PENDING_REQUEST_TIME * 60 * 1000) // 60 seconds
 		{
-			new byPlayer = PendingRequestInfo[playerid][rdByPlayer];
+			new byPlayer = PendingRequestInfo[playerid][ByPlayer];
 			SendFormattedMessage(playerid, COLOR_ERROR, "La richiesta da %s è scaduta.", Character_GetRolePlayName(byPlayer), byPlayer);
 			ResetPendingRequest(playerid);
 	
@@ -73,57 +73,57 @@ ptask OnRequestUpdateTimer[1000](playerid)
 
 stock Character_SetRequest(byPlayer, toPlayer, type, item = 0, amount = 0, slot = -1)
 {
-	PendingRequestInfo[byPlayer][rdPending] = PendingRequestInfo[toPlayer][rdPending] = 1;
+	PendingRequestInfo[byPlayer][Pending] = PendingRequestInfo[toPlayer][Pending] = 1;
 
-	PendingRequestInfo[byPlayer][rdToPlayer] = toPlayer;
-	PendingRequestInfo[toPlayer][rdByPlayer] = byPlayer;
+	PendingRequestInfo[byPlayer][ToPlayer] = toPlayer;
+	PendingRequestInfo[toPlayer][ByPlayer] = byPlayer;
 
-	PendingRequestInfo[byPlayer][rdTime] = PendingRequestInfo[toPlayer][rdTime] = GetTickCount();
+	PendingRequestInfo[byPlayer][Time] = PendingRequestInfo[toPlayer][Time] = GetTickCount();
 
-	PendingRequestInfo[byPlayer][rdItem] = PendingRequestInfo[toPlayer][rdItem] = item;
+	PendingRequestInfo[byPlayer][Item] = PendingRequestInfo[toPlayer][Item] = item;
 
-	PendingRequestInfo[byPlayer][rdSlot] = PendingRequestInfo[toPlayer][rdSlot] = slot;
+	PendingRequestInfo[byPlayer][Slot] = PendingRequestInfo[toPlayer][Slot] = slot;
 
-	PendingRequestInfo[byPlayer][rdAmount] = PendingRequestInfo[toPlayer][rdAmount] = amount;
+	PendingRequestInfo[byPlayer][Amount] = PendingRequestInfo[toPlayer][Amount] = amount;
 
-	PendingRequestInfo[byPlayer][rdType] = PendingRequestInfo[toPlayer][rdType] = type;
+	PendingRequestInfo[byPlayer][Type] = PendingRequestInfo[toPlayer][Type] = type;
 }
 
 //stock Character_SetPendingRequest(playerid, bool:)
 
 stock Request_IsPending(playerid)
 {
-	return PendingRequestInfo[playerid][rdPending];
+	return PendingRequestInfo[playerid][Pending];
 }
 
 stock Request_GetItem(playerid)
 {
-	return PendingRequestInfo[playerid][rdItem];
+	return PendingRequestInfo[playerid][Item];
 }
 
 stock Request_GetAmount(playerid)
 {
-	return PendingRequestInfo[playerid][rdAmount];
+	return PendingRequestInfo[playerid][Amount];
 }
 
 stock Request_GetSlot(playerid)
 {
-	return PendingRequestInfo[playerid][rdSlot];
+	return PendingRequestInfo[playerid][Slot];
 }
 
 stock Request_GetType(playerid)
 {
-	return PendingRequestInfo[playerid][rdType];
+	return PendingRequestInfo[playerid][Type];
 }
 
 stock Request_GetSender(playerid)
 {
-	return PendingRequestInfo[playerid][rdByPlayer];
+	return PendingRequestInfo[playerid][ByPlayer];
 }
 
 stock Request_GetReceiver(playerid)
 {
-	return PendingRequestInfo[playerid][rdToPlayer];
+	return PendingRequestInfo[playerid][ToPlayer];
 }
 
 stock Character_AcceptItemRequest(playerid)

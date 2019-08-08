@@ -26,12 +26,12 @@ static enum _:E_ADDICTION_STATE
 
 static enum e_PlayerDrugAddictionInfo
 {
-	addictionDrug,
-	addictionLastUsageTime,
-	addictionNextUsageTime,
-	addictionEffectTime, // Next effect time as seconds.
-	addictionUsageCounter,
-	addictionLastAlertTime
+	Drug,
+	LastUsageTime,
+	NextUsageTime,
+	EffectTime, // Next effect time as seconds.
+	UsageCounter,
+	LastAlertTime
 };
 static PlayerDrugAddictionInfo[MAX_PLAYERS][MAX_PLAYER_DRUGS][e_PlayerDrugAddictionInfo];
 
@@ -83,7 +83,7 @@ stock Character_ShowDrugStats(playerid, targetid)
 			set(s, "Lieve");
 		else if(Character_GetAddictionState(playerid, drugid) == ADDICTION_STATE_HEAVY)
 			set(s, "Pesante");
-		SendFormattedMessage(targetid, COLOR_ERROR, "Droga: %s - Dipendente: %s - Ultimo Utilizzo: %d minuti fa.", ServerItem_GetName(drugid), s, PlayerDrugAddictionInfo[playerid][i][addictionLastUsageTime]);
+		SendFormattedMessage(targetid, COLOR_ERROR, "Droga: %s - Dipendente: %s - Ultimo Utilizzo: %d minuti fa.", ServerItem_GetName(drugid), s, PlayerDrugAddictionInfo[playerid][i][LastUsageTime]);
 		count++;
 	}
 	if(count <= 0)
@@ -102,12 +102,6 @@ hook OnPlayerClearData(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-hook OnCharacterSaveData(playerid)
-{
-	Character_SaveDrugAddiction(playerid);
-	return Y_HOOKS_CONTINUE_RETURN_1;
-}
-
 hook OnCharacterLoad(playerid)
 {
 	Character_LoadDrugAddiction(playerid);
@@ -121,19 +115,19 @@ ptask OnPlayerDrugTimer[60000](playerid)
 	new drugid = 0;
 	for(new i = 0, j = MAX_PLAYER_DRUGS; i < j; ++i)
 	{
-		drugid = PlayerDrugAddictionInfo[playerid][i][addictionDrug];
+		drugid = PlayerDrugAddictionInfo[playerid][i][Drug];
 		if(!ServerItem_IsDrug(drugid))
 			continue;
-		PlayerDrugAddictionInfo[playerid][i][addictionLastUsageTime]++;
+		PlayerDrugAddictionInfo[playerid][i][LastUsageTime]++;
 		if(Character_IsAddictedBy(playerid, drugid))
 		{
-			if(PlayerDrugAddictionInfo[playerid][i][addictionNextUsageTime] > 0)
+			if(PlayerDrugAddictionInfo[playerid][i][NextUsageTime] > 0)
 			{
-				PlayerDrugAddictionInfo[playerid][i][addictionNextUsageTime]--;
+				PlayerDrugAddictionInfo[playerid][i][NextUsageTime]--;
 			}
 			else
 			{
-				PlayerDrugAddictionInfo[playerid][i][addictionLastAlertTime]--;
+				PlayerDrugAddictionInfo[playerid][i][LastAlertTime]--;
 			}
 		}
 		Character_SaveDrugAddiction(playerid);
@@ -148,25 +142,25 @@ hook OnPlayerAddictionTimer(playerid)
 	new drugid = 0;
 	for(new i = 0, j = MAX_PLAYER_DRUGS; i < j; ++i)
 	{
-		drugid = PlayerDrugAddictionInfo[playerid][i][addictionDrug];
+		drugid = PlayerDrugAddictionInfo[playerid][i][Drug];
 		if(!ServerItem_IsDrug(drugid))
 			continue;
-		if(PlayerDrugAddictionInfo[playerid][i][addictionEffectTime] > 0 && PlayerDrugAddictionInfo[playerid][i][addictionNextUsageTime] > 0)
+		if(PlayerDrugAddictionInfo[playerid][i][EffectTime] > 0 && PlayerDrugAddictionInfo[playerid][i][NextUsageTime] > 0)
 		{
-			PlayerDrugAddictionInfo[playerid][i][addictionEffectTime]--;
+			PlayerDrugAddictionInfo[playerid][i][EffectTime]--;
 			Character_HandleDrugEffect(playerid, drugid, false);
 		}
 		// Apply side effects
-		else if(Character_IsAddictedBy(playerid, drugid) && PlayerDrugAddictionInfo[playerid][i][addictionNextUsageTime] <= 0)
+		else if(Character_IsAddictedBy(playerid, drugid) && PlayerDrugAddictionInfo[playerid][i][NextUsageTime] <= 0)
 		{
-			PlayerDrugAddictionInfo[playerid][i][addictionEffectTime]--;
-			if(PlayerDrugAddictionInfo[playerid][i][addictionEffectTime] <= 0)
+			PlayerDrugAddictionInfo[playerid][i][EffectTime]--;
+			if(PlayerDrugAddictionInfo[playerid][i][EffectTime] <= 0)
 				Character_HandleDrugSideEffects(playerid, drugid);
 			
-			if(PlayerDrugAddictionInfo[playerid][i][addictionLastAlertTime] <= 0)
+			if(PlayerDrugAddictionInfo[playerid][i][LastAlertTime] <= 0)
 			{
 				SendFormattedMessage(playerid, COLOR_ERROR, "La dipendenza da %s comincia a farsi sentire. Assumi una dose o perderai hp.", ServerItem_GetName(drugid));
-				PlayerDrugAddictionInfo[playerid][i][addictionLastAlertTime] = DRUG_ALERT_TIME; // 30 minutes
+				PlayerDrugAddictionInfo[playerid][i][LastAlertTime] = DRUG_ALERT_TIME; // 30 minutes
 			}
 		}
 	}
@@ -214,7 +208,7 @@ static stock Character_HandleDrugSideEffects(playerid, drugid)
 	else if(nextHealth < minHealth)
 		nextHealth = minHealth;
 
-	PlayerDrugAddictionInfo[playerid][drugIndex][addictionEffectTime] = effectTime;
+	PlayerDrugAddictionInfo[playerid][drugIndex][EffectTime] = effectTime;
 
 	if(nextHealth > 0.0)
 		AC_SetPlayerHealth(playerid, nextHealth);
@@ -242,11 +236,11 @@ static stock Character_HandleDrugEffect(playerid, drugid, bool:firstUsage = fals
 
 	if(firstUsage)
 	{
-		PlayerDrugAddictionInfo[playerid][drugIndex][addictionDrug] = drugid;
-		PlayerDrugAddictionInfo[playerid][drugIndex][addictionEffectTime] = effectTime;
-		PlayerDrugAddictionInfo[playerid][drugIndex][addictionLastUsageTime] = 0;
-		PlayerDrugAddictionInfo[playerid][drugIndex][addictionNextUsageTime] = GetDrugSideEffectTime(drugid);
-		PlayerDrugAddictionInfo[playerid][drugIndex][addictionLastAlertTime] = 0;
+		PlayerDrugAddictionInfo[playerid][drugIndex][Drug] = drugid;
+		PlayerDrugAddictionInfo[playerid][drugIndex][EffectTime] = effectTime;
+		PlayerDrugAddictionInfo[playerid][drugIndex][LastUsageTime] = 0;
+		PlayerDrugAddictionInfo[playerid][drugIndex][NextUsageTime] = GetDrugSideEffectTime(drugid);
+		PlayerDrugAddictionInfo[playerid][drugIndex][LastAlertTime] = 0;
 		CallLocalFunction(#OnCharacterUseDrug, "dd", playerid, drugid);
 	}
 
@@ -273,22 +267,22 @@ stock Character_IsAddictedBy(playerid, drugid)
 
 stock Character_GetDrug(playerid, slotid)
 {
-	return PlayerDrugAddictionInfo[playerid][slotid][addictionDrug];
+	return PlayerDrugAddictionInfo[playerid][slotid][Drug];
 }
 
 stock Character_IncreaseDrugUsage(playerid, drugid)
 {
-	PlayerDrugAddictionInfo[playerid][GetDrugIndex(drugid)][addictionUsageCounter]++;
+	PlayerDrugAddictionInfo[playerid][GetDrugIndex(drugid)][UsageCounter]++;
 }
 
 stock Character_SetDrugUsageCounter(playerid, drugid, usageCounter)
 {
-	PlayerDrugAddictionInfo[playerid][GetDrugIndex(drugid)][addictionUsageCounter] = usageCounter;
+	PlayerDrugAddictionInfo[playerid][GetDrugIndex(drugid)][UsageCounter] = usageCounter;
 }
 
 stock Character_GetDrugUsageCounter(playerid, drugid)
 {
-	return PlayerDrugAddictionInfo[playerid][GetDrugIndex(drugid)][addictionUsageCounter];
+	return PlayerDrugAddictionInfo[playerid][GetDrugIndex(drugid)][UsageCounter];
 }
 
 static stock GetDrugIndex(drugid)
@@ -327,10 +321,10 @@ static stock Character_LoadDrugAddiction(playerid)
 		{
 			cache_get_value_index_int(i, 1, drugid);
 			drugIndex = GetDrugIndex(drugid);
-			PlayerDrugAddictionInfo[playerid][drugIndex][addictionDrug] = drugid;
-			cache_get_value_index_int(i, 2, PlayerDrugAddictionInfo[playerid][drugIndex][addictionLastUsageTime]);
-			cache_get_value_index_int(i, 3, PlayerDrugAddictionInfo[playerid][drugIndex][addictionUsageCounter]);
-			cache_get_value_index_int(i, 4, PlayerDrugAddictionInfo[playerid][drugIndex][addictionNextUsageTime]);
+			PlayerDrugAddictionInfo[playerid][drugIndex][Drug] = drugid;
+			cache_get_value_index_int(i, 2, PlayerDrugAddictionInfo[playerid][drugIndex][LastUsageTime]);
+			cache_get_value_index_int(i, 3, PlayerDrugAddictionInfo[playerid][drugIndex][UsageCounter]);
+			cache_get_value_index_int(i, 4, PlayerDrugAddictionInfo[playerid][drugIndex][NextUsageTime]);
 		}
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoadAddiction, "SELECT * FROM `character_drug_info` WHERE CharacterID = '%d';", Character_GetID(playerid));
@@ -361,9 +355,9 @@ static stock Character_SaveDrugAddiction(playerid)
 		;", 
 		Character_GetID(playerid),
 		Character_GetDrug(playerid, i),
-		PlayerDrugAddictionInfo[playerid][i][addictionLastUsageTime],
-		PlayerDrugAddictionInfo[playerid][i][addictionUsageCounter],
-		PlayerDrugAddictionInfo[playerid][i][addictionNextUsageTime]);
+		PlayerDrugAddictionInfo[playerid][i][LastUsageTime],
+		PlayerDrugAddictionInfo[playerid][i][UsageCounter],
+		PlayerDrugAddictionInfo[playerid][i][NextUsageTime]);
 	}
 	mysql_tquery(gMySQL, "COMMIT;");
 	return 1;

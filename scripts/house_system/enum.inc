@@ -1,36 +1,5 @@
 #define HOUSE_START_WORLD 	(1000)
 
-enum _:E_HOUSE_DATA
-{
-    hID,
-
-	hCreated,
-
-    hOwnerID,
-    hOwnerName[MAX_PLAYER_NAME],
-    hPrice,
-    hLocked,
-	hMoney,
-
-    Float:hEnterX,
-    Float:hEnterY,
-    Float:hEnterZ,
-    hEnterInterior,
-    hEnterWorld,
-
-    Float:hExitX,
-    Float:hExitY,
-    Float:hExitZ,
-    hExitInterior,
-    hExitWorld,
-	
-	hInterior,
-
-    hEnterPickup,
-    hExitPickup,
-    Text3D:h3DText,
-};
-
 enum 
 {
     HOUSE_VERY_LITTLE = 1,

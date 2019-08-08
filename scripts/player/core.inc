@@ -6,6 +6,9 @@
 #include <player\components\skin>
 #include <player\components\walk>
 #include <player\components\chat>
+#include <player\components\paycheck>
+
+
 
 #include <player\components\editobject>
 #include <player\components\death_system>
@@ -44,28 +47,27 @@
 // OTHERS
 #include <YSI_Coding\y_hooks>
 
+forward OnCharacterLoad(playerid); // Called when a Player select a character.
+forward OnCharacterLateLoad(playerid);
+
+forward OnCharacterPreSaveData(playerid, disconnect);
+
+forward OnPlayerClearData(playerid); // Callbacks called when character's data (or account data) must/can be cleared.
+
+forward OnCharacterDisconnected(playerid);
+
+forward OnCharacterSelected(playerid); // Called when a player select a character during login.
+forward OnCharacterSpawn(playerid); // Called when Character_Spawn is called.
+
 static enum E_PLAYER_DATA
 {
     ID,
-
-	Float:LastHealth,
-	Float:LastArmour,
 	
     Float:Health,
     Float:Armour,
 
-    BuildingKey,
-    HouseKey,
-
 	Faction,
 	Rank,
-
-	PayCheck,
-	
-	Banned,
-	BanExpiry,
-
-	LastChopShopTime,
 
     LootZone, // MUST REMOVE FROM HERE SOON
 };
@@ -74,18 +76,6 @@ static
 	CharacterName[MAX_PLAYERS][MAX_PLAYER_NAME]
 ;
 
-forward OnCharacterLoad(playerid); // Called when a Player select a character.
-forward OnCharacterLateLoad(playerid);
-
-forward OnCharacterPreSaveData(playerid, disconnect);
-forward OnCharacterSaveData(playerid);
-
-forward OnPlayerClearData(playerid); // Callbacks called when character's data (or account data) must/can be cleared.
-
-forward OnCharacterDisconnected(playerid);
-
-forward OnCharacterSelected(playerid); // Called when a player select a character during login.
-forward OnCharacterSpawn(playerid); // Called when Character_Spawn is called.
 
 
 
@@ -99,32 +89,10 @@ hook OnPlayerClearData(playerid)
     return 1;
 }
 
-hook OnCharacterDisconnected(playerid)
-{
-    Character_Save(playerid, true);
-    return Y_HOOKS_CONTINUE_RETURN_1;
-}
-
-hook OnCharacterLateLoad(playerid)
-{
-	AC_SetPlayerHealth(playerid, PlayerInfo[playerid][LastHealth]);
-	AC_SetPlayerArmour(playerid, PlayerInfo[playerid][LastArmour]);
-	return 1;
-}
-
 hook OnCharacterLoad(playerid)
 {
-	AC_SetPlayerHealth(playerid, 100);
 	SetPlayerName(playerid, CharacterName[playerid]);
 	return 1;
-}
-
-ptask SaveCharacterTimer[14000](playerid)
-{
-    if(!Character_IsLogged(playerid))
-	   return 0;
-    Character_Save(playerid);
-    return 1;
 }
 
 stock Character_SetVirtualWorld(playerid, virtualWorld)
@@ -161,7 +129,7 @@ stock Character_ShowStats(playerid, targetid)
 	getdate(year, month, day);
 	gettime(hours, minutes, seconds);
 	
-    SendClientMessage(targetid, COLOR_GREEN, "_____________________[STATISTICHE - %d/%d/%d @ %d/%d]_____________________", day, month, year, hours, minutes);
+    SendFormattedMessage(targetid, COLOR_GREEN, "_____________________[STATISTICHE - %d/%d/%d @ %d/%d]_____________________", day, month, year, hours, minutes);
 	SendFormattedMessage(targetid, -1, "[Account] Account: %s - Livello: %d - E-Mail: %s", Account_GetName(playerid), Account_GetLevel(playerid), Account_GetEMail(playerid));
     
 	if(Character_GetFaction(playerid) != INVALID_FACTION_ID)
@@ -189,10 +157,9 @@ stock Character_ShowStats(playerid, targetid)
 	if(Account_GetPremiumLevel(playerid) > 0 && Account_GetPremiumExpiry(playerid) > gettime())
 	{
 		static premiumNames[][8] = {"Bronze", "Silver", "Gold"};
-		new year, month, day, hour, minute, second;
-		TimestampToDate(Account_GetPremiumExpiry(playerid), year, month, day, hour, minute, second, 0);
+		TimestampToDate(Account_GetPremiumExpiry(playerid), year, month, day, hours, minutes, seconds, 0);
 
-		SendFormattedMessage(targetid, COLOR_YELLOW, "Premium %s - Scadenza: %d/%d/%d - %d:%d", premiumNames[Account_GetPremiumLevel(playerid)-1], day, month, year, hour, minute);
+		SendFormattedMessage(targetid, COLOR_YELLOW, "Premium %s - Scadenza: %d/%d/%d - %d:%d", premiumNames[Account_GetPremiumLevel(playerid)-1], day, month, year, hours, minutes);
 	}
 	
 	if(Account_GetAdminLevel(playerid) > 0)
@@ -235,38 +202,6 @@ stock Character_GetRolePlayName(playerid)
     	FixName(CharacterName[playerid], string);
     }
     return string;
-}
-
-stock Character_HasBuildingKey(playerid)
-{
-    return PlayerInfo[playerid][BuildingKey] > 0;
-}
-
-stock Character_GetBuildingKey(playerid)
-{
-    return PlayerInfo[playerid][BuildingKey];
-}
-
-stock Character_SetBuildingKey(playerid, buildingid)
-{
-    PlayerInfo[playerid][BuildingKey] = buildingid;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET building_key = '%d' WHERE id = '%d'", buildingid, Character_GetID(playerid));
-}
-
-stock Character_HasHouseKey(playerid)
-{
-    return PlayerInfo[playerid][HouseKey] > 0;
-}
-
-stock Character_GetHouseKey(playerid)
-{
-    return PlayerInfo[playerid][HouseKey];
-}
-
-stock Character_SetHouseKey(playerid, houseid)
-{
-    PlayerInfo[playerid][HouseKey] = houseid;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET house_key = '%d' WHERE id = '%d'", houseid, Character_GetID(playerid));
 }
 
 stock Character_GetID(playerid)
@@ -316,7 +251,7 @@ stock Character_GetRank(playerid)
 stock Character_SetRank(playerid, rank)
 {
 	PlayerInfo[playerid][Rank] = rank;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET rank = '%d' WHERE id = '%d'", rank, Character_GetID(playerid));
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET faction_rank = '%d' WHERE id = '%d'", rank, Character_GetID(playerid));
 }
 
 stock Character_SetFactionOOCEnabled(playerid, bool:value)
@@ -332,6 +267,7 @@ stock Character_IsFactionOOCEnabled(playerid)
 stock Character_SetFactionDuty(playerid, bool:value)
 {
 	Bit_Set(gCharacterBitState[e_pFactionDuty], playerid, value);
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET faction_duty = '%d' WHERE id = '%d'", value?1:0, Character_GetID(playerid));
 }
 
 stock Character_IsFactionDuty(playerid)
@@ -357,21 +293,6 @@ stock Character_SetBuyingVehicle(playerid, bool:value)
 stock Character_IsBuyingVehicle(playerid)
 {
 	return Bit_Get(gCharacterBitState[e_pBuyingVehicle], playerid);
-}
-
-stock Character_AddPayCheck(playerid, amount)
-{
-	PlayerInfo[playerid][PayCheck] += amount;
-}
-
-stock Character_SetPayCheck(playerid, set)
-{
-	PlayerInfo[playerid][PayCheck] = set;
-}
-
-stock Character_GetPayCheck(playerid)
-{
-	return PlayerInfo[playerid][PayCheck];
 }
 
 stock Character_SetCuffed(playerid, bool:value)
@@ -415,46 +336,12 @@ stock Character_IsLegHitted(playerid)
 	return Bit_Get(gCharacterBitState[e_pLegHit], playerid);
 }
 
-stock Character_SetBanned(playerid, ban)
-{
-	PlayerInfo[playerid][Banned] = ban;
-}
-
-stock Character_IsBanned(playerid)
-{
-	return PlayerInfo[playerid][Banned];
-}
-
-stock Character_SetBanExpiry(playerid, time)
-{
-	PlayerInfo[playerid][BanExpiry] = time;
-}
-
-stock Character_GetBanExpiry(playerid)
-{
-	return PlayerInfo[playerid][BanExpiry];
-}
-
 stock Character_ResetBitState(playerid)
 {
 	for(new i; e_Bit1_Data:i < e_Bit1_Data; i++)
 	{
 		Bit_Set(gCharacterBitState[e_Bit1_Data:i], playerid, false);
 	}
-}
-
-stock Character_GetLastChopShopTime(playerid)
-{
-	return PlayerInfo[playerid][LastChopShopTime];
-}
-
-stock Character_SetLastChopShopTime(playerid, time)
-{
-	if(!Character_IsLogged(playerid))
-		return 0;
-	PlayerInfo[playerid][LastChopShopTime] = time;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET last_chop_shop_time = '%d' WHERE id = '%d'", Character_GetLastChopSopTime(playerid), Character_GetID(playerid));
-	return 1;
 }
 
 stock Character_HasChopShopPrivileges(playerid)
@@ -542,29 +429,17 @@ stock Character_SetToJailPos(playerid)
 
 stock LoadCharacterResult(playerid)
 {
-    new count;
+    new count, tmp;
     cache_get_row_count(count);
     if(count > 0)
     {
-		cache_get_value_index_int(0, 0, PlayerInfo[playerid][pID]);
-		cache_get_value_index(0, 2, PlayerInfo[playerid][pName]);
+		cache_get_value_name_int(0, "id", PlayerInfo[playerid][ID]);
+		cache_get_value_name(0, "name", CharacterName[playerid]);
 
-		cache_get_value_index_int(0, 7, PlayerInfo[playerid][pBuildingKey]);
-		cache_get_value_index_int(0, 8, PlayerInfo[playerid][pHouseKey]);
+		cache_get_value_name_int(0, "faction", PlayerInfo[playerid][Faction]);
+		cache_get_value_name_int(0, "faction_rank", PlayerInfo[playerid][Rank]);
 
-		cache_get_value_index_int(0, 9, PlayerInfo[playerid][pFaction]);
-		cache_get_value_index_int(0, 10, PlayerInfo[playerid][pRank]);
-
-		cache_get_value_index_int(0, 13, PlayerInfo[playerid][pPayCheck]);
-
-		cache_get_value_index_int(0, 15, PlayerInfo[playerid][pChatStyle]);
-
-		cache_get_value_index_int(0, 17, PlayerInfo[playerid][pBanned]);
-		cache_get_value_index_int(0, 18, PlayerInfo[playerid][pBanExpiry]);
-
-		cache_get_value_index_int(0, 19, PlayerInfo[playerid][pLastChopShopTime]);
-
-		cache_get_value_index_int(0, 21, tmp);
+		cache_get_value_name_int(0, "faction_duty", tmp);
 		Character_SetFactionDuty(playerid, tmp ? true : false);
 		return 1;
     }
@@ -575,6 +450,4 @@ stock Character_Clear(playerid)
 {
     new CleanData[E_PLAYER_DATA];
     PlayerInfo[playerid] = CleanData;
-
-	pLastPMTime[playerid] = 0;
 }

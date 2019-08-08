@@ -7,10 +7,7 @@
 new
 	// probably Iterators aren't worth for this.
 	Iterator:pTogglePM[MAX_PLAYERS]<MAX_PLAYERS>,
-	Iterator:pToggleOOC[MAX_PLAYERS]<MAX_PLAYERS>,
-	pTempSkin[MAX_PLAYERS],
-	pSelectedUniformSlot[MAX_PLAYERS char],
-	pLastPMTime[MAX_PLAYERS]
+	Iterator:pToggleOOC[MAX_PLAYERS]<MAX_PLAYERS>
 ;
 
 enum e_Bit1_Data 
@@ -34,12 +31,7 @@ enum e_Bit1_Data
 new 
     BitArray:gCharacterBitState[e_Bit1_Data]<MAX_PLAYERS>;
 
-enum // e_DeathStates
-{
-	DEATH_STATE_NONE = 0,
-	DEATH_STATE_INJURED = 1,
-	DEATH_STATE_DEAD = 2
-}
+
 
 enum _:e_PendingType
 {
@@ -49,7 +41,9 @@ enum _:e_PendingType
 	REQUEST_TYPE_REPAIR,
 	REQUEST_TYPE_VEHICLE_SPRAY,
 	REQUEST_TYPE_SEARCH,
-	REQUEST_TYPE_BUILDING
+	REQUEST_TYPE_BUILDING,
+
+	REQUEST_TYPE_LAST // MUST BE LAST ONE
 }
 
 stock GetRequestTypeName(type)
@@ -65,5 +59,5 @@ stock GetRequestTypeName(type)
 	   case REQUEST_TYPE_BUILDING: l = "Edificio";
 	   default: l = "Sconosciuto";
     }
-    return l; //unreachable
+    return l;
 }

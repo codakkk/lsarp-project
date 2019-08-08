@@ -19,7 +19,6 @@ CMD:servizio(playerid, params[])
 			AC_SetPlayerHealth(playerid, 100.0);
 			AC_SetPlayerArmour(playerid, Faction_GetType(factionid) == FACTION_TYPE_POLICE ? 100.0 : 0.0);
 
-			pTempSkin[playerid] = GetPlayerSkin(playerid);
 			SetPlayerColor(playerid, COLOR_SLATEBLUE);
 			//Character_SetSelectingUniform(playerid, true);
 			new rankName[16];
@@ -43,14 +42,6 @@ CMD:uniforme(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non fai parte di una fazione.");
 	if(!Character_IsFactionDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Puoi utilizzare questo comando solo se in servizio.");
-	
-	/*if(Character_IsSelectingUniform(playerid))
-	{
-		Character_SetSelectingUniform(playerid, false);
-		Character_SetFreezed(playerid, false);
-		SendFormattedMessage(playerid, COLOR_GREEN, "Hai selezionato la nuova uniforme. ID: %d.", Faction_GetSkin(fid, pSelectedUniformSlot{playerid}));
-		return 1;
-	}*/
 
 	new uniform_id,
 		List:factionSkins = Faction_GetSkins(fid);
@@ -58,10 +49,6 @@ CMD:uniforme(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono uniformi disponibili.");
 	if(sscanf(params, "d", uniform_id))
 	{
-		/*Character_SetSelectingUniform(playerid, true);
-		Character_SetFreezed(playerid, true);
-		pSelectedUniformSlot{playerid} = 0;
-		SendClientMessage(playerid, COLOR_GREEN, "Usa Freccia Sx o Freccia Dx per selezionare la skin. Premi LALT (/uniforme) per confermare.");*/
 		SendClientMessage(playerid, COLOR_ERROR, "/uniforme <id uniforme>");
 		SendClientMessage(playerid, -1, "== {00FF00}Uniformi Disponibili{FFFFFF} ==");
 		new String:str;
@@ -81,7 +68,6 @@ CMD:uniforme(playerid, params[])
 	{
 		if(list_find(factionSkins, uniform_id) == -1)
 			return SendClientMessage(playerid, COLOR_ERROR, "L'uniforme inserita non esiste.");
-		pTempSkin[playerid] = GetPlayerSkin(playerid);
 		SetPlayerSkin(playerid, uniform_id);
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai selezionato la nuova uniforme. ID: %d.", uniform_id);
 	}

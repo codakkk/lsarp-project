@@ -147,9 +147,6 @@ CMD:setskin(playerid, params[])
     
 	Character_SetSkin(id, skid);
     SetPlayerSkin(id, skid);
-    // Send admin alert (?)
-    // Log (?)
-    Character_Save(id);
     return 1;
 }
 
@@ -200,7 +197,6 @@ CMD:givemoney(playerid, params[])
     SendMessageToAdmins(1, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha dato $%d a %s (%d).", Account_GetName(playerid), Character_GetOOCName(playerid), hp, Character_GetOOCName(id), id);
     SendFormattedMessage(id, COLOR_GREEN, "[ADMIN] %s (%s) ti ha givato $%d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
     Log(Account_GetName(playerid), Character_GetOOCName(id), "/givemoney", hp);
-    Character_Save(id);
     return 1;
 }
 
@@ -224,7 +220,6 @@ CMD:sethp(playerid, params[])
     SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha settato gli HP di %s (%d) a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), Character_GetOOCName(id), id, hp);
     SendFormattedMessage(playerid, COLOR_GREEN, "[ADMIN] %s (%s) ti ha settato gli HP a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
     Log(Account_GetName(playerid), Character_GetOOCName(id), "/sethp", hp);
-    Character_Save(id);
     return 1;
 }
 alias:sethp("sethealth");
@@ -246,7 +241,6 @@ CMD:setarmour(playerid, params[])
     SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha settato l'armatura di %s (%d) a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), Character_GetOOCName(id), id, hp);
     SendFormattedMessage(playerid, COLOR_GREEN, "[ADMIN] %s (%s) ti ha settato l'armatura a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
     Log(Account_GetName(playerid), Character_GetOOCName(id), "/setarmour", hp);
-    Character_Save(id);
     return 1;
 }
 alias:setarmour("setap");
@@ -369,14 +363,6 @@ CMD:setvhp(playerid, params[])
 	SetVehicleHealth(id, hp);
 	SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha settato gli HP a %f del veicolo %d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp, id);
 	Log(Account_GetName(playerid), "", "/setvhp", id);
-	foreach(new i : Player)
-	{
-		if(Vehicle_GetOwnerID(id) == Character_GetID(i))
-		{
-			Character_Save(i);
-			return 1;
-		}
-	}
 	return 1;
 }
 alias:setvhp("setvhealth");
@@ -641,7 +627,8 @@ CMD:invcheck(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
 	new str[64], Inventory:inv = Character_GetInventory(id);
 	format(str, sizeof(str), "Inventario di %s (%d/%d)",  Character_GetOOCName(id), Inventory_GetUsedSpace(inv), Inventory_GetSpace(inv));
-	Inventory_ShowInChat(inv, playerid, str);
+	
+	Inventory_Show(inv, playerid, str, DialogNull, "Chiudi", "Chiudi");
 	// Inventory_ShowInChatStr(Character_GetInventory(id), playerid, Character_GetOOCNameStr(id));
 	return 1;
 }
@@ -1132,9 +1119,8 @@ CMD:unbancharacter(playerid, params[])
 
 stock BanCharacter(playerid, adminid, days, reason[])
 {
-	Character_SetBanned(playerid, 1);
-
-	Character_SetBanExpiry(playerid, (days > 0) ? (gettime() + 60 * 60 * 24 * days) : cellmax );
+	new banTime = (days > 0) ? (gettime() + 60 * 60 * 24 * days) : cellmax;
+	
 	if(days > 0)
 	{
 		SendFormattedMessage(playerid, COLOR_ORANGE, "Sei stato bannato da %s per %d giorni. Motivo: %s", Account_GetName(adminid), days, reason);
@@ -1148,14 +1134,14 @@ stock BanCharacter(playerid, adminid, days, reason[])
 
 	Log(Account_GetName(adminid), Account_GetName(playerid), "BanCharacter", days);
 
-	Character_Save(playerid);
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET banned = '1', ban_expiry = '%d' WHERE id = '%d'", banTime, Character_GetID(playerid));
+
 	KickEx(playerid);
 	return 1;
 }
 
 stock BanAccount(playerid, adminid, reason[])
 {
-	Account_SetBanned(playerid, 1);
 	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET banned = '1' WHERE id = '%d'", Account_GetID(playerid));
 
 	SendFormattedMessage(playerid, COLOR_ORANGE, "Il tuo account (%s) è stato bannato da %s. Motivo: %s", Account_GetName(playerid), Account_GetName(adminid), reason);

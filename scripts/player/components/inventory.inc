@@ -9,7 +9,6 @@ stock bool:Character_InitializeInventory(playerid)
 		//return false;
 	new Inventory:inventory = Inventory_New(PLAYER_INVENTORY_START_SIZE);
 	map_add(PlayerInventory, playerid, List:inventory);
-	printf("Inventory Initialized");
 	return true;
 }
 
@@ -19,12 +18,6 @@ stock bool:Character_UnloadInventory(playerid)
 		return false;
 	map_remove_deep(PlayerInventory, playerid);
 	return true;
-}
-
-hook OnCharacterSaveData(playerid)
-{
-	Character_SaveInventory(playerid);
-	return 1;
 }
 
 hook OnCharacterLoad(playerid)
@@ -187,7 +180,7 @@ Dialog:Dialog_InventoryItemList(playerid, response, listitem, inputtext[])
 		return 0;
 	if(Character_GetDeathState(playerid) > 0)
 	{
-		SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare l'inventario ora.");
+		SendClientMessage(playerid, COLOR_ERROR, "Non puoi interagire con l'inventario ora.");
 		Character_ShowInventory(playerid, playerid);
 		return 0;
 	}

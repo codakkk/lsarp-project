@@ -31,14 +31,36 @@ Dialog:Dialog_Login(playerid, response, listitem, inputtext[])
 {
     if(!response)
     {
-	   Kick(playerid);
+	   KickEx(playerid);
 	   return 1;
     }
     inline OnCheck()
     {
 		// First check for email
-		if(LoadAccountData(playerid))
+		if(cache_num_rows() > 0)
 		{
+			new accountId, isBanned, banTime;
+			
+			cache_get_value_name_int(0, "id", accountId);
+			cache_get_value_name_int(0, "banned", isBanned);
+			cache_get_value_name_int(0, "ban_expiry", banTime);
+
+			if(isBanned)
+			{
+				if(!banTime || gettime() < banTime)
+				{
+					Dialog_Show(playerid, DialogNull, DIALOG_STYLE_MSGBOX, "Account Bannato", "Questo account risulta bannato.\nSe pensi sia un errore, visita www.lsarp.it", "Ok", "");
+					KickEx(playerid);
+					return 0;
+				}
+				else
+				{
+					mysql_tquery_f(gMySQL, "UPDATE `accounts` SET banned = '0', ban_expiry = '0' WHERE id = '%d'", accountId);
+				}
+			}
+			
+			LoadAccountData(playerid);
+
 			#if defined E_MAIL_CHECK
 			if(strlen(Account_GetEMail(playerid)) <= 0 || !IsValidEMail(Account_GetEMail(playerid)))
 			{
@@ -128,36 +150,18 @@ Dialog:Dialog_EMailConfirm(playerid, response, listitem, inputtext[])
 	return 1;
 }
 
-
 stock ExecuteLogin(playerid)
 {
 	Account_SetLogged(playerid, true);
 
 	stop LoginTimer[playerid];
 	LoginTimer[playerid] = Timer:0;
+
+	CallLocalFunction(#OnAccountLogin, "d", playerid);
     
-	if(Account_IsBanned(playerid))
-	{
-		if(!Account_GetBanExpiry(playerid) || gettime() < Account_GetBanExpiry(playerid))
-		{
-			Dialog_Show(playerid, DialogNull, DIALOG_STYLE_MSGBOX, "Account Bannato", "Questo account risulta bannato.\nSe pensi sia un errore, visita www.lsarp.it", "Ok", "");
-			KickEx(playerid);
-			return 0;
-		}
-		else
-		{
-			Account_SetBanned(playerid, 0);
-			Account_SetBanExpiry(playerid, 0);
-			Account_Save(playerid);
-		}
-	}
-
-	Account_LoadRewards(playerid);
-
-    inline OnLoad()
+	/*inline OnLoad()
     {
-       CallLocalFunction(#OnAccountLogin, "d", playerid);
     }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT id FROM characters WHERE account_id = '%d'", Account_GetID(playerid));
+    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT id FROM characters WHERE account_id = '%d'", Account_GetID(playerid));*/
 	return 1;
 }

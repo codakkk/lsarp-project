@@ -1,9 +1,17 @@
 #include <YSI_Coding\y_hooks>
 
-hook OnCharacterSaveData(playerid)
+static enum e_Bit1_OptionsData 
 {
-	Player_SaveOptions(playerid);
-	return Y_HOOKS_CONTINUE_RETURN_1;
+    e_pHotKeys,
+	e_pInvMode, // 0: Dialog - 1: Chat
+	e_pToggleHUD
+};
+static BitArray:OptionsBitSet[e_Bit1_OptionsData]<MAX_PLAYERS>;
+
+hook OnAccountCreated(playerid, account_db_id)
+{
+	mysql_tquery_f(gMySQL, "INSERT INTO `account_options` (account_id, hotkeys, inv_mode) VALUES('%d', '%d', '%d')", Account_GetID(playerid), 0, 0);
+	return 1;
 }
 
 hook OnCharacterLoad(playerid)
@@ -20,10 +28,10 @@ stock Player_LoadOptions(playerid)
 		if(cache_num_rows() > 0)
 		{
 			cache_get_value_index_int(0, 1, t);
-			Account_SetHotKeysEnabled(playerid, t ? true : false);
+			Player_SetHotKeysEnabled(playerid, t ? true : false);
 
 			cache_get_value_index_int(0, 2, t);
-			Account_SetInvModeEnabled(playerid, t ? true : false);
+			Player_SetInvModeEnabled(playerid, t ? true : false);
 
 		}
 	}
@@ -39,6 +47,39 @@ stock Player_SaveOptions(playerid)
 	hotkeys = VALUES(hotkeys), \
 	inv_mode = VALUES(inv_mode);", 
 	Account_GetID(playerid),
-	Account_HasHotKeysEnabled(playerid)?1:0,
-	Account_HasInvModeEnabled(playerid)?1:0);
+	Player_HasHotKeysEnabled(playerid)?1:0,
+	Player_HasInvModeEnabled(playerid)?1:0);
+}
+
+stock Player_SetHotKeysEnabled(playerid, bool:enable)
+{
+	Bit_Set(OptionsBitSet[e_pHotKeys], playerid, enable);
+	Player_SaveOptions(playerid);
+}
+
+stock Player_HasHotKeysEnabled(playerid)
+{
+	return Bit_Get(OptionsBitSet[e_pHotKeys], playerid);
+}
+
+stock Player_SetInvModeEnabled(playerid, bool:enable)
+{
+	Bit_Set(OptionsBitSet[e_pInvMode], playerid, enable);
+	Player_SaveOptions(playerid);
+}
+
+stock Player_HasInvModeEnabled(playerid)
+{
+	return Bit_Get(OptionsBitSet[e_pInvMode], playerid);
+}
+
+stock Player_SetHUDEnabled(playerid, bool:enable)
+{
+	Bit_Set(OptionsBitSet[e_pToggleHUD], playerid, !enable);
+	Player_SaveOptions(playerid);
+}
+
+stock Player_HasHUDEnabled(playerid)
+{
+	return !Bit_Get(OptionsBitSet[e_pToggleHUD], playerid);
 }

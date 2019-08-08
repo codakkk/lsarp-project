@@ -1,8 +1,62 @@
 #include <YSI_Coding\y_hooks>
 
+static 
+	PlayerBuildingKey[MAX_PLAYERS],
+	PlayerHouseKey[MAX_PLAYERS]
+;
+
+hook OnPlayerClearData(playerid)
+{
+	PlayerBuildingKey[playerid] = PlayerHouseKey[playerid] = 0;
+	return 1;
+}
+
+hook OnCharacterLoad(playerid)
+{
+	inline OnLoad()
+	{
+		cache_get_value_index_int(0, 0, PlayerBuildingKey[playerid]);
+		cache_get_value_index_int(0, 1, PlayerHouseKey[playerid]);
+	}
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT building_key, house_key FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
+	return 1;
+}
+
+stock Character_HasBuildingKey(playerid)
+{
+    return PlayerBuildingKey[playerid] > 0;
+}
+
+stock Character_GetBuildingKey(playerid)
+{
+    return PlayerBuildingKey[playerid];
+}
+
+stock Character_SetBuildingKey(playerid, buildingid)
+{
+    PlayerBuildingKey[playerid] = buildingid;
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET building_key = '%d' WHERE id = '%d'", buildingid, Character_GetID(playerid));
+}
+
+stock Character_HasHouseKey(playerid)
+{
+    return PlayerHouseKey[playerid] > 0;
+}
+
+stock Character_GetHouseKey(playerid)
+{
+    return PlayerHouseKey[playerid];
+}
+
+stock Character_SetHouseKey(playerid, houseid)
+{
+    PlayerHouseKey[playerid] = houseid;
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET house_key = '%d' WHERE id = '%d'", houseid, Character_GetID(playerid));
+}
+
 hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
-	if(Account_HasHotKeysEnabled(playerid) && Character_IsAlive(playerid))
+	if(Player_HasHotKeysEnabled(playerid) && Character_IsAlive(playerid))
 	{
 		new elementId, E_ELEMENT_TYPE:type;
 		if(Character_GetNearestPickup(playerid, elementId, type) && !IsPlayerInAnyVehicle(playerid))
@@ -262,8 +316,6 @@ stock Character_BuyBuilding(playerid, buildingid)
 	Building_GetName(buildingid, name);
 
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai acquistato questo edificio (%s) per $%d.", name, Building_GetPrice(buildingid));
-    Building_Save(buildingid);
-    Character_Save(playerid);
     return 1;
 }
 
@@ -290,9 +342,6 @@ stock Character_BuyHouse(playerid, houseid)
     Character_GiveMoney(playerid, -price, "Character_BuyHouse");
 
     SendFormattedMessage(playerid, COLOR_GREEN, "Congratulazioni! Hai acquistato questa casa per $%d.", price);
-
-    House_Save(houseid);
-    Character_Save(playerid);
     return 1;
 }
 

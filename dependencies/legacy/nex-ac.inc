@@ -1450,7 +1450,6 @@ ac_fpublic ac_SetPlayerPos(playerid, Float:ac_x, Float:ac_y, Float:ac_z)
 	ACInfo[playerid][acSetPosZ] = ac_z;
 	ACInfo[playerid][acSetPosTick] =
 	ACInfo[playerid][acGtc][11] = GetTickCount() + 3250;
-	printf("ac_SetPlayerPos");
 	return 1;
 }
 

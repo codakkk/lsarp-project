@@ -32,7 +32,6 @@ stock Account_ShowCharactersList(playerid)
     {
 		new count;
 		cache_get_row_count(count);
-		printf("COunt: %d", count);
 		if(cache_num_rows() == 0)
 		{
 			Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Crea nuovo personaggio", "Attualmente non risultano personaggi creati.\nPer poter giocare, devi disporre di un personaggio.\nInserisci il nome del nuovo personaggio.\nEsempio: Mario Rossi", "Ok", "");
@@ -53,7 +52,6 @@ stock Account_ShowCharactersList(playerid)
 			
 			content += str_format("%s\n", nameTemp);
 			
-			printf("%s", nameTemp);
 			list_add(Characters[playerid], character_id);
 	   	}
 	   	return Dialog_Show_s(playerid, Dialog_CharacterSelect, DIALOG_STYLE_LIST, @("Gestione Personaggi"), content, "Seleziona", "Altro");
@@ -77,7 +75,28 @@ Dialog:Dialog_CharacterSelect(playerid, response, listitem, inputtext[])
 
 	inline OnLoad()
 	{
-		Character_LoadData(playerid);
+		if(cache_num_rows() > 0)
+		{
+			new id, isBanned, banTime;
+			cache_get_value_name_int(0, "id", id);
+			cache_get_value_name_int(0, "banned", isBanned);
+			cache_get_value_name_int(0, "ban_expiry", banTime);
+			if(isBanned)
+			{
+				if(gettime() < banTime)
+				{
+					Dialog_Show(playerid, DialogNull, DIALOG_STYLE_MSGBOX, "Personaggio Bannato", "Questo personaggio risulta bannato.\nData di scadenza: %s.\nSe pensi sia stato un errore, visita www.lsarp.it", "Ok", "", date(banTime));
+					KickEx(playerid);
+					return 0;
+				}
+				else
+				{
+					mysql_tquery_f(gMySQL, "UPDATE `characters` SET banned = '0', ban_expiry = '0' WHERE id = '%d'", id);
+				}
+			}
+			Character_LoadData(playerid);
+
+		}
         //CallLocalFunction(#OnCharacterSelected, "d", playerid);
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `characters` WHERE id = '%d'", SelectedCharacter{playerid});

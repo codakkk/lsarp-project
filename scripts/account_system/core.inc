@@ -19,8 +19,6 @@ static enum E_ACCOUNT_DATA
 	FirstCharacter,
 	CharactersSlot,
 	CharactersCount,
-	Banned,
-	BanExpiry,
 	Level,
 	PayDay
 };
@@ -30,9 +28,6 @@ static enum e_Bit1_AccountData
 	e_pAccountLogged,
     e_pTogglePMAll,
     e_pToggleOOCAll,
-    e_pHotKeys,
-	e_pInvMode, // 0: Dialog - 1: Chat
-	e_pToggleHUD,
 	e_pAdminDuty,
 	e_pSupporterDuty
 };
@@ -162,8 +157,6 @@ stock Account_Save(playerid)
 		characters_counter = '%d', \
 		email = '%e', \
 		characters_slot = '%d', \
-		banned = '%d', \
-		ban_expiry = '%d', \
 		level = '%d', \
 		payday = '%d' \
 		WHERE id = '%d'", 
@@ -172,8 +165,6 @@ stock Account_Save(playerid)
 		Account_GetCharactersCount(playerid), 
 		Account_GetEMail(playerid),
 		Account_GetCharactersSlot(playerid),
-		Account_IsBanned(playerid),
-		Account_GetBanExpiry(playerid),
 		Account_GetLevel(playerid),
 		Account_GetPayDay(playerid),
 		Account_GetID(playerid));
@@ -212,7 +203,7 @@ stock LoadAccountData(playerid)
 {
 	if(cache_num_rows() > 0)
 	{
-		cache_get_value_index_int(0, 0, AccountInfo[playerid][ID]);
+		cache_get_value_name_int(0, "id", AccountInfo[playerid][ID]);
 		cache_get_value_index(0, 1, AccountName[playerid]);
 		cache_get_value_index_int(0, 3, AccountInfo[playerid][Admin]);
 		cache_get_value_index_int(0, 4, AccountInfo[playerid][Premium]);
@@ -220,8 +211,6 @@ stock LoadAccountData(playerid)
 		cache_get_value_index_int(0, 6, AccountInfo[playerid][CharactersCount]);
 		cache_get_value_index(0, 7, AccountEMail[playerid]);
 		cache_get_value_index_int(0, 8, AccountInfo[playerid][CharactersSlot]);
-		cache_get_value_index_int(0, 9, AccountInfo[playerid][Banned]);
-		cache_get_value_index_int(0, 10, AccountInfo[playerid][BanExpiry]);
 		cache_get_value_index_int(0, 11, AccountInfo[playerid][Level]);
 		cache_get_value_index_int(0, 12, AccountInfo[playerid][PayDay]);
 		return 1;
@@ -285,16 +274,6 @@ stock Account_HasPMAllEnabled(playerid)
 	return !Bit_Get(gAccountBitState[e_pTogglePMAll], playerid);
 }
 
-stock Account_SetHUDEnabled(playerid, bool:enable)
-{
-	Bit_Set(gAccountBitState[e_pToggleHUD], playerid, !enable);
-}
-
-stock Account_HasHUDEnabled(playerid)
-{
-	return !Bit_Get(gAccountBitState[e_pToggleHUD], playerid);
-}
-
 stock Account_SetOOCEnabled(playerid, bool:enable)
 {
 	Bit_Set(gAccountBitState[e_pToggleOOCAll], playerid, !enable);
@@ -308,26 +287,6 @@ stock Account_HasOOCEnabled(playerid)
 stock Account_HasOOCEnabledForPlayer(playerid, targetid)
 {
 	return !Iter_Contains(pToggleOOC[playerid], targetid);
-}
-
-stock Account_SetHotKeysEnabled(playerid, bool:enable)
-{
-	Bit_Set(gAccountBitState[e_pHotKeys], playerid, enable);
-}
-
-stock Account_HasHotKeysEnabled(playerid)
-{
-	return Bit_Get(gAccountBitState[e_pHotKeys], playerid);
-}
-
-stock Account_SetInvModeEnabled(playerid, bool:enable)
-{
-	Bit_Set(gAccountBitState[e_pInvMode], playerid, enable);
-}
-
-stock Account_HasInvModeEnabled(playerid)
-{
-	return Bit_Get(gAccountBitState[e_pInvMode], playerid);
 }
 
 stock Account_SetAdminDuty(playerid, bool:enable)
@@ -408,26 +367,6 @@ stock Account_GetCharactersCount(playerid)
 stock Account_AddCharactersCount(playerid, add)
 {
 	AccountInfo[playerid][CharactersCount] += add;
-}
-
-stock Account_SetBanned(playerid, ban)
-{
-	AccountInfo[playerid][Banned] = ban;
-}
-
-stock Account_IsBanned(playerid)
-{
-	return AccountInfo[playerid][Banned];
-}
-
-stock Account_SetBanExpiry(playerid, time)
-{
-	AccountInfo[playerid][BanExpiry] = time;
-}
-
-stock Account_GetBanExpiry(playerid)
-{
-	return AccountInfo[playerid][BanExpiry];
 }
 
 stock Account_SetLevel(playerid, level)

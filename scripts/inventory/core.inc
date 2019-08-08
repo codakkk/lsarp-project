@@ -7,6 +7,9 @@
 #include <inventory\callbacks>
 #include <YSI_Coding\y_hooks>
 
+#define Inventory_Show(%0,%1,%2,%3, Inventory_InternalShow(%0, %1, %2, #%3,
+#define Inventory_ShowStr(%0,%1,%2,%3, Inventory_InternalShowStr(%0, %1, %2, #%3,
+
 // Remember that we're using set instead of add for inventory size
 
 // Overload operators for the new container "Inventory:" (must be on top of everything)
@@ -459,15 +462,49 @@ stock Inventory_ShowInChatStr(Inventory:inventory, playerid, String:title)
 	return 1;
 }
 
-stock Inventory_ShowInChat(Inventory:inventory, playerid, const title[] = "")
+static Inventory_ShowInChat(Inventory:inventory, playerid, const title[] = "")
 {
 	if(strlen(title) > 0)
 		return Inventory_ShowInChatStr(inventory, playerid, str_new(title));
 	return Inventory_ShowInChatStr(inventory, playerid, STRING_NULL);
 }
 
-#define Inventory_Show(%0,%1,%2,%3, Inventory_InternalShow(%0, %1, %2, #%3,
-#define Inventory_ShowStr(%0,%1,%2,%3, Inventory_InternalShowStr(%0, %1, %2, #%3,
+static Inventory_ShowInDialog(Inventory:inventory, playerid, const title[], const dialog[] = "", const button1[] = "", const button2[] = "")
+{
+	new String:string = @("Nome\tQuantità\tTipo\tAltro\n"),
+		tempItem[E_ITEM_DATA], slotid = 0;
+	for_inventory(i : inventory)
+	{
+		iter_get_arr(i, tempItem);
+		if(iter_sizeof(i) == 0 || tempItem[gInvItem] == 0) // If no item
+		{
+			tempItem[gInvItem] = tempItem[gInvAmount] = tempItem[gInvExtra] = 0;
+			string += @("{808080}Slot Libero\t{808080}--\t{808080}--\t--\n");
+		}
+		else
+		{
+			new itemid = tempItem[gInvItem],
+				itemAmount = tempItem[gInvAmount],
+				extra = tempItem[gInvExtra];
+			
+			new String:s = str_format("{FFFFFF}%s\t{FFFFFF}%d\t{FFFFFF}%s\t", ServerItem_GetName(itemid), itemAmount, ServerItem_GetTypeName(itemid));
+			if(ServerItem_GetType(itemid) == ITEM_TYPE:ITEM_TYPE_WEAPON && (Weapon_RequireAmmo(itemid) || Weapon_CanBeDisassembled(itemid)))
+			{
+				if(extra == 0)
+					s += @("Vuota");
+				else
+					s += str_val(extra);
+			}
+			else
+				s += @("--");
+			s += @("\n");
+			string += s;
+		}
+		slotid++;
+	}
+	Dialog_Open_s(playerid, dialog, DIALOG_STYLE_TABLIST_HEADERS, str_new(title), string, button1, button2);
+	return 1;
+}
 
 stock Inventory_InternalShowStr(Inventory:inventory, playerid, String:title, const dialog[] = "", const button1[] = "", const button2[] = "")
 {
@@ -486,45 +523,13 @@ stock Inventory_InternalShow(Inventory:inventory, playerid, const title[], const
 {
 	if(!list_valid(inventory))
 		return 0;
-	if(Account_HasInvModeEnabled(playerid))
+	if(Player_HasInvModeEnabled(playerid))
 	{
-		return Inventory_ShowInChat(inventory, playerid, title);
-		//SendClientMessage(playerid, COLOR_GREEN, "Should show text inventory");
+		Inventory_ShowInChat(inventory, playerid, title);
 	}
 	else
 	{
-		new String:string = @("Nome\tQuantità\tTipo\tAltro\n"),
-			tempItem[E_ITEM_DATA], slotid = 0;
-		for_inventory(i : inventory)
-		{
-			iter_get_arr(i, tempItem);
-			if(iter_sizeof(i) == 0 || tempItem[gInvItem] == 0) // If no item
-			{
-				tempItem[gInvItem] = tempItem[gInvAmount] = tempItem[gInvExtra] = 0;
-				string += @("{808080}Slot Libero\t{808080}--\t{808080}--\t--\n");
-			}
-			else
-			{
-				new itemid = tempItem[gInvItem],
-					itemAmount = tempItem[gInvAmount],
-					extra = tempItem[gInvExtra];
-				
-				new String:s = str_format("{FFFFFF}%s\t{FFFFFF}%d\t{FFFFFF}%s\t", ServerItem_GetName(itemid), itemAmount, ServerItem_GetTypeName(itemid));
-				if(ServerItem_GetType(itemid) == ITEM_TYPE:ITEM_TYPE_WEAPON && (Weapon_RequireAmmo(itemid) || Weapon_CanBeDisassembled(itemid)))
-				{
-					if(extra == 0)
-						s += @("Vuota");
-					else
-						s += str_val(extra);
-				}
-				else
-					s += @("--");
-				s += @("\n");
-				string += s;
-			}
-			slotid++;
-		}
-		Dialog_Open_s(playerid, dialog, DIALOG_STYLE_TABLIST_HEADERS, str_new(title), string, button1, button2); 
+		Inventory_ShowInDialog(inventory, playerid, title, dialog, button1, button2); 
 	}
 	return 1;
 }

@@ -26,7 +26,6 @@ CMD:stilechat(playerid, params[])
 	else
 		SendFormattedMessage(playerid, -1, "Hai cambiato l'animazione della chat. Stile: {00FF00}%d{FFFFFF}.", style);
 	Character_SetChatStyle(playerid, style);
-	Character_Save(playerid);
 	return 1;
 }
 

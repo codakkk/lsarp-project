@@ -1,21 +1,61 @@
-#include <drop_system\accessors>
 #include <YSI_Coding\y_hooks>
+
+#define MAX_DROP_TIME_AS_MIN		60 //
+#define MAX_DROPS					500
+
+static enum _:E_DROP_INFO // _: for tag mismatch thing
+{
+	Created,
+    Float:X,
+    Float:Y,
+    Float:Z,
+	Float:RotX,
+	Float:RotY,
+	Float:RotZ,
+    Item,
+    ItemAmount,
+    ItemExtra,
+    String:CreatedBy,
+    CreatedTime,
+    World,
+    Interior,
+    Object,
+    Pickup
+};
+static
+	DropInfo[MAX_DROPS][E_DROP_INFO],
+	Pool:Drops
+;
+
+hook OnGameModeInit()
+{
+	Drops = pool_new();
+	return 1;
+}
 
 task OnDropCheck[60000]()
 {
-    foreach(new i : DropsIterator)
+    for_pool(i : Drops)
     {
-		//ITER_SAFE(DropsIterator, i)
+		new key = iter_get_key(i);
+		if( GetTickCount() - Drop_GetCreatedTime(key) >= 1000 * 60 * MAX_DROP_TIME_AS_MIN)
 		{
-			if( GetTickCount() - Drop_GetCreatedTime(i) >= 1000 * 60 * MAX_DROP_TIME_AS_MIN)
-			{
-				new v = Drop_Destroy(i);
-				if(v != -1) // used for Iter infinite loops.
-					i = v;
-			}
-
-		}
+			Drop_Destroy(key);
+			iter_erase(i);
+		}	
 	}
+}
+
+hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
+{
+	if(type == ELEMENT_TYPE_DROP)
+	{
+		if(Player_HasHotKeysEnabled(playerid))
+			Player_Info(playerid, "Premi ~y~~k~~PED_DUCK~~w~ per interagire", false);
+		else
+			Player_Info(playerid, "Digita ~y~/raccogli~w~ per interagire", false);
+	}
+	return 1;
 }
 
 hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz)
@@ -37,13 +77,9 @@ hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float
 		}
 		else if(response == EDIT_RESPONSE_FINAL)
 		{
-			DropInfo[dropid][dX] = x;
-			DropInfo[dropid][dY] = y;
-			DropInfo[dropid][dZ] = z;
-			DropInfo[dropid][dRotX] = rx;
-			DropInfo[dropid][dRotY] = ry;
-			DropInfo[dropid][dRotZ] = rz;
-			
+			Drop_SetPosition(dropid, x, y, z);
+			Drop_SetRotation(dropid, rx, ry, rz);
+
 			Drop_DestroyElements(dropid);
 			Drop_CreateElements(dropid);
 			
@@ -61,44 +97,54 @@ stock Drop_Create(Float:x, Float:y, Float:z, world, interior, itemid, amount, ex
 {
     if(itemid == 0 || amount == 0)
 	   return -1;
-	new id = Iter_Free(DropsIterator);
-	if(id == -1)
-		return -1;
-	DropInfo[id][dCreated] = 1;
-    DropInfo[id][dX] = x;
-    DropInfo[id][dY] = y;
-    DropInfo[id][dZ] = z;
-	DropInfo[id][dRotX] = 90.0;
-	DropInfo[id][dRotY] = 0.0;
-	DropInfo[id][dRotZ] = 0.0;
-    DropInfo[id][dWorld] = world;
-    DropInfo[id][dInterior] = interior;
-    DropInfo[id][dItem] = itemid;
-    DropInfo[id][dItemAmount] = amount;
-    DropInfo[id][dItemExtra] = extra;
-    DropInfo[id][dCreatedBy] = createdBy;
-    DropInfo[id][dCreatedTime] = GetTickCount();
+	
+	new data[E_DROP_INFO];
+	data[Created] = 1;
+    data[X] = x;
+    data[Y] = y;
+    data[Z] = z;
+	data[RotX] = 90.0;
+	data[RotY] = 0.0;
+	data[RotZ] = 0.0;
+    data[World] = world;
+    data[Interior] = interior;
+    data[Item] = itemid;
+    data[ItemAmount] = amount;
+    data[ItemExtra] = extra;
+    data[CreatedBy] = createdBy;
+    data[CreatedTime] = GetTickCount();
+
+	new id = pool_add_arr(Drops, data);
+
     Drop_CreateElements(id);
-	Iter_Add(DropsIterator, id);
     return id;
 }
 
 stock Drop_DestroyElements(dropid)
 {
-	if(Drop_IsValid(dropid))
-	{
-		DestroyDynamicObject(DropInfo[dropid][dObject]);
-		Pickup_Destroy(DropInfo[dropid][dPickup]);
-	}
+	if(!Drop_IsValid(dropid))
+		return 0;
+	
+	DestroyDynamicObject(Drop_GetObject(dropid));
+	Pickup_Destroy(Drop_GetPickup(dropid));
+	return 1;
 }
 
 stock Drop_CreateElements(dropid)
 {
-	if(Drop_IsValid(dropid))
-	{
-		DropInfo[dropid][dObject] = CreateDynamicObject(ServerItem_GetModelID(DropInfo[dropid][dItem]), DropInfo[dropid][dX], DropInfo[dropid][dY], DropInfo[dropid][dZ], DropInfo[dropid][dRotX], DropInfo[dropid][dRotY], DropInfo[dropid][dRotZ], DropInfo[dropid][dWorld], DropInfo[dropid][dInterior]);
-    	DropInfo[dropid][dPickup] = Pickup_Create(1007, dropid, DropInfo[dropid][dX], DropInfo[dropid][dY], DropInfo[dropid][dZ], ELEMENT_TYPE_DROP, DropInfo[dropid][dWorld], DropInfo[dropid][dInterior]);
-	}
+	if(!Drop_IsValid(dropid))
+		return 0;
+	new Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz;
+
+	Drop_GetPosition(dropid, x, y, z);
+
+	new object = CreateDynamicObject(ServerItem_GetModelID(Drop_GetItem(dropid)), x, y, z, rx, ry, rz, Drop_GetVirtualWorld(dropid), Drop_GetInterior(dropid));
+	new pickupid = Pickup_Create(1007, dropid, x, y, z, ELEMENT_TYPE_DROP, Drop_GetVirtualWorld(dropid), Drop_GetInterior(dropid));
+	
+	pool_set_cell(Drops, dropid, Object, object);
+	pool_set_cell(Drops, dropid, Pickup, pickupid);
+
+	return 1;
 }
 
 stock Drop_Destroy(dropid)
@@ -106,18 +152,7 @@ stock Drop_Destroy(dropid)
     if(Drop_IsValid(dropid))
     {
 		Drop_DestroyElements(dropid);
-		DropInfo[dropid][dCreated] = 0;
-		DropInfo[dropid][dX] = 0.0;
-		DropInfo[dropid][dY] = 0.0;
-		DropInfo[dropid][dZ] = 0.0;
-		DropInfo[dropid][dWorld] = 0;
-		DropInfo[dropid][dInterior] = 0;
-		DropInfo[dropid][dItem] = 0;
-		DropInfo[dropid][dItemAmount] = 0;
-		DropInfo[dropid][dItemExtra] = 0;
-		DropInfo[dropid][dCreatedBy] = @("");
-		DropInfo[dropid][dCreatedTime] = 0;
-		Iter_SafeRemove(DropsIterator, dropid, dropid);
+		pool_remove_deep(Drops, dropid);
 		return dropid;
     }
     return -1;
@@ -127,5 +162,146 @@ stock Drop_IsPlayerInRangeOf(playerid, dropid, Float:range = 3.0)
 {
 	if(!Drop_IsValid(dropid))
 		return 0;
-	return GetPlayerInterior(playerid) == Drop_GetInterior(dropid) && Character_GetVirtualWorld(playerid) == Drop_GetVirtualWorld(dropid) && IsPlayerInRangeOfPoint(playerid, range, DropInfo[dropid][dX], DropInfo[dropid][dY], DropInfo[dropid][dZ]);
+	new Float:x, Float:y, Float:z;
+	Drop_GetPosition(dropid, x, y, z);
+	return GetPlayerInterior(playerid) == Drop_GetInterior(dropid) && Character_GetVirtualWorld(playerid) == Drop_GetVirtualWorld(dropid) && IsPlayerInRangeOfPoint(playerid, range, x, y, z);
+}
+
+stock Drop_IsValid(dropid)
+{
+	return pool_has(Drops, dropid);
+}
+
+stock Drop_GetPosition(dropid, &Float:x, &Float:y, &Float:z)
+{
+    if(Drop_IsValid(dropid))
+	{
+		x = Float:pool_get(Drops, dropid, X);
+		y = Float:pool_get(Drops, dropid, Y);
+		z = Float:pool_get(Drops, dropid, Z);
+		return 1;
+	}
+	return 0;
+}
+
+stock Drop_SetPosition(dropid, Float:x, Float:y, Float:z)
+{
+	if(Drop_IsValid(dropid))
+	{
+		pool_set_cell(Drops, dropid, X, x);
+		pool_set_cell(Drops, dropid, Y, y);
+		pool_set_cell(Drops, dropid, Z, z);
+		return 1;
+	}
+	return 0;
+}
+
+stock Drop_SetRotation(dropid, Float:x, Float:y, Float:z)
+{
+	if(Drop_IsValid(dropid))
+	{
+		pool_set_cell(Drops, dropid, RotX, x);
+		pool_set_cell(Drops, dropid, RotY, y);
+		pool_set_cell(Drops, dropid, RotZ, z);
+		return 1;
+	}
+	return 0;
+}
+
+stock Drop_GetRotation(dropid, &Float:rx, &Float:ry, &Float:rz)
+{
+    if(Drop_IsValid(dropid))
+	{
+		rx = Float:pool_get(Drops, dropid, RotX);
+		ry = Float:pool_get(Drops, dropid, RotY);
+		rz = Float:pool_get(Drops, dropid, RotZ);
+		return 1;
+	}
+	return 0;
+}
+
+stock Drop_GetItemData(dropid, &itemid, &amount, &extra)
+{
+	if(Drop_IsValid(dropid))
+	{
+		itemid = pool_get(Drops, dropid, Item);
+		amount = pool_get(Drops, dropid, ItemAmount);
+		extra = pool_get(Drops, dropid, ItemExtra);
+		return 1;
+	}
+	return 0;
+}
+
+stock Drop_GetItem(dropid)
+{
+	if(!Drop_IsValid(dropid))
+		return 0;
+	return pool_get(Drops, dropid, Item);
+}
+
+stock Drop_GetItemAmount(dropid)
+{
+	if(!Drop_IsValid(dropid))
+		return 0;
+	return pool_get(Drops, dropid, ItemAmount);
+}
+
+stock Drop_GetItemExtra(dropid)
+{
+	if(!Drop_IsValid(dropid))
+		return 0;
+	return pool_get(Drops, dropid, ItemExtra);
+}
+
+stock String:Drop_GetCreatedByStr(dropid)
+{
+    return DropInfo[dropid][CreatedBy];
+}
+
+stock Drop_GetCreatedBy(dropid, name[])
+{
+    /*str_get(DropInfo[dropid][CreatedBy], name); 
+	if(!Drop_IsValid(dropid))
+		return 0;
+	return pool_get(Drops, dropid, World);*/
+}
+
+stock Drop_GetCreatedTime(dropid)
+{
+	if(!Drop_IsValid(dropid))
+		return 0;
+	return pool_get(Drops, dropid, CreatedTime);
+}
+
+stock Drop_IsCreated(dropid)
+{
+	return Drop_IsValid(dropid);
+}
+
+stock Drop_GetInterior(dropid)
+{
+	if(!Drop_IsValid(dropid))
+		return 0;
+	return pool_get(Drops, dropid, Interior);
+}
+
+stock Drop_GetVirtualWorld(dropid)
+{
+	if(!Drop_IsValid(dropid))
+		return 0;
+	return pool_get(Drops, dropid, World);
+}
+
+stock Drop_GetObject(dropid)
+{
+	if(!Drop_IsValid(dropid))
+		return 0;
+	return pool_get(Drops, dropid, Object);
+}
+
+stock Drop_GetPickup(dropid)
+{
+	if(!Drop_IsValid(dropid))
+		return 0;
+	return pool_get(Drops, dropid, Pickup);
 }

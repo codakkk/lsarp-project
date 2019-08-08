@@ -3,35 +3,35 @@
 
 
 
-enum _:E_BUILDING_INFO
+static enum _:E_BUILDING_INFO
 {
-    bID,
-    bExists,
-    bName[MAX_BUILDING_NAME],
-    bWelcomeText[MAX_WELCOME_TEXT_LENGTH],
-    Float:bEnterX,
-    Float:bEnterY,
-    Float:bEnterZ,
-    bEnterInterior,
-    bEnterWorld,
-    Float:bExitX,
-    Float:bExitY,
-    Float:bExitZ,
-    bExitInterior,
-	bExitWorld,
-    bOwnable,
-    bOwnerID,
-    bOwnerName[MAX_PLAYER_NAME],
-    bPrice,
-    bLocked,
-	bFaction,
-	bType,
-	bMoney,
+    ID,
+    Exists,
+    Name[MAX_BUILDING_NAME],
+    WelcomeText[MAX_WELCOME_TEXT_LENGTH],
+    Float:EnterX,
+    Float:EnterY,
+    Float:EnterZ,
+    EnterInterior,
+    EnterWorld,
+    Float:ExitX,
+    Float:ExitY,
+    Float:ExitZ,
+    ExitInterior,
+	ExitWorld,
+    Ownable,
+    OwnerID,
+    OwnerName[MAX_PLAYER_NAME],
+    Price,
+    Locked,
+	Faction,
+	Type,
+	Money,
     // Volatile
-    bEnterPickupID,
-    Text3D:bEnter3DText,
-    bExitPickupID,
-	Text3D:bExit3DText,
+    EnterPickupID,
+    Text3D:Enter3DText,
+    ExitPickupID,
+	Text3D:Exit3DText,
 };
 
 static
@@ -96,20 +96,20 @@ stock Building_Create(Float:x, Float:y, Float:z, interior, world)
 
 		new data[E_BUILDING_INFO];
 
-		set(data[bName], "SET_NAME");
-		set(data[bWelcomeText], "");
-		set(data[bOwnerName], "");
+		set(data[Name], "SET_NAME");
+		set(data[WelcomeText], "");
+		set(data[OwnerName], "");
 		
-		data[bEnterX] = x;
-		data[bEnterY] = y;
-		data[bEnterZ] = z;
-		data[bEnterInterior] = interior;
-		data[bEnterWorld] = world;
-		data[bOwnable] = 0;
-		data[bOwnerID] = 0;
-		data[bPrice] = 0;
-		data[bLocked] = 1;
-		data[bExists] = 1;
+		data[EnterX] = x;
+		data[EnterY] = y;
+		data[EnterZ] = z;
+		data[EnterInterior] = interior;
+		data[EnterWorld] = world;
+		data[Ownable] = 0;
+		data[OwnerID] = 0;
+		data[Price] = 0;
+		data[Locked] = 1;
+		data[Exists] = 1;
 
 		map_add_arr(Buildings, id, data);
 
@@ -125,8 +125,6 @@ stock Building_Create(Float:x, Float:y, Float:z, interior, world)
 
 stock Building_LoadAll()
 {
-	printf("Building_LoadAll");
-
 	new Cache:result = mysql_query(gMySQL, "SELECT * FROM `buildings` ORDER BY id", true);
 
 	printf("\nLoading Buildings...");
@@ -134,36 +132,36 @@ stock Building_LoadAll()
 	new data[E_BUILDING_INFO];
 	for(new i = 0; i < count; ++i)
 	{
-		cache_get_value_index_int(i, 0, data[bID]);
-		cache_get_value_index(i, 1, data[bName]);
-		cache_get_value_index(i, 2, data[bOwnerName]);
-		cache_get_value_index(i, 3, data[bWelcomeText]);
-		cache_get_value_index_float(i, 4, data[bEnterX]);
-		cache_get_value_index_float(i, 5, data[bEnterY]);
-		cache_get_value_index_float(i, 6, data[bEnterZ]);
-		cache_get_value_index_int(i, 7, data[bEnterInterior]);
-		cache_get_value_index_int(i, 8, data[bEnterWorld]);
-		cache_get_value_index_float(i, 9, data[bExitX]);
-		cache_get_value_index_float(i, 10, data[bExitY]);
-		cache_get_value_index_float(i, 11, data[bExitZ]);
-		cache_get_value_index_int(i, 12, data[bExitInterior]);
-		cache_get_value_index_int(i, 13, data[bOwnable]);
-		cache_get_value_index_int(i, 14, data[bOwnerID]);
-		cache_get_value_index_int(i, 15, data[bPrice]);
-		cache_get_value_index_int(i, 16, data[bLocked]);
-		cache_get_value_index_int(i, 17, data[bFaction]);
-		cache_get_value_index_int(i, 18, data[bType]);
+		cache_get_value_name_int(i, "id", data[ID]);
+		cache_get_value_name(i, "name", data[Name]);
+		cache_get_value_name(i, "owner_name", data[OwnerName]);
+		cache_get_value_name(i, "welcome_text", data[WelcomeText]);
+		cache_get_value_name_float(i, "enter_x", data[EnterX]);
+		cache_get_value_name_float(i, "enter_y", data[EnterY]);
+		cache_get_value_name_float(i, "enter_z", data[EnterZ]);
+		cache_get_value_name_int(i, "enter_interior", data[EnterInterior]);
+		cache_get_value_name_int(i, "enter_world", data[EnterWorld]);
+		cache_get_value_name_float(i, "exit_x", data[ExitX]);
+		cache_get_value_name_float(i, "exit_y", data[ExitY]);
+		cache_get_value_name_float(i, "exit_z", data[ExitZ]);
+		cache_get_value_name_int(i, "exit_interior", data[ExitInterior]);
+		cache_get_value_name_int(i, "ownable", data[Ownable]);
+		cache_get_value_name_int(i, "owner_id", data[OwnerID]);
+		cache_get_value_name_int(i, "price", data[Price]);
+		cache_get_value_name_int(i, "locked", data[Locked]);
+		cache_get_value_name_int(i, "faction", data[Faction]);
+		cache_get_value_name_int(i, "type", data[Type]);
 
-		cache_get_value_index_int(i, 18, data[bMoney]);
+		cache_get_value_name_int(i, "money", data[Money]);
 
-		data[bExitWorld] = BUILDING_START_WORLD + data[bID];
+		data[ExitWorld] = BUILDING_START_WORLD + data[ID];
 
-		data[bExists] = 1;
+		data[Exists] = 1;
 
-		map_add_arr(Buildings, data[bID], data);
+		map_add_arr(Buildings, data[ID], data);
 
-		Building_CreateElements(data[bID]);
-		//printf("Type: %d", BuildingInfo[i][bType]);
+		Building_CreateElements(data[ID]);
+		//printf("Type: %d", BuildingInfo[i][Type]);
 		//Iter_Add(Buildings, i);
 	}
 	printf("Loaded %d buildings.\n", count);
@@ -176,12 +174,14 @@ stock Building_SetPosition(buildingid, Float:x, Float:y, Float:z, vw, int)
     if(!Building_IsValid(buildingid))
 	   return 0;
 	
-	map_set_cell(Buildings, buildingid, bEnterX, x);
-	map_set_cell(Buildings, buildingid, bEnterY, y);
-	map_set_cell(Buildings, buildingid, bEnterZ, z);
-	map_set_cell(Buildings, buildingid, bEnterWorld, vw);
-	map_set_cell(Buildings, buildingid, bEnterInterior, int);
-    Building_Save(buildingid);
+	map_set_cell(Buildings, buildingid, EnterX, x);
+	map_set_cell(Buildings, buildingid, EnterY, y);
+	map_set_cell(Buildings, buildingid, EnterZ, z);
+	map_set_cell(Buildings, buildingid, EnterWorld, vw);
+	map_set_cell(Buildings, buildingid, EnterInterior, int);
+    
+	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET enter_x = '%f', enter_y = '%f', enter_z = '%f', enter_interior = '%d', enter_world = '%d' WHERE id = '%d'", 
+					x, y, z, int, vw, Building_GetID(buildingid));
 
     Building_DestroyElements(buildingid);
     Building_CreateElements(buildingid);
@@ -196,8 +196,10 @@ stock Building_SetName(buildingid, name[MAX_BUILDING_NAME])
 		Iter:iter = Iter:map_iter_at(Buildings, buildingid)
 	;
 
-	iter_set_cells(iter, bName, name);
-    Building_Save(buildingid);
+	iter_set_cells(iter, Name, name);
+    
+	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET name = '%e' WHERE id = '%d'", 
+					name, Building_GetID(buildingid));
 
     Building_DestroyElements(buildingid);
 	Building_CreateElements(buildingid);
@@ -209,13 +211,14 @@ stock Building_SetInterior(buildingid, Float:x, Float:y, Float:z, interiorid)
     if(!Building_IsValid(buildingid))
 	   return 0;
 
-	map_set_cell(Buildings, buildingid, bExitX, x);
-	map_set_cell(Buildings, buildingid, bExitY, y);
-	map_set_cell(Buildings, buildingid, bExitZ, z);
-	map_set_cell(Buildings, buildingid, bExitInterior, interiorid);
-	map_set_cell(Buildings, buildingid, bExitWorld, BUILDING_START_WORLD + buildingid);
+	map_set_cell(Buildings, buildingid, ExitX, x);
+	map_set_cell(Buildings, buildingid, ExitY, y);
+	map_set_cell(Buildings, buildingid, ExitZ, z);
+	map_set_cell(Buildings, buildingid, ExitInterior, interiorid);
+	map_set_cell(Buildings, buildingid, ExitWorld, BUILDING_START_WORLD + buildingid);
 
-    Building_Save(buildingid);
+    mysql_tquery_f(gMySQL, "UPDATE `buildings` SET exit_x = '%f', exit_y = '%f', exit_z = '%f', exit_interior = '%d' WHERE id = '%d'", 
+					x, y, z, interiorid, Building_GetID(buildingid));
 
 	Building_DestroyElements(buildingid);
 	Building_CreateElements(buildingid);
@@ -226,8 +229,9 @@ stock Building_SetOwnable(buildingid, ownable)
 {
     if(!Building_IsValid(buildingid))
 	   return 0;
-	map_set_cell(Buildings, buildingid, bOwnable, ownable);
-    Building_Save(buildingid);
+	map_set_cell(Buildings, buildingid, Ownable, ownable);
+    mysql_tquery_f(gMySQL, "UPDATE `buildings` SET ownable = '%d' WHERE id = '%d'", 
+					ownable, Building_GetID(buildingid));
     return 1;
 }
 
@@ -235,8 +239,10 @@ stock Building_SetPrice(buildingid, price)
 {
     if(!Building_IsValid(buildingid))
 	   return 0;
-    map_set_cell(Buildings, buildingid, bPrice, price);
-    Building_Save(buildingid);
+    map_set_cell(Buildings, buildingid, Price, price);
+    
+	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET price = '%d' WHERE id = '%d'", 
+					price, Building_GetID(buildingid));
     return 1;
 }
 
@@ -245,7 +251,10 @@ stock Building_SetWelcomeText(buildingid, text[MAX_WELCOME_TEXT_LENGTH])
 	if(!Building_IsValid(buildingid))
 	   return 0;
 	new Iter:iter = Iter:map_iter_at(Buildings, buildingid);
-	iter_set_cells(iter, bWelcomeText, text);
+	iter_set_cells(iter, WelcomeText, text);
+
+	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET welcome_text = '%e' WHERE id = '%d'", 
+					text, Building_GetID(buildingid));
 	return 1;
 }
 
@@ -254,7 +263,7 @@ stock Building_GetWelcomeText(buildingid, text[MAX_WELCOME_TEXT_LENGTH])
 	if(!Building_IsValid(buildingid))
 	   return 0;
 	new Iter:iter = map_iter_at(Buildings, buildingid);
-    iter_get_md_arr(iter, {bWelcomeText}, text);
+    iter_get_md_arr(iter, {WelcomeText}, text);
 	return 1;
 }
 
@@ -269,9 +278,13 @@ stock Building_SetOwner(buildingid, playerid)
 {
     if(!Building_IsValid(buildingid) || !Building_IsOwnable(buildingid) || !Character_IsLogged(playerid))
 	   return 0;
-	map_set_cell(Buildings, buildingid, bOwnerID, Character_GetID(playerid));
+	map_set_cell(Buildings, buildingid, OwnerID, Character_GetID(playerid));
 	new Iter:iter = Iter:map_iter_at(Buildings, buildingid);
-	iter_set_cells(iter, bOwnerName, Character_GetOOCName(playerid));
+	iter_set_cells(iter, OwnerName, Character_GetOOCName(playerid));
+
+	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET owner_name = '%e', owner_id = '%d' WHERE id = '%d'", 
+					Character_GetOOCName(playerid), Character_GetID(playerid), Building_GetID(buildingid));
+
     Log(Character_GetOOCName(playerid), "", "Building_SetOwner", buildingid);
     return 1;
 }
@@ -280,9 +293,12 @@ stock Building_ResetOwner(buildingid)
 {
     if(!Building_IsValid(buildingid))
 	   return 0;
-    map_set_cell(Buildings, buildingid, bOwnerID, 0);
+    map_set_cell(Buildings, buildingid, OwnerID, 0);
 	new Iter:iter = Iter:map_iter_at(Buildings, buildingid);
-	iter_set_cells(iter, bOwnerName, "");
+	iter_set_cells(iter, OwnerName, "");
+
+	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET owner_name = '', owner_id = '0' WHERE id = '%d'", Building_GetID(buildingid));
+	
     Log("", "", "Building_ResetOwner", buildingid);
     return 1;
 }
@@ -293,7 +309,7 @@ stock Building_Delete(buildingid)
 		return 0;
 	
     new query[64];
-    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `buildings` WHERE id = '%d'", buildingid);
+    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `buildings` WHERE id = '%d'", Building_GetID(buildingid));
     mysql_tquery(gMySQL, query);
 
 	Building_DestroyElements(buildingid);
@@ -301,51 +317,6 @@ stock Building_Delete(buildingid)
 	// UPDATE OWNERID -> BUILDING_ID TO 0.
     
 	map_remove_deep(Buildings, buildingid);
-    return 1;
-}
-
-stock Building_Save(buildingid)
-{
-    if(!Building_IsValid(buildingid))
-	   return 0;
-
-	new name[64], ownerName[MAX_PLAYER_NAME], welcomeText[MAX_WELCOME_TEXT_LENGTH],
-		Float:enterX, Float:enterY, Float:enterZ,
-		Float:exitX, Float:exitY, Float:exitZ,
-    	query[512];
-	
-	Building_GetName(buildingid, name);
-	Building_GetOwnerName(buildingid, ownerName);
-	Building_GetWelcomeText(buildingid, welcomeText);
-	Building_GetEnterPos(buildingid, enterX, enterY, enterZ);
-	Building_GetExitPos(buildingid, exitX, exitY, exitZ);
-
-    mysql_format(gMySQL, query, sizeof(query), "UPDATE `buildings` SET \
-    name = '%e', owner_name = '%e', \
-    welcome_text = '%e', \
-    enter_x = '%f', enter_y = '%f', enter_z = '%f', \
-    enter_interior = '%d', enter_world = '%d', \
-    exit_x = '%f', exit_y = '%f', exitz = '%f', \
-    exit_interior = '%d', \
-    ownable = '%d', owner_id = '%d', \
-    price = '%d', locked = '%d', \
-	faction = '%d', \
-	type = '%d', \
-	money = '%d' \
-    WHERE id = '%d'", 
-    name, ownerName,
-	welcomeText,
-    enterX, enterY, enterZ,
-    Building_GetEnterInterior(buildingid), Building_GetEnterWorld(buildingid),
-    exitX, exitY, exitZ,
-    Building_GetExitInterior(buildingid),
-    Building_IsOwnable(buildingid), Building_GetOwnerID(buildingid),
-    Building_GetPrice(buildingid), Building_IsLocked(buildingid),
-	Building_GetFaction(buildingid),
-	Building_GetType(buildingid),
-	Building_GetMoney(buildingid),
-    Building_GetID(buildingid));
-	mysql_tquery(gMySQL, query);
     return 1;
 }
 
@@ -359,16 +330,16 @@ stock Building_CreateElements(buildingid)
 	Building_GetExitPos(buildingid, exitX, exitY, exitZ);
     
 	new enterPickup = Pickup_Create(1239, buildingid, enterX, enterY, enterZ, ELEMENT_TYPE_BUILDING_ENTRANCE, Building_GetEnterWorld(buildingid), Building_GetEnterInterior(buildingid));
-	map_set_cell(Buildings, buildingid, bEnterPickupID, enterPickup);
+	map_set_cell(Buildings, buildingid, EnterPickupID, enterPickup);
 
     new Text3D:enterText = CreateDynamic3DTextLabel(name, COLOR_LIGHTBLUE/*2*/, enterX, enterY, enterZ + 0.55, 20, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, Building_GetEnterWorld(buildingid));
-	map_set_cell(Buildings, buildingid, bEnter3DText, enterText);
+	map_set_cell(Buildings, buildingid, Enter3DText, enterText);
 
     new exitPickup = Pickup_Create(1007, buildingid, exitX, exitY, exitZ, ELEMENT_TYPE_BUILDING_EXIT, Building_GetExitWorld(buildingid), Building_GetExitInterior(buildingid));
-	map_set_cell(Buildings, buildingid, bExitPickupID, exitPickup);
+	map_set_cell(Buildings, buildingid, ExitPickupID, exitPickup);
 
 	new Text3D:exitText = CreateDynamic3DTextLabel("Uscita", COLOR_LIGHTBLUE/*2*/, exitX, exitY, exitZ + 0.55, 20, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, Building_GetExitWorld(buildingid), Building_GetExitInterior(buildingid));
-	map_set_cell(Buildings, buildingid, bExit3DText, exitText);
+	map_set_cell(Buildings, buildingid, Exit3DText, exitText);
 
 }
 
@@ -376,11 +347,11 @@ stock Building_DestroyElements(buildingid)
 {
 	if(!Building_IsValid(buildingid))
 		return 0;
-    Pickup_Destroy(map_get(Buildings, buildingid, bEnterPickupID));
-    Pickup_Destroy(map_get(Buildings, buildingid, bExitPickupID));
-	new Text3D:t = Text3D:map_get(Buildings, buildingid, bEnter3DText);
+    Pickup_Destroy(map_get(Buildings, buildingid, EnterPickupID));
+    Pickup_Destroy(map_get(Buildings, buildingid, ExitPickupID));
+	new Text3D:t = Text3D:map_get(Buildings, buildingid, Enter3DText);
     DestroyDynamic3DTextLabelEx(t);
-	t = Text3D:map_get(Buildings, buildingid, bExit3DText);
+	t = Text3D:map_get(Buildings, buildingid, Exit3DText);
 	DestroyDynamic3DTextLabelEx(t);
 	return 1;
 }
@@ -394,7 +365,7 @@ stock Building_GetName(buildingid, name[MAX_BUILDING_NAME])
 	if(!Building_IsValid(buildingid))
 		return 0;
 	new Iter:iter = map_iter_at(Buildings, buildingid);
-    iter_get_md_arr(iter, {bName}, name);
+    iter_get_md_arr(iter, {Name}, name);
     return 1;
 }
 
@@ -402,7 +373,7 @@ stock Building_IsOwnable(a)
 {
 	if(!Building_IsValid(a))
 		return 0;
-    return map_get(Buildings, a, bOwnable);
+    return map_get(Buildings, a, Ownable);
 }
 
 stock Building_IsOwned(a)
@@ -416,7 +387,7 @@ stock Building_GetOwnerID(a)
 {
 	if(!Building_IsValid(a))
 		return 0;
-    return map_get(Buildings, a, bOwnerID);
+    return map_get(Buildings, a, OwnerID);
 }
 
 stock Building_GetOwnerName(a, name[MAX_PLAYER_NAME])
@@ -424,7 +395,7 @@ stock Building_GetOwnerName(a, name[MAX_PLAYER_NAME])
 	if(!Building_IsValid(a))
 		return 0;
     new Iter:iter = map_iter_at(Buildings, a);
-    iter_get_md_arr(iter, {bOwnerName}, name);
+    iter_get_md_arr(iter, {OwnerName}, name);
     return 1;
 }
 
@@ -432,21 +403,24 @@ stock Building_IsLocked(a)
 {
 	if(!Building_IsValid(a))
 		return 0;
-    return map_get(Buildings, a, bLocked);
+    return map_get(Buildings, a, Locked);
 }
 
 stock Building_GetPrice(a)
 {
 	if(!Building_IsValid(a))
 		return 0;
-    return map_get(Buildings, a, bPrice);
+    return map_get(Buildings, a, Price);
 }
 
 stock Building_SetFaction(buildingid, factionid)
 {
 	if(!Building_IsValid(buildingid))
 		return 0;
-	map_set_cell(Buildings, buildingid, bFaction, factionid);
+	map_set_cell(Buildings, buildingid, Faction, factionid);
+
+	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET faction = '%d' WHERE id = '%d'", 
+					factionid, Building_GetID(buildingid));
 	return 1;
 }
 
@@ -454,44 +428,44 @@ stock Building_GetFaction(buildingid)
 {
 	if(!Building_IsValid(buildingid))
 		return INVALID_FACTION_ID;
-	return map_get(Buildings, buildingid, bFaction);
+	return map_get(Buildings, buildingid, Faction);
 }
 
 stock Building_GetEnterInterior(buildingid)
 {
 	if(!Building_IsValid(buildingid))
 		return 0;
-	return map_get(Buildings, buildingid, bEnterInterior);
+	return map_get(Buildings, buildingid, EnterInterior);
 }
 
 stock Building_GetEnterWorld(buildingid)
 {
 	if(!Building_IsValid(buildingid))
 		return 0;
-	return map_get(Buildings, buildingid, bEnterWorld);
+	return map_get(Buildings, buildingid, EnterWorld);
 }
 
 stock Building_GetExitInterior(buildingid)
 {
 	if(!Building_IsValid(buildingid))
 		return 0;
-	return map_get(Buildings, buildingid, bExitInterior);
+	return map_get(Buildings, buildingid, ExitInterior);
 }
 
 stock Building_GetExitWorld(buildingid)
 {
 	if(!Building_IsValid(buildingid))
 		return 0;
-	return map_get(Buildings, buildingid, bExitWorld);
+	return map_get(Buildings, buildingid, ExitWorld);
 }
 
 stock Building_GetEnterPos(buildingid, &Float:x, &Float:y, &Float:z)
 {
 	if(!Building_IsValid(buildingid))
 		return 0;
-	x = Float:map_get(Buildings, buildingid, bEnterX);
-	y = Float:map_get(Buildings, buildingid, bEnterY);
-	z = Float:map_get(Buildings, buildingid, bEnterZ);
+	x = Float:map_get(Buildings, buildingid, EnterX);
+	y = Float:map_get(Buildings, buildingid, EnterY);
+	z = Float:map_get(Buildings, buildingid, EnterZ);
 	return 1;
 }
 
@@ -499,9 +473,9 @@ stock Building_GetExitPos(buildingid, &Float:x, &Float:y, &Float:z)
 {
 	if(!Building_IsValid(buildingid))
 		return 0;
-	x = Float:map_get(Buildings, buildingid, bExitX);
-	y = Float:map_get(Buildings, buildingid, bExitY);
-	z = Float:map_get(Buildings, buildingid, bExitZ);
+	x = Float:map_get(Buildings, buildingid, ExitX);
+	y = Float:map_get(Buildings, buildingid, ExitY);
+	z = Float:map_get(Buildings, buildingid, ExitZ);
 	return 1;
 }
 
@@ -509,14 +483,17 @@ stock Building_GetType(buildingid)
 {
 	if(!Building_IsValid(buildingid))
 		return -1;
-	return map_get(Buildings, buildingid, bType);
+	return map_get(Buildings, buildingid, Type);
 }
 
 stock Building_SetType(buildingid, type)
 {
 	if(!Building_IsValid(buildingid) || type < 0 || type >= BUILDING_TYPE_LAST)
 		return 0;
-	map_set_cell(Buildings, buildingid, bType, type);
+	map_set_cell(Buildings, buildingid, Type, type);
+
+	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET type = '%d' WHERE id = '%d'", 
+					type, Building_GetID(buildingid));
 	return 1;
 }
 
@@ -524,14 +501,17 @@ stock Building_GetID(buildingid)
 {
 	if(!Building_IsValid(buildingid))
 		return 0;
-	return map_get(Buildings, buildingid, bID);
+	return map_get(Buildings, buildingid, ID);
 }
 
 stock Building_SetLocked(buildingid, locked)
 {
 	if(!Building_IsValid(buildingid))
 		return 0;
-	map_set_cell(Buildings, buildingid, bLocked, locked);
+	map_set_cell(Buildings, buildingid, Locked, locked);
+
+	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET locked = '%d' WHERE id = '%d'", 
+					locked, Building_GetID(buildingid));
 	return 1;
 }
 
@@ -539,19 +519,21 @@ stock Building_GetMoney(buildingid)
 {
 	if(!Building_IsValid(buildingid))
 		return 0;
-	return map_get(Buildings, buildingid, bMoney);
+	return map_get(Buildings, buildingid, Money);
 }
 
 stock Building_GiveMoney(buildingid, amount)
 {
-	return Building_SetMoney(buildingid, map_get(Buildings, buildingid, bMoney) + amount);
+	return Building_SetMoney(buildingid, map_get(Buildings, buildingid, Money) + amount);
 }
 
 stock Building_SetMoney(buildingid, amount)
 {
 	if(!Building_IsValid(buildingid))
 		return 0;
-	map_set_cell(Buildings, buildingid, bMoney, amount);
+	map_set_cell(Buildings, buildingid, Money, amount);
+	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET money = '%d' WHERE id = '%d'", 
+					amount, Building_GetID(buildingid));
 	return 1;
 }
 
@@ -620,7 +602,6 @@ Dialog:Dialog_Building(playerid, response, listitem, inputtext[])
 				SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso il tuo edificio.");
 			else
 				SendClientMessage(playerid, COLOR_GREEN, "Hai aperto il tuo edificio.");
-			Building_Save(buildingid);
 			return 1;
 		}
 		case 1:
@@ -668,8 +649,6 @@ Dialog:Dialog_BuildingDepositMoney(playerid, response, listitem, inputtext[])
 
 	SendFormattedMessage(playerid, -1, "Hai depositato $%d all'interno dell'edificio.", money);
 
-	Character_Save(playerid);
-	Building_Save(buildingid);
 	return 1;
 }
 
@@ -691,8 +670,6 @@ Dialog:DialogBuildingWithdrawMoney(playerid, response, listitem, inputtext[])
 
 	SendFormattedMessage(playerid, -1, "Hai ritirato $%d dall'interno dell'edificio.", money);
 
-	Character_Save(playerid);
-	Building_Save(buildingid);
 	return 1;
 }
 
@@ -717,8 +694,6 @@ Dialog:Dialog_BuildingSell(playerid, response, listitem, inputtext[])
 
 	Building_ResetOwner(buildingid);
 
-	Building_Save(buildingid);
-	Character_Save(playerid);
 	return 1;
 }
 
@@ -769,7 +744,7 @@ stock Character_GetNearBuilding(playerid, bool:inside)
 	{
 		/*foreach(new b : Buildings)
 		{
-			if(BuildingInfo[b][bExists] && Building_GetExitWorld(b) == Character_GetVirtualWorld(playerid))
+			if(BuildingInfo[b][Exists] && Building_GetExitWorld(b) == Character_GetVirtualWorld(playerid))
 				return b;
 		}*/
 		return Character_GetNearBuildingID(playerid);

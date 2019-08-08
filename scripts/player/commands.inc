@@ -57,8 +57,8 @@ CMD:tog(playerid, params[])
 	}
 	else if(!strcmp(params, "hud", true))
 	{
-		Account_SetHUDEnabled(playerid, !Account_HasHUDEnabled(playerid));
-		if(Account_HasHUDEnabled(playerid))
+		Player_SetHUDEnabled(playerid, !Player_HasHUDEnabled(playerid));
+		if(Player_HasHUDEnabled(playerid))
 		{
 			TextDrawShowForPlayer(playerid, Clock);
 			SetHealthBarVisible(playerid, true);
@@ -166,7 +166,8 @@ CMD:faiuto(playerid, params[])
 	{
 		if(Faction_GetType(factionid) == FACTION_TYPE_POLICE)
 		{
-			SendClientMessage(playerid, COLOR_SLATEBLUE, "[GUARDIA NAZIONALE]: /ammanetta - /trascina - /arresta");
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "[GUARDIA NAZIONALE]: /ammanetta - /trascina - /arresta - (/m)egafono");
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "[GUARDIA NAZIONALE]: /perquisisci - /cura - /servizio");
 		}
 	}
 	return 1;
@@ -192,8 +193,8 @@ CMD:invcmds(playerid, params[])
 flags:hotkeys(CMD_ALIVE_USER);
 CMD:hotkeys(playerid, params[])
 {
-	Account_SetHotKeysEnabled(playerid, !Account_HasHotKeysEnabled(playerid));
-    if(Account_HasHotKeysEnabled(playerid))
+	Player_SetHotKeysEnabled(playerid, !Player_HasHotKeysEnabled(playerid));
+    if(Player_HasHotKeysEnabled(playerid))
     {
 		SendClientMessage(playerid, COLOR_GREEN, "Hai abilitato le HotKeys.");
 		SendClientMessage(playerid, -1, "Ora puoi utilizzare anche:");
@@ -261,7 +262,7 @@ CMD:lasciacarcere(playerid, params[])
 	
 	Character_SetJailTime(playerid, 0);
 	Character_SetICJailed(playerid, false);
-	
+
 	//Character_Spawn(playerid);
 	SetPlayerPos(playerid, 1313.0187, -2063.6877, 57.1440);
 	SendClientMessage(playerid, COLOR_GREEN, "Hai lasciato il carcere.");
@@ -299,7 +300,6 @@ CMD:stilelotta(playerid, params[])
 			}
 		}
 		SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo stile di combattimento.");
-		Character_Save(playerid);
 	}
 	return 1;
 }

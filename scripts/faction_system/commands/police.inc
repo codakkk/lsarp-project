@@ -1,15 +1,19 @@
 #include <YSI_Coding\y_hooks>
 
-ptask OnPlayerUniformSelectUpdate[1000](playerid)
+// Do we need InspectingBy? This should be remove 
+
+static 
+	InspectedBy[MAX_PLAYERS] = {-1, ...},
+	InspectingPlayer[MAX_PLAYERS] = {-1, ...};
+
+hook OnPlayerClearData(playerid)
 {
-	if(!Character_IsLogged(playerid) || !Character_IsSelectingUniform(playerid))
-		return 1;
-    new keys, updown, leftright;
-    GetPlayerKeys(playerid, keys, updown, leftright);
-	if(leftright == KEY_LEFT)
+	new inspecting = InspectingPlayer[playerid];
+	if(inspecting != -1 && InspectedBy[inspecting] == playerid)
 	{
-		pSelectedUniformSlot{playerid}--;
+		InspectedBy[inspecting] = -1;
 	}
+	InspectingPlayer[playerid] = InspectedBy[playerid] = -1;
 	return 1;
 }
 
@@ -161,8 +165,8 @@ CMD:perquisisci(playerid, params[])
 	if(sscanf(params, "k<u>d", id))
 		return SendClientMessage(playerid, COLOR_ERROR, "/perquisisci <playerid/partofname/#id>");
 
-	if(id == playerid)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso.");
+	//if(id == playerid)
+		//return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso.");
 
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
@@ -177,6 +181,17 @@ CMD:perquisisci(playerid, params[])
 	return 1;
 }
 
+flags:megafono(CMD_POLICE);
+CMD:megafono(playerid, params[])
+{
+	if(isnull(params) || strlen(params) >= 256)
+		return SendClientMessage(playerid, COLOR_ERROR, "(/m)egafono <testo>");
+	new String:str = str_format("[MEGAFONO] %s: %s", Character_GetRolePlayName(playerid), params);
+	ProxDetectorStr(playerid, 50.0, str, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW);	
+	return 1;
+}
+alias:megafono("m");
+
 stock Character_AcceptSearch(playerid)
 {
 	if(!Request_IsPending(playerid) || Request_GetType(playerid) != REQUEST_TYPE_SEARCH)
@@ -188,10 +203,57 @@ stock Character_AcceptSearch(playerid)
 	SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s (%d) ha accettato la tua richiesta di perquisizione.", Character_GetRolePlayName(playerid), playerid);
 	SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "Hai accettato la richiesta di perquisizione di %s (%d).", Character_GetRolePlayName(senderid), senderid);
 
-	new str[64], Inventory:inv = Character_GetInventory(playerid);
-	format(str, sizeof(str), "Inventario di %s (%d/%d)",  Character_GetRolePlayName(playerid), Inventory_GetUsedSpace(inv), Inventory_GetSpace(inv));
-	Inventory_ShowInChat(inv, senderid, str);
-	SendFormattedMessage(senderid, -1, "Denaro: $%d", Character_GetMoney(playerid));
+	ShowInspectingInventory(senderid, playerid);
+	return 1;
+}
+
+Dialog:Dialog_InvSearch(playerid, response, listitem, inputtext[])
+{
+	if(!response || Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE)
+		return 1;
+	
+	new inspecting = InspectingPlayer[playerid];
+	
+	if(!IsPlayerInRangeOfPlayer(playerid, inspecting, 5.0))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
+	
+	new 
+		itemid = Character_GetSlotItem(inspecting, listitem),
+		amount = Character_GetSlotAmount(inspecting, listitem)
+	;
+	
+	// Probably amount == 0 is an useless check. Inventory system is robust enough :P
+	if(itemid == 0 || amount == 0)
+		return ShowInspectingInventory(playerid, inspecting);
+
+	if(!Character_HasSpaceForItem(playerid, itemid, amount))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario per confiscare questo oggetto.");
+
+	if(Character_DecreaseSlotAmount(inspecting, listitem, amount))
+	{
+		new rankName[MAX_FACTION_RANK_NAME];
+		Faction_GetRankName(Character_GetFaction(playerid), Character_GetRank(playerid), rankName);
+		
+		SendFormattedMessage(inspecting, COLOR_BLUE, "%s %s ti ha confiscato un oggetto (%s. Quantità: %d).", rankName, Character_GetRolePlayName(playerid), ServerItem_GetName(itemid), amount);
+		SendFormattedMessage(playerid, COLOR_BLUE, "Hai confiscato un oggetto (%s. Quantità: %d) a %s.", ServerItem_GetName(itemid), amount, Character_GetRolePlayName(inspecting));
+	}
+
+	return 1;
+}
+
+static ShowInspectingInventory(playerid, inspectingPlayer)
+{
+	if(inspectingPlayer == -1 || !IsPlayerConnected(inspectingPlayer) || !Character_IsLogged(inspectingPlayer))
+		return 0;
+	InspectingPlayer[playerid] = inspectingPlayer;
+	new Inventory:inv = Character_GetInventory(inspectingPlayer);
+	new str[128];
+	format(str, sizeof(str), "Inventario di %s (%d/%d) - Denaro: $%d",  Character_GetRolePlayName(playerid), Inventory_GetUsedSpace(inv), Inventory_GetSpace(inv), Character_GetMoney(playerid));
+	
+	Inventory_Show(inv, playerid, str, Dialog_InvSearch, Faction_GetType(Character_GetFaction(playerid)) == FACTION_TYPE_POLICE ? ("Confisca") : ("Chiudi"), "Chiudi");
+	
+	ResetPendingRequest(playerid);
+	ResetPendingRequest(inspectingPlayer);
 	return 1;
 }
 
@@ -202,8 +264,7 @@ stock Character_OffDuty(playerid)
 	
 	Character_SetFactionDuty(playerid, false);
 	
-	if(pTempSkin[playerid] != 0)
-		SetPlayerSkin(playerid, pTempSkin[playerid]);
+	SetPlayerSkin(playerid, Character_GetSkin(playerid));
 	
 	Character_ResetWeapons(playerid);
 
@@ -211,8 +272,6 @@ stock Character_OffDuty(playerid)
 	AC_SetPlayerArmour(playerid, 0.0);
 
 	Character_SetSelectingUniform(playerid, false);
-
-	pTempSkin[playerid] = 0;
 	
 	new rankName[16];
 	Faction_GetRankName(Character_GetFaction(playerid), Character_GetRank(playerid), rankName);

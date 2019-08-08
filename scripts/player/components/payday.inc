@@ -26,6 +26,7 @@ stock Character_PayDay(playerid)
 		paycheck += premiumPaycheck[Account_GetPremiumLevel(playerid)-1];
 		SendFormattedMessage(playerid, COLOR_YELLOW, "Hai ricevuto $%d aggiuntivi come bonus Premium.", paycheck);
 	}
+
 	new factionid = Character_GetFaction(playerid);
 	if(factionid != INVALID_FACTION_ID)
 	{
@@ -56,7 +57,6 @@ stock Character_PayDay(playerid)
 		SendClientMessage(playerid, COLOR_YELLOW, "Dirigiti verso NOMEPOSTO per ritirare il tuo stipendio.");
     
 	Account_IncreaseLevel(playerid, 1);
-	SetPlayerScore(playerid, Account_GetLevel(playerid));
 	
 	/*if(Character_GetExp(playerid) < expForNewLevel)
     {
@@ -70,6 +70,7 @@ stock Character_PayDay(playerid)
 	   expForNewLevel = (Character_GetLevel(playerid)+1) * 2;
 	   SendFormattedMessage(playerid, COLOR_YELLOW, "Congratulazioni! Hai raggiunto il livello %d. Per il prossimo livello hai bisogno di %d punti esperienza.", Character_GetLevel(playerid), expForNewLevel);
     }*/
+
 	if(Character_HasBuildingKey(playerid))
 	{
 		new id = Character_GetBuildingKey(playerid);
@@ -81,8 +82,7 @@ stock Character_PayDay(playerid)
 		}
 	}
     SendClientMessage(playerid, COLOR_YELLOW, "____________________________________________________");
-	//Character_GiveMoney(playerid, paycheck, "paycheck");
-    Character_Save(playerid);
+
 	Account_Save(playerid);
     GameTextForPlayer(playerid, "~y~PayDay", 5000, 1);
 	return 1;

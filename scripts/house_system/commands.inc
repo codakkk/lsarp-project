@@ -16,7 +16,7 @@ CMD:gotohouse(playerid, params[])
 	return 1;
 }
 
-flags:hcreate(CMD_RCON);
+flags:hcreate(CMD_DEVELOPER);
 CMD:hcreate(playerid, params[])
 {
     new interior;
@@ -40,7 +40,7 @@ CMD:hcreate(playerid, params[])
     return 1;
 }
 
-flags:hdelete(CMD_RCON);
+flags:hdelete(CMD_DEVELOPER);
 CMD:hdelete(playerid, params[])
 {
 	new houseid = strval(params);
@@ -57,7 +57,29 @@ CMD:hdelete(playerid, params[])
 	return 1;
 }
 
-flags:hedit(CMD_RCON);
+flags:hresetowner(CMD_DEVELOPER);
+CMD:hresetowner(playerid, params[])
+{
+	new houseid = strval(params);
+	
+	if(houseid <= 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "/hresetowner <houseid>");
+
+	if(!House_IsValid(houseid))
+	   return SendClientMessage(playerid, COLOR_ERROR, "L'id della casa inserita non è valido.");
+
+	if(!House_IsCreated(houseid))
+		return SendClientMessage(playerid, COLOR_ERROR, "La casa non è stata creata.");
+
+	if(House_ResetOwner(houseid))
+	{
+		SendFormattedMessage(playerid, COLOR_YELLOW, "Hai resettato il proprietario della casa id %d.", houseid);
+		SendMessageToAdmins(1, COLOR_ORANGE, "AdmCmd: %s (%d) ha resettato il proprietario della casa id %d.", Account_GetName(playerid), playerid, houseid);
+	}
+	return 1;
+}
+
+flags:hedit(CMD_DEVELOPER);
 CMD:hedit(playerid, params[])
 {
     new houseid, command[16], value;
@@ -79,7 +101,6 @@ CMD:hedit(playerid, params[])
 	   House_SetEnterInterior(houseid, GetPlayerInterior(playerid));
 	   House_SetEnterWorld(houseid, Character_GetVirtualWorld(playerid));
 	   House_CreateObjects(houseid);
-	   House_Save(houseid);
     }
     else if(!strcmp(command, "interior", true))
     {
@@ -89,7 +110,6 @@ CMD:hedit(playerid, params[])
 		  return SendClientMessage(playerid, COLOR_ERROR, "Interior non valido");
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato l'interior della casa %d. Nuovo: %d", houseid, value);
 	   House_SetInterior(houseid, value);
-	   House_Save(houseid);
     }
     else if(!strcmp(command, "price", true))
     {
@@ -99,7 +119,6 @@ CMD:hedit(playerid, params[])
 		  return SendClientMessage(playerid, COLOR_ERROR, "Il prezzo della casa deve essere maggiore di 0.");
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato il prezzo di vendita della casa %d. Nuovo prezzo: %d", houseid, value);
 	   House_SetPrice(houseid, value);
-	   House_Save(houseid);
     }
     else if(!strcmp(command, "lock", true))
     {
@@ -112,16 +131,15 @@ CMD:hedit(playerid, params[])
 		  s = "Aperta";
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato lo stato della porta della casa %d. Stato: %s", houseid, s);
 	   House_SetLocked(houseid, value);
-	   House_Save(houseid);
     }
     else return SendClientMessage(playerid, COLOR_ERROR, "/hedit <houseid> <pos - interior - price - lock>");
     return 1;
 }
 
-flags:ahousecmds(CMD_RCON);
+flags:ahousecmds(CMD_DEVELOPER);
 CMD:ahousecmds(playerid, params[])
 {
-    SendClientMessage(playerid, COLOR_WHITE, "[HOUSES]: /hcreate - /hedit - /resethousefurnitures - /resethouseexterior");
+    SendClientMessage(playerid, COLOR_WHITE, "[HOUSES]: /hcreate - /hedit - /resethousefurnitures - /resethouseexterior - /hresetowner");
     return 1;
 }
 
@@ -130,8 +148,9 @@ CMD:casa(playerid, params[])
 {	
 	return Character_ShowHouseDialog(playerid);
 }
+alias:casa("cmenu");
 
-flags:resethousefurnitures(CMD_ADMIN);
+flags:resethousefurnitures(CMD_DEVELOPER);
 CMD:resethousefurnitures(playerid, params[])
 {
     new houseid;

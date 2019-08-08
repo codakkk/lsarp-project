@@ -645,7 +645,6 @@ stock WearObject_SaveAll(playerid)
 
 stock Character_LoadWearObjects(playerid)
 {
-    printf("LoadWearObjects");
     inline OnLoad()
     {
         new 
@@ -656,7 +655,7 @@ stock Character_LoadWearObjects(playerid)
             Float:rotx = 0.0, Float:roty = 0.0, Float:rotz = 0.0,
             Float:scalex = 0.0, Float:scaley = 0.0, Float:scalez = 0.0,
             color1 = 0, color2 = 0;
-        printf("Player %d Wear objects: %d", playerid, rows);
+        printf("Player %d loaded %d wear objects.", playerid, rows);
         for(new i = 0; i < rows; ++i)
         {
             if(i >= MAX_PLAYER_OBJECTS)
@@ -688,13 +687,12 @@ stock Character_LoadWearObjects(playerid)
             cache_get_value_index_int(i, 16, equipped);
 
             Internal_AddWearObject(playerid, slotid, name, modelid, bone, x, y, z, rotx, roty, rotz, scalex, scaley, scalez, color1, color2);
-            printf("Equipped: %d", equipped);
+
             if(equipped == 1)
                 Internal_WearObjectUse(playerid, slotid);
         }
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM character_wear_objects WHERE character_id = '%d' AND slot_id != '-1'", Character_GetID(playerid));
-    printf("Query: SELECT * FROM character_wear_objects WHERE character_id = '%d' AND slot_id != '-1'", Character_GetID(playerid));
 }
 
 

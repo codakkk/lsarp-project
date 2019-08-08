@@ -21,15 +21,12 @@ hook OnPlayerClearData(playerid)
     return 1;
 }
 
-hook OnCharacterPreSaveData(playerid, disconnect)
+hook OnCharacterDisconnected(playerid)
 {
-    if(disconnect)
-    {
-        if(Character_HasBeanBag(playerid))
-            pc_cmd_beanbag(playerid, "");
-        if(Character_HasTaser(playerid))
-            pc_cmd_taser(playerid, "");
-    }
+    if(Character_HasBeanBag(playerid))
+        pc_cmd_beanbag(playerid, "");
+    if(Character_HasTaser(playerid))
+        pc_cmd_taser(playerid, "");
     return 1;
 }
 

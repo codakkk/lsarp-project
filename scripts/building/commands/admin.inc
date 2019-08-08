@@ -48,8 +48,9 @@ CMD:abuildingfaction(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "L'edificio inserito non è valdio.");
 	if(fid != INVALID_FACTION_ID && !Faction_IsValid(fid))
 		return SendClientMessage(playerid, COLOR_ERROR, "La fazione inserita non è valida. Usa /afactionslist per una lista.");	
+	
 	Building_SetFaction(bid, fid);
-	Building_Save(bid);
+
 	if(fid == INVALID_FACTION_ID)
 		SendFormattedMessage(playerid, COLOR_GREEN, "L'edificio %d non appartiene più alla fazione ID %d.", bid, fid);
 	else
@@ -73,7 +74,6 @@ CMD:abuildingexit(playerid, params[])
 
     if(Building_SetInterior(id, x, y, z, GetPlayerInterior(playerid)))
     {
-		Building_Save(id);
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato l'interior del building id %d.", id);
 		Log(Account_GetName(playerid), "", "/abuildingexit", id);
     }
@@ -99,7 +99,6 @@ CMD:abuildingentrance(playerid, params[])
 
     if(Building_SetPosition(id, x, y, z, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid)))
     {
-		Building_Save(id);
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai spostato il building %d.", id);
 		Log(Account_GetName(playerid), "", "/abuildingentrance", id);
     }
@@ -125,7 +124,6 @@ CMD:abuildingname(playerid, params[])
 
 	if(Building_SetName(id, name))
 	{
-		Building_Save(id);
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il nome del building %d. Nuovo nome: %s", id, name);
 		Log(Account_GetName(playerid), "", "/abuildingname", id);
 	}
@@ -148,7 +146,6 @@ CMD:abuildingownable(playerid, params[])
 
     if(Building_SetOwnable(id, ownable))
     {
-		Building_Save(id);
 		if(ownable)
 			SendFormattedMessage(playerid, COLOR_GREEN, "Il building %d è ora acquistabile.", id);
 		else
@@ -174,7 +171,6 @@ CMD:abuildingprice(playerid, params[])
 
     if(Building_SetPrice(id, price))
     {
-		Building_Save(id);
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il prezzo del building %d. Nuovo Prezzo: $%d", id, price);
 		Log(Account_GetName(playerid), "", "/abuildingprice", id);
     }
@@ -196,7 +192,7 @@ CMD:abuildinglock(playerid, params[])
 	   return SendClientMessage(playerid, COLOR_ERROR, "Invalid Building ID");
 
     Building_SetLocked(id, (lock > 0) ? (1) : (0));
-	Building_Save(id);
+
     if(lock)
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai chiuso il building %d.", id);
     else
@@ -236,7 +232,6 @@ CMD:abuildingwelcome(playerid, params[])
 	   return SendClientMessage(playerid, COLOR_ERROR, "Invalid Building ID");
 
 	Building_SetWelcomeText(id, text);
-	Building_Save(id);
 
 	SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il testo di benvenuto del building %d.", id);
 	SendFormattedMessage(playerid, COLOR_GREEN, "Testo: %s", text);
@@ -260,8 +255,6 @@ CMD:abuildingtype(playerid, params[])
 
 	if(!Building_SetType(id, type))
 		return SendClientMessage(playerid, COLOR_ERROR, "Tipo di edificio non valido.");
-
-	Building_Save(id);
 
 	SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il tipo del building %d.", id);
 	SendFormattedMessage(playerid, COLOR_GREEN, "Nuovo tipo: %d", type);

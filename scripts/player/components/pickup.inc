@@ -48,7 +48,7 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
 			string += str_format("~y~Proprietario: ~w~%s~n~", Character_GetNameFromDatabase(House_GetOwnerID(houseid), true));
 			if(House_GetOwnerID(houseid) == Character_GetID(playerid))
 			{
-				if(Account_HasHotKeysEnabled(playerid))
+				if(Player_HasHotKeysEnabled(playerid))
 					string += @("Premi ~b~~k~~SNEAK_ABOUT~~w~ (/casa) per il menu.~n~");
 				else
 					string += @("Digita ~b~/casa~w~ per il menu.~n~");
@@ -60,10 +60,6 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
 		}
 		string += str_format("~r~Interno:~w~ %d~n~", House_GetInteriorID(houseid));
 		GameTextForPlayerStr(playerid, string, 2000, 5);
-	}
-	else if(type == ELEMENT_TYPE_DROP)
-	{
-		Player_Info(playerid, "Premi ~y~~k~~PED_DUCK~~w~ per interagire", false);
 	}
     return 1;
 }

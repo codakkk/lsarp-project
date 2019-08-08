@@ -3,8 +3,8 @@
 flags:invmode(CMD_USER);
 CMD:invmode(playerid, params[])
 {
-	Account_SetInvModeEnabled(playerid, !Account_HasInvModeEnabled(playerid));
-	if(Account_HasInvModeEnabled(playerid))
+	Player_SetInvModeEnabled(playerid, !Player_HasInvModeEnabled(playerid));
+	if(Player_HasInvModeEnabled(playerid))
 	{
 		SendClientMessage(playerid, COLOR_GREEN, "Hai impostato l'inventario in chat mode.");
 	}
@@ -19,12 +19,7 @@ CMD:invmode(playerid, params[])
 flags:inventario(CMD_USER);
 CMD:inventario(playerid, params[])
 {
-	if(Account_HasInvModeEnabled(playerid))
-	{
-		new Inventory:playerInventory = Character_GetInventory(playerid);
-		Inventory_ShowInChat(playerInventory, playerid, "Inventario");
-	}
-	else Character_ShowInventory(playerid, playerid);
+	Character_ShowInventory(playerid, playerid);
 	return 1;
 }
 alias:inventario("inv");
@@ -215,7 +210,6 @@ CMD:gettaarma(playerid, params[])
 	{
 		SendClientMessage(playerid, COLOR_GREEN, "Hai gettato l'arma.");
 		ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 3.0, 0, 0, 0, 0, 0);
-		Character_Save(playerid);
 	}
 	return 1;
 }

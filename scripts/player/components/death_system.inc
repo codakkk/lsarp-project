@@ -4,6 +4,13 @@
 #define INJURED_TIME_AS_SECONDS		60
 #define DEATH_TIME_AS_SECONDS 		30
 
+static enum // e_DeathStates
+{
+	DEATH_STATE_NONE = 0,
+	DEATH_STATE_INJURED = 1,
+	DEATH_STATE_DEAD = 2
+}
+
 static enum e_DeathState
 {
 	pDeathTime,

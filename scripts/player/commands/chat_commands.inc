@@ -64,8 +64,6 @@ CMD:pm(playerid, params[])
 	{
 		Player_Info(playerid, "Il giocatore a cui hai inviato il ~y~PM~w~ risulta ~r~AFK~w~.");
 	}
-	
-	pLastPMTime[playerid] = GetTickCount();
     return 1;
 }
 

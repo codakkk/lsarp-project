@@ -46,6 +46,9 @@ stock Character_AcceptCare(playerid)
 	if(senderid == INVALID_PLAYER_ID)
 		return 0;
 	
+	if(!Character_IsInjured(playerid))
+		return 1;
+
 	if(!IsPlayerInRangeOfPlayer(playerid, senderid, 5.0) || !Character_IsLogged(senderid))
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore che ti ha inviato la richiesta.");
@@ -65,7 +68,6 @@ stock Character_AcceptCare(playerid)
 	else 
 		Character_SetCareTick(playerid, 1);
 
-	Character_SetDeathState(playerid, DEATH_STATE_NONE);
 	Character_SetLegHit(playerid, false);
 	
 	Character_ResetDeathState(playerid);

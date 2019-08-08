@@ -20,10 +20,13 @@ static enum E_PLAYER_SPAWN_DATA
 	Float:SpawnA,
 	SpawnInterior,
 	SpawnVirtualWorld,
+
     Float:LastX,
     Float:LastY,
     Float:LastZ,
     Float:LastA,
+	Float:LastHealth,
+	Float:LastArmour,
     LastInterior,
     LastVirtualWorld,
 };
@@ -33,28 +36,72 @@ static
 
 	bool:IsSpawned[MAX_PLAYERS char] = {false, ...},
 	bool:IsFirstSpawn[MAX_PLAYERS char] = {false, ...},
-	SpawnPoint[MAX_PLAYERS char] = {SPAWN_POINT_TYPE_NONE, ...},
-	SpawnPointExtraID[MAX_PLAYERS] = {-1, ...}
+	SpawnPointType[MAX_PLAYERS char] = {SPAWN_POINT_TYPE_NONE, ...},
+	SpawnPointID[MAX_PLAYERS] = {0, ...}
 ;
 
 hook OnPlayerClearData(playerid)
 {
 	IsSpawned{playerid} = IsFirstSpawn{playerid} = false;
-	SpawnPoint{playerid} = SPAWN_POINT_TYPE_NONE;
-	SpawnPointExtraID[playerid] = -1;
+	SpawnPointType{playerid} = SPAWN_POINT_TYPE_NONE;
+	SpawnPointID[playerid] = 0;
 	PlayerSpawnData[playerid] = CleanSpawnData;
+	return 1;
+}
+
+hook OnCharacterDisconnected(playerid)
+{
+	Internal_SavePos(playerid);
 	return 1;
 }
 
 hook OnCharacterCreated(playerid, character_db_id)
 {
-	mysql_tquery_f(gMySQL, "INSERT INTO `character_spawn_data` (character_id, is_first_spawn, spawn_x, spawn_y, spawn_z, spawn_a, spawn_interior, spawn_world) VALUES('%d', 1, '%f', '%f', '%f', '0.0', '0', '0')", character_db_id, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
+	mysql_tquery_f(gMySQL, "INSERT INTO `character_spawn_data` (character_id, is_first_spawn, spawn_type, spawn_id, spawn_x, spawn_y, spawn_z, spawn_a, spawn_interior, spawn_world) VALUES('%d', 1, '0', '0', '%f', '%f', '%f', '0.0', '0', '0')", character_db_id, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
 	return 1;
 }
 
 hook OnCharacterLoad(playerid)
 {
 	Character_LoadSpawnData(playerid);
+	return 1;
+}
+
+
+ptask SavePlayerPositionTime[30000](playerid)
+{
+    if(!Character_IsLogged(playerid))
+	   return 0;
+    Internal_SavePos(playerid);
+    return 1;
+}
+
+static Internal_SavePos(playerid)
+{
+	new 
+		Float:x, Float:y, Float:z, Float:a,
+		Float:health, Float:armour,
+		interior = GetPlayerInterior(playerid),
+		world = Character_GetVirtualWorld(playerid),
+		isSpawned = Character_IsAlive(playerid) ? 1 : 0
+	;
+
+	GetPlayerPos(playerid, x, y, z);
+	GetPlayerFacingAngle(playerid, a);
+
+	AC_GetPlayerHealth(playerid, health);
+	AC_GetPlayerArmour(playerid, armour);
+
+	mysql_tquery_f(gMySQL, "UPDATE `character_spawn_data` SET \
+	last_x = '%f', last_y = '%f', last_z = '%f', last_a = '%f', last_interior = '%f', last_world = '%f', \
+	last_health = '%f', last_armour = '%f', \
+	is_spawned = '%d' \
+	WHERE \
+	character_id = '%d'", 
+	x, y, z, a, interior, world,
+	health, armour,
+	isSpawned,
+	Character_GetID(playerid));
 	return 1;
 }
 
@@ -81,20 +128,36 @@ CMD:spawnpoint(playerid, params[])
 		if(Character_GetHouseKey(playerid) != extraid && House_GetOwnerID(extraid) != Character_GetID(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non sei nè il proprietario nè un affittuario di questa casa.");
 		
-		SpawnPoint{playerid} = spawnType;
-		SpawnPointExtraID[playerid] = extraid;
+		Character_SetSpawnPointType(playerid, SPAWN_POINT_TYPE_HOUSE);
+		Character_SetSpawnPointID(playerid, extraid);
+
 		SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo spawn point. La prossima volta respawnerai a casa tua.");
+	}
+	else if(spawnType == SPAWN_POINT_TYPE_BUSINESS)
+	{
+		if(!Character_HasBuildingKey(playerid))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi un business.");
+		
+		Character_SetSpawnPointType(playerid, SPAWN_POINT_TYPE_BUSINESS);
+		Character_SetSpawnPointID(playerid, Character_GetBuildingKey(playerid));
+
+		SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo spawn point. La prossima volta respawnerai al tuo negozio.");
+	}
+	else if(spawnType == SPAWN_POINT_TYPE_FACTION)
+	{
+		if(Character_GetFaction(playerid) == INVALID_FACTION_ID)
+			return SendClientMessage(playerid, COLOR_ERROR, "Non fai parte di una fazione.");
+		
+		Character_SetSpawnPointType(playerid, SPAWN_POINT_TYPE_FACTION);
+
+		SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo spawn point. La prossima volta respawnerai all'HQ della tua fazione.");
 	}
 	else
 	{
-		SpawnPoint{playerid} = spawnType;
-		SpawnPointExtraID[playerid] = -1;
+		SpawnPointType{playerid} = spawnType;
+		SpawnPointID[playerid] = 0;
 		if(spawnType == SPAWN_POINT_TYPE_NONE)
 			SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo spawn point. La prossima volta respawnerai al Mall.");
-		else if(spawnType == SPAWN_POINT_TYPE_FACTION)
-			SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo spawn point. La prossima volta respawnerai all'HQ della tua fazione.");
-		else if(spawnType == SPAWN_POINT_TYPE_BUSINESS)
-			SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo spawn point. La prossima volta respawnerai al tuo negozio.");
 	}
 	return 1;
 }
@@ -132,8 +195,6 @@ stock Character_HandleFirstSpawn(playerid)
 
 	mysql_format(gMySQL, query, sizeof(query), "UPDATE `accounts` SET characters_counter = '%d' WHERE id = '%d'", Account_GetCharactersCount(playerid), Account_GetID(playerid));
 	mysql_tquery(gMySQL, query);
-
-	Character_Save(playerid);
 	return 1;
 }
 
@@ -175,37 +236,83 @@ stock Character_Spawn(playerid)
 		SetPlayerFacingAngle(playerid, PlayerSpawnData[playerid][LastA]);
 		SetPlayerInterior(playerid, PlayerSpawnData[playerid][LastInterior]);
 		Character_SetVirtualWorld(playerid, PlayerSpawnData[playerid][LastVirtualWorld]);
-		defer LoadCharacterDataAfterTime(playerid);
+
+		SetPlayerHealth(playerid, PlayerSpawnData[playerid][LastHealth]);
+		SetPlayerArmour(playerid, PlayerSpawnData[playerid][LastArmour]);
     }
     else
     {
-		if(Character_GetSpawnPoint(playerid) == SPAWN_POINT_TYPE_HOUSE && Character_GetSpawnPointExtraID(playerid) != -1)
+		if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_HOUSE && Character_GetSpawnPointID(playerid) != -1)
 		{
-			new housekey = Character_GetSpawnPointExtraID(playerid);
+			new housekey = Character_GetSpawnPointID(playerid);
 			if(House_GetOwnerID(housekey) != Character_GetID(playerid) && Character_GetHouseKey(playerid) != housekey)
 			{
-				SendClientMessage(playerid, COLOR_ERROR, "La casa in cui sei spawnato non è più tua o non ne sei piu' affittuario.");
-				SendClientMessage(playerid, COLOR_ERROR, "Il tuo spawn-point è stato resettato al Mall.");
-				Character_SetSpawnPoint(playerid, SPAWN_POINT_TYPE_NONE);
-				SpawnPointExtraID[playerid] = -1;
-				Character_Save(playerid);
+				SendClientMessage(playerid, COLOR_ERROR, "Non possiedi più la casa. Il tuo spawn-point è stato resettato al Mall.");
+				
+				Character_SetSpawnPointType(playerid, SPAWN_POINT_TYPE_NONE);
+				Character_SetSpawnPointID(playerid, 0);
+
+				Streamer_UpdateEx(playerid, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
+
+				SetPlayerPos(playerid, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
+				SetPlayerInterior(playerid, 0);
+				Character_SetVirtualWorld(playerid, 0);
 			}
-			new Float:x, Float:y, Float:z;
-			House_GetEnterPosition(housekey, x, y, z);
-			SetPlayerPos(playerid, x, y, z);
-			SetPlayerInterior(playerid, House_GetEnterInterior(housekey));
-			Character_SetVirtualWorld(playerid, House_GetEnterWorld(housekey));
+			else
+			{
+				new Float:x, Float:y, Float:z;
+				House_GetEnterPosition(housekey, x, y, z);
+
+				Streamer_UpdateEx(playerid, x, y, z);
+
+				SetPlayerPos(playerid, x, y, z);
+				SetPlayerInterior(playerid, House_GetEnterInterior(housekey));
+				Character_SetVirtualWorld(playerid, House_GetEnterWorld(housekey));
+			}
 		}
-		else if(Character_GetSpawnPoint(playerid) == SPAWN_POINT_TYPE_FACTION && Character_GetFaction(playerid) != INVALID_FACTION_ID)
+		else if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_BUSINESS)
+		{
+			new buildingkey = Character_GetBuildingKey(playerid);
+			if(!Building_IsValid(buildingkey) || Building_GetOwnerID(buildingkey) != Character_GetID(playerid))
+			{
+				SendClientMessage(playerid, COLOR_ERROR, "Non possiedi più il business. Il tuo spawn-point è stato resettato al Mall.");
+				
+				Character_SetSpawnPointType(playerid, SPAWN_POINT_TYPE_NONE);
+				Character_SetSpawnPointID(playerid, 0);
+
+				Streamer_UpdateEx(playerid, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
+
+				SetPlayerPos(playerid, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
+				SetPlayerInterior(playerid, 0);
+				Character_SetVirtualWorld(playerid, 0);
+			}
+			else
+			{
+				new Float:x, Float:y, Float:z;
+				Building_GetEnterPos(buildingkey, x, y, z);
+				
+				Streamer_UpdateEx(playerid, x, y, z);
+
+				SetPlayerPos(playerid, x, y, z);
+				SetPlayerInterior(playerid, Building_GetEnterInterior(buildingkey));
+				Character_SetVirtualWorld(playerid, Building_GetEnterWorld(buildingkey));
+			}
+		}
+		else if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_FACTION && Character_GetFaction(playerid) != INVALID_FACTION_ID)
 		{
 			new Float:x, Float:y, Float:z, factionid = Character_GetFaction(playerid);
 			Faction_GetSpawnPos(factionid, x, y, z);
+
+			Streamer_UpdateEx(playerid, x, y, z);
+
 			SetPlayerPos(playerid, x, y, z);
 			SetPlayerInterior(playerid, Faction_GetSpawnInterior(factionid));
 			Character_SetVirtualWorld(playerid, Faction_GetSpawnWorld(factionid));
 		}
 		else
 		{
+			Streamer_UpdateEx(playerid, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
+
 			SetPlayerPos(playerid, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
 			SetPlayerInterior(playerid, 0);
 			Character_SetVirtualWorld(playerid, 0);
@@ -213,8 +320,7 @@ stock Character_Spawn(playerid)
 		AC_SetPlayerHealth(playerid, 100.0);
 		AC_SetPlayerArmour(playerid, 0.0);
     }
-	//ClearAnimations(playerid);
-	//ApplyAnimation(playerid, "CARRY", "crry_prtial", 2.0, 0, 0, 0, 0, 0);
+	defer LoadCharacterDataAfterTime(playerid);
 	CallLocalFunction(#OnCharacterSpawn, "d", playerid);
 	return 1;
 }
@@ -225,32 +331,29 @@ stock Character_Spawn(playerid)
 // 2: means faction (if any)
 // 3: means business (if any)
 // from 4 to INFINITE: means a specific spawn point.
-stock Character_SetSpawnPoint(playerid, spawnid)
+stock Character_SetSpawnPointType(playerid, spawnid)
 {
 	if(spawnid < SPAWN_POINT_TYPE_NONE)
 		return 0;
-	SpawnPoint{playerid} = spawnid;
+	SpawnPointType{playerid} = spawnid;
+	mysql_tquery_f(gMySQL, "UPDATE `character_spawn_data` SET spawn_type = '%d' WHERE character_id = '%d'", spawnid, Character_GetID(playerid));
 	return 1;
 }
 
-stock Character_SetSpawnPointExtraID(playerid, extraid)
+stock Character_SetSpawnPointID(playerid, extraid)
 {
-	SpawnPointExtraID[playerid] = extraid;
+	SpawnPointID[playerid] = extraid;
+	mysql_tquery_f(gMySQL, "UPDATE `character_spawn_data` SET spawn_id = '%d' WHERE character_id = '%d'", extraid, Character_GetID(playerid));
 }
 
-stock Character_GetSpawnPointExtraID(playerid)
+stock Character_GetSpawnPointID(playerid)
 {
-	return SpawnPointExtraID[playerid];
+	return SpawnPointID[playerid];
 }
 
-stock Character_GetSpawnPoint(playerid)
+stock Character_GetSpawnPointType(playerid)
 {
-	return SpawnPoint{playerid};
-}
-
-static Character_SaveSpawnData(playerid)
-{
-	return 1;
+	return SpawnPointType{playerid};
 }
 
 static Character_LoadSpawnData(playerid)
@@ -268,25 +371,34 @@ static Character_LoadSpawnData(playerid)
 			return 1;
 		}
 
-		cache_get_value_index_int(0, 1, temp);
+		cache_get_value_name_int(0, "is_first_spawn", temp);
 		IsFirstSpawn{playerid} = temp ? true : false;
 
-		cache_get_value_index_int(0, 2, temp);
+		cache_get_value_name_int(0, "is_spawned", temp);
 		IsSpawned{playerid} = temp ? true : false;
 
-		cache_get_value_index_float(0, 3, PlayerSpawnData[playerid][LastX]);
-		cache_get_value_index_float(0, 4, PlayerSpawnData[playerid][LastY]);
-		cache_get_value_index_float(0, 5, PlayerSpawnData[playerid][LastZ]);
-		cache_get_value_index_float(0, 6, PlayerSpawnData[playerid][LastA]);
-		cache_get_value_index_int(0, 7, PlayerSpawnData[playerid][LastInterior]);
-		cache_get_value_index_int(0, 8, PlayerSpawnData[playerid][LastVirtualWorld]);
+		cache_get_value_name_float(0, "last_x", PlayerSpawnData[playerid][LastX]);
+		cache_get_value_name_float(0, "last_y", PlayerSpawnData[playerid][LastY]);
+		cache_get_value_name_float(0, "last_z", PlayerSpawnData[playerid][LastZ]);
+		cache_get_value_name_float(0, "last_a", PlayerSpawnData[playerid][LastA]);
+		cache_get_value_name_int(0, "last_interior", PlayerSpawnData[playerid][LastInterior]);
+		cache_get_value_name_int(0, "last_world", PlayerSpawnData[playerid][LastVirtualWorld]);
 
-		cache_get_value_index_float(0, 9, PlayerSpawnData[playerid][SpawnX]);
-		cache_get_value_index_float(0, 10, PlayerSpawnData[playerid][SpawnY]);
-		cache_get_value_index_float(0, 11, PlayerSpawnData[playerid][SpawnZ]);
-		cache_get_value_index_float(0, 12, PlayerSpawnData[playerid][SpawnA]);
-		cache_get_value_index_int(0, 13, PlayerSpawnData[playerid][SpawnInterior]);
-		cache_get_value_index_int(0, 14, PlayerSpawnData[playerid][SpawnVirtualWorld]);
+		cache_get_value_name_float(0, "last_health", PlayerSpawnData[playerid][LastHealth]);
+		cache_get_value_name_float(0, "last_armour", PlayerSpawnData[playerid][LastArmour]);
+		
+		new tmp = 0;
+		cache_get_value_name_int(0, "spawn_type", tmp);
+		SpawnPointType{playerid} = tmp;
+
+		cache_get_value_name_int(0, "spawn_id", SpawnPointID[playerid]);
+
+		cache_get_value_name_float(0, "spawn_x", PlayerSpawnData[playerid][SpawnX]);
+		cache_get_value_name_float(0, "spawn_y", PlayerSpawnData[playerid][SpawnY]);
+		cache_get_value_name_float(0, "spawn_z", PlayerSpawnData[playerid][SpawnZ]);
+		cache_get_value_name_float(0, "spawn_a", PlayerSpawnData[playerid][SpawnA]);
+		cache_get_value_name_int(0, "spawn_interior", PlayerSpawnData[playerid][SpawnInterior]);
+		cache_get_value_name_int(0, "spawn_world", PlayerSpawnData[playerid][SpawnVirtualWorld]);
 	
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `character_spawn_data` WHERE character_id = '%d'", Character_GetID(playerid));
@@ -295,6 +407,5 @@ static Character_LoadSpawnData(playerid)
 
 timer LoadCharacterDataAfterTime[2000](playerid)
 {
-	
 	CallLocalFunction("OnCharacterLateLoad", "d", playerid);
 }

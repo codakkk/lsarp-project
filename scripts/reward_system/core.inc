@@ -35,6 +35,12 @@ hook OnPlayerClearData(playerid)
     return 1;
 }
 
+hook OnAccountLogin(playerid)
+{
+	Account_LoadRewards(playerid);
+	return 1;
+}
+
 stock Account_SaveRewards(playerid)
 {
 	new query[512];
@@ -290,6 +296,5 @@ Dialog:Dialog_ZPointsBuyRewards(playerid, response, listitem, inputtext[])
 	Account_AddPoints(playerid, -price);
 	Account_SaveRewards(playerid);
 	Account_Save(playerid);
-	Character_Save(playerid);
 	return 1;
 }
