@@ -379,20 +379,22 @@ stock ProxDetectorS(Float:radius, playerid, targetid)
     return 0;
 }
 
-stock ProxDetectorStr(playerid, Float:radius, String:string, col1, col2, col3, col4, col5, ooc = false, receiveSelf = true)
+stock ProxDetectorStr(playerid, Float:radius, String:string, col1, col2, col3, col4, col5, bool:ooc = false, bool:receiveSelf = true)
 {
-    new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
+    /*new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
     amx_to_ref(var, ptr);
-    str_get(string, ptr[0], .size=size);
+    str_get(string, ptr[0], .size=size);*/
 
-    new result = ProxDetector(playerid, radius, ptr[0], col1, col2, col3, col4, col5, ooc, receiveSelf);
+	new buffer[256];
+	str_get(string, buffer);
+    new result = ProxDetector(playerid, radius, /*ptr[0]*/buffer, col1, col2, col3, col4, col5, ooc, receiveSelf);
 
-    amx_free(var);
-    amx_delete(var);
+    /*amx_free(var);
+    amx_delete(var);*/
     return result;
 }
 
-stock ProxDetector(playerid, Float:radius, const string[], col1, col2, col3, col4, col5, ooc = false, receiveSelf = true)
+stock ProxDetector(playerid, Float:radius, const string[], col1, col2, col3, col4, col5, bool:ooc = false, bool:receiveSelf = true)
 {
     if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))
 	   return 0;
@@ -422,19 +424,47 @@ stock ProxDetector(playerid, Float:radius, const string[], col1, col2, col3, col
 
 stock SendTwoLinesMessageStr(playerid, color, String:string)
 {
-	new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
+	/*new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
     amx_to_ref(var, ptr);
-    str_get(string, ptr[0], .size=size);
+    str_get(string, ptr[0], .size=size);*/
 
-    new result = SendTwoLinesMessage(playerid, color, ptr[0]);
+	new buffer[256];
+	str_get(string, buffer);
+    new result = SendTwoLinesMessage(playerid, color, /*ptr[0]*/ buffer);
 
-    amx_free(var);
-    amx_delete(var);
+    /*amx_free(var);
+    amx_delete(var);*/
 	return result;
 }
 
-// I must increase two lines characters.
 stock SendTwoLinesMessage(playerid, color, const message[], GLOBAL_TAG_TYPES:...)
+{
+	#define maxRowLength 120
+	//static const maxRowLength = 120; // 120 characters.
+
+	new string[256];
+	format(string, sizeof(string), message, ___3);
+	new len = strlen(string);
+	if(len > maxRowLength + 4)
+	{
+		new tmp1[maxRowLength + 4], tmp2[maxRowLength + 4];
+		
+		strmid(tmp2, string, maxRowLength, len);
+		strins(tmp2, ".. ", 0);
+		strmid(tmp1, string, 0, maxRowLength);
+		strins(tmp1, " ..", maxRowLength);
+		SendClientMessage(playerid, color, tmp1);
+		SendClientMessage(playerid, color, tmp2);
+	}
+	else
+	{
+		SendClientMessage(playerid, color, string);
+	}
+    return 1;
+}
+
+// I must increase two lines characters.
+/*stock SendTwoLinesMessage(playerid, color, const message[], GLOBAL_TAG_TYPES:...)
 {
 	new string[256];
 	format(string, sizeof(string), message, ___3);
@@ -455,18 +485,20 @@ stock SendTwoLinesMessage(playerid, color, const message[], GLOBAL_TAG_TYPES:...
 		SendClientMessage(playerid, color, string);
 	}
     return 1;
-}
+}*/
 
 stock SendTwoLinesMessageToAllStr(color, String:string)
 {
-	new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
+	/*new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
     amx_to_ref(var, ptr);
-    str_get(string, ptr[0], .size=size);
+    str_get(string, ptr[0], .size=size);*/
 
-    new result = SendTwoLinesMessageToAll(color, ptr[0]);
+	new buffer[256];
+	str_get(string, buffer);
+    new result = SendTwoLinesMessageToAll(color, /*ptr[0]*/ buffer);
 
-    amx_free(var);
-    amx_delete(var);
+    /*amx_free(var);
+    amx_delete(var);*/
 	return result;
 }
 

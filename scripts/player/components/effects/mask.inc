@@ -11,16 +11,16 @@ hook OnPlayerClearData(playerid)
 
 hook OnCharacterInjured(playerid)
 {
-	Character_RemoveMask(playerid);
+	//Character_RemoveMask(playerid);
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
 hook OnCharacterSpawn(playerid)
 {
-	//if(Character_IsAlive(playerid))
-	//{
-	Character_RemoveMask(playerid);
-	//}
+	if(Character_IsAlive(playerid))
+	{
+		Character_RemoveMask(playerid);
+	}
 
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
@@ -115,10 +115,16 @@ CMD:rimuovimaschera(playerid, params[])
 	new id;
 	if(sscanf(params, "k<u>", id))
 		return SendClientMessage(playerid, COLOR_ERROR, "/rimuovimaschera <playerid/partofname/#maskid>");
+	
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id) || !IsPlayerInRangeOfPlayer(playerid, id, 2.5))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
+	
+	if(playerid == id)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso.");
+
 	if(Character_IsAlive(id) || !Character_IsMasked(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
+	
 	Character_RemoveMask(id);
 	ProxDetectorStr(playerid, 15.0, str_format("(( %s ha tolto la maschera di %s ))", Character_GetRolePlayName(playerid), Character_GetRolePlayName(id)), 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF, 0xD0AEEBFF,	0xD0AEEBFF, false);
 	//Character_CharacterMe(playerid, id, "rimuove la maschera di");

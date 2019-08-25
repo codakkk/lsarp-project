@@ -46,20 +46,18 @@ CMD:dai(playerid, params[])
 
     if(!IsPlayerInRangeOfPlayer(playerid, id, 3.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
-    
-	
-	
+
 	if(!Character_IsAlive(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
 
 	if(!strcmp(text, "arma", true))
 	{
 		if(Request_IsPending(playerid, REQUEST_TYPE_WEAPON))
-			return SendClientMessage(playerid, COLOR_ERROR, "Hai già una richiesta d'arma attiva.");
+			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'arma attiva.");
 		
 		if(Request_IsPending(id, REQUEST_TYPE_WEAPON))
-			return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta d'arma attiva.");	
-		
+			return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta d'arma attiva.");
+
 		new weapon = Character_GetWeapon(playerid);
 		new ammo = Character_GetAmmo(playerid);
 		if(weapon == 0 || ammo <= 0)
@@ -69,9 +67,10 @@ CMD:dai(playerid, params[])
 			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
 
 		SendFormattedMessage(playerid, COLOR_SEND_REQUEST, "Hai proposto di dare l'arma (%s) con %d proiettili a %s.", Weapon_GetName(weapon), ammo, Character_GetRolePlayName(id));
-		SendClientMessage(playerid, COLOR_SEND_REQUEST, "Digita '{FF0000}/annulla{FFFFFF} per annullare.");
+		SendClientMessage(playerid, COLOR_SEND_REQUEST, "Digita \"/annulla arma\" per annullare.");
+
 		SendFormattedMessage(id, COLOR_RECEIVE_REQUEST, "%s vuole darti un'arma (%s) con %d proiettili.", Character_GetRolePlayName(playerid), Weapon_GetName(weapon), ammo);
-		SendClientMessage(id, COLOR_RECEIVE_REQUEST, "Digita '{00FF00}/accetta arma{FFFFFF}' per accettare.");
+		SendClientMessage(id, COLOR_RECEIVE_REQUEST, "Digita \"/accetta arma\" per accettare o \"/rifiuta arma\" per rifiutare.");
 
 		Character_SetRequest(playerid, id, REQUEST_TYPE_WEAPON, weapon, 1, Weapon_GetSlot(weapon));
 	}
@@ -115,16 +114,13 @@ CMD:accetta(playerid, params[])
 		{
 			if(!Request_IsPending(playerid, REQUEST_TYPE_WEAPON))
 				return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta d'arma attiva.");
-
 			if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_WEAPON), 5.0))
 				return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
-
 			new slotid = Request_GetSlot(playerid, REQUEST_TYPE_WEAPON),
 				weaponid = Request_GetItem(playerid, REQUEST_TYPE_WEAPON),
 				tempWeapon = 0,
 				ammo = 0,
 				requestSender = Request_GetSender(playerid, REQUEST_TYPE_WEAPON);
-			
 			GetPlayerWeaponData(requestSender, slotid, tempWeapon, ammo);
 			if(weaponid != tempWeapon || ammo == 0)
 			{
@@ -167,38 +163,6 @@ CMD:accetta(playerid, params[])
 		{
 			Character_AcceptDeathState(playerid);
 		}
-		else if(!strcmp(params, "veicolo", true))
-		{
-			// I must check if seller disconnected (must clear data too)
-			if(! (pVehicleSeller[playerid] != -1 && pVehicleSellingTo[pVehicleSeller[playerid]] == playerid))
-				return SendClientMessage(playerid, COLOR_ERROR, "Il venditore si è disconnesso o non esiste.");
-			if(Character_GetMoney(playerid) < pVehicleSellingPrice[playerid])
-				return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi.");
-			if(!IsPlayerInRangeOfPlayer(playerid, pVehicleSeller[playerid], 10.0))
-				return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
-
-			SendFormattedMessage(pVehicleSeller[playerid], COLOR_GREEN, "%s ha accettato il tuo veicolo per $%d.", Character_GetOOCName(playerid), pVehicleSellingPrice[playerid]);
-			SendFormattedMessage(playerid, COLOR_GREEN, "Hai comprato il veicolo di %s per $%d.", Character_GetOOCName(pVehicleSeller[playerid]), pVehicleSellingPrice[playerid]);
-
-			Character_GiveMoney(playerid, -pVehicleSellingPrice[playerid]);
-			Character_GiveMoney(pVehicleSeller[playerid], pVehicleSellingPrice[playerid]);
-
-			new 
-				vehicleid = pSellingVehicleID[playerid],
-				sellerid = pVehicleSeller[playerid];
-
-			new query[256];
-			mysql_format(gMySQL, query, sizeof(query), "UPDATE `vehicles` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), Vehicle_GetID(vehicleid));
-			mysql_tquery(gMySQL, query);
-
-			Vehicle_SetOwner(vehicleid, playerid);
-
-			pVehicleSellingPrice[playerid] = pVehicleSellingPrice[sellerid] = 0;
-			pSellingVehicleID[playerid] = pSellingVehicleID[sellerid] = 0;
-			pVehicleSellingTo[sellerid] = -1;
-			pVehicleSeller[playerid] = -1;
-			return 1;
-		}
 		else if(!strcmp(params, "cure", true))
 		{
 			Character_AcceptCare(playerid);
@@ -224,43 +188,169 @@ CMD:accetta(playerid, params[])
 		{
 			Character_AcceptBuilding(playerid);
 		}
+		else if(!strcmp(params, "fazione", true) || !strcmp(params, "faz", true) || !strcmp(params, "faction", true))
+		{
+			Character_AcceptFaction(playerid);	
+		}
+		else if(!strcmp(params, "veicolo", true) || !strcmp(params, "vehicle", true) || !strcmp(params, "veh", true))
+		{
+			Character_AcceptVehicleRequest(playerid);	
+		}
+		//else
+			//CallLocalFunction(#OnCharacterAccept, "ds", playerid, params);
 	}
 	else
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "/accetta <oggetto>");
-		SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma, oggetto, morte, veicolo, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
-		SendClientMessage(playerid, COLOR_ERROR, "... edificio (biz)");
+		SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma, oggetto, morte, cure,  veicolo, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
+		SendClientMessage(playerid, COLOR_ERROR, "... (edi)ficio (biz), (faz)ione, veicolo");
 	}
     return 1;
+}
+
+flags:rifiuta(CMD_USER);
+CMD:rifiuta(playerid, params[])
+{
+	new type = REQUEST_TYPE_NONE;
+	if(!strcmp(params, "morte", true))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non decidi tu.");
+	else if(!strcmp(params, "arma", true))
+	{
+		type = REQUEST_TYPE_WEAPON;
+	}
+	else if(!strcmp(params, "oggetto", true))
+	{
+		type = REQUEST_TYPE_ITEM;
+	}
+	else if(!strcmp(params, "riparazione", true) || !strcmp(params, "ripa", true))
+	{
+		type = REQUEST_TYPE_REPAIR;
+	}
+	else if(!strcmp(params, "verniciatura", true) || !strcmp(params, "vern", true))
+	{
+		type = REQUEST_TYPE_VEHICLE_SPRAY;
+	}
+	else if(!strcmp(params, "perquisizione", true) || !strcmp(params, "perq", true))
+	{
+		type = REQUEST_TYPE_SEARCH;
+	}
+	else if(!strcmp(params, "edificio", true) || !strcmp(params, "edi", true) || !strcmp(params, "biz", true))
+	{
+		type = REQUEST_TYPE_BUILDING;
+	}
+	else if(!strcmp(params, "cura", true) || !strcmp(params, "cure", true) || !strcmp(params, "heal", true))
+	{
+		type = REQUEST_TYPE_CARE;
+	}
+	else if(!strcmp(params, "veicolo", true) || !strcmp(params, "vehicle", true) || !strcmp(params, "veh", true))
+	{
+		type = REQUEST_TYPE_VEHICLE;
+	}
+	else if(!strcmp(params, "fazione", true) || !strcmp(params, "faction", true))
+	{
+		type = REQUEST_TYPE_FACTION;
+	}
+	if(type != REQUEST_TYPE_NONE)
+	{
+		DeclineRequest(playerid, type);
+	}
+	else 
+	{
+		SendClientMessage(playerid, COLOR_ERROR, "/rifiuta <text>");
+		SendClientMessage(playerid, COLOR_ERROR, "Text: arma, oggetto, morte, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
+		SendClientMessage(playerid, COLOR_ERROR, "... (edi)ficio (biz), cure, veicolo");
+	}
+	return 1;
+}
+
+static DeclineRequest(playerid, type)
+{
+	if(!Request_IsPending(playerid, type))
+		return SendFormattedMessage(playerid, COLOR_ERROR, "Non hai una richiesta (%s) attiva.", GetRequestTypeName(type));
+	
+	new sender = Request_GetSender(playerid, type),
+		receiver = Request_GetReceiver(playerid, type);
+	
+	ResetPendingRequest(sender, type);
+	ResetPendingRequest(receiver, type);
+
+	SendFormattedMessage(sender, COLOR_REJECT_REQUEST, "%s ha rifiutato la tua richiesta (%s).", Character_GetRolePlayName(receiver), GetRequestTypeName(type));
+	SendFormattedMessage(receiver, COLOR_REJECT_REQUEST, "Hai rifiutato la proposta (%s) di %s.", GetRequestTypeName(type), Character_GetRolePlayName(sender));
+	return 1;
+}
+
+static CancelRequest(playerid, type)
+{
+	if(!Request_IsPending(playerid, type))
+		return SendFormattedMessage(playerid, COLOR_ERROR, "Non hai una richiesta (%s) attiva.", GetRequestTypeName(type));
+	
+	new sender = Request_GetSender(playerid, type),
+		receiver = Request_GetReceiver(playerid, type);
+	
+	ResetPendingRequest(sender, type);
+	ResetPendingRequest(receiver, type);
+
+	SendFormattedMessage(sender, COLOR_REJECT_REQUEST, "Hai annullato la richiesta (%s) inviata a %s.", GetRequestTypeName(type), Character_GetRolePlayName(receiver));
+	SendFormattedMessage(receiver, COLOR_REJECT_REQUEST, "%s ha annullato la proposta (%s).", Character_GetRolePlayName(sender), GetRequestTypeName(type));
+	return 1;
 }
 
 flags:annulla(CMD_USER);
 CMD:annulla(playerid, params[])
 {
 	if(Character_IsBuyingVehicle(playerid))
-    {
-        return Dealership_PlayerCancelBuy(playerid);
-    }
-	if(!Request_IsPending(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta attiva.");
-
-	new 
-		toPlayer = Request_GetReceiver(playerid), 
-		byPlayer = Request_GetSender(playerid)
-	;
-	if(toPlayer == playerid)
 	{
-		SendFormattedMessage(byPlayer, COLOR_REJECT_REQUEST, "%s ha rifiutato la tua richiesta (%s).", Character_GetRolePlayName(playerid), GetRequestTypeName(Request_GetType(playerid)));
-		SendFormattedMessage(playerid, COLOR_REJECT_REQUEST, "Hai rifiutato la richiesta (%s) di %s.", Character_GetRolePlayName(byPlayer), GetRequestTypeName(Request_GetType(playerid)));
-		ResetPendingRequest(byPlayer);
+		return Dealership_PlayerCancelBuy(playerid);
 	}
-	else if(byPlayer == playerid)
+	new type = REQUEST_TYPE_NONE;
+	if(!strcmp(params, "morte", true))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non decidi tu.");
+	else if(!strcmp(params, "arma", true))
 	{
-		SendFormattedMessage(toPlayer, COLOR_REJECT_REQUEST, "%s ha annullato la richiesta (%s).", Character_GetRolePlayName(playerid), GetRequestTypeName(Request_GetType(playerid)));
-		SendFormattedMessage(playerid, COLOR_REJECT_REQUEST, "Hai annullato la richiesta (%s) inviata a %s.", Character_GetRolePlayName(toPlayer), GetRequestTypeName(Request_GetType(playerid)));
-		ResetPendingRequest(toPlayer);
+		type = REQUEST_TYPE_WEAPON;
 	}
-	ResetPendingRequest(playerid);
+	else if(!strcmp(params, "oggetto", true))
+	{
+		type = REQUEST_TYPE_ITEM;
+	}
+	else if(!strcmp(params, "riparazione", true) || !strcmp(params, "ripa", true))
+	{
+		type = REQUEST_TYPE_REPAIR;
+	}
+	else if(!strcmp(params, "verniciatura", true) || !strcmp(params, "vern", true))
+	{
+		type = REQUEST_TYPE_VEHICLE_SPRAY;
+	}
+	else if(!strcmp(params, "perquisizione", true) || !strcmp(params, "perq", true))
+	{
+		type = REQUEST_TYPE_SEARCH;
+	}
+	else if(!strcmp(params, "edificio", true) || !strcmp(params, "edi", true) || !strcmp(params, "biz", true))
+	{
+		type = REQUEST_TYPE_BUILDING;
+	}
+	else if(!strcmp(params, "cure", true) || !strcmp(params, "cura", true) || !strcmp(params, "heal", true))
+	{
+		type = REQUEST_TYPE_CARE;
+	}
+	else if(!strcmp(params, "fazione", true) || !strcmp(params, "faction", true))
+	{
+		type = REQUEST_TYPE_FACTION;
+	}
+	else if(!strcmp(params, "veicolo", true) || !strcmp(params, "vehiche", true) || !strcmp(params, "veh", true))
+	{
+		type = REQUEST_TYPE_VEHICLE;
+	}
+	if(type != REQUEST_TYPE_NONE)
+	{
+		CancelRequest(playerid, type);
+	}
+	else 
+	{
+		SendClientMessage(playerid, COLOR_ERROR, "/annulla <text>");
+		SendClientMessage(playerid, COLOR_ERROR, "Text: arma, oggetto, cure, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
+		SendClientMessage(playerid, COLOR_ERROR, "... (edi)ficio (biz)");
+	}
 	return 1;
 }
 
@@ -282,20 +372,9 @@ CMD:compra(playerid, params[])
 		{
 			return Dealership_ShowVehiclesToPlayer(eID, playerid);
 		}
-		else if(eType == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_IsValid(eID))
-		{
-			return Character_BuyBuilding(playerid, eID);
-		}
-		else if(eType == ELEMENT_TYPE_HOUSE_ENTRANCE && House_IsValid(eID))
-		{
-			return Character_BuyHouse(playerid, eID);
-		}
-		else if(eType == ELEMENT_TYPE_CHOPSHOP)
-		{
-			return Garage_BuyMechanicalComponents(playerid);
-		}
 	}
-    return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando qui.");
+	CallLocalFunction(#OnCharacterTryBuy, "d", playerid);
+    return 1;//SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando qui.");
 }
 
 flags:rimuovi(CMD_ALIVE_USER);

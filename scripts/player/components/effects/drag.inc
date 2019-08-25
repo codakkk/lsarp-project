@@ -2,20 +2,20 @@
 #include <YSI_Coding\y_hooks>
 
 static 
-	pDraggedBy[MAX_PLAYERS],
-	Timer:pDragTimer[MAX_PLAYERS]
+	DraggedBy[MAX_PLAYERS],
+	Timer:DragTimer[MAX_PLAYERS]
 ;
 
 hook OnPlayerClearData(playerid)
 {
 	Character_SetDraggedBy(playerid, INVALID_PLAYER_ID);
-	stop pDragTimer[playerid];
+	stop DragTimer[playerid];
     return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
 hook OnCharacterSpawn(playerid)
 {
-	stop pDragTimer[playerid];
+	stop DragTimer[playerid];
 	Character_SetDragged(playerid, false);
 	Character_SetDraggedBy(playerid, INVALID_PLAYER_ID);
 	Character_SetDragging(playerid, false);
@@ -43,12 +43,12 @@ timer UpdateDragging[250](playerid, targetid)
 
 stock Character_SetDraggedBy(playerid, draggerid)
 {
-	pDraggedBy[playerid] = draggerid;
+	DraggedBy[playerid] = draggerid;
 }
 
 stock Character_GetDraggedBy(playerid)
 {
-	return pDraggedBy[playerid];
+	return DraggedBy[playerid];
 }
 
 stock Character_SetDragged(playerid, bool:dragged)
@@ -73,11 +73,11 @@ stock Character_IsDragging(playerid)
 
 stock Character_StartDragTimer(playerid, id)
 {
-	pDragTimer[playerid] = repeat UpdateDragging(playerid, id);
+	DragTimer[playerid] = repeat UpdateDragging(playerid, id);
 }
 
 stock Character_StopDragTimer(playerid)
 {
-	stop pDragTimer[playerid];
-	pDragTimer[playerid] = Timer:0;
+	stop DragTimer[playerid];
+	DragTimer[playerid] = Timer:0;
 }

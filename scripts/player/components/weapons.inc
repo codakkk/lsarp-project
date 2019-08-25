@@ -26,11 +26,11 @@ stock Character_SaveWeapons(playerid)
 		if(ammo == 0)
 		{
 			// removes weaponid from database if empty.
-			format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE CharacterID = '%d' AND WeaponID = '%d';", Character_GetID(playerid), weaponid);
+			format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE character_id = '%d' AND weapon_id = '%d';", Character_GetID(playerid), weaponid);
 		}
 		else
 		{
-			format(query, sizeof(query), "INSERT INTO `character_weapons` (CharacterID, WeaponID, Ammo) VALUES('%d', '%d', '%d') ON DUPLICATE KEY UPDATE Ammo = VALUES(Ammo);", Character_GetID(playerid), weaponid, ammo);
+			format(query, sizeof(query), "INSERT INTO `character_weapons` (character_id, weapon_id, ammo) VALUES('%d', '%d', '%d') ON DUPLICATE KEY UPDATE ammo = VALUES(ammo);", Character_GetID(playerid), weaponid, ammo);
 		}
 		mysql_pquery(gMySQL, query);
 	}
@@ -55,7 +55,7 @@ stock Character_LoadWeapons(playerid)
 		}
 		printf("%d weapons loaded for player %d.", rows, playerid);
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT WeaponID, Ammo FROM `character_weapons` WHERE CharacterID = '%d'", Character_GetID(playerid));
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT weapon_id, ammo FROM `character_weapons` WHERE character_id = '%d'", Character_GetID(playerid));
 }
 
 stock Character_HasWeaponInSlot(playerid, slotid)
@@ -92,7 +92,7 @@ stock Character_RemoveWeapon(playerid, weaponid)
 	}
 
 	static query[128];
-	format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE WeaponID = '%d' AND CharacterID = '%d';", weaponid, Character_GetID(playerid));
+	format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE weapon_id = '%d' AND character_id = '%d';", weaponid, Character_GetID(playerid));
 	mysql_pquery(gMySQL, query);
 
 	Character_ResetWeapons(playerid);
@@ -110,7 +110,7 @@ stock Character_ResetWeapons(playerid)
 		return 0;
 	ResetPlayerWeapons(playerid);
 	new query[256];
-	format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE CharacterID = '%d'", Character_GetID(playerid));
+	format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE character_id = '%d'", Character_GetID(playerid));
 	mysql_pquery(gMySQL, query);
 	return 1;
 }

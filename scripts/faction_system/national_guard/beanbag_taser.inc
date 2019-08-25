@@ -56,29 +56,22 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 
 hook OnCharacterDamageDone(playerid, Float:amount, issuerid, weaponid, bodypart)
 {
-    printf("1");
     if(issuerid == INVALID_PLAYER_ID)
         return 1;
-    printf("2");
     if(!Character_HasBeanBag(issuerid) && !Character_HasTaser(issuerid))
         return 1;
-    printf("3");
     if(Character_IsAlive(playerid))
     {
-        printf("4");
         if(Faction_GetType(Character_GetFaction(issuerid)) == FACTION_TYPE_POLICE && Character_IsFactionDuty(issuerid))
         {
-            printf("5");
             if(weaponid == 25 && ProxDetectorS(15.0, issuerid, playerid))
             {
-                printf("6");
                 SendFormattedMessage(playerid, COLOR_YELLOW, "Sei stato colpito dal BeanBag di %s (%d).", Character_GetRolePlayName(issuerid), issuerid);
                 SendFormattedMessage(issuerid, COLOR_YELLOW, "Hai colpito %s (%d) con la tua BeanBag.", Character_GetRolePlayName(playerid), playerid);
                 Character_SetStunned(playerid, 15);
             }
-            else if(weaponid == 23 && ProxDetectorS(10.0, issuerid, playerid))
+            else if(weaponid == 23 && ProxDetectorS(15.0, issuerid, playerid))
             {
-                printf("7");
                 SendFormattedMessage(playerid, COLOR_YELLOW, "Sei stato colpito dal taser di %s (%d).", Character_GetRolePlayName(issuerid), issuerid);
                 SendFormattedMessage(issuerid, COLOR_YELLOW, "Hai colpito %s (%d) con il tuo taser.", Character_GetRolePlayName(playerid), playerid);
                 Character_SetStunned(playerid, 10);

@@ -1,3 +1,6 @@
+
+#define INVENTORY_NULL			(Inventory:0)
+
 #define for_inventory(%0:%1) for_list(%0:%1)
 
 #define MAX_ITEMS_IN_SERVER		   (100)
@@ -80,9 +83,7 @@ new
 new stock
 	Map:VehicleInventory, // <Key: vehicle_id, Value: List:Items>
 	Iterator:VehicleItemsSlot[MAX_VEHICLES]<MAX_ITEMS_PER_VEHICLE>;
-
-new stock 
-	Map:HouseInventory;
+	
 // GLOBAL ITEMS ID
 new stock
 	gItem_Hamburger,
@@ -148,5 +149,7 @@ new stock
 	gItem_MechanicalComponents,
 	gItem_Money,
 
-	gItem_Radio
+	gItem_Radio,
+
+	gItem_Cigarette
 ;

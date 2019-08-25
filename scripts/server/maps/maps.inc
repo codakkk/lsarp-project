@@ -1,4 +1,5 @@
 #include <server\maps\ju>
+#include <server\maps\coremaps>
 #include <YSI_Coding\y_hooks>
 
 hook OnPlayerConnect(playerid)

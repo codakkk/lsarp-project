@@ -18,12 +18,19 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
 				Building_GetName(buildingid, bname);
 				//Building_GetOwnerName(buildingid, ownerName);
 				string += str_format("~y~%s~n~~w~Proprietario: ~y~%s~w~.~n~", bname, Character_GetNameFromDatabase(Building_GetOwnerID(buildingid), true));
+				if(Building_GetOwnerID(buildingid) == Character_GetID(playerid))
+				{
+					if(Player_HasHotKeysEnabled(playerid))
+						string += @("Premi ~b~~k~~SNEAK_ABOUT~~w~ (/biz) per il menu.~n~");
+					else
+						string += @("Digita ~b~/biz~w~ per il menu.~n~");
+				}
 			}
 			else
 			{
 				new bname[MAX_BUILDING_NAME];
 				Building_GetName(buildingid, bname);
-				string += str_format("~y~%s~n~~g~Prezzo:~w~$%d~n~", bname, Building_GetPrice(buildingid));
+				string += str_format("~y~%s~n~~g~Prezzo:~w~ $%d~n~", bname, Building_GetPrice(buildingid));
 			}
 		}
 		else

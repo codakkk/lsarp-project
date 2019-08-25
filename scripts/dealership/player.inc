@@ -1,15 +1,16 @@
 #include <YSI_Coding\y_hooks>
 
 static 
-	CurrentShowRoom[MAX_PLAYERS char],
+	SelectedVehicle[MAX_PLAYERS],
+	SelectedVehiclePrice[MAX_PLAYERS],
+	CurrentDealership[MAX_PLAYERS char],
 	VehicleColorNum1[MAX_PLAYERS char],
 	VehicleColorNum2[MAX_PLAYERS char]
-
 ;
 
-ptask OnPlayerDealerShipTimer[1000](playerid)
+ptask OnPlayerDealershipTimer[500](playerid)
 {
-	if(!Character_IsLogged(playerid) || Character_IsBuyingVehicle(playerid))
+	if(!Character_IsLogged(playerid) || !Character_IsBuyingVehicle(playerid))
 		return 0;
     new keys, updown, leftright;
     GetPlayerKeys(playerid, keys, updown, leftright);
@@ -29,12 +30,7 @@ ptask OnPlayerDealerShipTimer[1000](playerid)
 	{
 		VehicleColorNum2{playerid}++;
 	}
-	new maxColor = sizeof(CarColors) - 1;
-	if(VehicleColorNum1{playerid} < 0) VehicleColorNum1{playerid} = maxColor;
-	if(VehicleColorNum1{playerid} > maxColor) VehicleColorNum1{playerid} = 0;
-	if(VehicleColorNum2{playerid} < 0) VehicleColorNum2{playerid} = maxColor;
-	if(VehicleColorNum2{playerid} > maxColor) VehicleColorNum2{playerid} = 0;
-	ChangeVehicleColor(gBuyingVehicleID[playerid], CarColors[VehicleColorNum1{playerid}], CarColors[VehicleColorNum2{playerid}]);
+	ChangeVehicleColor(SelectedVehicle[playerid], Dealership_GetColorByIndex(VehicleColorNum1{playerid}), Dealership_GetColorByIndex(VehicleColorNum2{playerid}));
     return 1;
 }
 
@@ -50,9 +46,9 @@ hook OnCharacterDisconnected(playerid)
 
 hook OnPlayerClearData(playerid)
 {
-    if(Character_IsBuyingVehicle(playerid) && gBuyingVehicleID[playerid])
+    if(Character_IsBuyingVehicle(playerid) && SelectedVehicle[playerid])
     {
-	   Vehicle_Destroy(gBuyingVehicleID[playerid]);
+	   Vehicle_Destroy(SelectedVehicle[playerid]);
     }
     ClearBuyingVehicleData(playerid);
     return 1;
@@ -61,9 +57,9 @@ hook OnPlayerClearData(playerid)
 stock ClearBuyingVehicleData(playerid)
 {
     Character_SetBuyingVehicle(playerid, false);
-    CurrentShowRoom{playerid} = 0;
-    gBuyingVehicleID[playerid] = 0;
-    gBuyingVehiclePrice[playerid] = 0;
+    CurrentDealership{playerid} = 0;
+    SelectedVehicle[playerid] = 0;
+    SelectedVehiclePrice[playerid] = 0;
     VehicleColorNum1{playerid} = VehicleColorNum2{playerid} = 0;
     return 1;
 }
@@ -73,19 +69,24 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementId, E_ELEMENT_TYPE:type)
 {
     if(type != ELEMENT_TYPE_DEALERSHIP)
 	   return 1;
-    new dealership_id = elementId;
-    if(Account_GetAdminLevel(playerid) > 1)
+    new 
+		dealership_id = elementId,
+		String:str;
+    
+	if(Account_GetAdminLevel(playerid) > 1 && Account_IsAdminDuty(playerid))
     {
-	   new string[64];
-	   format(string, sizeof(string), "~g~%s~w~ [%d]", DealershipInfo[dealership_id][dsName], dealership_id);
-	   GameTextForPlayer(playerid, string, 1000, 3);
+	   str += str_format("~r~ID: %d~w~~n~", dealership_id);
     }
-    else
-    {
-	   new string[64];
-	   format(string, sizeof(string), "~g~%s~w~", DealershipInfo[dealership_id][dsName]);
-	   GameTextForPlayer(playerid, string, 1000, 3);
-    }
+    new name[32];
+	Dealership_GetName(dealership_id, name);
+	str += str_format("~g~%s~w~~n~", name);
+
+	if(Player_HasHotKeysEnabled(playerid))
+		str += @("Premi ~b~~k~~SNEAK_ABOUT~~w~ per il menu.");
+	else
+		str += @("Digita ~b~/compra~w~ per il menu.");
+	
+	GameTextForPlayerStr(playerid, str, 3000, 3);
     return 1;
 }
 
@@ -105,11 +106,11 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 		}
 	}
 	else
-	{
+	{	
 		new
 			eID,
 			E_ELEMENT_TYPE:eType;
-		if(PRESSED(KEY_WALK) && Character_GetNearestPickup(playerid, eID, eType) && eType == ELEMENT_TYPE_DEALERSHIP)
+		if(Player_HasHotKeysEnabled(playerid) && PRESSED(KEY_WALK) && Character_GetNearestPickup(playerid, eID, eType) && eType == ELEMENT_TYPE_DEALERSHIP)
 		{
 			Dealership_ShowVehiclesToPlayer(eID, playerid);
 		}
@@ -117,67 +118,82 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
     return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-stock Dealership_ShowVehiclesToPlayer(dealership_id, playerid)
+stock Dealership_ShowVehiclesToPlayer(dealershipid, playerid)
 {
-    if(!DealershipInfo[dealership_id][dsID])
+    if(!Dealership_IsValid(dealershipid))
 	   return 0;
+
+	if(Dealership_IsOnlyPremium(dealershipid) && Account_GetPremiumLevel(playerid) <= 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Devi essere un membro premium per accedere a questa concessionaria.");
+		
     new
-	   string[1024],
-	   count = 0;
+	   String:string = @("Modello\tPrezzo\n"),
+	   List:vehicles = Dealership_GetVehiclesList(dealershipid);
+
+    if(list_size(vehicles) <= 0)
+	   return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono veicoli acquistabili.");
     
-    for(new i = 0; i < MAX_VEHICLES_IN_SHOWROOM; ++i)
+	for(new i = 0, j = list_size(vehicles); i < j; ++i)
     {
-	   if(!DealershipInfo[dealership_id][dsModels][i] || !DealershipInfo[dealership_id][dsPrices][i])
-		  continue;
-	   new 
-		  modelid = DealershipInfo[dealership_id][dsModels][i],
-		  price = DealershipInfo[dealership_id][dsPrices][i]
-	   ;
-	   format(string, sizeof(string), "%s%s\t$%d\n", string, Vehicle_GetNameFromModel(modelid), price);
-	   gDealershipItemList[playerid][count] = i;
-	   count++;
+		string += str_format("%s\t$%d\n", Vehicle_GetNameFromModel(Dealership_GetModelAt(dealershipid, i)), Dealership_GetPriceAt(dealershipid, i));
+	   //format(string, sizeof(string), "%s%d(0.0, 0.0, 0.0, 1.0, 3, 3)\t%s - ~g~~h~$%d\n", string, modelid, Vehicle_GetNameFromModel(modelid), price);
+	   //string += str_format("%d(0.0, 0.0, 0.0, 1.0, 1.0)\t%s~n~~g~~h~$%d\n", modelid, Vehicle_GetNameFromModel(modelid), price);
     }
-    if(count == 0)
-	   return 0;
-    CurrentShowRoom{playerid} = dealership_id;
-    Dialog_Show(playerid, Dialog_PlayerShowRoom, DIALOG_STYLE_TABLIST_HEADERS, "Concessionaria", "Modello\tPrezzo\n%s", "Acquista", "Chiudi", string);
-    return 1;
+    CurrentDealership{playerid} = dealershipid;
+
+	new name[32];
+	Dealership_GetName(dealershipid, name);
+
+   	Dialog_Show_s(playerid, Dialog_DealershipVehicles, DIALOG_STYLE_TABLIST_HEADERS, @(name), string, "Acquista", "Chiudi");
+	//ShowPlayerDialog(playerid, Dialog_DealershipVehicles, DIALOG_STYLE_TABLIST_HEADERS, "Concessionaria", string, "Acquista", "Chiudi");
+    //Dialog_ShowPreview(playerid, Dialog_DealershipVehicles, "Concessionaria", string, "Acquista", "Chiudi");
+	return 1;
 }
 
-Dialog:Dialog_PlayerShowRoom(playerid, response, listitem, inputtext[])
+Dialog:Dialog_DealershipVehicles(playerid, response, listitem, inputtext[])
 {
     if(!response)
 	   return 0;
     new
-	   item = gDealershipItemList[playerid][listitem],
-	   dealership_id = CurrentShowRoom{playerid},
-	   vehicle_price = DealershipInfo[dealership_id][dsPrices][item],
-	   vehicle_model = DealershipInfo[dealership_id][dsModels][item]
+	   	dealershipid = CurrentDealership{playerid},
+		vehicleModel = Dealership_GetModelAt(dealershipid, listitem),
+	   	vehiclePrice = Dealership_GetPriceAt(dealershipid, listitem)
     ;
 
-    if(!IsPlayerInRangeOfPoint(playerid, 5.0, DealershipInfo[dealership_id][dsX], DealershipInfo[dealership_id][dsY], DealershipInfo[dealership_id][dsZ]))
+
+
+    if(!Character_IsNearDealership(playerid, dealershipid))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Ti sei allontanato dalla concessionaria.");
 
-    if(Character_GetMoney(playerid) < vehicle_price)
-    {
-	   SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi.");
-	   Dealership_ShowVehiclesToPlayer(dealership_id, playerid);
-	   return 1;
-    }
-    Character_SetBuyingVehicle(playerid, true);
-    gBuyingVehiclePrice[playerid] = vehicle_price;
-    gBuyingVehicleID[playerid] = Vehicle_Create(vehicle_model, DealershipInfo[dealership_id][dsVehX], DealershipInfo[dealership_id][dsVehY], DealershipInfo[dealership_id][dsVehZ], 0, 0, 0, 0, 0);
-    
-    SetPlayerPos(playerid, DealershipInfo[dealership_id][dsVehX], DealershipInfo[dealership_id][dsVehY], DealershipInfo[dealership_id][dsVehZ]);
-    Character_SetVirtualWorld(playerid, playerid + 1);
-    SetVehicleVirtualWorld(gBuyingVehicleID[playerid], playerid + 1);
-    PutPlayerInVehicle(playerid, gBuyingVehicleID[playerid], 0);
-    TogglePlayerControllable(playerid, 0);
+	if(Character_GetOwnedVehicleCount(playerid) >= Account_GetOwnableVehicleCount(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Possiedi già il massimo numero di veicoli acquistabili. Acquista un pacchetto premium per aumentarlo.");
 
-    new Float:x, Float:y;
-    GetXYInFrontOfPos(DealershipInfo[dealership_id][dsVehX], DealershipInfo[dealership_id][dsVehY], DealershipInfo[dealership_id][dsVehA] + 45, x, y, 10.0);
-    SetPlayerCameraPos(playerid, x, y, DealershipInfo[dealership_id][dsVehZ] + 2.0);
-    SetPlayerCameraLookAt(playerid, DealershipInfo[dealership_id][dsVehX], DealershipInfo[dealership_id][dsVehY], DealershipInfo[dealership_id][dsVehZ]);
+    if(Character_GetMoney(playerid) < vehiclePrice)
+    {
+		SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi.");
+		Dealership_ShowVehiclesToPlayer(dealershipid, playerid);
+		return 1;
+    }
+
+    Character_SetBuyingVehicle(playerid, true);
+    
+	SelectedVehiclePrice[playerid] = vehiclePrice;
+
+	new Float:vx, Float:vy, Float:vz, Float:va;
+	Dealership_GetVehicleSpawnPos(dealershipid, vx, vy, vz, va);
+
+    SelectedVehicle[playerid] = Vehicle_Create(vehicleModel, vx, vy, vz, va, 0, 0, 0, 0);
+    
+    SetPlayerPos(playerid, vx, vy, vz);
+    
+	Character_SetVirtualWorld(playerid, playerid + 1);
+
+    SetVehicleVirtualWorld(SelectedVehicle[playerid], playerid + 1);
+    PutPlayerInVehicle(playerid, SelectedVehicle[playerid], 0);
+    
+	Character_SetFreezed(playerid, true);
+
+	SetCameraBehindPlayer(playerid);
 
     VehicleColorNum1{playerid} = 0;
     VehicleColorNum2{playerid} = 0;
@@ -191,30 +207,37 @@ Dialog:Dialog_PlayerShowRoom(playerid, response, listitem, inputtext[])
 
 stock Dealership_PlayerConfirmBuy(playerid)
 {
-    if(Character_IsBuyingVehicle(playerid))
+    if(!Character_IsBuyingVehicle(playerid))
 		return 0;
-    if(Character_GetMoney(playerid) < gBuyingVehiclePrice[playerid])
+    if(Character_GetMoney(playerid) < SelectedVehiclePrice[playerid])
     {
-		new dealershipid = CurrentShowRoom{playerid};
+		new dealershipid = CurrentDealership{playerid};
 		SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi.");
-		Vehicle_Destroy(gBuyingVehicleID[playerid]);
+		Vehicle_Destroy(SelectedVehicle[playerid]);
 		Character_SetVirtualWorld(playerid, 0);
-		SetPlayerPos(playerid, DealershipInfo[dealershipid][dsX], DealershipInfo[dealershipid][dsY], DealershipInfo[dealershipid][dsZ]);
+
+		new Float:x, Float:y, Float:z;
+		Dealership_GetPosition(dealershipid, x, y, z);
+
+		SetPlayerPos(playerid, x, y, z);
+		
 		ClearBuyingVehicleData(playerid);
 	}
 	else
 	{
-		SendFormattedMessage(playerid, -1, "Congratulazioni! Hai acquistato questo veicolo ({00AA00}%s{FFFFFF}) per {00FF00}$%d{FFFFFF}.", Vehicle_GetName(gBuyingVehicleID[playerid]), gBuyingVehiclePrice[playerid]);
-		Character_GiveMoney(playerid, -gBuyingVehiclePrice[playerid], "Concessionaria");
-		SetVehicleVirtualWorld(gBuyingVehicleID[playerid], 0);
+		SendFormattedMessage(playerid, -1, "Congratulazioni. Hai acquistato questo veicolo ({00AA00}%s{FFFFFF}) per {00FF00}$%d{FFFFFF}.", Vehicle_GetName(SelectedVehicle[playerid]), SelectedVehiclePrice[playerid]);
+		Character_GiveMoney(playerid, -SelectedVehiclePrice[playerid], "Concessionaria");
+		SetVehicleVirtualWorld(SelectedVehicle[playerid], 0);
 		Character_SetVirtualWorld(playerid, 0);
-		PutPlayerInVehicle(playerid, gBuyingVehicleID[playerid], 0);
+		PutPlayerInVehicle(playerid, SelectedVehicle[playerid], 0);
 		
-		Character_AddOwnedVehicle(playerid, gBuyingVehicleID[playerid]);
-		Vehicle_SetEngineOff(gBuyingVehicleID[playerid]);
+		Vehicle_SetPrice(SelectedVehicle[playerid], SelectedVehiclePrice[playerid]);
+
+		Character_AddOwnedVehicle(playerid, SelectedVehicle[playerid]);
+		Vehicle_SetEngineStatus(SelectedVehicle[playerid], false);
 	}
-	gBuyingVehicleID[playerid] = 0;
-	gBuyingVehiclePrice[playerid] = 0;
+	SelectedVehicle[playerid] = 0;
+	SelectedVehiclePrice[playerid] = 0;
 	SetCameraBehindPlayer(playerid);
 	ClearBuyingVehicleData(playerid);
 	TogglePlayerControllable(playerid, 1);
@@ -223,13 +246,26 @@ stock Dealership_PlayerConfirmBuy(playerid)
 
 stock Dealership_PlayerCancelBuy(playerid)
 {
-    new showroom = CurrentShowRoom{playerid};
-    Vehicle_Destroy(gBuyingVehicleID[playerid]);
-    SetPlayerPos(playerid, DealershipInfo[showroom][dsX], DealershipInfo[showroom][dsY], DealershipInfo[showroom][dsZ]);
+    new dealershipid = CurrentDealership{playerid};
+    Vehicle_Destroy(SelectedVehicle[playerid]);
+
+    new Float:x, Float:y, Float:z;
+	Dealership_GetPosition(dealershipid, x, y, z);
+	SetPlayerPos(playerid, x, y, z);
+
     TogglePlayerControllable(playerid, 1);
     Character_SetVirtualWorld(playerid, 0);
     SetCameraBehindPlayer(playerid);
     ClearBuyingVehicleData(playerid);
     SendClientMessage(playerid, COLOR_ERROR, "Hai annullato l'acquisto.");
     return 1;
+}
+
+static Character_IsNearDealership(playerid, dealershipid)
+{
+	if(!Dealership_IsValid(dealershipid) || Character_GetVirtualWorld(playerid) != Dealership_GetVirtualWorld(dealershipid))
+		return 0;
+	new Float:x, Float:y, Float:z;
+	Dealership_GetPosition(dealershipid, x, y, z);
+	return IsPlayerInRangeOfPoint(playerid, 5.0, x, y, z);
 }

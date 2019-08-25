@@ -11,9 +11,9 @@ static const RewardInfo[][e_RewardData] =
 	{250, "Cambio Nome"},
 	{300, "Block PM"},
 	{300, "Block OOC"},
-	{500, "Premium Bronze (1 mese)"},
-	{750, "Premium Silver (1 mese)"},
-	{1000, "Premium Gold (1 mese)"},
+	{500, "Premium Nerone (1 mese)"},
+	{750, "Premium Caligola (1 mese)"},
+	{1000, "Premium Giulio Cesare (1 mese)"},
 	{500, "+1 Slot Personaggio"},
 	{200, "+1 Livello"}
 };
@@ -35,24 +35,16 @@ hook OnPlayerClearData(playerid)
     return 1;
 }
 
-stock Account_SaveRewards(playerid)
+hook OnAccountCreated(playerid, account_db_id)
 {
-	new query[512];
-	mysql_format(gMySQL, query, sizeof(query), "INSERT INTO `account_rewards` \
-			(account_id, z_points, change_name, block_pm, block_ooc) \
-			VALUES('%d', '%d', '%d', '%d', '%d') \
-			ON DUPLICATE KEY UPDATE \
-            z_points = VALUES(z_points), \
-			change_name = VALUES(change_name), \
-			block_pm = VALUES(block_pm), \
-			block_ooc = VALUES(block_ooc)",
-			Account_GetID(playerid),
-            Account_GetZPoints(playerid),
-			Account_GetChangeNameCount(playerid),
-			Account_HasBlockPM(playerid),
-			Account_HasBlockOOC(playerid));
-    
-    mysql_tquery(gMySQL, query);
+	mysql_tquery_f(gMySQL, "INSERT INTO `account_rewards` (account_id) VALUES('%d')", account_db_id);
+	return 1;
+}
+
+hook OnAccountLogin(playerid)
+{
+	Account_LoadRewards(playerid);
+	return 1;
 }
 
 stock Account_LoadRewards(playerid)
@@ -61,10 +53,14 @@ stock Account_LoadRewards(playerid)
 	{
 		if(cache_num_rows() > 0)
 		{
-            cache_get_value_index_int(0, 1, PlayerRewardData[playerid][ZPoints]);
-			cache_get_value_index_int(0, 2, PlayerRewardData[playerid][ChangeName]);
-			cache_get_value_index_int(0, 3, PlayerRewardData[playerid][BlockPM]);
-			cache_get_value_index_int(0, 4, PlayerRewardData[playerid][BlockOOC]);
+            cache_get_value_name_int(0, "z_points", PlayerRewardData[playerid][ZPoints]);
+			cache_get_value_name_int(0, "change_name", PlayerRewardData[playerid][ChangeName]);
+			cache_get_value_name_int(0, "block_pm", PlayerRewardData[playerid][BlockPM]);
+			cache_get_value_name_int(0, "block_ooc", PlayerRewardData[playerid][BlockOOC]);
+		}
+		else
+		{
+			mysql_tquery_f(gMySQL, "INSERT INTO `account_rewards` (account_id) VALUES('%d')", Account_GetID(playerid));
 		}
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `account_rewards` WHERE account_id = '%d'", Account_GetID(playerid));
@@ -72,12 +68,16 @@ stock Account_LoadRewards(playerid)
 
 stock Account_SetZPoints(playerid, points)
 {
+	if(!Character_IsLogged(playerid))
+		return 0;
 	PlayerRewardData[playerid][ZPoints] = points;
+	mysql_tquery_f(gMySQL, "UPDATE `account_rewards` SET z_points = '%d' WHERE account_id = '%d'", points, Account_GetID(playerid));
+	return 1;
 }
 
 stock Account_AddPoints(playerid, points)
 {
-	PlayerRewardData[playerid][ZPoints] += points;
+	return Account_SetZPoints(playerid, Account_GetZPoints(playerid) + points);
 }
 
 stock Account_GetZPoints(playerid)
@@ -90,6 +90,7 @@ stock Account_AddChangeName(playerid, amount)
     if(!Account_IsLogged(playerid))
         return 0;
     PlayerRewardData[playerid][ChangeName] += amount;
+	mysql_tquery_f(gMySQL, "UPDATE `account_rewards` SET change_name = '%d' WHERE account_id = '%d'", Account_GetChangeNameCount(playerid), Account_GetID(playerid));
     return 1;
 }
 
@@ -112,6 +113,7 @@ stock Account_SetBlockPM(playerid, value)
     if(!Account_IsLogged(playerid))
         return 0;
     PlayerRewardData[playerid][BlockPM] = value;
+	mysql_tquery_f(gMySQL, "UPDATE `account_rewards` SET block_pm = '%d' WHERE account_id = '%d'", Account_HasBlockPM(playerid), Account_GetID(playerid));
     return 1;
 }
 
@@ -134,6 +136,7 @@ stock Account_SetBlockOOC(playerid, value)
     if(!Account_IsLogged(playerid))
         return 0;
     PlayerRewardData[playerid][BlockOOC] = value;
+	mysql_tquery_f(gMySQL, "UPDATE `account_rewards` SET block_ooc = '%d' WHERE account_id = '%d'", Account_HasBlockOOC(playerid), Account_GetID(playerid));
     return 1;
 }
 
@@ -288,9 +291,5 @@ Dialog:Dialog_ZPointsBuyRewards(playerid, response, listitem, inputtext[])
 	}
 	SendFormattedMessage(playerid, -1, "Hai acquistato \"{00AA00}%s{FFFFFF}\" per {AA0000}%d{FFFFFF} Z-Points.", RewardInfo[listitem][rdName], price);
 	Account_AddPoints(playerid, -price);
-	Account_SaveRewards(playerid);
-	Account_Save(playerid);
-	Character_Save(playerid);
 	return 1;
 }
-//we

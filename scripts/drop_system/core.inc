@@ -137,7 +137,7 @@ stock Drop_CreateElements(dropid)
 	new Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz;
 
 	Drop_GetPosition(dropid, x, y, z);
-
+	Drop_GetRotation(dropid, rx, ry, rz);
 	new object = CreateDynamicObject(ServerItem_GetModelID(Drop_GetItem(dropid)), x, y, z, rx, ry, rz, Drop_GetVirtualWorld(dropid), Drop_GetInterior(dropid));
 	new pickupid = Pickup_Create(1007, dropid, x, y, z, ELEMENT_TYPE_DROP, Drop_GetVirtualWorld(dropid), Drop_GetInterior(dropid));
 	

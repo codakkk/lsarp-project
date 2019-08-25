@@ -34,10 +34,10 @@ stock Character_Delete(playerid, character_db_id, character_name[])
     mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `characters` WHERE id = '%d' AND LOWER(name) = LOWER('%e')", character_db_id, character_name);
     mysql_tquery(gMySQL, query);
 
-    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `character_inventory` WHERE CharacterID = '%d'", character_db_id);
+    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `character_inventory` WHERE character_id = '%d'", character_db_id);
     mysql_tquery(gMySQL, query);
 
-	format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE CharacterID = '%d'", character_db_id);
+	format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE character_id = '%d'", character_db_id);
 	mysql_pquery(gMySQL, query);
 
     inline OnVehicles()
@@ -46,7 +46,7 @@ stock Character_Delete(playerid, character_db_id, character_name[])
 		for(new i = 0; i < count; ++i)
 		{
 			cache_get_value_index_int(i, 0, vid);
-			mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `vehicle_inventory` WHERE VehicleID = '%d'", vid);
+			mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `vehicle_inventory` WHERE vehicle_id = '%d'", vid);
 			mysql_tquery(gMySQL, query);
 		}
 		mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `vehicles` WHERE owner_id = '%d'", character_db_id);
@@ -108,7 +108,7 @@ stock Character_GetNameFromDatabase(userdbid, bool:removeUnderscore)
 // Mainly used by /aduty 
 stock Character_EnableSomeAntiCheats(playerid, enabled)
 {
-	static const cheatCodes[] = {0, 1, 2, 3, 5, 6, 7, 8, 9, 10};
+	static const cheatCodes[] = {0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 19, 20};
 	for(new i = 0, j = sizeof(cheatCodes); i < j; ++i)
 		EnableAntiCheatForPlayer(playerid, cheatCodes[i], enabled);
 }

@@ -158,6 +158,8 @@ stock Gate_Create(Float:x, Float:y, Float:z)
     data[ObjectID] = CreateDynamicObject(19912, x, y, z, 0, 0, 0, -1, -1, -1, STREAMER_OBJECT_SD, STREAMER_OBJECT_DD);
     Streamer_SetIntData(STREAMER_TYPE_OBJECT, data[ObjectID], E_STREAMER_EXTRA_ID, id);
     
+    map_add_arr(Gates, id, data);
+
     cache_delete(result);
     return id;
 }
@@ -214,7 +216,7 @@ stock Gate_LoadAll()
             
             map_add_arr(Gates, data[ID], data);
         }
-        printf("Loaded %d gates.", rows);
+        printf("%d gates loaded.", rows);
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `gates` ORDER BY id DESC");
 }

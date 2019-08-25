@@ -1,5 +1,5 @@
 #include <furniture_system\furnitures_list>
-
+#include <furniture_system\components\door>
 /*
     TODO: Must fix local ids (/furnitureid) when editing exteriors
     Should I create a separate Map for exterior maps? NO
@@ -7,6 +7,8 @@
 */
 
 #include <YSI_Coding\y_hooks>
+
+#define EXTERIOR_WORLD              (0)
 
 #define MAX_FURNITURE_PER_PAGE      (15)
 #define MAX_EXTERIOR_DISTANCE       (10.0)
@@ -34,7 +36,8 @@ static enum e_FurnitureCustomData
     FURNITURE_CREATED_BY_ACCOUNT,
     FURNITURE_LAST_EDIT_ACCOUNT,
     FURNITURE_LAST_EDIT_CHARACTER,
-    FURNITURE_LINKED_TO // Used by Exterior's furnitures.
+    FURNITURE_LINKED_TO, // Used by Exterior's furnitures.
+    bool:FURNITURE_IS_OPENED,
 };
 static 
     FurnitureCustomData[e_FurnitureCustomData],
@@ -164,7 +167,7 @@ hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float
         }
         else if(response == EDIT_RESPONSE_FINAL)
         {
-            if(!Internal_ValidateObjectPos(objectid, x, y, z))
+            if(!Internal_ValidateObjectPos(objectid, x, y, z) && !Account_IsAdminDuty(playerid))
             {
                 SetDynamicObjectPos(objectid, tx, ty, tz);
                 SetDynamicObjectRot(objectid, trx, try, trz);
@@ -495,7 +498,7 @@ stock Furniture_Load(worldid)
         
         map_add(Furnitures, worldid, pool);
 
-        printf("%d furnitures loaded for world %d.", rows, worldid);
+        //printf("%d furnitures loaded for world %d.", rows, worldid);
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM furnitures WHERE world = '%d' AND object_id = '0';", worldid);
     return 1;
@@ -519,7 +522,7 @@ stock Furniture_StartBuy(playerid, modelid)
         //return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza denaro per acquistare questo mobile.");
 
     new maxFurnitures = 0;
-    if(Character_GetVirtualWorld(playerid) == FurnitureLinkedTo[playerid]) // Exterior
+    if(Character_GetVirtualWorld(playerid) == EXTERIOR_WORLD) // Exterior
     {
         maxFurnitures = Character_GetExtFurnitureSlot(playerid);
     }
@@ -528,8 +531,8 @@ stock Furniture_StartBuy(playerid, modelid)
         maxFurnitures = Character_GetFurnitureSlot(playerid);
     }
     
-    printf("Max Furnitures: %d", Character_GetFurnitureSlot(playerid));
-    printf("Current Furniture Count: %d", Character_GetFurnitureCount(playerid));
+    //printf("Max Furnitures: %d", Character_GetFurnitureSlot(playerid));
+    //printf("Current Furniture Count: %d", Character_GetFurnitureCount(playerid));
 
     if(Character_GetFurnitureCount(playerid) >= maxFurnitures)
         return SendFormattedMessage(playerid, COLOR_ERROR, "Hai raggiunto il limite di mobili per questo edificio (%d).", maxFurnitures);
@@ -643,7 +646,7 @@ stock Furniture_UpdateInfoList(playerid)
 
     if(ShowingLabelsForWorld[playerid] == -1)
     {
-        if(world == 0)
+        if(world == 0 && !Account_IsAdminDuty(playerid))
             ShowingLabelsForWorld[playerid] = Internal_GetNearbyFurnableWorld(playerid);
         else
             ShowingLabelsForWorld[playerid] = world;
@@ -669,7 +672,7 @@ stock Furniture_UpdateInfoList(playerid)
         
         if(Account_GetAdminLevel(playerid) > 1 && Account_IsAdminDuty(playerid))
         {
-            format(text, sizeof(text), "%s\n{{FF6347}(( Account: %s )){FFFFFF}\n{FF6347}(( Object ID: %d )){FFFFFF}", Account_GetNameFromDatabase(Account_GetID(playerid)), objectid);
+            format(text, sizeof(text), "%s\n{FF6347}(( Account: %s )){FFFFFF}\n{FF6347}(( Object ID: %d )){FFFFFF}", text, Account_GetNameFromDatabase(Account_GetID(playerid)), objectid);
         }
 
         labelid = CreateDynamic3DTextLabel(text, -1, x, y, z + 0.2, 20.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), playerid);  
@@ -684,13 +687,18 @@ stock Furniture_UpdateInfoList(playerid)
 stock Character_CanFurnish(playerid, bool:outsideCheck = false)
 {
     new currentHouse = Character_GetHouseID(playerid);
-    if(outsideCheck && currentHouse == -1)
+    if(outsideCheck && !House_IsValid(currentHouse))
     {
         new Float:x, Float:y, Float:z;
         for_map(i : GetHousesMap())
         {
             new houseid = iter_get_key(i);
-            if(House_GetOwnerID(houseid) == Character_GetID(playerid) && Character_GetVirtualWorld(playerid) == House_GetEnterWorld(houseid) && GetPlayerInterior(playerid) == House_GetEnterInterior(houseid))
+            
+            // Can't build inside houses with enter world != 0 (houses in complex, example)
+            if(House_GetEnterWorld(houseid) != 0)
+                continue;
+            
+            if( (House_GetOwnerID(houseid) == Character_GetID(playerid) || Account_IsAdminDuty(playerid)) && Character_GetVirtualWorld(playerid) == House_GetEnterWorld(houseid) && GetPlayerInterior(playerid) == House_GetEnterInterior(houseid))
             {
                 House_GetEnterPosition(houseid, x, y, z);
                 if(GetPlayerDistanceFromPoint(playerid, x, y, z) >= 15.0)
@@ -699,11 +707,11 @@ stock Character_CanFurnish(playerid, bool:outsideCheck = false)
             }
         }
     }
-    if(currentHouse != -1 && House_GetOwnerID(currentHouse) == Character_GetID(playerid) && IsPlayerInRangeOfHouseExit(playerid, currentHouse, 50.0))
+    if(House_IsValid(currentHouse) && (House_GetOwnerID(currentHouse) == Character_GetID(playerid) || Account_IsAdminDuty(playerid)) && IsPlayerInRangeOfHouseExit(playerid, currentHouse, 100.0))
     {
         return currentHouse;
     }
-    return 0;
+    return INVALID_HOUSE_ID;
 }
 
 stock Character_GetFurnitureSlot(playerid)
@@ -724,7 +732,7 @@ stock Character_GetFurnitureSlot(playerid)
 
 stock Character_GetExtFurnitureSlot(playerid)
 {
-    static const limit[] = {5, 5, 20, 30};
+    static const limit[] = {5, 5, 10, 20};
     return limit[Account_GetPremiumLevel(playerid)];
 }
 
@@ -751,6 +759,13 @@ stock Furniture_Remove(playerid, objectid)
         Furniture_UpdateInfoList(playerid);
     }
     return 1;
+}
+
+stock bool:Furniture_RemoveByObjectID(objectid)
+{
+    if(!IsValidDynamicObject(objectid) || !Furniture_IsValid(objectid))
+        return false;
+    return Internal_RemoveFurniture(Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_WORLD_ID), objectid) >= 1 ? true : false;
 }
 
 // Talking on Discord with a person
@@ -928,13 +943,10 @@ stock Internal_GetNearbyFurnableWorld(playerid)
     for_map(i : GetHousesMap())
     {
         new houseid = iter_get_key(i);
-        printf("House id: %d", houseid);
         if(House_GetOwnerID(houseid) != Character_GetID(playerid) || House_GetEnterWorld(houseid) != Character_GetVirtualWorld(playerid))
             continue;
-        printf("Owner id: %d", House_GetOwnerID(houseid));
         House_GetEnterPosition(houseid, x, y, z);
         dist = GetPlayerDistanceFromPoint(playerid, x, y, z);
-        printf("Dist: %f", dist);
         if(dist > MAX_EXTERIOR_DISTANCE)
             continue;
         if(dist < nearest)
@@ -943,7 +955,6 @@ stock Internal_GetNearbyFurnableWorld(playerid)
             linked_to = House_GetExitWorld(houseid);
         }
     }
-    printf("Linked _to: %d", linked_to);
     return linked_to;
 }
 
@@ -1121,4 +1132,37 @@ stock Character_SetFurnitureLinkedTo(playerid, worldid)
 stock Character_GetFurnitureLinkedTo(playerid)
 {
     return FurnitureLinkedTo[playerid];
+}
+
+stock Pool:Furniture_GetAllInWorld(worldid)
+{
+    if(!map_has_key(Furnitures, worldid))
+        return Pool:0;
+    return Pool:map_get(Furnitures, worldid);
+}
+
+stock Furniture_SetOpened(objectid, bool:s)
+{
+    if(!IsValidDynamicObject(objectid))
+        return 0;
+    Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+    FurnitureCustomData[FURNITURE_IS_OPENED] = s;
+    Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+    return 1;
+}
+
+stock bool:Furniture_IsOpened(objectid)
+{
+    if(!IsValidDynamicObject(objectid))
+        return false;
+    Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+    return FurnitureCustomData[FURNITURE_IS_OPENED];
+}
+
+stock bool:Furniture_IsValid(objectid)
+{
+    if(!IsValidDynamicObject(objectid))
+        return false;
+    Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+    return FurnitureCustomData[FURNITURE_DATABASE_ID] > 0;
 }

@@ -21,8 +21,9 @@ hook OnCharacterLoad(playerid)
 flags:ritirastipendio(CMD_ALIVE_USER);
 CMD:ritirastipendio(playerid, params[])
 {
-	if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_PAYCHECK))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei al punto esatto per ritirare lo stipendio.");
+	new buildingid = Character_GetNearBuildingID(playerid);
+	if(!Building_IsValid(buildingid) || Building_GetType(buildingid) != BUILDING_TYPE_PAYCHECK)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei nell'edificio esatto per ritirare lo stipendio.");
 	new paycheck = Character_GetPayCheck(playerid);
 	if(paycheck <= 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai uno stipendio da ritirare.");

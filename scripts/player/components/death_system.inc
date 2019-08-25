@@ -1,7 +1,10 @@
 
 #include <YSI_Coding\y_hooks>
 
-#define INJURED_TIME_AS_SECONDS		60
+forward OnCharacterDeath(playerid, killerid, reason);
+forward OnCharacterAcceptDeath(playerid);
+
+#define INJURED_TIME_AS_SECONDS		30
 #define DEATH_TIME_AS_SECONDS 		30
 
 static enum // e_DeathStates
@@ -27,9 +30,7 @@ static enum e_DeathState
 
 static stock
 	PlayerDeathState[MAX_PLAYERS][e_DeathState],
-	pDeathState[MAX_PLAYERS char], // 0 = Not dead, 1 = Waiting for healing, 2 = Death
-	pTempWeapons[MAX_PLAYERS][13],
-	pTempAmmo[MAX_PLAYERS][13]
+	DeathState[MAX_PLAYERS char] // 0 = Not dead, 1 = Waiting for healing, 2 = Death
 ;
 
 
@@ -38,7 +39,6 @@ hook OnPlayerClearData(playerid)
 	Character_SetDeathState(playerid, DEATH_STATE_NONE);
 	if(IsValidDynamic3DTextLabel(PlayerDeathState[playerid][pDeathText]))
 		DestroyDynamic3DTextLabelEx(PlayerDeathState[playerid][pDeathText]);
-	
 	Character_ResetDeathState(playerid);
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
@@ -69,10 +69,7 @@ ptask OnPlayerDeathSystemUpdate[500](playerid)
 
 		new Float:x, Float:y, Float:z, Float:a, interior, world;
 		GetPlayerPos(playerid, x, y, z);
-		printf("Current: %f - %f - %f", x, y, z);
 		Character_GetDeathStateData(playerid, x, y, z, a, interior, world);
-		printf("Death: %f - %f - %f", x, y, z);
-		printf("Dist: %f", GetPlayerDistanceFromPoint(playerid, x, y, z));
 		if(Character_IsInjured(playerid))
 		{
 			new deathTime = GetTickCount() - Character_GetDeathTime(playerid);
@@ -105,7 +102,6 @@ ptask OnPlayerDeathSystemUpdate[500](playerid)
 			SetPlayerFacingAngle(playerid, a);
 			SetPlayerInterior(playerid, interior);
 			Character_SetVirtualWorld(playerid, world);
-			printf("Reset");
 		}
 
 		if(GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) 
@@ -122,11 +118,39 @@ hook OnCharDeathFinished(playerid)
 	return 1;
 }
 
-hook OnCharacterDeath(playerid, killerid, reason)
+public OnPlayerDeath(playerid, killerid, reason)
 {
-	printf("OnCharacterDeathStart");
-	new deathState = Character_GetDeathState(playerid) < 1 ? Character_GetDeathState(playerid)+1 : 0;
-	Character_SetDeathState(playerid, deathState);
+	if(IsPlayerNPC(playerid))
+		return 1;
+	
+	if(killerid != INVALID_PLAYER_ID)
+		Log(Character_GetOOCName(playerid), Character_GetOOCName(killerid), "OnPlayerDeath", reason);
+	
+	
+	SetPlayerDrunkLevel(playerid, 0);
+
+	if(Character_IsAlive(playerid))
+	{
+		new vid = GetPlayerVehicleID(playerid);
+		if(reason == 51 && vid > 0) //(IsAHelicopter(vid) || IsAPlane(vid)))
+		{
+			Character_SetDeathState(playerid, DEATH_STATE_NONE);
+		}
+		else
+		{
+			Character_SetInvincibleForTime(playerid, 2);
+			Character_SetDeathState(playerid, DEATH_STATE_INJURED);
+		}
+	}
+	else if(Character_IsInjured(playerid))
+	{
+		Character_SetDeathState(playerid, DEATH_STATE_NONE);
+	}
+	
+	new newDeathState = Character_GetDeathState(playerid);
+
+	// Just a workaround for unable to hook OnPlayerDeath with weaponconfig
+	CallLocalFunction(#OnCharacterDeath, "ddd", playerid, killerid, reason);
 
 	GetPlayerPos(playerid, PlayerDeathState[playerid][pDeathX], PlayerDeathState[playerid][pDeathY], PlayerDeathState[playerid][pDeathZ]);
 	GetPlayerFacingAngle(playerid, PlayerDeathState[playerid][pDeathA]);
@@ -135,23 +159,20 @@ hook OnCharacterDeath(playerid, killerid, reason)
 	PlayerDeathState[playerid][pDeathWorld] = Character_GetVirtualWorld(playerid);
 	PlayerDeathState[playerid][pDeathVehicle] = GetPlayerVehicleID(playerid);
 
-	if(deathState == DEATH_STATE_INJURED)
+	if(newDeathState == DEATH_STATE_INJURED)
 	{
 		if(killerid != INVALID_PLAYER_ID)
-			SendFormattedMessage(playerid, COLOR_ERROR, "(( Sei stato ucciso da \"%s\". ))", Character_GetRolePlayName(killerid));
+			SendFormattedMessage(playerid, COLOR_ERROR, "(( Sei stato ferito da \"%s\". ))", Character_GetRolePlayName(killerid));
 		SendFormattedMessage(playerid, COLOR_GREEN, "Digita /danni %d per lo storico danni.", playerid);
 		Character_SetDeathTime(playerid, GetTickCount());
 	}
-	else if(deathState == DEATH_STATE_DEAD)
-	{
-		Character_SetDeathTime(playerid, GetTickCount());
-		Character_OffDuty(playerid);
-	}
 	else
 	{
+		Character_ResetWeapons(playerid);
 	}
 	Internal_UpdateDeathState(playerid);
-	return Y_HOOKS_CONTINUE_RETURN_1;
+
+	return 1;
 }
 
 static Internal_UpdateDeathState(playerid)
@@ -168,7 +189,7 @@ static Internal_UpdateDeathState(playerid)
 			new str[64];
 			
 			if(Character_IsMasked(playerid))
-				format(str, sizeof(str), "(( QUESTO GIOCATORE È FERITO. /danni %07d ))", Character_GetID(playerid));
+				format(str, sizeof(str), "(( QUESTO GIOCATORE È FERITO. /danni #%07d ))", Character_GetID(playerid));
 			else
 				format(str, sizeof(str), "(( QUESTO GIOCATORE È FERITO. /danni %d ))", playerid);
 			
@@ -193,7 +214,7 @@ static Internal_UpdateDeathState(playerid)
 			SendClientMessage(playerid, COLOR_ERROR, "Sei in gravi condizioni, tra 60 secondi puoi accettare la morte utilizzando \"/accetta morte\".");
 			CallLocalFunction(#OnCharacterInjured, "d", playerid);
 		}
-		else if(deathState == DEATH_STATE_DEAD)
+		/*else if(deathState == DEATH_STATE_DEAD)
 		{
 			Character_OffDuty(playerid);
 			Character_ResetWeapons(playerid);
@@ -221,9 +242,8 @@ static Internal_UpdateDeathState(playerid)
 			Character_SetVirtualWorld(playerid, world);
 
 			//CallLocalFunction(#OnCharacterDeath, "d", playerid);
-		}
+		}*/
 		Internal_ApplyDeathAnim(playerid);
-		printf("After thaat");
 	}
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
@@ -239,11 +259,14 @@ stock Character_AcceptDeathState(playerid)
 
 	AC_SetPlayerHealth(playerid, 0.0);
 	Character_SetDeathTime(playerid, 0);
+
+	CallLocalFunction(#OnCharacterAcceptDeath, "d", playerid);
+
 	Internal_UpdateDeathState(playerid);
 	return 1;
 }
 
-CMD:cind(playerid, params[])
+/*CMD:cind(playerid, params[])
 {
 	if(GetPlayerAnimationIndex(playerid))
     {
@@ -258,7 +281,7 @@ CMD:cind(playerid, params[])
         SendClientMessage(playerid, 0xFFFFFFFF, msg);
     }
 	return 1;
-}
+}*/
 
 flags:respawnme(CMD_USER);
 CMD:respawnme(playerid, params[])
@@ -280,33 +303,33 @@ stock Character_ResetDeathState(playerid)
 	PlayerTextDrawHide(playerid, pDeathTextDraw[playerid]);
 	new CleanPlayerDeathState[e_DeathState];
 	PlayerDeathState[playerid] = CleanPlayerDeathState;
-	pDeathState{playerid} = DEATH_STATE_NONE;
+	DeathState{playerid} = DEATH_STATE_NONE;
 }
 
 stock Character_SetDeathState(playerid, s)
 {
-	pDeathState{playerid} = s;
+	DeathState{playerid} = s;
 }
 
  // 0: Alive, 1: Injured, 2: Dead
 stock Character_GetDeathState(playerid)
 {
-	return pDeathState{playerid};
+	return DeathState{playerid};
 }
 
 stock Character_IsAlive(playerid)
 {
-	return pDeathState{playerid} == DEATH_STATE_NONE;  // 0: Alive, 1: Injured, 2: Dead
+	return DeathState{playerid} == DEATH_STATE_NONE;  // 0: Alive, 1: Injured, 2: Dead
 }
 
 stock Character_IsInjured(playerid)
 {
-	return pDeathState{playerid} == DEATH_STATE_INJURED; // 0: Alive, 1: Injured, 2: Dead
+	return DeathState{playerid} == DEATH_STATE_INJURED; // 0: Alive, 1: Injured, 2: Dead
 }
 
 stock Character_IsDead(playerid)
 {
-	return pDeathState{playerid} == DEATH_STATE_DEAD; // 0: Alive, 1: Injured, 2: Dead
+	return DeathState{playerid} == DEATH_STATE_DEAD; // 0: Alive, 1: Injured, 2: Dead
 }
 
 stock Character_GetDeathStateData(playerid, &Float:x, &Float:y, &Float:z, &Float:a, &int, &world)
@@ -353,6 +376,5 @@ static stock Internal_ApplyDeathAnim(playerid)
 	{
 		ClearAnimationsEx(playerid, false);
 		ApplyAnimation(playerid, "WUZI", "CS_Dead_Guy", 4.0, 0, 0, 0, 1, 0, 1);
-		printf("Internal_ApplyDeathAnim");
 	}
 }

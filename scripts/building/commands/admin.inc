@@ -1,13 +1,11 @@
-flags:abuildingcmds(CMD_RCON);
+flags:abuildingcmds(CMD_DEVELOPER);
 CMD:abuildingcmds(playerid, params[])
 {
-    SendClientMessage(playerid, -1, "[BUILDINGS]: /abuildingexit - /abuildingentrance - /abuildingname");
-    SendClientMessage(playerid, -1, "[BUILDINGS]: /abuildingownable - /abuildingprice - /abuildinglock - /abuildingwelcome");
-    SendClientMessage(playerid, -1, "[BUILDINGS]: /abuildingfaction - /abuildingtype");
+    SendClientMessage(playerid, -1, "[BUILDINGS]: /abcreate - /abedit");
     return 1;
 }
 
-flags:gotobuilding(CMD_ADMIN);
+flags:gotobuilding(CMD_MODERATOR);
 CMD:gotobuilding(playerid, params[])
 {
 	new id;
@@ -23,7 +21,7 @@ CMD:gotobuilding(playerid, params[])
 	return 1;
 }
 
-flags:abcreate(CMD_RCON);
+flags:abcreate(CMD_DEVELOPER);
 CMD:abcreate(playerid, params[])
 {
     
@@ -35,173 +33,7 @@ CMD:abcreate(playerid, params[])
     return 1;
 }
 
-flags:abuildingfaction(CMD_RCON);
-CMD:abuildingfaction(playerid, params[])
-{
-	new bid, fid;
-	if(sscanf(params, "dd", bid, fid))
-	{
-		SendClientMessage(playerid, COLOR_ERROR, "/abuildingfaction <buildingid> <factionid>");
-		return SendFormattedMessage(playerid, COLOR_ERROR, "Utilizza %d come factionid per rimuoverla.", INVALID_FACTION_ID);
-	}
-	if(!Building_IsValid(bid))
-		return SendClientMessage(playerid, COLOR_ERROR, "L'edificio inserito non è valdio.");
-	if(fid != INVALID_FACTION_ID && !Faction_IsValid(fid))
-		return SendClientMessage(playerid, COLOR_ERROR, "La fazione inserita non è valida. Usa /afactionslist per una lista.");	
-	
-	Building_SetFaction(bid, fid);
-
-	if(fid == INVALID_FACTION_ID)
-		SendFormattedMessage(playerid, COLOR_GREEN, "L'edificio %d non appartiene più alla fazione ID %d.", bid, fid);
-	else
-		SendClientMessageStr(playerid, COLOR_GREEN, str_format("Hai settato l'edificio %d appartenente alla fazione %S (%d).", bid, Faction_GetNameStr(fid), fid));
-	Log(Account_GetName(playerid), "", "/abuildingfaction", bid);
-	return 1;
-}
-
-flags:abuildingexit(CMD_RCON);
-CMD:abuildingexit(playerid, params[])
-{
-    new id;
-    if(sscanf(params, "i", id))
-	   return SendClientMessage(playerid, COLOR_ERROR, "/abuildingexit <buildingid>");
-    
-    if(!Building_IsValid(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "Invalid Building ID");
-    
-    new Float:x, Float:y, Float:z;
-    GetPlayerPos(playerid, x, y, z);
-
-    if(Building_SetInterior(id, x, y, z, GetPlayerInterior(playerid)))
-    {
-		SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato l'interior del building id %d.", id);
-		Log(Account_GetName(playerid), "", "/abuildingexit", id);
-    }
-    else
-    {
-	   SendFormattedMessage(playerid, COLOR_GREEN, "Non è stato possibile settare l'interior del building %d.", id);
-    }
-    return 1;
-}
-
-flags:abuildingentrance(CMD_RCON);
-CMD:abuildingentrance(playerid, params[])
-{
-    new id;
-    if(sscanf(params, "i", id))
-		return SendClientMessage(playerid, COLOR_ERROR, "/abuildingentrance <buildingid>");
-    
-    if(!Building_IsValid(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "Invalid Building ID");
-    
-    new Float:x, Float:y, Float:z;
-    GetPlayerPos(playerid, x, y, z);
-
-    if(Building_SetPosition(id, x, y, z, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid)))
-    {
-		SendFormattedMessage(playerid, COLOR_GREEN, "Hai spostato il building %d.", id);
-		Log(Account_GetName(playerid), "", "/abuildingentrance", id);
-    }
-    else
-    {
-	   SendFormattedMessage(playerid, COLOR_GREEN, "Non è stato possibile spostare il building %d.", id);
-    }
-    return 1;
-}
-
-flags:abuildingname(CMD_RCON);
-CMD:abuildingname(playerid, params[])
-{
-    new id, name[MAX_BUILDING_NAME];
-    if(sscanf(params, "is[64]", id, name))
-	   return SendClientMessage(playerid, COLOR_ERROR, "/abuildingname <buildingid> <name>");
-    
-    if(!Building_IsValid(id))
-	   return SendClientMessage(playerid, COLOR_ERROR, "Invalid Building ID");
-    
-    if(strlen(name) > MAX_BUILDING_NAME)
-	   return SendClientMessage(playerid, COLOR_ERROR, "Nome troppo lungo.");
-
-	if(Building_SetName(id, name))
-	{
-		SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il nome del building %d. Nuovo nome: %s", id, name);
-		Log(Account_GetName(playerid), "", "/abuildingname", id);
-	}
-    else
-    {
-	   SendFormattedMessage(playerid, COLOR_GREEN, "Non è stato possibile settare il nome del building %d.", id);
-    }
-    return 1;
-}
-
-flags:abuildingownable(CMD_RCON);
-CMD:abuildingownable(playerid, params[])
-{
-    new id, ownable;
-    if(sscanf(params, "ii", id, ownable))
-	   return SendClientMessage(playerid, COLOR_ERROR, "/abuildingname <buildingid> <ownable: 0:no 1:yes>");
-    
-    if(!Building_IsValid(id))
-	   return SendClientMessage(playerid, COLOR_ERROR, "Invalid Building ID");
-
-    if(Building_SetOwnable(id, ownable))
-    {
-		if(ownable)
-			SendFormattedMessage(playerid, COLOR_GREEN, "Il building %d è ora acquistabile.", id);
-		else
-			SendFormattedMessage(playerid, COLOR_GREEN, "Il building %d non è più acquistabile.", id);
-		Log(Account_GetName(playerid), "", "/abuildingownable", id);
-    }
-    else
-    {
-	   SendFormattedMessage(playerid, COLOR_GREEN, "Non è stato possibile eseguire il comando sul building %d.", id);
-    }
-    return 1;
-}
-
-flags:abuildingprice(CMD_RCON);
-CMD:abuildingprice(playerid, params[])
-{
-    new id, price;
-    if(sscanf(params, "ii", id, price))
-	   return SendClientMessage(playerid, COLOR_ERROR, "/abuildingprice <buildingid> <price>");
-    
-    if(!Building_IsValid(id))
-	   return SendClientMessage(playerid, COLOR_ERROR, "Invalid Building ID");
-
-    if(Building_SetPrice(id, price))
-    {
-		SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il prezzo del building %d. Nuovo Prezzo: $%d", id, price);
-		Log(Account_GetName(playerid), "", "/abuildingprice", id);
-    }
-    else
-    {
-	   SendFormattedMessage(playerid, COLOR_GREEN, "Non è stato possibile eseguire il comando sul building %d.", id);
-    }
-    return 1;
-}
-
-flags:abuildinglock(CMD_RCON);
-CMD:abuildinglock(playerid, params[])
-{
-    new id, lock;
-    if(sscanf(params, "ii", id, lock))
-	   return SendClientMessage(playerid, COLOR_ERROR, "/abuildinglock <buildingid> <open: 0 - closed: 1>");
-    
-    if(!Building_IsValid(id))
-	   return SendClientMessage(playerid, COLOR_ERROR, "Invalid Building ID");
-
-    Building_SetLocked(id, (lock > 0) ? (1) : (0));
-
-    if(lock)
-	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai chiuso il building %d.", id);
-    else
-	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai aperto il building %d.", id);
-    Log(Account_GetName(playerid), "", "/abuildinglock", id);
-    return 1;
-}
-
-/*flags:abdelete(CMD_RCON);
+/*flags:abdelete(CMD_DEVELOPER);
 CMD:abdelete(playerid, params[])
 {
     new id;
@@ -221,43 +53,188 @@ CMD:abdelete(playerid, params[])
     return 1;
 }*/
 
-flags:abuildingwelcome(CMD_RCON);
-CMD:abuildingwelcome(playerid, params[])
+
+flags:abedit(CMD_DEVELOPER);
+CMD:abedit(playerid, p[])
 {
-    new id, text[MAX_WELCOME_TEXT_LENGTH];
-    if(sscanf(params, "is[128]", id, text) || strlen(text) >= MAX_WELCOME_TEXT_LENGTH)
-	   return SendClientMessage(playerid, COLOR_ERROR, "/abuildingwelcome <buildingid> <testo>");
+    new buildingid, command[16], params[256], value;
+    if(sscanf(p, "ds[16]S()[256]", buildingid, command, params))
+    {
+	    SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> <pos - interior - price - lock - rmowner - name - type - ..");
+        SendClientMessage(playerid, COLOR_ERROR, ".. faction - exit - ownable - welcometext >");
+        return 0;
+    }
     
-    if(!Building_IsValid(id))
-	   return SendClientMessage(playerid, COLOR_ERROR, "Invalid Building ID");
+    if(!Building_IsValid(buildingid))
+        return SendClientMessage(playerid, COLOR_ERROR, "L'id del building inserito non è valido.");
 
-	Building_SetWelcomeText(id, text);
+    if(!strcmp(command, "pos", true))
+    {
+        SendFormattedMessage(playerid, COLOR_GREEN, "Hai spostato le coordinate d'entrata dell'edificio %d.", buildingid);
 
-	SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il testo di benvenuto del building %d.", id);
-	SendFormattedMessage(playerid, COLOR_GREEN, "Testo: %s", text);
+        new Float:x, Float:y, Float:z;
+        GetPlayerPos(playerid, x, y, z);
 
-    return 1;
-}
+        if(Building_SetPosition(buildingid, x, y, z, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid)))
+        {
+            SendFormattedMessage(playerid, COLOR_GREEN, "Hai spostato il building %d.", buildingid);
+            Log(Account_GetName(playerid), "", "/abuildingentrance", buildingid);
+        }
+        else
+        {
+            SendFormattedMessage(playerid, COLOR_GREEN, "Non è stato possibile spostare il building %d.", buildingid);
+        }
+    }
+    else if(!strcmp(command, "price", true))
+    {
+        new price;
+	    if(sscanf(params, "d", price))
+            return SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> <price>");
+	    if(Building_SetPrice(buildingid, value))
+        {
+            SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il prezzo del building %d. Nuovo Prezzo: $%d", buildingid, price);
+            Log(Account_GetName(playerid), "", "/abedit price", buildingid);
+        }
+        else
+        {
+            SendFormattedMessage(playerid, COLOR_GREEN, "Non è stato possibile eseguire il comando sul building %d.", buildingid);
+        }
+    }
+    else if(!strcmp(command, "rmowner", true))
+    {
+	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai resettato il proprietario del building %d.", buildingid);
+       Building_ResetOwner(buildingid);
+       Log(Account_GetName(playerid), "none", "/abedit rmowner", buildingid);
+    }
+    else if(!strcmp(command, "name", true))
+    {
+        new name[MAX_BUILDING_NAME];
+        if(sscanf(params, "s[64]", name))
+            return SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> name <name (max 64 characters)>");
+        
+        if(strlen(name) > MAX_BUILDING_NAME)
+    	   return SendClientMessage(playerid, COLOR_ERROR, "Nome troppo lungo.");
 
-flags:abuildingtype(CMD_RCON);
-CMD:abuildingtype(playerid, params[])
-{
-    new id, type;
-    if(sscanf(params, "ii", id, type))
-	{
-		SendClientMessage(playerid, COLOR_ERROR, "/abuildingtype <buildingid> <type>");
-		SendClientMessage(playerid, COLOR_ERROR, "0: Store, 1: Paycheck, 2: Garage");
-		return 1;
-	}
-    
-    if(!Building_IsValid(id))
-	   return SendClientMessage(playerid, COLOR_ERROR, "Invalid Building ID");
+        if(Building_SetName(buildingid, name))
+        {
+            SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il nome del building %d. Nuovo nome: %s", buildingid, name);
+            Log(Account_GetName(playerid), "", "/abuildingname", buildingid);
+        }
+        else
+        {
+            SendFormattedMessage(playerid, COLOR_GREEN, "Non è stato possibile settare il nome del building %d.", buildingid);
+        }
+    }
+    else if(!strcmp(command, "type", true))
+    {
+        new type;
+        if(sscanf(params, "d", type))
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> type <typeid>");
+            SendClientMessage(playerid, COLOR_ERROR, "0: Store, 1: Paycheck, 2: Garage, 3: Complex");
+            return 0;
+        }
 
-	if(!Building_SetType(id, type))
-		return SendClientMessage(playerid, COLOR_ERROR, "Tipo di edificio non valido.");
+        if(!Building_SetType(buildingid, type))
+            return SendClientMessage(playerid, COLOR_ERROR, "Tipo di edificio non valido.");
 
-	SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il tipo del building %d.", id);
-	SendFormattedMessage(playerid, COLOR_GREEN, "Nuovo tipo: %d", type);
+        SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il tipo del building %d.", buildingid);
+        SendFormattedMessage(playerid, COLOR_GREEN, "Nuovo tipo: %d", type);
+    }
+    else if(!strcmp(command, "faction", true))
+    {
+        new factionid;
+        if(sscanf(params, "d", factionid))
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> faction <factionid>");
+            return 0;
+        }
 
+        if(!Faction_IsValid(factionid))
+		    return SendClientMessage(playerid, COLOR_ERROR, "La fazione inserita non è valida. Usa /afactionslist per una lista.");	
+	
+        Building_SetFaction(buildingid, factionid);
+
+        if(factionid == INVALID_FACTION_ID)
+            SendFormattedMessage(playerid, COLOR_GREEN, "L'edificio %d non appartiene più alla fazione ID %d.", buildingid, factionid);
+        else
+            SendClientMessageStr(playerid, COLOR_GREEN, str_format("Hai settato l'edificio %d appartenente alla fazione %S (%d).", buildingid, Faction_GetNameStr(factionid), factionid));
+        Log(Account_GetName(playerid), "", "/abedit faction", buildingid);
+    }
+    else if(!strcmp(command, "exit", true))
+    {
+        new Float:x, Float:y, Float:z;
+        GetPlayerPos(playerid, x, y, z);
+
+        if(Building_SetInterior(buildingid, x, y, z, GetPlayerInterior(playerid)))
+        {
+            SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato l'interior del building id %d.", buildingid);
+            Log(Account_GetName(playerid), "", "/abedit exit", buildingid);
+        }
+        else
+        {
+            SendFormattedMessage(playerid, COLOR_GREEN, "Non è stato possibile settare l'interior del building %d.", buildingid);
+        }
+    }
+    else if(!strcmp(command, "ownable", true))
+    {
+        new ownable;
+        if(sscanf(params, "d", ownable))
+            return SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> ownable <1: yes - 0: no>");
+
+        if(Building_SetOwnable(buildingid, ownable))
+        {
+            if(ownable)
+                SendFormattedMessage(playerid, COLOR_GREEN, "Il building %d è ora acquistabile.", buildingid);
+            else
+                SendFormattedMessage(playerid, COLOR_GREEN, "Il building %d non è più acquistabile.", buildingid);
+            Log(Account_GetName(playerid), "", "/abedit ownable", buildingid);
+        }
+        else
+        {
+            SendFormattedMessage(playerid, COLOR_GREEN, "Non è stato possibile eseguire il comando sul building %d.", buildingid);
+        }
+    }
+    else if(!strcmp(command, "lock", true))
+    {
+        new lock;
+        if(sscanf(params, "d", lock))
+            return SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> lock <1: lock - 0: open>");
+
+        Building_SetLocked(buildingid, (lock > 0) ? (1) : (0));
+
+        if(lock)
+            SendFormattedMessage(playerid, COLOR_GREEN, "Hai chiuso il building %d.", buildingid);
+        else
+            SendFormattedMessage(playerid, COLOR_GREEN, "Hai aperto il building %d.", buildingid);
+        Log(Account_GetName(playerid), "", "/abedit lock", buildingid);
+    }
+    else if(!strcmp(command, "welcometext", true))
+    {
+        new welcomeText[MAX_WELCOME_TEXT_LENGTH];
+        if(sscanf(params, "s[128]", welcomeText))
+            return SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> welcometext <text (max 128 characters)>");
+
+        Building_SetWelcomeText(buildingid, welcomeText);
+
+        SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il testo di benvenuto del building %d.", buildingid);
+        SendFormattedMessage(playerid, COLOR_GREEN, "Testo: %s", welcomeText);
+    }
+    else if(!strcmp(command, "interior", true))
+    {
+        new welcomeText[MAX_WELCOME_TEXT_LENGTH];
+        if(sscanf(params, "s[128]", welcomeText))
+            return SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> welcometext <text (max 128 characters)>");
+        new Float:x, Float:y, Float:z;
+        GetPlayerPos(playerid, x, y, z);
+        Building_SetInterior(buildingid, x, y, z, GetPlayerInterior(playerid));
+
+        SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato l'interior del building %d alla posizione corrente.", buildingid);
+    }
+    else 
+    {
+        SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> <pos - interior - price - lock - rmowner - name - type - ..");
+        SendClientMessage(playerid, COLOR_ERROR, ".. faction - exit - ownable - welcometext >");
+    }
     return 1;
 }

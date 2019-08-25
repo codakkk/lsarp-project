@@ -40,6 +40,33 @@ static
 	SpawnPointID[MAX_PLAYERS] = {0, ...}
 ;
 
+hook OnGameModeInit()
+{
+	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `character_spawn_data` ( \
+						`character_id` int(11) NOT NULL, \
+						`is_first_spawn` int(11) NOT NULL, \
+						`is_spawned` int(1) NOT NULL DEFAULT '0', \
+						`last_x` float NOT NULL DEFAULT '0', \
+						`last_y` float NOT NULL DEFAULT '0', \
+						`last_z` float NOT NULL DEFAULT '0', \
+						`last_a` float NOT NULL DEFAULT '0', \
+						`last_interior` int(11) NOT NULL DEFAULT '0', \
+						`last_world` int(11) NOT NULL DEFAULT '0', \
+						`last_health` float NOT NULL DEFAULT '100', \
+						`last_armour` float NOT NULL DEFAULT '0', \
+						`spawn_type` tinyint(4) NOT NULL DEFAULT '0', \
+						`spawn_id` smallint(6) NOT NULL DEFAULT '0', \
+						`spawn_x` float NOT NULL DEFAULT '0', \
+						`spawn_y` float NOT NULL DEFAULT '0', \
+						`spawn_z` float NOT NULL DEFAULT '0', \
+						`spawn_a` float NOT NULL DEFAULT '0', \
+						`spawn_interior` int(11) NOT NULL DEFAULT '0', \
+						`spawn_world` int(11) NOT NULL DEFAULT '0', \
+						PRIMARY KEY (`character_id`) \
+						) ENGINE=InnoDB DEFAULT CHARSET=latin1;");
+	return 1;
+}
+
 hook OnPlayerClearData(playerid)
 {
 	IsSpawned{playerid} = IsFirstSpawn{playerid} = false;

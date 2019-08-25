@@ -1041,6 +1041,6 @@ CMD:attenti(playerid, params[])
 {
 	if(!AnimationCheck(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare un'animazione al momento.");
-	ApplyAnimationEx(playerid, "RAPPING","RAP_A_OUT", 4.1, 0, 0, 0, 0, 0);
+	ApplyAnimationEx(playerid, "RAPPING","RAP_A_OUT", 4.1, 0, 1, 0, 1, 0);
 	return 1;
 }

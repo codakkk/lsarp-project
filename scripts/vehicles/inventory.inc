@@ -17,7 +17,7 @@ stock Inventory:Vehicle_InitializeInventory(vehicleid)
 	}
     new Inventory:inv = Inventory_New(2);
     map_add(VehicleInventory, vehicleid, List:inv);
-    printf("Vehicle %d Inventory initialized", vehicleid);
+    //printf("Vehicle %d Inventory initialized", vehicleid);
     return inv;
 }
 
@@ -26,7 +26,7 @@ stock Vehicle_UnloadInventory(vehicleid)
 	if(Vehicle_IsValid(vehicleid) && map_has_key(VehicleInventory, vehicleid))
 	{
     	map_remove_deep(VehicleInventory, vehicleid);
-    	printf("Vehicle %d Inventory unloaded", vehicleid);
+    	//printf("Vehicle %d Inventory unloaded", vehicleid);
 	}
     return 1;
 }
@@ -422,7 +422,7 @@ stock Vehicle_SaveInventory(vehicleid)
 {
 	if(!Vehicle_GetID(vehicleid) || !list_valid(Vehicle_GetInventory(vehicleid)))
 		return 0;
-	Inventory_SaveInDatabase(Vehicle_GetInventory(vehicleid), "vehicle_inventory", "VehicleID", Vehicle_GetID(vehicleid));
+	Inventory_SaveInDatabase(Vehicle_GetInventory(vehicleid), "vehicle_inventory", "vehicle_id", Vehicle_GetID(vehicleid));
 	return 1;
 }
 
@@ -430,6 +430,6 @@ stock Vehicle_LoadInventory(vehicleid)
 {
 	if(!Vehicle_GetID(vehicleid))
 		return 0;
-	Inventory_LoadFromDatabase(Vehicle_GetInventory(vehicleid), "vehicle_inventory", "VehicleID", Vehicle_GetID(vehicleid));
+	Inventory_LoadFromDatabase(Vehicle_GetInventory(vehicleid), "vehicle_inventory", "vehicle_id", Vehicle_GetID(vehicleid));
 	return 1;
 }

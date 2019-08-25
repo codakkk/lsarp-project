@@ -148,33 +148,6 @@ stock Account_CreateCharacter(playerid, const characterName[MAX_PLAYER_NAME])
 	return 1;
 }
 
-stock Account_Save(playerid)
-{
-    if(!Account_IsLogged(playerid))
-	   return 0;
-    new query[512];
-    mysql_format(gMySQL, query, sizeof(query), "UPDATE `accounts` SET \
-		admin_level = '%d', \
-		premium = '%d', premium_expiry = '%d', \
-		characters_counter = '%d', \
-		email = '%e', \
-		characters_slot = '%d', \
-		level = '%d', \
-		payday = '%d' \
-		WHERE id = '%d'", 
-		Account_GetAdminLevel(playerid), 
-		Account_GetPremiumLevel(playerid), Account_GetPremiumExpiry(playerid),
-		Account_GetCharactersCount(playerid), 
-		Account_GetEMail(playerid),
-		Account_GetCharactersSlot(playerid),
-		Account_GetLevel(playerid),
-		Account_GetPayDay(playerid),
-		Account_GetID(playerid));
-    
-    mysql_tquery(gMySQL, query);
-    return 1;
-}
-
 timer LoginKickTimer[1000 * 60](playerid) 
 {
 	if(Account_IsLogged(playerid))
@@ -206,15 +179,17 @@ stock LoadAccountData(playerid)
 	if(cache_num_rows() > 0)
 	{
 		cache_get_value_name_int(0, "id", AccountInfo[playerid][ID]);
-		cache_get_value_index(0, 1, AccountName[playerid]);
-		cache_get_value_index_int(0, 3, AccountInfo[playerid][Admin]);
-		cache_get_value_index_int(0, 4, AccountInfo[playerid][Premium]);
-		cache_get_value_index_int(0, 5, AccountInfo[playerid][PremiumExpiry]);
-		cache_get_value_index_int(0, 6, AccountInfo[playerid][CharactersCount]);
-		cache_get_value_index(0, 7, AccountEMail[playerid]);
-		cache_get_value_index_int(0, 8, AccountInfo[playerid][CharactersSlot]);
-		cache_get_value_index_int(0, 11, AccountInfo[playerid][Level]);
-		cache_get_value_index_int(0, 12, AccountInfo[playerid][PayDay]);
+		cache_get_value_name(0, "name", AccountName[playerid]);
+		cache_get_value_name_int(0, "admin_level", AccountInfo[playerid][Admin]);
+		cache_get_value_name_int(0, "premium", AccountInfo[playerid][Premium]);
+		cache_get_value_name_int(0, "premium_expiry", AccountInfo[playerid][PremiumExpiry]);
+		cache_get_value_name_int(0, "characters_counter", AccountInfo[playerid][CharactersCount]);
+		cache_get_value_name(0, "email", AccountEMail[playerid]);
+		cache_get_value_name_int(0, "characters_slot", AccountInfo[playerid][CharactersSlot]);
+		cache_get_value_name_int(0, "level", AccountInfo[playerid][Level]);
+		cache_get_value_name_int(0, "payday", AccountInfo[playerid][PayDay]);
+
+		SetPlayerScore(playerid, AccountInfo[playerid][Level]);
 		return 1;
 	}
 	return 0;
@@ -254,6 +229,8 @@ stock Account_GetPayDay(playerid)
 stock Account_AddPayDay(playerid, add)
 {
 	AccountInfo[playerid][PayDay] += add;
+	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET payday = '%d' WHERE id = '%d'", Account_GetPayDay(playerid), Account_GetID(playerid));
+	return 1;
 }
 
 stock Account_SetLogged(playerid, bool:logged)
@@ -319,6 +296,8 @@ stock Account_GetID(playerid)
 stock Account_SetAdminLevel(playerid, level)
 {
 	AccountInfo[playerid][Admin] = level;
+	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET admin_level = '%d' WHERE id = '%d'", level, Account_GetID(playerid));
+	return 1;
 }
 
 stock Account_GetAdminLevel(playerid)
@@ -329,6 +308,8 @@ stock Account_GetAdminLevel(playerid)
 stock Account_SetPremiumLevel(playerid, level)
 {
 	AccountInfo[playerid][Premium] = level;
+	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET premium = '%d' WHERE id = '%d'", level, Account_GetID(playerid));
+	return 1;
 }
 
 stock Account_GetPremiumLevel(playerid)
@@ -339,6 +320,8 @@ stock Account_GetPremiumLevel(playerid)
 stock Account_SetPremiumExpiry(playerid, time)
 {
 	AccountInfo[playerid][PremiumExpiry] = time;
+	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET premium_expiry = '%d' WHERE id = '%d'", time, Account_GetID(playerid));
+	return 1;
 }
 
 stock Account_GetPremiumExpiry(playerid)
@@ -353,12 +336,16 @@ stock Account_GetCharactersSlot(playerid)
 
 stock Account_SetCharactersSlot(playerid, setValue)
 {
+	if(!Account_IsLogged(playerid))
+		return 0;
 	AccountInfo[playerid][CharactersSlot] = setValue;
+	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET characters_slot = '%d' WHERE id = '%d'", Account_GetCharactersSlot(playerid), Account_GetID(playerid));
+	return 1;
 }
 
 stock Account_IncreaseCharactersSlot(playerid, amount)
 {
-	AccountInfo[playerid][CharactersSlot] += amount;
+	return Account_SetCharactersSlot(playerid, Account_GetCharactersSlot(playerid) + amount);
 }
 
 stock Account_GetCharactersCount(playerid)
@@ -369,6 +356,7 @@ stock Account_GetCharactersCount(playerid)
 stock Account_AddCharactersCount(playerid, add)
 {
 	AccountInfo[playerid][CharactersCount] += add;
+	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET characters_counter = '%d' WHERE id = '%d'", Account_GetCharactersCount(playerid), Account_GetID(playerid));
 }
 
 stock Account_SetLevel(playerid, level)
@@ -386,4 +374,12 @@ stock Account_IncreaseLevel(playerid, amount)
 stock Account_GetLevel(playerid)
 {
 	return AccountInfo[playerid][Level];
+}
+
+stock Account_GetOwnableVehicleCount(playerid)
+{
+	if(!Character_IsLogged(playerid))
+		return 0;
+	static const ownable[] = {3, 8, 10, 12};
+	return ownable[Account_GetPremiumLevel(playerid)];
 }

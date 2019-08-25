@@ -1,3 +1,5 @@
+
+#define INVALID_HOUSE_ID	(-1)
 #define HOUSE_START_WORLD 	(1000)
 
 enum 

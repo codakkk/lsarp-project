@@ -17,12 +17,25 @@ hook OnPlayerClearData(playerid)
 	return 1;
 }
 
-flags:ammanetta(CMD_POLICE);
-CMD:ammanetta(playerid, params[])
+hook OnCharacterDeath(playerid, killerid, reason)
 {
+	if(Character_IsAlive(playerid))
+	{
+		Character_OffDuty(playerid);
+	}
+	return 1;
+}
+
+flags:manette(CMD_ALIVE_USER);
+CMD:manette(playerid, params[])
+{
+	// MUST CHECK IT BETTER
+	if( (!Faction_IsValid(Character_GetFaction(playerid)) || Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE) && !Account_IsAdminDuty(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro della Guardia Nazionale.");
+		
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_ERROR, "/ammanetta <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_ERROR, "/manette <playerid/partofname>");
 	
 	if(!Character_IsLogged(id) || id == playerid)
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
@@ -47,28 +60,49 @@ CMD:arresta(playerid, params[])
 {
 	if(!Character_IsFactionDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei in servizio.");
+		
 	new id, time;
 	if(sscanf(params, "k<u>d", id, time))
 		return SendClientMessage(playerid, COLOR_ERROR, "/arresta <playerid/partofname> <minuti>");
+
 	if(id == playerid || !Character_IsLogged(id) || IsPlayerNPC(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
+
 	if(Character_GetFaction(id) != INVALID_FACTION_ID && Faction_GetType(Character_GetFaction(id)) == Faction_GetType(Character_GetFaction(playerid)))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi arrestare questo giocatore.");
+
 	if(time < 0 || time > 720)
 		return SendClientMessage(playerid, COLOR_ERROR, "Il tempo di arresto va da 0 a 720.");
+
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 4.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
+
 	if(!IsPlayerNearAnyArrestPos(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei al punto di arresto.");
 
+	if(Character_IsDragging(playerid) && Character_GetDraggedBy(id) == playerid)
+	{
+		Character_SetDragging(playerid, false);
+		Character_StopDragTimer(playerid);
+	}
+
+	Character_SetDragged(id, false);
+	Character_SetDraggedBy(id, INVALID_PLAYER_ID);
+	Character_SetFreezed(id, false);
+
+	Character_SetCuffed(id, false);
 	Character_SetJailTime(id, time);
 	Character_SetICJailed(id, true);
+	
+	Character_OffDuty(id);
+	
+	ClearAnimations(id);
 
 	Character_SetToJailPos(id);
 
-	SendFormattedMessage(id, -1, "Sei stato arrestato da %s per {FF0000}%d{FFFFFF} minuti.", Character_GetOOCName(playerid));
+	SendFormattedMessage(id, COLOR_ORANGE, "Sei stato arrestato da %s per %d minuti.", Character_GetOOCName(playerid));
 
-	new rankName[16];
+	new rankName[MAX_FACTION_RANK_NAME];
 	Faction_GetRankName(Character_GetFaction(playerid), Character_GetRank(playerid), rankName);
 
 	new String:message = str_format("(( HQ: %s %s ha arrestato %s per %d minuti. ))", rankName, Character_GetOOCName(playerid), Character_GetOOCName(id), time);
@@ -80,6 +114,9 @@ CMD:arresta(playerid, params[])
 			SendClientMessageStr(i, COLOR_BLUE, message);
 		}
 	}
+	
+	SendFormattedMessage(playerid, COLOR_ORANGE, "** Hai arrestato %s per %d minuti.", Character_GetOOCName(id), time);
+
 	Log(Character_GetOOCName(playerid), Character_GetOOCName(id), "/arresta", time);
 	return 1;
 }
@@ -90,12 +127,16 @@ CMD:trascina(playerid, params[])
 	new id;
 	if(sscanf(params, "k<u>", id))
 		return SendClientMessage(playerid, COLOR_ERROR, "/trascina <playerid/partofname>");
+
 	if(playerid == id || !Character_IsLogged(id) || IsPlayerNPC(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
+
 	if(!Character_IsAlive(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi trascinare questo giocatore.");
+
 	if(Character_IsJailed(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi trascinare un giocatore incarcerato.");
+	
 	if(Character_IsDragging(playerid) && Character_IsDragged(id) && Character_GetDraggedBy(id) == playerid)
 	{
 		Character_StopDragTimer(playerid);
@@ -110,7 +151,7 @@ CMD:trascina(playerid, params[])
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 3.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
 
-	if(!Character_CanInteract(playerid))
+	if(!Character_CanInteract(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è ammanettato o stordito.");
 	
 	Character_SetDragged(id, true);
@@ -126,6 +167,9 @@ CMD:trascina(playerid, params[])
 flags:cura(CMD_ALIVE_USER);
 CMD:cura(playerid, params[])
 {
+	if(Request_IsPending(playerid, REQUEST_TYPE_CARE))
+		return SendClientMessage(playerid, COLOR_ERROR, "Hai già una richiesta cure attiva.");
+	
 	new factionid = Character_GetFaction(playerid);
 	if(!Account_IsAdminDuty(playerid))
 	{
@@ -137,35 +181,25 @@ CMD:cura(playerid, params[])
 	new id;
 	if(sscanf(params, "k<u>", id))
 		return SendClientMessage(playerid, COLOR_ERROR, "/cura <playerid/partofname>");
+	
 	if( (!Account_IsAdminDuty(playerid) && id == playerid) || !IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
+	
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 5.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
+	
 	if(!Character_IsInjured(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non ha bisogno di cure.");
-	if(Character_GetCarePlayer(id) != INVALID_PLAYER_ID)
-		return SendClientMessage(playerid, COLOR_ERROR, "Questo giocatore ha già una richiesta di cure.");
-	if(GetTickCount() - Character_GetCareTicks(playerid) < 1000*15)
-		return SendClientMessage(playerid, COLOR_ERROR, "Puoi inviare una richiesta di cure ogni quindici secondi.");
 	
-	Character_SetCarePlayer(id, playerid);
-	Character_SetCareTick(playerid, GetTickCount());
+	if(Request_IsPending(id, REQUEST_TYPE_CARE))
+		return SendClientMessage(playerid, COLOR_ERROR, "Questo giocatore ha già una richiesta di cure.");
 
-	SendFormattedMessage(id, COLOR_YELLOW, "%s vuole curarti. Digita \"/accetta cure\" per accettare.", Character_GetRolePlayName(playerid));
-	SendFormattedMessage(playerid, COLOR_YELLOW, "Richiesta di cure inviata a %s.", Character_GetRolePlayName(id));
+	Character_SetRequest(playerid, id, REQUEST_TYPE_CARE);
+
+	SendFormattedMessage(id, COLOR_YELLOW, "%s vuole curarti. Digita \"/accetta cure\" per accettare o \"/rifiuta cure\" per rifiutare.", Character_GetRolePlayName(playerid));
+	SendFormattedMessage(playerid, COLOR_YELLOW, "Richiesta di cure inviata a %s. Digita \"/annulla cure\" per annullare.", Character_GetRolePlayName(id));
 	return 1;
 }
-
-flags:megafono(CMD_POLICE);
-CMD:megafono(playerid, params[])
-{
-	if(isnull(params) || strlen(params) >= 256)
-		return SendClientMessage(playerid, COLOR_ERROR, "(/m)egafono <testo>");
-	new String:str = str_format("[MEGAFONO] %s: %s", Character_GetRolePlayName(playerid), params);
-	ProxDetectorStr(playerid, 50.0, str, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW);	
-	return 1;
-}
-alias:megafono("m");
 
 flags:perquisisci(CMD_ALIVE_USER); //flags:perquisisci(CMD_POLICE);
 CMD:perquisisci(playerid, params[])
@@ -176,8 +210,8 @@ CMD:perquisisci(playerid, params[])
 	if(sscanf(params, "k<u>d", id))
 		return SendClientMessage(playerid, COLOR_ERROR, "/perquisisci <playerid/partofname/#id>");
 
-	//if(id == playerid)
-		//return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso.");
+	if(id == playerid)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso.");
 
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
@@ -185,12 +219,29 @@ CMD:perquisisci(playerid, params[])
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 5.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
 	
-	SendFormattedMessage(id, COLOR_RECEIVE_REQUEST, "%s (%d) vuole perquisirti. Digita \"/accetta perquisizione\" per accettare o \"/annulla\" per rifiutare.", Character_GetRolePlayName(playerid), playerid);
-	SendFormattedMessage(playerid, COLOR_SEND_REQUEST, "Richiesta di perquisizione inviata a %s (%d).", Character_GetRolePlayName(id), id);
-	Character_SetRequest(playerid, id, REQUEST_TYPE_SEARCH);
+	if(Request_IsPending(playerid, REQUEST_TYPE_SEARCH))
+		return SendClientMessage(playerid, COLOR_ERROR, "Hai già una richiesta di perquisizione attiva.");
 
+	if(Request_IsPending(id, REQUEST_TYPE_SEARCH))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta di perquisizione attiva.");
+	
+	SendFormattedMessage(id, COLOR_RECEIVE_REQUEST, "%s (%d) vuole perquisirti. Digita \"/accetta perquisizione\" per accettare o \"/rifiuta perquisizione\" per rifiutare.", Character_GetRolePlayName(playerid), playerid);
+	SendFormattedMessage(playerid, COLOR_SEND_REQUEST, "Richiesta di perquisizione inviata a %s (%d).", Character_GetRolePlayName(id), id);
+
+	Character_SetRequest(playerid, id, REQUEST_TYPE_SEARCH);
 	return 1;
 }
+
+flags:megafono(CMD_POLICE);
+CMD:megafono(playerid, params[])
+{
+	if(isnull(params) || strlen(params) >= 256)
+		return SendClientMessage(playerid, COLOR_ERROR, "(/m)egafono <testo>");
+	new String:str = str_format("[%s] o< %s", Character_GetRolePlayName(playerid), params);
+	ProxDetectorStr(playerid, 50.0, str, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW);	
+	return 1;
+}
+alias:megafono("m");
 
 stock Character_AcceptSearch(playerid)
 {
@@ -202,9 +253,6 @@ stock Character_AcceptSearch(playerid)
 
 	SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s (%d) ha accettato la tua richiesta di perquisizione.", Character_GetRolePlayName(playerid), playerid);
 	SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "Hai accettato la richiesta di perquisizione di %s (%d).", Character_GetRolePlayName(senderid), senderid);
-
-	ResetPendingRequest(playerid, REQUEST_TYPE_SEARCH);
-	ResetPendingRequest(senderid, REQUEST_TYPE_SEARCH);
 
 	ShowInspectingInventory(senderid, playerid);
 	return 1;
@@ -255,8 +303,8 @@ static ShowInspectingInventory(playerid, inspectingPlayer)
 	
 	Inventory_Show(inv, playerid, str, Dialog_InvSearch, Faction_GetType(Character_GetFaction(playerid)) == FACTION_TYPE_POLICE ? ("Confisca") : ("Chiudi"), "Chiudi");
 	
-	ResetPendingRequest(playerid);
-	ResetPendingRequest(inspectingPlayer);
+	ResetPendingRequest(playerid, REQUEST_TYPE_SEARCH);
+	ResetPendingRequest(inspectingPlayer, REQUEST_TYPE_SEARCH);
 	return 1;
 }
 

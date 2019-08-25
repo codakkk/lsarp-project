@@ -1,5 +1,7 @@
 #include <YSI_Coding\y_hooks>
 
+forward OnPlayerEnterBuilding(playerid, buildingid);
+
 static 
 	PlayerBuildingKey[MAX_PLAYERS],
 	PlayerHouseKey[MAX_PLAYERS]
@@ -19,6 +21,20 @@ hook OnCharacterLoad(playerid)
 		cache_get_value_index_int(0, 1, PlayerHouseKey[playerid]);
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT building_key, house_key FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
+	return 1;
+}
+
+hook OnCharacterTryBuy(playerid)
+{
+	new elementid, E_ELEMENT_TYPE:type;
+	if(Character_GetNearestPickup(playerid, elementid, type))
+	{
+		if(type == ELEMENT_TYPE_HOUSE_ENTRANCE && House_IsValid(elementid))
+			return Character_BuyHouse(playerid, elementid);
+		
+		if(type == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_IsValid(elementid))
+			return Character_BuyBuilding(playerid, elementid);
+	}
 	return 1;
 }
 
@@ -78,6 +94,10 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 				if(type == ELEMENT_TYPE_HOUSE_ENTRANCE || type == ELEMENT_TYPE_HOUSE_EXIT)
 				{
 					Character_ShowHouseDialog(playerid);
+				}
+				else if(type == ELEMENT_TYPE_BUILDING_ENTRANCE || type == ELEMENT_TYPE_BUILDING_EXIT)
+				{
+					Character_ShowBizDialog(playerid);
 				}
 			}
 		}
@@ -167,6 +187,8 @@ static Internal_EnterBuilding(playerid, buildingid)
     Character_SetVirtualWorld(playerid, world);
     // Should I use Fading?
 	SetPlayerPos(playerid, x, y, z);
+
+	CallLocalFunction(#OnPlayerEnterBuilding, "dd", playerid, buildingid);
 	return 1;
 }
 
@@ -348,7 +370,7 @@ stock Character_BuyHouse(playerid, houseid)
 stock Character_ShowHouseDialog(playerid)
 {
 	new houseid = Character_GetNearHouseIDMenu(playerid);
-	if(houseid != -1)
+	if(House_IsValid(houseid))
 	{
 		return Dialog_Show(playerid, Dialog_House, DIALOG_STYLE_LIST, "Casa", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nCambia Interior", "Continua", "Chiudi");
 	}

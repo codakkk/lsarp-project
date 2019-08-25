@@ -46,7 +46,7 @@ stock ChopShop_CanCharacterUse(playerid)
 
 stock Vehicle_GetChopShopPrice(vehicleid)
 {
-	return ( (Dealership_GetModelPrice(GetVehicleModel(vehicleid)) / 100) * CHOPSHOP_VEHICLE_PERCENTAGE );
+	return ( (Vehicle_GetPrice(vehicleid) / 100) * CHOPSHOP_VEHICLE_PERCENTAGE );
 }
 
 stock ChopShop_Sell(playerid, vehicleid)
@@ -85,7 +85,6 @@ stock ChopShop_Sell(playerid, vehicleid)
     Character_SetLastChopShopTime(playerid, gettime());
 	Vehicle_SetLastChopShopTime(vehicleid, gettime());
 
-	Vehicle_Save(vehicleid); // Remember to update the code for pLastChopShopTime
 	new Float:x, Float:y, Float:z;
 	GetPlayerPos(playerid, x, y, z);
 	SetPlayerPos(playerid, x, y, z);

@@ -161,21 +161,20 @@ stock Faction_LoadAll()
 {
 	inline OnLoad()
 	{
-		printf("Loading factions...");
 		new rows = cache_num_rows(), data[E_FACTION_DATA];
 		
 		for(new i = 0; i < rows; ++i)
 		{
 			data[Created] = 1;
-			cache_get_value_index_int(i, 0, data[ID]);
-			cache_get_value_index(i, 1, data[Name]);
-			cache_get_value_index(i, 2, data[ShortName]);
-			cache_get_value_index_int(i, 3, data[Type]);
-			cache_get_value_index_float(i, 4, data[SpawnX]);
-			cache_get_value_index_float(i, 5, data[SpawnY]);
-			cache_get_value_index_float(i, 6, data[SpawnZ]);
-			cache_get_value_index_int(i, 7, data[Interior]);
-			cache_get_value_index_int(i, 8, data[World]);
+			cache_get_value_name_int(i, "id", data[ID]);
+			cache_get_value_name(i, "name", data[Name]);
+			cache_get_value_name(i, "short_name", data[ShortName]);
+			cache_get_value_name_int(i, "type", data[Type]);
+			cache_get_value_name_float(i, "spawn_x", data[SpawnX]);
+			cache_get_value_name_float(i, "spawn_y", data[SpawnY]);
+			cache_get_value_name_float(i, "spawn_z", data[SpawnZ]);
+			cache_get_value_name_int(i, "spawn_interior", data[Interior]);
+			cache_get_value_name_int(i, "spawn_world", data[World]);
 
 			map_add_arr(Factions, data[ID], data);
 

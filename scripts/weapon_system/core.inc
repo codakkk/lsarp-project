@@ -2,7 +2,6 @@
 
 hook OnGameModeInit()
 {
-	printf("Initializing Weapons...");
 	Weapon_InitializeType(WEAPON_COLT45, gItem_LightAmmo, 25, true);
 	Weapon_InitializeType(WEAPON_SILENCED, gItem_LightAmmo, 30, true);
 	Weapon_InitializeType(WEAPON_DEAGLE, gItem_LightAmmo, 45, true);
@@ -20,7 +19,6 @@ hook OnGameModeInit()
 
 	Weapon_InitializeType(WEAPON_RIFLE, gItem_RifleAmmo, 70, true);
 	Weapon_InitializeType(WEAPON_SNIPER, gItem_RifleAmmo, 500, true);
-	printf("Weapons initialized");
 	return 1;
 }
 

@@ -1,7 +1,7 @@
 stock Character_CharacterAMe(playerid, otherid, text[], GLOBAL_TAG_TYPES:...)
 {
 	new s[148];
-	format(s, sizeof(s), "%s %s", text, Character_GetRolePlayName(otherid));
+	format(s, sizeof(s), "%s %s.", text, Character_GetRolePlayName(otherid));
 	return Character_AMe(playerid, s);
 }
 
@@ -81,14 +81,16 @@ stock Player_Info(playerid, text[], bool:forced = false, time = 2500)
 
 stock Player_InfoStr(playerid, String:string, bool:forced = false, time = 2500)
 {
-	new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
+	/*new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
 	amx_to_ref(var, ptr);
-	str_get(string, ptr[0], .size=size);
+	str_get(string, ptr[0], .size=size);*/
 
-	new result = Player_Info(playerid, ptr[0], forced, time);
+	static buffer[256];
+	str_get(string, buffer);
+	new result = Player_Info(playerid, /*ptr[0]*/ buffer, forced, time);
 
-	amx_free(var);
-	amx_delete(var);
+	/*amx_free(var);
+	amx_delete(var);*/
 	return result;
 }
 

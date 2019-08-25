@@ -1,3 +1,30 @@
+
+flags:dipartimento(CMD_ALIVE_USER);
+CMD:dipartimento(playerid, params[])
+{
+	if(isnull(params) || strlen(params) > 200)
+		return SendClientMessage(playerid, COLOR_ERROR, "(/d)ipartimento <messaggio>");
+
+	new factionid = Character_GetFaction(playerid), shortName[MAX_FACTION_SHORT_NAME], rankName[MAX_FACTION_RANK_NAME];
+	
+	if(Faction_GetType(factionid) != FACTION_TYPE_POLICE && Faction_GetType(factionid) != FACTION_TYPE_MEDICAL)
+		return 0;
+	
+	Faction_GetShortName(factionid, shortName);
+	Faction_GetRankName(factionid, Character_GetRank(playerid), rankName);
+
+	foreach(new i : Player)
+	{
+		factionid = Character_GetFaction(i);
+		if(Faction_GetType(factionid) == FACTION_TYPE_POLICE || Faction_GetType(factionid) == FACTION_TYPE_MEDICAL)
+		{
+			SendFormattedMessage(i, 0xF17B91FF, "[%s] %s %s dice: %s", shortName, rankName, Character_GetOOCName(playerid), params);
+		}
+	}	
+	return 1;
+}
+alias:dipartimento("d");
+
 flags:fazione(CMD_ALIVE_USER);
 CMD:fazione(playerid, params[])
 {
@@ -107,31 +134,36 @@ CMD:setfaction(playerid, params[])
 	if(!Faction_HasRank(factionid, rankid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Rank non valido.");
 	
+	Character_OffDuty(id);
+
 	Character_SetFaction(id, factionid);
 	Character_SetRank(id, rankid);
 
-	new name[MAX_FACTION_NAME];
+	new name[MAX_FACTION_NAME], rankName[MAX_FACTION_RANK_NAME];
 	Faction_GetName(factionid, name);
+	Faction_GetRankName(factionid, rankid, rankName);
 
-	SendFormattedMessage(id, COLOR_GREEN, "%s (%d) ti ha settato nella fazione %s.", Account_GetName(playerid), playerid, name);
-	SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%d) ha settato %s (%d) nella fazione %s.", Account_GetName(playerid), playerid, Character_GetOOCName(id), id, name);
+	SendFormattedMessage(id, COLOR_GREEN, "%s (%d) ti ha settato nella fazione %s. Rank: %s", Account_GetName(playerid), playerid, name, rankName);
+	SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%d) ha settato %s (%d) nella fazione %s. Rank: %s", Account_GetName(playerid), playerid, Character_GetOOCName(id), id, name, rankName);
 	return 1;
 }
 
-flags:factionkick(CMD_MODERATOR);
-CMD:factionkick(playerid, params[])
+flags:afactionkick(CMD_MODERATOR);
+CMD:afactionkick(playerid, params[])
 {
-	new id, factionid, rankid;
-	if(sscanf(params, "k<u>dd", id, factionid, rankid))
+	new id;
+	if(sscanf(params, "k<u>", id))
 	{
-		SendClientMessage(playerid, COLOR_ERROR, "/factionkick <playerid/partofname>");
-		SendClientMessage(playerid, COLOR_ERROR, "Usa /afactionslist per una lista completa.");
+		SendClientMessage(playerid, COLOR_ERROR, "/afactionkick <playerid/partofname>");
 		return 1;	
 	}
 	if(!Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
-	if(Character_GetFaction(playerid) == INVALID_FACTION_ID)
+	if(!Faction_IsValid(Character_GetFaction(playerid)))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è in una fazione.");
+	
+	Character_OffDuty(id);
+
 	Character_SetFaction(id, INVALID_FACTION_ID);
 	Character_SetRank(id, 0);
 	SendClientMessageStr(id, COLOR_GREEN, str_format("%s (%d) ti ha kickato dalla tua fazione.", Account_GetName(playerid), playerid));

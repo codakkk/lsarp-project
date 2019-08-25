@@ -8,7 +8,6 @@ hook OnCharacterLoad(playerid)
 		{
 			Account_SetPremiumLevel(playerid, 0);
 			Account_SetPremiumExpiry(playerid, 0);
-			Account_Save(playerid);
 			SendClientMessage(playerid, COLOR_ERROR, "Il premium ti è scaduto. Visita il forum per informazioni su come rinnovarlo.");
 		}
 	}
@@ -23,7 +22,6 @@ CMD:givezpoints(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "/givezpoints <playerid/partofname> <points>");
 	
 	Account_AddPoints(id, points);
-    Account_SaveRewards(playerid);
 
 	SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-ALERT] %s (%d) ha dato %d Z-Points a %s (%d).", 
 	Account_GetName(playerid), playerid, points, Account_GetName(id), id);
@@ -117,8 +115,6 @@ CMD:setpremium(playerid, params[])
 	
 	Account_SetPremiumLevel(id, premiumid);
 	Account_SetPremiumExpiry(playerid, time ? (gettime() + 3600 * 24 * time) : 0);
-
-	Account_Save(id);
 
 	SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-ALERT]: %s (%d) ha settato %s (%d) premium livello %d.", 
 	Account_GetName(playerid), playerid, Account_GetName(id), id, premiumid);

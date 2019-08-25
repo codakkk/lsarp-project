@@ -29,7 +29,7 @@ CMD:anim(playerid, params[])
 		if(AnimationCheck(playerid))
 			ApplyAnimation(playerid, tmpLib, tmpAnimName, 4.1, isLoop, 1, 1, 1, 0);
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnFind, "SELECT * FROM `character_custom_animations` WHERE CharacterID = '%d' AND Name = '%e';", Character_GetID(playerid), animName);
+	MySQL_TQueryInline(gMySQL, using inline OnFind, "SELECT * FROM `character_custom_animations` WHERE character_id = '%d' AND name = '%e';", Character_GetID(playerid), animName);
 	return 1;
 }
 alias:anim("ca");
@@ -71,7 +71,7 @@ CMD:customanim(playerid, params[])
 			}
 			Dialog_Show_s(playerid, Dialog_CustomAnimDelete, DIALOG_STYLE_TABLIST_HEADERS, @("Custom Animations"), content, "Elimina", "Chiudi");
 		}
-		MySQL_TQueryInline(gMySQL, using inline OnFind, "SELECT Name, Library, AnimName, `Loop` FROM `character_custom_animations` WHERE CharacterID = '%d';", Character_GetID(playerid));
+		MySQL_TQueryInline(gMySQL, using inline OnFind, "SELECT name, library, anim_name, is_loop FROM `character_custom_animations` WHERE character_id = '%d';", Character_GetID(playerid));
 	}
 	else return SendClientMessage(playerid, COLOR_ERROR, "/customanim <crea - lista>");
 	return 1;
@@ -93,11 +93,11 @@ Dialog:Dialog_CustomAnimDelete(playerid, response, listitem, inputtext[])
 		cache_get_value_index_int(listitem, 0, tmpId);
 		cache_get_value_index(listitem, 1, tmpName);
 
-		mysql_tquery_f(gMySQL, "DELETE FROM `character_custom_animations` WHERE ID = '%d';", tmpId);
+		mysql_tquery_f(gMySQL, "DELETE FROM `character_custom_animations` WHERE id = '%d';", tmpId);
 
 		SendFormattedMessage(playerid, COLOR_GREEN, "Custom Animation \"%s\" eliminata con successo.", tmpName);
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnCheck, "SELECT ID, Name FROM `character_custom_animations` WHERE CharacterID = '%d';", Character_GetID(playerid));
+	MySQL_TQueryInline(gMySQL, using inline OnCheck, "SELECT id, name FROM `character_custom_animations` WHERE character_id = '%d';", Character_GetID(playerid));
 	return 1;
 }
 
@@ -150,7 +150,7 @@ Dialog:Dialog_CreateCAnimCName(playerid, response, listitem, inputtext[])
 			Dialog_Show(playerid, Dialog_CreateCustomAnimOk, DIALOG_STYLE_MSGBOX, "Conferma Animazione Personalizzata", "Nome: %s\nLibreria: %s\nNome Animazione: %s\nLoop: %s", "Crea", "Annulla", pCustomAnimCustomName[playerid], pCustomAnimLibrary[playerid], pCustomAnimName[playerid], pCustomAnimLoop{playerid} ? ("Si") : ("No"));
 		}
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnCheck, "SELECT ID FROM `character_custom_animations` WHERE CharacterID = '%d' AND LOWER(Name) = LOWER('%e');", Character_GetID(playerid), inputtext);
+	MySQL_TQueryInline(gMySQL, using inline OnCheck, "SELECT id FROM `character_custom_animations` WHERE character_id = '%d' AND LOWER(name) = LOWER('%e');", Character_GetID(playerid), inputtext);
 	return 1;
 }
 
@@ -165,7 +165,7 @@ Dialog:Dialog_CreateCustomAnimOk(playerid, response, listitem, inputtext[])
 
 stock CustomAnimation_CreateForPlayer(playerid, const customName[], const library[], const animName[], isLoop)
 {
-	mysql_tquery_f(gMySQL, "INSERT INTO `character_custom_animations` (CharacterID, Name, Library, AnimName, `Loop`) VALUES('%d', '%e', '%e', '%e', '%d');", 
+	mysql_tquery_f(gMySQL, "INSERT INTO `character_custom_animations` (character_id, name, library, anim_name, is_loop) VALUES('%d', '%e', '%e', '%e', '%d');", 
 	Character_GetID(playerid), customName, library, animName, isLoop);
 }
 

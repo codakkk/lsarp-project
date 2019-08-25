@@ -7,7 +7,10 @@ enum //E_BUILDING_TYPE
 {
 	BUILDING_TYPE_STORE = 0,
 	BUILDING_TYPE_PAYCHECK,
-	// Insert here other types
     BUILDING_TYPE_GARAGE,
+	BUILDING_TYPE_COMPLEX,
+
+	// Insert here other types
 	BUILDING_TYPE_LAST
 }
+

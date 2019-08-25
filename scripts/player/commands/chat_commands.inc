@@ -49,15 +49,23 @@ CMD:pm(playerid, params[])
 	}
     
     PlayerPlaySound(id, 1085, 0.0, 0.0, 0.0);
-    if(Account_IsAdminDuty(playerid) || Account_IsSupporterDuty(playerid))
+    if(Account_IsAdminDuty(playerid))
     {
-        SendTwoLinesMessage(id, COLOR_RECEIVEPM, "** PM da {FF6347}%s{ffdb18}: %s", Character_GetOOCName(playerid), playerid, s);
-        SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a %s (%d): %s", Character_GetOOCName(id), id, s);
+        SendTwoLinesMessage(id, COLOR_RECEIVEPM, "** PM da {FF6347}%s{ffdb18}: %s", Account_GetName(playerid), s);
+        SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a {FF6347}%s{ffdb18} (%d): %s", Character_GetOOCName(id), id, s);
     }
     else
     {
-        SendTwoLinesMessage(id, COLOR_RECEIVEPM, "PM da %s (%d): %s", Character_GetOOCName(playerid), playerid, s);
-        SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a %s (%d): %s", Character_GetOOCName(id), id, s);
+        if(Account_IsSupporterDuty(playerid))
+        {
+            SendTwoLinesMessage(id, COLOR_RECEIVEPM, "PM da {e9de98}%s{ffdb18} (%d): %s", Character_GetOOCName(playerid), playerid, s);
+            SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM {e9de98}a %s{ffdb18} (%d): %s", Character_GetOOCName(id), id, s);
+        }
+        else
+        {
+            SendTwoLinesMessage(id, COLOR_RECEIVEPM, "PM da %s (%d): %s", Character_GetOOCName(playerid), playerid, s);
+            SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a %s (%d): %s", Character_GetOOCName(id), id, s);
+        }
     }
 	
 	if(Character_IsAFK(id))
@@ -145,7 +153,7 @@ CMD:b(playerid, params[])
     new String:string;
     if(Account_IsAdminDuty(playerid))
     {
-        string = str_format("{FFFFFF}(( {FF4500}%s{FFFFFF} [%d]: %s ))", Account_GetName(playerid), playerid, params);
+        string = str_format("{FFFFFF}(( {FF6347}%s{FFFFFF} [%d]: %s ))", Account_GetName(playerid), playerid, params);
         //ProxDetectorStr(playerid, 15.0, string, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, true);
 		ProxDetectorStr(playerid, 15.0, string, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, true);
     }

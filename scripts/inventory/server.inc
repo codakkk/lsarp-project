@@ -1,8 +1,5 @@
 hook OnGameModeInit()
 {
-	printf("2");
-    printf("Loading items.");
-
     ServerItem_ManualInitializeItem(0, "Vuoto", ITEM_TYPE:ITEM_TYPE_NONE, 0, 1);
     // Setup weapons
     for(new i = 1; i <= 46; ++i)
@@ -85,6 +82,8 @@ hook OnGameModeInit()
 	gItem_Money = ServerItem_ManualInitializeItem(96, "Denaro", ITEM_TYPE_MONEY, 1212, cellmax-1);
 
 	gItem_Radio = ServerItem_ManualInitializeItem(97, "Radio", ITEM_TYPE_GENERAL, 1212, 1);
+
+	gItem_Cigarette = ServerItem_ManualInitializeItem(98, "Sigarette", ITEM_TYPE_GENERAL, 1212, 1);
     printf("Items loaded. N: %d\n", Iter_Count(ServerItems));
     return 1;
 }

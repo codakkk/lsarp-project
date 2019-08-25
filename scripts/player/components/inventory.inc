@@ -74,8 +74,8 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 		{
 			ResetPendingRequest(playerid, REQUEST_TYPE_WEAPON);
 			ResetPendingRequest(Request_GetReceiver(playerid, REQUEST_TYPE_WEAPON), REQUEST_TYPE_WEAPON);
-			SendClientMessage(playerid, COLOR_ERROR, "La richiesta d'arma è stata annullata poiché non possiedi più l'arma.");
-			SendClientMessage(Request_GetReceiver(playerid, REQUEST_TYPE_WEAPON), COLOR_ERROR, "La richiesta d'arma ricevuta dal giocatore è stata annullata poiché non possiede più l'arma.");
+			SendClientMessage(playerid, COLOR_ERROR, "La richiesta è stata annullata poiché non possiedi più l'arma.");
+			SendClientMessage(Request_GetReceiver(playerid, REQUEST_TYPE_WEAPON), COLOR_ERROR, "La richiesta ricevuta dal giocatore è stata annullata poiché non possiede più l'arma.");
 		}
 	}
 	return 1;
@@ -457,7 +457,7 @@ stock Character_SaveInventory(playerid)
 {
 	if(!Character_IsLogged(playerid))
 		return 0;
-	Inventory_SaveInDatabase(Character_GetInventory(playerid), "character_inventory", "CharacterID", Character_GetID(playerid));
+	Inventory_SaveInDatabase(Character_GetInventory(playerid), "character_inventory", "character_id", Character_GetID(playerid));
 	return 1;
 }
 
@@ -466,7 +466,7 @@ stock Character_LoadInventory(playerid)
 	if(!Character_IsLogged(playerid))
 		return 0;
 	Character_ResizeInventory(playerid);
-	Inventory_LoadFromDatabase(Character_GetInventory(playerid), "character_inventory", "CharacterID", Character_GetID(playerid));
+	Inventory_LoadFromDatabase(Character_GetInventory(playerid), "character_inventory", "character_id", Character_GetID(playerid));
 	return 1;
 }
 
@@ -501,7 +501,7 @@ stock Character_GiveItemToPlayer(playerid, giveTo, slotid, amount)
 stock Character_DropItem(playerid, slotid, amount)
 {
 	if(Request_IsPending(playerid, REQUEST_TYPE_ITEM))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi gettare un oggetto se hai una richiesta d'oggetto attiva.");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi gettare un oggetto se hai una richiesta attiva.");
 	if(IsPlayerInAnyVehicle(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando all'interno di un veicolo.");
 	new 
@@ -550,10 +550,10 @@ stock Character_SendItemRequest(playerid, toPlayerId, slotid, amount)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai la quantità necessaria.");
 	
 	if(Request_IsPending(toPlayerId, REQUEST_TYPE_ITEM))
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta d'oggetto attiva.");
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta attiva.");
 
 	if(Request_IsPending(playerid, REQUEST_TYPE_ITEM))
-		return SendClientMessage(playerid, COLOR_ERROR, "Hai già una richiesta d'oggetto attiva.");
+		return SendClientMessage(playerid, COLOR_ERROR, "Hai già una richiesta attiva.");
 
 	if(!Character_IsAlive(toPlayerId))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
@@ -561,7 +561,8 @@ stock Character_SendItemRequest(playerid, toPlayerId, slotid, amount)
 	Character_SetRequest(playerid, toPlayerId, REQUEST_TYPE_ITEM, itemid, amount, slotid);
 	
 	SendFormattedMessage(playerid, COLOR_SEND_REQUEST, "Hai proposto di dare l'oggetto (%s, Quantità: %d) a %s.", ServerItem_GetName(itemid), amount, Character_GetRolePlayName(toPlayerId));
+	SendClientMessage(playerid, COLOR_SEND_REQUEST, "Ricorda che puoi utilizzare \"annulla oggetto\" per annullare.");
 	SendFormattedMessage(toPlayerId, COLOR_RECEIVE_REQUEST, "%s vuole darti un oggetto (%s, Quantità: %d).", Character_GetRolePlayName(playerid), ServerItem_GetName(itemid), amount);
-	SendClientMessage(toPlayerId, COLOR_RECEIVE_REQUEST, "Digita \"/accetta oggetto\" per accettare oppure \"/annulla\" per rifiutare.");
+	SendClientMessage(toPlayerId, COLOR_RECEIVE_REQUEST, "Digita \"/accetta oggetto\" per accettare oppure \"/rifiuta oggetto\" per rifiutare.");
 	return 1;
 }

@@ -23,6 +23,11 @@ stock Inventory:Inventory_New(space)
     return inventory;
 }
 
+stock bool:Inventory_IsValid(Inventory:inv)
+{
+	return list_valid(inv);
+}
+
 stock bool:Inventory_Resize(Inventory:inventory, new_space)
 {
     if(!list_valid(inventory))
@@ -508,14 +513,15 @@ static Inventory_ShowInDialog(Inventory:inventory, playerid, const title[], cons
 
 stock Inventory_InternalShowStr(Inventory:inventory, playerid, String:title, const dialog[] = "", const button1[] = "", const button2[] = "")
 {
-	new ptr[1][] = {{}}, size = str_len(title) + 1, Var:var = amx_alloc(size);
+	/*new ptr[1][] = {{}}, size = str_len(title) + 1, Var:var = amx_alloc(size);
     amx_to_ref(var, ptr);
-    str_get(title, ptr[0], .size=size);
+    str_get(title, ptr[0], .size=size);*/
+	static buffer[2048];
+	str_get(title, buffer);
+    new result = Inventory_InternalShow(inventory, playerid, /*ptr[0]*/buffer, dialog, button1, button2);
 
-    new result = Inventory_InternalShow(inventory, playerid, ptr[0], dialog, button1, button2);
-
-    amx_free(var);
-    amx_delete(var);
+    /*amx_free(var);
+    amx_delete(var);*/
 	return result;
 }
 
@@ -561,16 +567,16 @@ stock Inventory_LoadFromDatabase(Inventory:inventory, const databaseName[], cons
 			slotid, itemid, amount, extra;
 		for(new i = 0; i < rows; ++i)
 		{
-			cache_get_value_index_int(i, 0, slotid);
-			cache_get_value_index_int(i, 1, itemid);
-			cache_get_value_index_int(i, 2, amount);
-			cache_get_value_index_int(i, 3, extra);
+			cache_get_value_name_int(i, "slot_id", slotid);
+			cache_get_value_name_int(i, "item", itemid);
+			cache_get_value_name_int(i, "amount", amount);
+			cache_get_value_name_int(i, "extra", extra);
 			if(itemid == 0 || amount == 0)
 				continue;
 			Inventory_SetItem(inventory, slotid, itemid, amount, extra);
 		}
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT SlotID, Item, Amount, Extra FROM `%e` WHERE %e = '%d' ORDER BY SlotID", databaseName, entityKeyName, id);
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT slot_id, item, amount, extra FROM `%e` WHERE %e = '%d' ORDER BY slot_id", databaseName, entityKeyName, id);
 	return true;
 }
 
@@ -588,16 +594,16 @@ stock Inventory_SaveInDatabase(Inventory:inventory, const databaseName[], const 
 		extra = Inventory_GetSlotExtra(inventory, i);
 		if(itemid == 0 || amount == 0)
 		{
-			mysql_tquery_f(gMySQL, "DELETE FROM `%e` WHERE %e = '%d' AND SlotID = '%d';", databaseName, entityKeyName, entityId, i);
+			mysql_tquery_f(gMySQL, "DELETE FROM `%e` WHERE %e = '%d' AND slot_id = '%d';", databaseName, entityKeyName, entityId, i);
 		}
 		else
 		{
 			mysql_tquery_f(gMySQL, 
-			"INSERT INTO `%e` (%e, SlotID, Item, Amount, Extra) VALUES('%d', '%d', '%d', '%d', '%d') \
+			"INSERT INTO `%e` (%e, slot_id, item, amount, extra) VALUES('%d', '%d', '%d', '%d', '%d') \
 			ON DUPLICATE KEY UPDATE \
-			Item = VALUES(Item), \
-			Amount = VALUES(Amount), \
-			Extra = VALUES(Extra);",
+			item = VALUES(item), \
+			amount = VALUES(amount), \
+			extra = VALUES(extra);",
 			databaseName, entityKeyName,
 			entityId, i, itemid, amount, extra);
 		}

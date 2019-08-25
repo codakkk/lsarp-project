@@ -49,7 +49,6 @@ CMD:passa(playerid, params[])
 	
 	if(Request_IsPending(playerid, REQUEST_TYPE_ITEM))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'oggetto attiva.");
-
 	new slotid, id, amount;
 	if(sscanf(params, "k<u>dD(1)", id, slotid, amount))
 		return SendClientMessage(playerid, COLOR_ERROR, "/passa <playerid/partofname> <slotid> <quantità (default 1)>");
@@ -67,9 +66,6 @@ CMD:getta(playerid, params[])
 	if(Character_IsFactionDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
 	
-	if(Request_IsPending(playerid, REQUEST_TYPE_ITEM))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'oggetto attiva.");
-
 	new slotid, amount;
 	if(sscanf(params, "dD(1)", slotid, amount))
 		return SendClientMessage(playerid, COLOR_ERROR, "/getta <slotid> <quantità (default 1)>");
@@ -200,7 +196,7 @@ CMD:gettaarma(playerid, params[])
 	if(Character_IsFactionDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
 
-	if(Request_IsPending(playerid, REQUEST_TYPE_WEAPON))
+	if(Request_IsPending(playerid, REQUEST_TYPE_WEAPON) && Request_GetSender(playerid, REQUEST_TYPE_WEAPON) == playerid)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'arma attiva.");
 	new 
 		weaponid, 
@@ -213,6 +209,7 @@ CMD:gettaarma(playerid, params[])
 	if(result != -1 && Character_RemoveWeapon(playerid, weaponid))
 	{
 		SendClientMessage(playerid, COLOR_GREEN, "Hai gettato l'arma.");
+		SetPlayerArmedWeapon(playerid, 0);
 		ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 3.0, 0, 0, 0, 0, 0);
 	}
 	return 1;

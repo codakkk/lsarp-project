@@ -42,9 +42,9 @@ hook OnGameModeInit()
 						`health` float DEFAULT '0', \
 						`armour` float DEFAULT '0', \
 						`skin` int(11) DEFAULT '1', \
-						`building_key` int(11) NOT NULL DEFAULT '-1', \
-						`house_key` int(11) NOT NULL DEFAULT '-1', \
-						`faction` int(11) NOT NULL DEFAULT '-1', \
+						`building_key` int(11) NOT NULL DEFAULT '0', \
+						`house_key` int(11) NOT NULL DEFAULT '0', \
+						`faction` int(11) NOT NULL DEFAULT '0', \
 						`faction_rank` int(11) NOT NULL DEFAULT '-1', \
 						`jail_time` int(11) NOT NULL DEFAULT '0', \
 						`jail_ic` int(11) NOT NULL DEFAULT '0', \
@@ -61,32 +61,20 @@ hook OnGameModeInit()
 						) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;", false);
 
 	mysql_query(gMySQL, "CREATE TABLE `character_privileges` (\
-						`CharacterID` INT(11) NOT NULL, \
-						`ChopShop` INT(11) NOT NULL DEFAULT 0, \
-						PRIMARY KEY (`CharacterID`), \
-						CONSTRAINT `CharacterPrivileges` FOREIGN KEY (`CharacterID`) REFERENCES `characters` (`id`) ON DELETE CASCADE \
+						`character_id` INT(11) NOT NULL, \
+						`chop_shop` INT(11) NOT NULL DEFAULT 0, \
+						PRIMARY KEY (`character_id`), \
+						CONSTRAINT `CharacterPrivileges` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE \
 						) ENGINE=InnoDB DEFAULT CHARSET=latin1;", false);
 
-    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS dealerships \
-						(`ID` INT(11) NOT NULL AUTO_INCREMENT, \
-						`Name` VARCHAR(24) NULL, \
-						`Models` VARCHAR(255) NULL, \
-						`Prices` VARCHAR(255) NULL, \
-						`X` FLOAT NULL, \
-						`Y` FLOAT NULL, \
-						`Z` FLOAT NULL, \
-						`VehicleX` FLOAT NULL, \
-						`VehicleY` FLOAT NULL, \
-						`VehicleZ` FLOAT NULL, \
-						PRIMARY KEY (`ID`))", false);
 
     mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS character_inventory \
-						(`CharacterID` INT(11) NOT NULL, \
-						`Items` VARCHAR(255) NULL, \
-						`ItemsAmount` VARCHAR(255) NULL, \
-						`ItemsExtraData` VARCHAR(255) NULL, \
-						`EquippedBag` INT(11) NULL,  \
-						PRIMARY KEY (`CharacterID`))", false);
+						(`character_id` INT(11) NOT NULL, \
+						`slot_id` INT(11) NOT NULL, \
+						`item` INT(11) NOT NULL, \
+						`amount` INT(11) NOT NULL, \
+						`extra` INT(11) NOT NULL, \
+						PRIMARY KEY (`character_id`))", false);
 
     mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS vehicle_inventory \
 						(`VehicleID` INT(11) NOT NULL, \
@@ -96,28 +84,24 @@ hook OnGameModeInit()
 						PRIMARY KEY (`VehicleID`))", false);
     
     mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS houses \
-						(`ID` INT(11) NOT NULL AUTO_INCREMENT, \
-						`OwnerID` INT(11) NULL, \
-						`OwnerName` VARCHAR(24) NULL, \
-						`EnterX` FLOAT NULL, \
-						`EnterY` FLOAT NULL, \
-						`EnterZ` FLOAT NULL, \
-						`EnterInterior` INT(11) NULL, \
-						`EnterWorld` INT(11) NULL, \
-						`ExitX` FLOAT NULL, \
-						`ExitY` FLOAT NULL, \
-						`ExitZ` FLOAT NULL, \
-						`ExitInterior` INT(11) NULL, \
-						`Price` INT(11) NULL, \
-						`Locked` INT(11) NULL, \
-						PRIMARY KEY (`ID`))", false);
-
-    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS house_inventory \
-						(`HouseID` INT(11) NOT NULL, \
-						`Items` VARCHAR(255) NULL, \
-						`ItemsAmount` VARCHAR(255) NULL, \
-						`ItemsExtraData` VARCHAR(255) NULL, \
-						PRIMARY KEY (`HouseID`))", false);
+						(`id` INT(11) NOT NULL AUTO_INCREMENT, \
+						`owner_id` INT(11) NULL, \
+						`owner_name` VARCHAR(24) NULL, \
+						`enter_x` FLOAT NULL, \
+						`enter_y` FLOAT NULL, \
+						`enter_z` FLOAT NULL, \
+						`enter_interior` INT(11) NULL, \
+						`enter_world` INT(11) NULL, \
+						`exit_x` FLOAT NULL, \
+						`exit_y` FLOAT NULL, \
+						`exit_z` FLOAT NULL, \
+						`exit_interior` INT(11) NULL, \
+						`price` INT(11) NULL, \
+						`locked` INT(11) NULL, \
+						`money` INT(11) NULL, \
+						`interior` INT(11) NULL, \
+						`created` INT(11) NULL, \
+						PRIMARY KEY (`id`))", false);
 
     mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS loot_zones \
 						(`ID` INT(11) NOT NULL AUTO_INCREMENT, \
@@ -131,30 +115,25 @@ hook OnGameModeInit()
 						`lz_items_rarity` VARCHAR(255) NULL, \
 						PRIMARY KEY (`ID`))", false);
 	
-	mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS character_drug_info \
-						(`CharacterID` INT(11) NOT NULL, \
-						`SkinID` INT(11) NOT NULL DEFAULT '0', \
-						`SlotID` INT(11) NOT NULL, \
-						PRIMARY KEY (`ID`))", false);
-	
 	mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS `character_drug_info` ( \
-						`CharacterID` int(11) NOT NULL, \
-						`LastUsedDrug` smallint(6) NOT NULL DEFAULT '0', \
-						`LastUsedDrugTime` int(11) NOT NULL DEFAULT '0', \
-						`LastUsedDrugCount` tinyint(4) NOT NULL DEFAULT '0', \
-						PRIMARY KEY (`CharacterID`), \
-						CONSTRAINT `CharacterDrugs` FOREIGN KEY (`CharacterID`) REFERENCES `characters` (`id`) ON DELETE CASCADE \
+						`character_id` int(11) NOT NULL, \
+						`drug_id` int(11) NOT NULL, \
+						`last_usage_time` int(11) NOT NULL, \
+						`usage_counter` int(11) NOT NULL, \
+						`next_usage_time` int(11) NOT NULL, \
+						PRIMARY KEY (`character_id`), \
+						CONSTRAINT `character_drugs` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE \
 						) ENGINE=InnoDB DEFAULT CHARSET=latin1", false);
 
 	mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS `character_custom_animations` ( \
-						`ID` int(11) NOT NULL AUTO_INCREMENT, \
-						`CharacterID` int(11) NOT NULL, \
-						`Name` VARCHAR(32) NOT NULL, \
-						`Library` VARCHAR(32) NOT NULL, \
-						`AnimName` VARCHAR(32) NOT NULL, \
-						`Loop` tinyint(4) NOT NULL, \
-						CONSTRAINT IDCharacterID PRIMARY KEY (`ID`, `CharacterID`), \
-						CONSTRAINT `CharacterCustomAnimations` FOREIGN KEY (`CharacterID`) REFERENCES `characters` (`id`) ON DELETE CASCADE \
+						`id` int(11) NOT NULL AUTO_INCREMENT, \
+						`character_id` int(11) NOT NULL, \
+						`name` VARCHAR(32) NOT NULL, \
+						`library` VARCHAR(32) NOT NULL, \
+						`anim_name` VARCHAR(32) NOT NULL, \
+						`is_loop` tinyint(4) NOT NULL, \
+						CONSTRAINT IDCharacterID PRIMARY KEY (`id`, `character_id`), \
+						CONSTRAINT `CharacterCustomAnimations` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE \
 						) ENGINE=InnoDB DEFAULT CHARSET=latin1", false);
 
 	mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS furnitures \
@@ -197,6 +176,16 @@ stock mysql_tquery_f(MySQL:handle, const query[], GLOBAL_TAG_TYPES:...)
 	if(ret)
 	{
 		ret = mysql_tquery(handle, YSI_UNSAFE_HUGE_STRING);
+	}
+	return ret;
+}
+
+stock mysql_tquery_f_callback(MySQL:handle, const callback[] = "", const format[] = "", const query[], GLOBAL_TAG_TYPES:...)
+{
+	new ret = mysql_format(handle, YSI_UNSAFE_HUGE_STRING, YSI_UNSAFE_HUGE_LENGTH, query, ___(4));
+	if(ret)
+	{
+		ret = mysql_tquery(handle, YSI_UNSAFE_HUGE_STRING, callback, format);
 	}
 	return ret;
 }

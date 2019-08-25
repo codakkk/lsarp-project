@@ -7,30 +7,6 @@
 
 // CHANGE ME/AME COLOR
 
-hook OnPlayerClearData(playerid)
-{
-    if(pVehicleSeller[playerid] != -1 && pVehicleSellingTo[pVehicleSeller[playerid]] == playerid)
-    {
-	   new seller = pVehicleSeller[playerid];
-	   SendClientMessage(seller, COLOR_ERROR, "Il giocatore a cui volevi vendere il veicolo si è disconnesso.");
-	   pVehicleSellingTo[seller] = -1;
-	   pVehicleSellingPrice[seller] = 0;
-	   pSellingVehicleID[seller] = 0;
-    }
-    else if(pVehicleSellingTo[playerid] != -1 && pVehicleSeller[pVehicleSellingTo[playerid]] == playerid)
-    {
-	   new customer = pVehicleSellingTo[playerid];
-	   SendClientMessage(customer, COLOR_ERROR, "Il giocatore che voleva venderti il veicolo si è disconnesso.");
-	   pVehicleSeller[customer] = -1;
-	   pVehicleSellingPrice[customer] = 0;
-	   pSellingVehicleID[customer] = 0;
-    }
-    pVehicleSellingPrice[playerid] = 0;
-    pSellingVehicleID[playerid] = 0;
-    pVehicleSellingTo[playerid] = -1;
-    pVehicleSeller[playerid] = -1;
-    return 1;
-}
 
 flags:info(CMD_USER);
 CMD:info(playerid, params[])
@@ -85,11 +61,11 @@ CMD:tog(playerid, params[])
 	return 1;
 }
 
-flags:dom(CMD_USER);
-CMD:dom(playerid, params[])
+flags:domanda(CMD_USER);
+CMD:domanda(playerid, params[])
 {
     if(isnull(params))
-	   return SendClientMessage(playerid, COLOR_ERROR, "/dom <testo>");
+	   return SendClientMessage(playerid, COLOR_ERROR, "(/dom)anda <testo>");
     new seconds = (Account_GetPremiumLevel(playerid) > 0) ? 10 : 30;
     if(GetTickCount() - pLastAdminQuestionTime[playerid] < 1000 * seconds)
 	   return SendFormattedMessage(playerid, COLOR_ERROR, "Puoi inviare una domanda ogni %d secondi.", seconds);
@@ -107,6 +83,7 @@ CMD:dom(playerid, params[])
     pLastAdminQuestionTime[playerid] = GetTickCount();
     return 1;
 }
+alias:domanda("dom");
 
 flags:afk(CMD_USER);
 CMD:afk(playerid, params[])
@@ -126,11 +103,12 @@ CMD:afk(playerid, params[])
 flags:aiuto(CMD_USER);
 CMD:aiuto(playerid, params[])
 {
-    SendClientMessage(playerid, -1, "[GENERALE]: /info - /dom - /compra - /annulla - /sconosciuto - /oggetto");
-    SendClientMessage(playerid, -1, "[GENERALE]: /rimuovi - /hotkeys - /arma - /id - /dp - /blindfold");
-	SendClientMessage(playerid, -1, "[GENERALE]: /afk - /stilechat - /stilelotta - /stilecamminata - /oggetto");
-	SendClientMessage(playerid, -1, "[GENERALE]: /cancello - /onduty - /testers");
+    SendClientMessage(playerid, -1, "[GENERALE]: /info - (/dom)anda - /compra - /annulla - /sconosciuto - /oggetto - /rimuovimaschera");
+    SendClientMessage(playerid, -1, "[GENERALE]: /rimuovi - /hotkeys - /arma - /id - /dp - /blindfold - /lostitems");
+	SendClientMessage(playerid, -1, "[GENERALE]: /afk - /stilechat - /stilelotta - /stilecamminata - /flascia - /cambiapassword");
+	SendClientMessage(playerid, -1, "[GENERALE]: /accetta - /rifiuta - /cancello - /onduty - /chiediaiuto - /casa - /biz");
     SendClientMessage(playerid, -1, "[ALTRO]: /chatcmds - /animlist - /vcmds - /invcmds - /zpoints - /furniturecmds");
+	SendClientMessage(playerid, -1, "[ALTRO]: /fcmds");
 	new factionid = Character_GetFaction(playerid);
 	if(factionid != -1)
 	{
@@ -138,11 +116,11 @@ CMD:aiuto(playerid, params[])
 			Faction_GetType(factionid) == FACTION_TYPE_MEDICAL ||
 			Faction_GetType(factionid) == FACTION_TYPE_GOVERNAMENT)
 		{
-			SendClientMessage(playerid, COLOR_SLATEBLUE, "[FAZIONE]: (/f)azione - /faiuto");
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "[FAZIONE]: (/f)azione");
 		}
 	}
 	if(Account_GetAdminLevel(playerid) > 0)
-		SendClientMessage(playerid, COLOR_GREEN, "[SUPPORTER]: /tcmds");
+		SendClientMessage(playerid, COLOR_GREEN, "[TESTER]: /tcmds");
 	if(Account_GetAdminLevel(playerid) > 1)
 		SendClientMessage(playerid, COLOR_GREEN, "[ADMIN]: /acmds");
     return 1;
@@ -153,32 +131,16 @@ flags:chatcmds(CMD_USER);
 CMD:chatcmds(playerid, params[])
 {
     SendClientMessage(playerid, -1, "[CHAT]: /b - /me - /ame - /low - /melow - /do - /dolow - (/s)hout");
-    SendClientMessage(playerid, -1, "[CHAT]: (/w)hisper - (/cw)hisper - /pm - /blockb - /blockpm - /cleaarchat");
-	return 1;
-}
-
-
-flags:faiuto(CMD_USER);
-CMD:faiuto(playerid, params[])
-{
-	new factionid = Character_GetFaction(playerid);
-	if(factionid != -1)
-	{
-		if(Faction_GetType(factionid) == FACTION_TYPE_POLICE)
-		{
-			SendClientMessage(playerid, COLOR_SLATEBLUE, "[GUARDIA NAZIONALE]: /ammanetta - /trascina - /arresta - (/m)egafono");
-			SendClientMessage(playerid, COLOR_SLATEBLUE, "[GUARDIA NAZIONALE]: /perquisisci - /cura - /servizio");
-		}
-	}
+    SendClientMessage(playerid, -1, "[CHAT]: (/w)hisper - (/cw)hisper - /pm - /blockb - /blockpm - /clearchat");
 	return 1;
 }
 
 flags:vcmds(CMD_ALIVE_USER);
 CMD:vcmds(playerid, params[])
 {
-	SendClientMessage(playerid, -1, "[VEICOLI]: /motore - (/fin)estrino - /vmenu - /vapri - /vchiudi");
+	SendClientMessage(playerid, -1, "[VEICOLI]: (/v)eicolo - /motore - (/fin)estrino - /vsicura");
 	SendClientMessage(playerid, -1, "[VEICOLI]: /vluci - /vparcheggia - /vpark - /vbagagliaio");
-	SendClientMessage(playerid, -1, "[VEICOLI]: (/vdis)assembla - (/vdep)osita");
+	SendClientMessage(playerid, -1, "[VEICOLI]: (/vinv)entario - (/vdis)assembla - (/vdep)osita");
 	return 1;
 }
 
@@ -244,7 +206,7 @@ CMD:id(playerid, params[])
 			}
 		}
 		if(c == 0)
-			SendClientMessage(playerid, COLOR_ERROR, "Giocatore non collegato.");
+			SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
 	}
 	return 1;
 }
@@ -252,12 +214,12 @@ CMD:id(playerid, params[])
 flags:lasciacarcere(CMD_ALIVE_USER);
 CMD:lasciacarcere(playerid, params[])
 {
-	if(!Character_IsJailed(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei in carcere");
-	if(Character_GetJailTime(playerid) > 0)
+	if(!Character_IsICJailed(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei in carcere.");
+	if(Character_GetJailTime(playerid) > 1)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai ancora scontato la tua pena.");
-	new id, E_ELEMENT_TYPE:type;
-	if(!Character_GetNearestPickup(playerid, id, type) || type != ELEMENT_TYPE_JAIL_EXIT)
+	
+	if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_JAIL_EXIT))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino all'uscita della prigione.");
 	
 	Character_SetJailTime(playerid, 0);
@@ -265,7 +227,7 @@ CMD:lasciacarcere(playerid, params[])
 
 	//Character_Spawn(playerid);
 	SetPlayerPos(playerid, 1313.0187, -2063.6877, 57.1440);
-	SendClientMessage(playerid, COLOR_GREEN, "Hai lasciato il carcere.");
+	SendClientMessage(playerid, -1, "Hai lasciato il carcere.");
 	return 1;
 }
 

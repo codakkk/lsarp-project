@@ -42,12 +42,12 @@ hook OnPlayerClearData(playerid)
 			if(PendingRequestInfo[toPlayer][i][Pending] && PendingRequestInfo[toPlayer][i][ByPlayer] == playerid)
 			{
 				SendFormattedMessage(toPlayer, COLOR_ERROR, "La richiesta (%s) di %s è stata annullata poiché si è disconnesso.", GetRequestTypeName(i), Character_GetRolePlayName(playerid));
-				ResetPendingRequest(toPlayer);
+				ResetPendingRequest(toPlayer, i);
 			}
 			else if(PendingRequestInfo[fromPlayer][i][Pending] && PendingRequestInfo[fromPlayer][i][ToPlayer] == playerid)
 			{
 				SendFormattedMessage(fromPlayer, COLOR_ERROR, "La richiesta (%s) inviata a %s è stata annullata poiché si è disconnesso.", GetRequestTypeName(i), Character_GetRolePlayName(playerid));
-				ResetPendingRequest(fromPlayer);
+				ResetPendingRequest(fromPlayer, i);
 			}
 		}
 		ResetPendingRequest(playerid, i);
@@ -65,11 +65,13 @@ ptask OnRequestUpdateTimer[1000](playerid)
 		{
 			if(GetTickCount() - PendingRequestInfo[playerid][i][Time] > PENDING_REQUEST_TIME * 60 * 1000) // 60 seconds
 			{
-				new byPlayer = PendingRequestInfo[playerid][i][ByPlayer];
-				SendFormattedMessage(playerid, COLOR_ERROR, "La richiesta (%s) da %s è scaduta.", GetRequestTypeName(i), Character_GetRolePlayName(byPlayer), byPlayer);
-				ResetPendingRequest(playerid, i);
+				new toPlayer = Request_GetReceiver(playerid, i),
+					byPlayer = Request_GetSender(playerid, i);
+
+				SendFormattedMessage(toPlayer, COLOR_ERROR, "La proposta (%s) di %s è scaduta.", GetRequestTypeName(i), Character_GetRolePlayName(byPlayer));
+				ResetPendingRequest(toPlayer, i);
 		
-				SendFormattedMessage(byPlayer, COLOR_ERROR, "La richiesta (%s) inviata a %s è scaduta.", GetRequestTypeName(i), Character_GetRolePlayName(playerid), playerid);
+				SendFormattedMessage(byPlayer, COLOR_ERROR, "La proposta (%s) inviata a %s è scaduta.", GetRequestTypeName(i), Character_GetRolePlayName(toPlayer));
 				ResetPendingRequest(byPlayer, i);
 			}
 		}
@@ -85,7 +87,10 @@ stock Character_SetRequest(byPlayer, toPlayer, type, item = 0, amount = 0, slot 
 	PendingRequestInfo[byPlayer][type][Pending] = PendingRequestInfo[toPlayer][type][Pending] = 1;
 
 	PendingRequestInfo[byPlayer][type][ToPlayer] = toPlayer;
+	PendingRequestInfo[byPlayer][type][ByPlayer] = byPlayer;
+
 	PendingRequestInfo[toPlayer][type][ByPlayer] = byPlayer;
+	PendingRequestInfo[toPlayer][type][ToPlayer] = toPlayer;
 
 	PendingRequestInfo[byPlayer][type][Time] = PendingRequestInfo[toPlayer][type][Time] = GetTickCount();
 
@@ -104,7 +109,7 @@ stock Character_SetRequest(byPlayer, toPlayer, type, item = 0, amount = 0, slot 
 stock Request_IsPending(playerid, type)
 {
 	if(! (REQUEST_TYPE_NONE < type < REQUEST_TYPE_LAST))
-		return 1;
+		return 0;
 	return PendingRequestInfo[playerid][type][Pending];
 }
 
@@ -143,13 +148,13 @@ stock Character_AcceptItemRequest(playerid)
 	if(!Request_IsPending(playerid, REQUEST_TYPE_ITEM))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta attiva.");
 
-	if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid), 5.0))
+	if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_ITEM), 5.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore che ti ha inviato la richiesta.");
 
 	new 
-		senderid = Request_GetSender(playerid),
-		amount = Request_GetAmount(playerid),
-		slotid = Request_GetSlot(playerid);
+		senderid = Request_GetSender(playerid, REQUEST_TYPE_ITEM),
+		amount = Request_GetAmount(playerid, REQUEST_TYPE_ITEM),
+		slotid = Request_GetSlot(playerid, REQUEST_TYPE_ITEM);
 
 	new
 		itemid = Character_GetSlotItem(senderid, slotid),
@@ -181,7 +186,7 @@ stock Character_AcceptItemRequest(playerid)
 	}
 	Character_AMe(senderid, "prende degli oggetti e li da a %s.", Character_GetRolePlayName(playerid));
 
-	ResetPendingRequest(senderid);
-	ResetPendingRequest(playerid);
+	ResetPendingRequest(senderid, REQUEST_TYPE_ITEM);
+	ResetPendingRequest(playerid, REQUEST_TYPE_ITEM);
 	return 1;
 }

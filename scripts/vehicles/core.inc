@@ -1,9 +1,6 @@
 
 #include <YSI_Coding\y_hooks>
 
-#define VEHICLE_MIN_HEALTH	250.0
-#define VEHICLE_MIN_HEALTH_FOR_ENGINE	350.0
-
 // Remove OwnerName from enum and create an indipendent variable (VehicleOwnerName)
 
 static enum E_VEHICLE_DATA
@@ -20,7 +17,8 @@ static enum E_VEHICLE_DATA
 	LastChopShopTime,
 	Faction,
 	SpawnExpiry,
-	Plate[9]
+	Plate[9],
+	Price
 };
 
 enum E_VEHICLE_RESTORE_DATA
@@ -54,7 +52,7 @@ static
 
 hook OnGameModeInit()
 {
-	mysql_query(gMySQL, "CREATE TABLE `vehicles` ( \
+	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `vehicles` ( \
 						`id` int(11) NOT NULL AUTO_INCREMENT, \
 						`owner_id` int(11) NOT NULL, \
 						`model` int(11) NOT NULL, \
@@ -78,8 +76,8 @@ hook OnGameModeInit()
 						PRIMARY KEY (`id`), \
 						KEY `OwnerID` (`owner_id`), \
 						CONSTRAINT `CharacterVehicle` FOREIGN KEY (`owner_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE \
-						) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1", false);
-	mysql_tquery(gMySQL, "UPDATE `vehicles` SET spawned = 0 WHERE 1;");
+						) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1");
+	mysql_tquery(gMySQL, "UPDATE `vehicles` SET spawned = '0' WHERE 1;");
 	new query[256];
 	mysql_format(gMySQL, query, sizeof(query), "SELECT * FROM vehicles WHERE faction != '%d';", INVALID_FACTION_ID);
 	mysql_tquery(gMySQL, query, #Vehicle_LoadAll);
@@ -94,13 +92,21 @@ task OnVehicleUpdate[500]()
 			continue;
 		if(Vehicle_GetHealth(v) <= VEHICLE_MIN_HEALTH)
 		{
+			new Float:x, Float:y, Float:z, Float:a;
+			
+			GetVehiclePos(v, x, y, z);
+			GetVehicleZAngle(v, a);
+
 			Vehicle_SetDestroyed(v, true);
 			Vehicle_Respawn(v);
+			
+			SetVehiclePos(v, x, y, z);
+			SetVehicleZAngle(v, a);
 		}
 	}
 }
 
-task OnVehicleCheck[120000]() 
+/*task OnVehicleCheck[120000]() 
 {
 	foreach(new v : Vehicle)
 	{
@@ -116,7 +122,7 @@ task OnVehicleCheck[120000]()
 			continue;
 		}
 	}
-}
+}*/
 
 ptask OnPlayerVehicleFuelUpdate[15000](playerid)
 {
@@ -130,13 +136,13 @@ ptask OnPlayerVehicleFuelUpdate[15000](playerid)
 			//!IsAHelicopter(vehicleid) && !IsAPlane(vehicleid) && !IsABoat(vehicleid)
 			if(Vehicle_IsEngineOn(vehicleid) && !IsABike(vehicleid))
 			{
-				Vehicle_GiveFuel(vehicleid, -0.25);
+				Vehicle_AddFuel(vehicleid, -0.25);
 			}
 		}
 		else
 		{
 			Player_Info(playerid, "Benzina ~r~finita~w~.", true, 4000);
-			Vehicle_SetEngineOff(vehicleid);
+			Vehicle_SetEngineStatus(vehicleid, false);
 		}
 	}
 	return 1;
@@ -153,7 +159,7 @@ ptask OnPlayerVehicleCheck[1000 + 1](playerid)
 		new Float:health = Vehicle_GetHealth(vehicleid);
 		if(health < VEHICLE_MIN_HEALTH_FOR_ENGINE && !Account_IsAdminDuty(playerid))
 		{
-			Vehicle_SetEngineOff(vehicleid);
+			Vehicle_SetEngineStatus(vehicleid, false);
 			SendClientMessage(playerid, COLOR_ERROR, "Il motore del veicolo si è spento poiché è danneggiato.");
 		}
 
@@ -188,10 +194,11 @@ stock Vehicle_Reload(vehicleid)
 	
 	ChangeVehicleColor(vehicleid, VehicleInfo[vehicleid][Color1], VehicleInfo[vehicleid][Color2]);
 
-	Vehicle_SetEngineOff(vehicleid);
+	Vehicle_SetEngineStatus(vehicleid, false);
 	if(Vehicle_IsDestroyed(vehicleid))
 	{
 		Vehicle_SetDestroyed(vehicleid, false);
+		//SetVehicleHealth(vehicleid, VEHICLE_MIN_HEALTH);
 		SetVehicleHealth(vehicleid, VEHICLE_MIN_HEALTH_FOR_ENGINE+50.0);
 	}
 	else
@@ -212,7 +219,7 @@ stock Vehicle_Reload(vehicleid)
 	{
 		SetVehiclePos(vehicleid, VehicleInfo[vehicleid][X], VehicleInfo[vehicleid][Y], VehicleInfo[vehicleid][Z]);
 		SetVehicleZAngle(vehicleid, VehicleInfo[vehicleid][A]);
-		Vehicle_SetEngineOff(vehicleid);
+		Vehicle_SetEngineStatus(vehicleid, false);
 		if(Vehicle_IsDestroyed(vehicleid))
 		{
 			Vehicle_SetDestroyed(vehicleid, false);
@@ -233,7 +240,7 @@ stock Vehicle_Reload(vehicleid)
 stock Vehicle_Respawn(vehicleid)
 {
 	SetVehicleToRespawn(vehicleid);
-	Vehicle_SetEngineOff(vehicleid);
+	Vehicle_SetEngineStatus(vehicleid, false);
 	Vehicle_SetLightState(vehicleid, false);
 	Vehicle_SetFuel(vehicleid, 100.0);
 	SetVehiclePos(vehicleid, VehicleInfo[vehicleid][X], VehicleInfo[vehicleid][Y], VehicleInfo[vehicleid][Z]);
@@ -290,9 +297,10 @@ stock Vehicle_InsertInDatabase(vehicleid)
 		Vehicle_InitializeInventory(vehicleid);
 		//Vehicle_GeneratePlate(vehicleid);
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO `vehicles` (owner_id, model, color_1, color_2, x, y, z, a, locked, faction) \
-		VALUES('%d', '%d', '%d', '%d', '%f', '%f', '%f', '%f', '0', '%d')",
-		Vehicle_GetOwnerID(vehicleid), GetVehicleModel(vehicleid), Vehicle_GetColor1(vehicleid), Vehicle_GetColor2(vehicleid), x, y, z, a, Vehicle_GetFaction(vehicleid));
+	MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO `vehicles` (owner_id, model, color_1, color_2, x, y, z, angle, locked, faction, price) \
+		VALUES('%d', '%d', '%d', '%d', '%f', '%f', '%f', '%f', '0', '%d', '%d')",
+		Vehicle_GetOwnerID(vehicleid), GetVehicleModel(vehicleid), Vehicle_GetColor1(vehicleid), Vehicle_GetColor2(vehicleid), x, y, z, a, Vehicle_GetFaction(vehicleid),
+		Vehicle_GetPrice(vehicleid));
 	return 1;
 }
 
@@ -318,6 +326,7 @@ stock Vehicle_Reset(vehicleid)
     VehicleInfo[vehicleid][Y] = 0.0;
     VehicleInfo[vehicleid][Z] = 0.0;
     VehicleInfo[vehicleid][A] = 0.0;
+	VehicleInfo[vehicleid][Faction] = INVALID_FACTION_ID;
     Vehicle_SetLocked(vehicleid, false);
 	Vehicle_SetLastChopShopTime(vehicleid, 0);
 	Vehicle_CancelDespawn(vehicleid);
@@ -327,7 +336,7 @@ stock Vehicle_Reset(vehicleid)
     VehicleRestore[vehicleid][LastZ] = 0.0;
     VehicleRestore[vehicleid][LastA] = 0.0;
     VehicleRestore[vehicleid][LastHealth] = 0.0;
-    Vehicle_SetEngineOff(vehicleid);
+    Vehicle_SetEngineStatus(vehicleid, false);
 	Vehicle_SetDestroyed(vehicleid, false);
 	Vehicle_SetFuel(vehicleid, 0.0);
 	return 1;
@@ -335,13 +344,14 @@ stock Vehicle_Reset(vehicleid)
 
 stock Vehicle_Park(vehicleid, Float:nx, Float:ny, Float:nz, Float:na)
 {
-    if(!Vehicle_GetID(vehicleid) || Vehicle_GetModel(vehicleid) == 0)
+    if(!Vehicle_IsValid(vehicleid))
 	   return 0;
     VehicleInfo[vehicleid][X] = nx;
     VehicleInfo[vehicleid][Y] = ny;
     VehicleInfo[vehicleid][Z] = nz;
     VehicleInfo[vehicleid][A] = na;
-    Vehicle_Save(vehicleid);
+    if(Vehicle_GetID(vehicleid) != 0)
+		mysql_tquery_f(gMySQL, "UPDATE `vehicles` SET x = '%f', y = '%f', z = '%f', angle = '%f' WHERE id = '%d'", nx, ny, nz, na, Vehicle_GetID(vehicleid));
     return 1;
 }
 
@@ -381,6 +391,14 @@ stock Vehicle_SetLightState(vehicleid, s)
     return 1;
 }
 
+stock Vehicle_GetLightState(vehicleid)
+{
+    new engine, lights, alarm, doors, bonnet, boot, objective;
+    GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
+    return lights;
+}
+
+
 stock Vehicle_IsEngineOff(vehicleid)
 {
     new engine, lights, alarm, doors, bonnet, boot, objective;
@@ -393,26 +411,6 @@ stock Vehicle_IsEngineOn(vehicleid)
     new engine, lights, alarm, doors, bonnet, boot, objective;
     GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
     return engine;
-}
-
-stock Vehicle_SetEngineOn(vehicleid)
-{
-    if(IsABike(vehicleid))
-	   return 0;
-    new engine, lights, alarm, doors, bonnet, boot, objective;
-    GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
-    SetVehicleParamsEx(vehicleid, VEHICLE_PARAMS_ON, lights, alarm, doors, bonnet, boot, objective);
-    return 1;
-}
-
-stock Vehicle_SetEngineOff(vehicleid)
-{
-    if(IsABike(vehicleid))
-	   return 0;
-    new engine, lights, alarm, doors, bonnet, boot, objective;
-    GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
-    SetVehicleParamsEx(vehicleid, VEHICLE_PARAMS_OFF, lights, alarm, doors, bonnet, boot, objective);
-    return 1;
 }
 
 stock Vehicle_UpdateLockState(vehicleid)
@@ -493,58 +491,6 @@ stock Vehicle_IsOwnerConnected(vehicleid)
     return 0;
 }
 
-stock Vehicle_Save(vehicleid)
-{
-    if(Vehicle_IsTemporary(vehicleid) || !Vehicle_GetID(vehicleid) || !Vehicle_GetModel(vehicleid))
-	   return 0;
-    new 
-	   Float:x, 
-	   Float:y, 
-	   Float:z, 
-	   Float:a,
-	   Float:hp;
-	   //vehSpawned = 0;
-    
-    GetVehiclePos(vehicleid, x, y, z);
-    GetVehicleZAngle(vehicleid, a);
-    GetVehicleHealth(vehicleid, hp);
-
-	/*if(x != 0.0 && y != 0.0 && z != 0.0)
-	{
-		vehSpawned = 1;
-	}*/
-
-    new query[1024];
-    mysql_format(gMySQL, query, sizeof(query), "UPDATE `vehicles` SET \
-    model = '%d', \
-	owner_id = '%d', \
-    color_1 = '%d', color_2 = '%d', \
-    x = '%f', y = '%f', z = '%f', a = '%f', \
-    locked = '%d', \
-    last_x = '%f', last_y = '%f', last_z = '%f', last_a = '%f', \
-    last_health = '%f', \
-    engine = '%d', \
-	fuel = '%f', \
-	faction = '%d', \
-	last_chop_shop_time = '%d' \
-    WHERE ID = '%d'", 
-    Vehicle_GetModel(vehicleid),
-	Vehicle_GetOwnerID(vehicleid),
-    Vehicle_GetColor1(vehicleid), Vehicle_GetColor2(vehicleid),
-    VehicleInfo[vehicleid][X], VehicleInfo[vehicleid][Y], VehicleInfo[vehicleid][Z], VehicleInfo[vehicleid][A],
-    Vehicle_IsLocked(vehicleid),
-    x, y, z, a,
-    hp,
-    Vehicle_GetEngineStatus(vehicleid),
-	Vehicle_GetFuel(vehicleid),
-	Vehicle_GetFaction(vehicleid),
-	Vehicle_GetLastChopShopTime(vehicleid),
-    Vehicle_GetID(vehicleid));
-    mysql_tquery(gMySQL, query);
-    CallLocalFunction(#OnVehicleSaved, "d", vehicleid);
-    return 1;
-}
-
 // Deletes a vehicle (vehicleid). If it's a player vehicle, all their references are destroyed too (database, ecc).
 stock Vehicle_Delete(vehicleid)
 {
@@ -552,7 +498,7 @@ stock Vehicle_Delete(vehicleid)
 		return 0;
 	mysql_tquery_f(gMySQL, "DELETE FROM `vehicles` WHERE id = '%d'", Vehicle_GetID(vehicleid));
 
-	//mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `vehicle_inventory` WHERE VehicleID = '%d'", Vehicle_GetID(vehicleid));
+	//mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `vehicle_inventory` WHERE vehicle_id = '%d'", Vehicle_GetID(vehicleid));
 	//mysql_tquery(gMySQL, query);
 
 	Vehicle_Destroy(vehicleid);
@@ -599,7 +545,10 @@ stock Vehicle_GeneratePlate(vehicleid)
 
 stock Vehicle_SetPlate(vehicleid, plate[])
 {
+	if(Vehicle_GetID(vehicleid) <= 0)
+		return 0;
 	set(VehicleInfo[vehicleid][Plate], plate);
+	mysql_tquery_f(gMySQL, "UPDATE `vehicles` SET plate = '%e' WHERE id = '%d'", plate, Vehicle_GetID(vehicleid));
 	return SetVehicleNumberPlate(vehicleid, plate);
 }
 
@@ -621,9 +570,15 @@ stock Vehicle_Despawn(vehicleid)
 {
 	if(!Vehicle_GetID(vehicleid) || Vehicle_IsTemporary(vehicleid))
 		return 0;
-	mysql_tquery_f(gMySQL, "UPDATE `vehicles` SET spawned = '0' WHERE id = '%d';", Vehicle_GetID(vehicleid));
+	
+	new Float:x, Float:y, Float:z, Float:a, Float:health;
 
-	Vehicle_Save(vehicleid);
+	GetVehiclePos(vehicleid, x, y, z);
+	GetVehicleZAngle(vehicleid, a);
+	GetVehicleHealth(vehicleid, health);
+
+	mysql_tquery_f(gMySQL, "UPDATE `vehicles` SET spawned = '0', last_x = '%f', last_y = '%f', last_z = '%f', last_a = '%f', last_health = '%f' WHERE id = '%d';", 
+	x, y, z, a, health, Vehicle_GetID(vehicleid));
 
 	CallLocalFunction(#OnVehicleUnloaded, "d", vehicleid);
 	
@@ -647,39 +602,62 @@ stock Vehicle_IsOwner(vehicleid, playerid, bool:onlyEffectiveOwner)
 forward Vehicle_LoadAll();
 public Vehicle_LoadAll()
 {
-	new count = 0, dbid = 0, modelid = 0, ownerid = 0, locked = 0;
+	new count = 0, dbid = 0, modelid = 0, ownerid = 0, locked = 0,
+		bool:alreadyLoaded = false;
+	
 	cache_get_row_count(count);
 
 	for(new i = 0; i < count; ++i)
 	{
-		cache_get_value_index_int(i, 0, dbid);
-		cache_get_value_index_int(i, 1, ownerid);
-		cache_get_value_index_int(i, 2, modelid);
+		cache_get_value_name_int(i, "id", dbid);
+		cache_get_value_name_int(i, "owner_id", ownerid);
+		cache_get_value_name_int(i, "model", modelid);
 		
 		if(dbid == 0 || modelid == 0)
 			continue;
+		
+		// Just safeness. Probably useless
+		foreach(new v : Vehicle)
+		{
+			if(Vehicle_GetID(v) == dbid)
+			{
+				alreadyLoaded = true;
+				break;
+			}
+		}
 
-		new vehicleid = Vehicle_Create(modelid, 0, 0, 0, 0, 0, 0, 0, 0);
+		if(alreadyLoaded)
+			continue;
+
+		new vehicleid = Vehicle_Create(modelid, 0.0, 0.0, 0.0, 0.0, 0, 0, -1);
+		
 		VehicleInfo[vehicleid][ID] = dbid;
 		VehicleInfo[vehicleid][OwnerID] = ownerid;
-		cache_get_value_index_int(i, 3, VehicleInfo[vehicleid][Color1]);
-		cache_get_value_index_int(i, 4, VehicleInfo[vehicleid][Color2]);
-		cache_get_value_index_float(i, 5, VehicleInfo[vehicleid][X]);
-		cache_get_value_index_float(i, 6, VehicleInfo[vehicleid][Y]);
-		cache_get_value_index_float(i, 7, VehicleInfo[vehicleid][Z]);
-		cache_get_value_index_float(i, 8, VehicleInfo[vehicleid][A]);
-		cache_get_value_index_int(i, 9, locked);
-		cache_get_value_index_float(i, 10, VehicleRestore[vehicleid][LastX]);
-		cache_get_value_index_float(i, 11, VehicleRestore[vehicleid][LastY]);
-		cache_get_value_index_float(i, 12, VehicleRestore[vehicleid][LastZ]);
-		cache_get_value_index_float(i, 13, VehicleRestore[vehicleid][LastA]);
-		cache_get_value_index_float(i, 14, VehicleRestore[vehicleid][LastHealth]);
-		//cache_get_value_index_int(i, 15, VehicleRestore[vehicleid][Spawned]);
-		//cache_get_value_index_int(i, 16, VehicleRestore[vehicleid][Engine]);
-		cache_get_value_index_float(i, 17, VehicleFuel[vehicleid]);	  
-		cache_get_value_index_int(i, 18, VehicleInfo[vehicleid][Faction]);
-		cache_get_value_index_int(i, 19, VehicleInfo[vehicleid][LastChopShopTime]);
-		cache_get_value_index_int(i, 20, VehicleInfo[vehicleid][Plate]);
+		
+		cache_get_value_name_float(i, "x", VehicleInfo[vehicleid][X]);
+		cache_get_value_name_float(i, "y", VehicleInfo[vehicleid][Y]);
+		cache_get_value_name_float(i, "z", VehicleInfo[vehicleid][Z]);
+		cache_get_value_name_float(i, "angle", VehicleInfo[vehicleid][A]);
+		cache_get_value_name_int(i, "color_1", VehicleInfo[vehicleid][Color1]);
+		cache_get_value_name_int(i, "color_2", VehicleInfo[vehicleid][Color2]);
+		
+		SetVehiclePos(vehicleid, VehicleInfo[vehicleid][X], VehicleInfo[vehicleid][Y], VehicleInfo[vehicleid][Z]);
+		SetVehicleZAngle(vehicleid, VehicleInfo[vehicleid][A]);
+		ChangeVehicleColor(vehicleid, VehicleInfo[vehicleid][Color1], VehicleInfo[vehicleid][Color2]);
+
+		cache_get_value_name_int(i, "locked", locked);
+		cache_get_value_name_float(i, "last_x", VehicleRestore[vehicleid][LastX]);
+		cache_get_value_name_float(i, "last_y", VehicleRestore[vehicleid][LastY]);
+		cache_get_value_name_float(i, "last_z", VehicleRestore[vehicleid][LastZ]);
+		cache_get_value_name_float(i, "last_a", VehicleRestore[vehicleid][LastA]);
+		cache_get_value_name_float(i, "last_health", VehicleRestore[vehicleid][LastHealth]);
+		//cache_get_value_name_int(i, 15, VehicleRestore[vehicleid][Spawned]);
+		//cache_get_value_name_int(i, 16, VehicleRestore[vehicleid][Engine]);
+		cache_get_value_name_float(i, "fuel", VehicleFuel[vehicleid]);	  
+		cache_get_value_name_int(i, "faction", VehicleInfo[vehicleid][Faction]);
+		cache_get_value_name_int(i, "last_chop_shop_time", VehicleInfo[vehicleid][LastChopShopTime]);
+		cache_get_value_name_int(i, "plate", VehicleInfo[vehicleid][Plate]);
+		cache_get_value_name_int(i, "price", VehicleInfo[vehicleid][Price]);
 		
 		Vehicle_SetEngineStatus(vehicleid, false);
 		Vehicle_SetDestroyed(vehicleid, false);
@@ -691,7 +669,7 @@ public Vehicle_LoadAll()
 
 		if(ownerid > 0)
 		{
-			new bool:found = false;
+			/*new bool:found = false;
 			foreach(new p : Player)
 			{
 				if(Character_GetID(p) == ownerid)
@@ -702,9 +680,9 @@ public Vehicle_LoadAll()
 				}
 			}
 			if(!found)
-			{
+			{*/
 				Vehicle_SetOwnerName(vehicleid, Character_GetNameFromDatabase(ownerid, true));
-			}
+			//}
 		}
 
 		Vehicle_CancelDespawn(vehicleid);
@@ -756,12 +734,17 @@ stock Vehicle_GetFaction(vehicleid)
 
 stock Vehicle_HasFaction(vehicleid)
 {
-	return VehicleInfo[vehicleid][Faction] != -1;
+	return VehicleInfo[vehicleid][Faction] != INVALID_FACTION_ID;
 }
 
 stock Vehicle_SetFaction(vehicleid, factionid)
 {
+	if(!Vehicle_IsValid(vehicleid))
+		return 0;
 	VehicleInfo[vehicleid][Faction] = factionid;
+	if(Vehicle_GetID(vehicleid) != 0)
+		mysql_tquery_f(gMySQL, "UPDATE `vehicles` SET faction = '%d' WHERE id = '%d'", Faction_GetID(factionid), Vehicle_GetID(vehicleid));
+	return 1;
 }
 
 stock Vehicle_SetOwnerName(vehicleid, const name[])
@@ -776,8 +759,13 @@ stock Vehicle_GetOwnerID(vehicleid)
 
 stock Vehicle_SetOwner(vehicleid, playerid)
 {
+	if(!Vehicle_IsValid(vehicleid))
+		return 0;
 	VehicleInfo[vehicleid][OwnerID] = Character_GetID(playerid);
 	Vehicle_SetOwnerName(vehicleid, Character_GetOOCName(playerid));
+	if(Vehicle_GetID(vehicleid) != 0)
+		mysql_tquery_f(gMySQL, "UPDATE `vehicles` SET owner_id = '%d' WHERE id = '%d'", Vehicle_GetOwnerID(vehicleid), Vehicle_GetID(vehicleid));
+	return 1;
 }
 
 stock Vehicle_SetTemporary(vehicleid, bool:istemporary)
@@ -797,12 +785,20 @@ stock Vehicle_GetLastChopShopTime(vehicleid)
 
 stock Vehicle_SetLastChopShopTime(vehicleid, time)
 {
+	if(!Vehicle_IsValid(vehicleid))
+		return 0;
 	VehicleInfo[vehicleid][LastChopShopTime] = time;
+	if(Vehicle_GetID(vehicleid) != 0)
+		mysql_tquery_f(gMySQL, "UPDATE `vehicles` SET last_chop_shop_time = '%d' WHERE id = '%d'", time, Vehicle_GetID(vehicleid));
+	return 1;
 }
 
 stock Vehicle_SetLocked(vehicleid, bool:locked)
 {
 	Bit_Set(gVehicleBitState[e_vLocked], vehicleid, locked);
+	if(Vehicle_GetID(vehicleid) != 0)
+		mysql_tquery_f(gMySQL, "UPDATE `vehicles` SET locked = '%d' WHERE id = '%d'", locked?1:0, Vehicle_GetID(vehicleid));
+	return 1;
 }
 
 stock Vehicle_IsLocked(vehicleid)
@@ -833,10 +829,17 @@ stock Vehicle_IsDespawn(vehicleid)
 // Updates Vehicle Params too.
 stock Vehicle_SetEngineStatus(vehicleid, bool:engineStatus)
 {
+	if(!Vehicle_IsValid(vehicleid))
+		return 0;
 	Bit_Set(gVehicleBitState[e_vEngine], vehicleid, engineStatus);
 	new engine, lights, alarm, doors, bonnet, boot, objective;
     GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
     SetVehicleParamsEx(vehicleid, engineStatus ? VEHICLE_PARAMS_ON : VEHICLE_PARAMS_OFF, lights, alarm, doors, bonnet, boot, objective);
+	
+	if(Vehicle_GetID(vehicleid) != 0)
+		mysql_tquery_f(gMySQL, "UPDATE `vehicles` SET engine = '%d' WHERE id = '%d'", engineStatus?VEHICLE_PARAMS_ON : VEHICLE_PARAMS_OFF, Vehicle_GetID(vehicleid));
+
+	return 1;
 }
 
 stock Vehicle_GetEngineStatus(vehicleid)
@@ -847,6 +850,8 @@ stock Vehicle_GetEngineStatus(vehicleid)
 stock Vehicle_IsOwnable(vehicleid)
 {
 	if(!Vehicle_IsValid(vehicleid))
+		return 0;
+	if(Vehicle_HasFaction(vehicleid))
 		return 0;
 	// IS FACTION VEHICLE?
 	return 1;
@@ -877,6 +882,10 @@ stock Vehicle_SetColors(vehicleid, color1, color2)
 		return 0;
 	VehicleInfo[vehicleid][Color1] = color1;
 	VehicleInfo[vehicleid][Color2] = color2;
+
+	if(Vehicle_GetID(vehicleid) != 0)
+		mysql_tquery_f(gMySQL, "UPDATE `vehicles` SET color_1 = '%d', color_2 = '%d' WHERE id = '%d'", color1, color2, Vehicle_GetID(vehicleid));
+
 	return ChangeVehicleColor(vehicleid, color1, color2);
 }
 
@@ -887,25 +896,22 @@ stock Float:Vehicle_GetFuel(vehicleid)
 
 stock Vehicle_SetFuel(vehicleid, Float:setValue)
 {
+	if(!Vehicle_IsValid(vehicleid))
+		return 0;
 	if(setValue > 100)
 		setValue = 100;
 	else if(setValue < 0)
 		setValue = 0;
 	VehicleFuel[vehicleid] = setValue;
+
+	if(Vehicle_GetID(vehicleid) != 0)
+		mysql_tquery_f(gMySQL, "UPDATE `vehicles` SET fuel = '%f' WHERE id = '%d'", setValue, Vehicle_GetID(vehicleid));
+	return 1;
 }
 
 stock Vehicle_AddFuel(vehicleid, Float:addValue)
 {
 	Vehicle_SetFuel(vehicleid, VehicleFuel[vehicleid] + addValue);
-}
-
-stock Vehicle_GiveFuel(vehicleid, Float:value)
-{
-	VehicleFuel[vehicleid] += value;
-	if(VehicleFuel[vehicleid] > 100.0)
-		VehicleFuel[vehicleid] = 100.0;
-	else if(VehicleFuel[vehicleid] < 0.0)
-		VehicleFuel[vehicleid] = 0.0;
 }
 
 stock Float:Vehicle_GetHealth(vehicleid)
@@ -923,4 +929,31 @@ stock Vehicle_GetSpawnExpiry(vehicleid)
 stock Vehicle_SetSpawnExpiry(vehicleid, time)
 {
 	VehicleInfo[vehicleid][SpawnExpiry] = time;
+}
+
+stock Vehicle_GetSpawnPos(vehicleid, &Float:x, &Float:y, &Float:z)
+{
+	if(!IsValidVehicle(vehicleid))
+		return 0;
+	x = VehicleInfo[vehicleid][X];
+	y = VehicleInfo[vehicleid][Y];
+	z = VehicleInfo[vehicleid][Z];
+	return 1;
+}
+
+stock Vehicle_GetPrice(vehicleid)
+{
+	if(!Vehicle_IsValid(vehicleid))
+		return 0;
+	return VehicleInfo[vehicleid][Price];
+}
+
+stock Vehicle_SetPrice(vehicleid, price)
+{
+	if(!Vehicle_IsValid(vehicleid))
+		return 0;
+	VehicleInfo[vehicleid][Price] = price;
+	if(Vehicle_GetID(vehicleid) != 0)
+		mysql_tquery_f(gMySQL, "UPDATE `vehicles` SET price = '%d' WHERE id = '%d'", price, Vehicle_GetID(vehicleid));
+	return 1;
 }

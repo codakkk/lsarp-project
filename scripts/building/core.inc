@@ -1,7 +1,10 @@
-#include <building\garage>
+#include <building\components\inventory>
+#include <building\components\garage>
+#include <building\components\shop>
 #include <YSI_Coding\y_hooks>
 
-
+forward OnBuildingLoaded(buildingid);
+forward OnBuildingDeleted(buildingid);
 
 static enum _:E_BUILDING_INFO
 {
@@ -95,7 +98,7 @@ stock Building_Create(Float:x, Float:y, Float:z, interior, world)
 		new id = cache_insert_id();
 
 		new data[E_BUILDING_INFO];
-
+		data[ID] = id;
 		set(data[Name], "SET_NAME");
 		set(data[WelcomeText], "");
 		set(data[OwnerName], "");
@@ -115,7 +118,7 @@ stock Building_Create(Float:x, Float:y, Float:z, interior, world)
 
 		Building_CreateElements(id);
 
-		
+		CallLocalFunction(#OnBuildingLoaded, "d", id);
     }
     MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO buildings (name, owner_name, welcome_text, enter_x, enter_y, enter_z, enter_interior, enter_world, exit_x, exit_y, exit_z, exit_interior, ownable, owner_id, price, locked) \
 						   VALUES('SET_NAME', '', '', '%f', '%f', '%f', '%d', '%d', '0.0', '0.0', '0.0', '0', '0', '0', '0', '1')", 
@@ -127,7 +130,6 @@ stock Building_LoadAll()
 {
 	new Cache:result = mysql_query(gMySQL, "SELECT * FROM `buildings` ORDER BY id", true);
 
-	printf("\nLoading Buildings...");
 	new count = cache_num_rows();
 	new data[E_BUILDING_INFO];
 	for(new i = 0; i < count; ++i)
@@ -161,10 +163,12 @@ stock Building_LoadAll()
 		map_add_arr(Buildings, data[ID], data);
 
 		Building_CreateElements(data[ID]);
+
+		CallLocalFunction(#OnBuildingLoaded, "d", data[ID]);
 		//printf("Type: %d", BuildingInfo[i][Type]);
 		//Iter_Add(Buildings, i);
 	}
-	printf("Loaded %d buildings.\n", count);
+	printf("%d buildings loaded.\n", count);
 	cache_delete(result);
 	return 1;
 }
@@ -298,7 +302,16 @@ stock Building_ResetOwner(buildingid)
 	iter_set_cells(iter, OwnerName, "");
 
 	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET owner_name = '', owner_id = '0' WHERE id = '%d'", Building_GetID(buildingid));
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET building_key = '0' WHERE building_key = '%d'", Building_GetID(buildingid));
 	
+	foreach(new i : Player)
+	{
+		if(!Character_IsLogged(i) || Character_GetBuildingKey(i) != Building_GetID(buildingid))
+			continue;
+		SendClientMessage(i, COLOR_ORANGE, "L'edificio di cui eri proprietario non ti appartiene piu'.");
+		Character_SetBuildingKey(i, 0);
+	}
+
     Log("", "", "Building_ResetOwner", buildingid);
     return 1;
 }
@@ -315,7 +328,8 @@ stock Building_Delete(buildingid)
 	Building_DestroyElements(buildingid);
 	
 	// UPDATE OWNERID -> BUILDING_ID TO 0.
-    
+    CallLocalFunction(#OnBuildingDeleted, "d", buildingid);
+
 	map_remove_deep(Buildings, buildingid);
     return 1;
 }
@@ -537,41 +551,39 @@ stock Building_SetMoney(buildingid, amount)
 	return 1;
 }
 
-stock Character_ShowBuildingDialog(playerid)
+stock Building_GetAddress(buildingid)
 {
-	new buildingid = Character_GetNearBuildingIDMenu(playerid);
-	if(buildingid != -1 && Building_IsOwnable(buildingid))
-	{
-		return Dialog_Show(playerid, Dialog_Building, DIALOG_STYLE_LIST, "Edificio", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore", "Continua", "Chiudi");
-	}
-	return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno di un tuo edificio."), 0;
+    new zone[32], Float:x, Float:y, Float:z;
+    Building_GetEnterPos(buildingid, x, y, z);
+    Get2DZoneName(x, y, z, zone, sizeof(zone));
+    return zone;
 }
 
 stock Character_AcceptBuilding(playerid)
 {
-	if(!Request_IsPending(playerid, REQUEST_TYPE_REPAIR))
+	if(!Request_IsPending(playerid, REQUEST_TYPE_BUILDING))
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di riparazione attiva."), 0;
 	
-    if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_REPAIR), 5.0))
+    if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_BUILDING), 5.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
 	
-	new senderid = Request_GetSender(playerid, REQUEST_TYPE_REPAIR),
-		buildingid = Request_GetItem(playerid, REQUEST_TYPE_REPAIR),
-        price = Request_GetAmount(playerid, REQUEST_TYPE_REPAIR)
+	new senderid = Request_GetSender(playerid, REQUEST_TYPE_BUILDING),
+		buildingid = Request_GetItem(playerid, REQUEST_TYPE_BUILDING),
+        price = Request_GetAmount(playerid, REQUEST_TYPE_BUILDING)
     ;
 
 	if(buildingid == -1)
 	{
-		ResetPendingRequest(playerid, REQUEST_TYPE_REPAIR);
-		ResetPendingRequest(senderid, REQUEST_TYPE_REPAIR);
+		ResetPendingRequest(playerid, REQUEST_TYPE_BUILDING);
+		ResetPendingRequest(senderid, REQUEST_TYPE_BUILDING);
 		return 0;
 	}
 
 	if(Building_GetOwnerID(buildingid) != Character_GetID(senderid))
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Il giocatore che ti ha inviato la richiesta non è più proprietario dell'edificio.");
-		ResetPendingRequest(playerid, REQUEST_TYPE_REPAIR);
-		ResetPendingRequest(senderid, REQUEST_TYPE_REPAIR);
+		ResetPendingRequest(playerid, REQUEST_TYPE_BUILDING);
+		ResetPendingRequest(senderid, REQUEST_TYPE_BUILDING);
 		return 0;
 	}
 
@@ -581,155 +593,10 @@ stock Character_AcceptBuilding(playerid)
     SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s ha accettato la tua richiesta di vendita del tuo edificio. Hai guadagnato $%d.", Character_GetRolePlayName(playerid), price);
     SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "%s ti ha venduto il suo edificio per $%d.", Character_GetRolePlayName(senderid), price);
 
-    ResetPendingRequest(playerid, REQUEST_TYPE_REPAIR);
-    ResetPendingRequest(senderid, REQUEST_TYPE_REPAIR);
+    ResetPendingRequest(playerid, REQUEST_TYPE_BUILDING);
+    ResetPendingRequest(senderid, REQUEST_TYPE_BUILDING);
 	return 1;
 }
-
-Dialog:Dialog_Building(playerid, response, listitem, inputtext[])
-{
-	if(!response)
-		return 0;
-	new buildingid = Character_GetNearBuildingIDMenu(playerid);
-	if(buildingid == -1)
-		return 0;
-	switch(listitem)
-	{
-		case 0:
-		{
-			Building_SetLocked(buildingid, !Building_IsLocked(buildingid));
-			if(Building_IsLocked(buildingid))
-				SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso il tuo edificio.");
-			else
-				SendClientMessage(playerid, COLOR_GREEN, "Hai aperto il tuo edificio.");
-			return 1;
-		}
-		case 1:
-		{
-			return SendClientMessage(playerid, COLOR_ERROR, "Non ancora disponibile ^^");
-		}
-		case 2:
-		{
-			return Dialog_Show(playerid, Dialog_BuildingDepositMoney, DIALOG_STYLE_INPUT, "Deposita Denaro", "Inserisci l'ammontare di denaro che vuoi depositare all'interno del tuo edificio.", "Deposita", "Indietro");
-		}
-		case 3:
-		{
-			return Dialog_Show(playerid, DialogBuildingWithdrawMoney, DIALOG_STYLE_INPUT, "Ritira Denaro", "Inserisci l'ammontare di denaro che vuoi ritirare dall'interno del tuo edificio.", "Ritira", "Indietro");
-		}
-		case 4:
-		{
-			new money = Building_GetPrice(buildingid)/2;
-			new name[MAX_BUILDING_NAME];
-			Building_GetName(buildingid, name);
-			return Dialog_Show(playerid, Dialog_BuildingSell, DIALOG_STYLE_MSGBOX, "Vendita Edificio", "Sei sicuro di voler vendere questo edificio (%s) per $%d?", "Vendi", "Indietro", name, money);
-		}
-		case 5:
-		{
-			return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "Inserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
-		}
-	}
-	return 1;
-}
-
-Dialog:Dialog_BuildingDepositMoney(playerid, response, listitem, inputtext[])
-{
-	if(!response)
-		return Character_ShowBuildingDialog(playerid);
-	
-	new buildingid = Character_GetNearBuildingIDMenu(playerid);
-	if(buildingid == -1)
-		return 0;
-	
-	new money =  strval(inputtext);
-	if(money <= 0 || money > Character_GetMoney(playerid))
-		return Dialog_Show(playerid, Dialog_BuildingDepositMoney, DIALOG_STYLE_INPUT, "Deposita Denaro", "{FF0000}Non disponi della quantità di denaro inserita.\n{FFFFFF}Inserisci l'ammontare di denaro che vuoi depositare all'interno del tuo edificio.", "Deposita", "Indietro");
-	
-	Building_GiveMoney(buildingid, money);
-	Character_GiveMoney(playerid, -money, "building_deposit");
-
-	SendFormattedMessage(playerid, -1, "Hai depositato $%d all'interno dell'edificio.", money);
-
-	return 1;
-}
-
-Dialog:DialogBuildingWithdrawMoney(playerid, response, listitem, inputtext[])
-{
-	if(!response)
-		return Character_ShowBuildingDialog(playerid);
-	
-	new buildingid = Character_GetNearBuildingIDMenu(playerid);
-	if(buildingid == -1)
-		return 0;
-	
-	new money = strval(inputtext);
-	if(money <= 0 || money > Building_GetMoney(buildingid))
-		return Dialog_Show(playerid, DialogBuildingWithdrawMoney, DIALOG_STYLE_INPUT, "Ritira Denaro", "{FF0000}L'edificio non dispone della quantità di denaro inserita.\n{FFFFFF}Inserisci l'ammontare di denaro che vuoi ritirare dall'interno del tuo edificio.", "Ritira", "Indietro");
-	
-	Building_GiveMoney(buildingid, -money);
-	Character_GiveMoney(playerid, money, "building_withdraw");
-
-	SendFormattedMessage(playerid, -1, "Hai ritirato $%d dall'interno dell'edificio.", money);
-
-	return 1;
-}
-
-Dialog:Dialog_BuildingSell(playerid, response, listitem, inputtext[])
-{
-	if(!response)
-		return Character_ShowBuildingDialog(playerid);
-	
-	new buildingid = Character_GetNearBuildingIDMenu(playerid);
-
-	if(buildingid == -1)
-		return 0;
-	
-	new price = Building_GetPrice(buildingid)/2,
-		name[MAX_BUILDING_NAME];
-	
-	Building_GetName(buildingid, name);
-
-	Character_GiveMoney(playerid, price, "building_sell");
-
-	SendFormattedMessage(playerid, -1, "Hai venduto il tuo edificio (%s) per $%d.", name, price);
-
-	Building_ResetOwner(buildingid);
-
-	return 1;
-}
-
-Dialog:Dialog_BuildingSellToPlayer(playerid, response, listitem, inputtext[])
-{
-	if(!response)
-		return Character_ShowBuildingDialog(playerid);
-	
-	new buildingid = Character_GetNearBuildingIDMenu(playerid);
-
-	if(buildingid == -1)
-		return 0;
-	
-	new id, money;
-
-	if(sscanf(inputtext, "k<u>d", id, money))
-		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il formato inserito non è giusto.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
-
-	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
-		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il giocatore non è collegato.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
-
-	if(!IsPlayerInRangeOfPlayer(playerid, id, 8.0))
-		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il giocatore è troppo distante.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
-
-	if(money < 0 || money > Character_GetMoney(id))
-		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il giocatore non ha abbastanza denaro.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
-
-	if(Character_HasBuildingKey(id))
-		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il giocatore possiede già un edificio.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
-
-	Character_SetRequest(playerid, id, REQUEST_TYPE_BUILDING, buildingid, money);
-	SendFormattedMessage(id, COLOR_RECEIVE_REQUEST, "%s vuole venderti il suo edificio per $%d.", Character_GetRolePlayName(playerid), money);
-	SendFormattedMessage(playerid, COLOR_SEND_REQUEST, "Hai proposto il tuo edificio a %s per $%d.", Character_GetRolePlayName(id), money);
-	return 1;
-}
-
 
 stock Character_GetNearBuildingID(playerid)
 {
@@ -758,15 +625,183 @@ stock Character_GetNearBuilding(playerid, bool:inside)
 	return -1;
 }
 
-stock Character_GetNearBuildingIDMenu(playerid)
+stock Character_GetNearBuildingIDMenu(playerid, minRank = 3)
 {
 	new buildingid = Character_GetNearBuilding(playerid, true);
-	if(buildingid == -1)
+	if(!Building_IsValid(buildingid))
 		buildingid = Character_GetNearBuilding(playerid, false);
-	if(buildingid != -1)
+	if(Building_IsValid(buildingid))
 	{
-		if(Account_IsAdminDuty(playerid) || House_GetOwnerID(buildingid) == Character_GetID(playerid) || House_GetID(buildingid) == Character_GetHouseKey(playerid))
+		if(Account_IsAdminDuty(playerid) || Building_GetOwnerID(buildingid) == Character_GetID(playerid) || Building_GetID(buildingid) == Character_GetBuildingKey(playerid))
+			return buildingid;
+		if(Faction_IsValid(Character_GetFaction(playerid)) && Character_GetFaction(playerid) == Building_GetFaction(buildingid) && Character_GetRank(playerid) <= minRank)
 			return buildingid;
 	}
 	return -1;
+}
+
+stock Character_ShowBizDialog(playerid)
+{
+	new buildingid = Character_GetNearBuildingIDMenu(playerid);
+	if(Building_IsValid(buildingid) && Building_GetOwnerID(buildingid) == Character_GetID(playerid))
+	{
+		return Dialog_Show(playerid, Dialog_Building, DIALOG_STYLE_LIST, "Edificio", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nGestisci Negozio", "Continua", "Chiudi");
+	}
+	return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno di un tuo edificio."), 0;
+}
+
+flags:biz(CMD_ALIVE_USER);
+CMD:biz(playerid, params[])
+{
+	return Character_ShowBizDialog(playerid);
+}
+alias:biz("edificio", "building");
+
+Dialog:Dialog_Building(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+		return 0;
+	new buildingid = Character_GetNearBuildingIDMenu(playerid);
+	if(!Building_IsValid(buildingid) || Building_GetOwnerID(buildingid) != Character_GetID(playerid))
+		return 0;
+	switch(listitem)
+	{
+		case 0:
+		{
+			Building_SetLocked(buildingid, !Building_IsLocked(buildingid));
+			if(Building_IsLocked(buildingid))
+				SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso il tuo edificio.");
+			else
+				SendClientMessage(playerid, COLOR_GREEN, "Hai aperto il tuo edificio.");
+			return 1;
+		}
+		case 1:
+		{
+			return Building_ShowInventory(buildingid, playerid);
+		}
+		case 2:
+		{
+			return Dialog_Show(playerid, Dialog_BuildingDepositMoney, DIALOG_STYLE_INPUT, "Deposita Denaro", "Inserisci l'ammontare di denaro che vuoi depositare all'interno del tuo edificio.", "Deposita", "Indietro");
+		}
+		case 3:
+		{
+			return Dialog_Show(playerid, DialogBuildingWithdrawMoney, DIALOG_STYLE_INPUT, "Ritira Denaro", "Inserisci l'ammontare di denaro che vuoi ritirare dall'interno del tuo edificio.", "Ritira", "Indietro");
+		}
+		case 4:
+		{
+			new money = Building_GetPrice(buildingid)/2;
+			new name[MAX_BUILDING_NAME];
+			Building_GetName(buildingid, name);
+			return Dialog_Show(playerid, Dialog_BuildingSell, DIALOG_STYLE_MSGBOX, "Vendita Edificio", "Sei sicuro di voler vendere questo edificio (%s) per $%d?", "Vendi", "Indietro", name, money);
+		}
+		case 5:
+		{
+			return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "Inserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
+		}
+		case 6:
+		{
+			return Character_EditSellableItems(playerid);
+		}
+	}
+	return 1;
+}
+
+Dialog:Dialog_BuildingDepositMoney(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+		return Character_ShowBizDialog(playerid);
+	
+	new buildingid = Character_GetNearBuildingIDMenu(playerid);
+	if(!Building_IsValid(buildingid) || Building_GetOwnerID(buildingid) != Character_GetID(playerid))
+		return 0;
+	
+	new money =  strval(inputtext);
+	if(money <= 0 || money > Character_GetMoney(playerid))
+		return Dialog_Show(playerid, Dialog_BuildingDepositMoney, DIALOG_STYLE_INPUT, "Deposita Denaro", "{FF0000}Non disponi della quantità di denaro inserita.\n{FFFFFF}Inserisci l'ammontare di denaro che vuoi depositare all'interno del tuo edificio.", "Deposita", "Indietro");
+	
+	Building_GiveMoney(buildingid, money);
+	Character_GiveMoney(playerid, -money, "building_deposit");
+
+	SendFormattedMessage(playerid, -1, "Hai depositato $%d all'interno dell'edificio.", money);
+
+	return 1;
+}
+
+Dialog:DialogBuildingWithdrawMoney(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+		return Character_ShowBizDialog(playerid);
+	
+	new buildingid = Character_GetNearBuildingIDMenu(playerid);
+	if(!Building_IsValid(buildingid) || Building_GetOwnerID(buildingid) != Character_GetID(playerid))
+		return 0;
+	
+	new money = strval(inputtext);
+	if(money <= 0 || money > Building_GetMoney(buildingid))
+		return Dialog_Show(playerid, DialogBuildingWithdrawMoney, DIALOG_STYLE_INPUT, "Ritira Denaro", "{FF0000}La cassa non dispone della quantità di denaro inserita.\n{FFFFFF}Inserisci l'ammontare di denaro che vuoi ritirare dalla cassa del tuo edificio.", "Ritira", "Indietro");
+	
+	Building_GiveMoney(buildingid, -money);
+	Character_GiveMoney(playerid, money, "building_withdraw");
+
+	SendFormattedMessage(playerid, -1, "Hai ritirato $%d dall'interno dell'edificio.", money);
+
+	return 1;
+}
+
+Dialog:Dialog_BuildingSell(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+		return Character_ShowBizDialog(playerid);
+	
+	new buildingid = Character_GetNearBuildingIDMenu(playerid);
+
+	if(!Building_IsValid(buildingid) || Building_GetOwnerID(buildingid) != Character_GetID(playerid))
+		return 0;
+	
+	new price = Building_GetPrice(buildingid)/2,
+		name[MAX_BUILDING_NAME];
+	
+	Building_GetName(buildingid, name);
+
+	Character_GiveMoney(playerid, price, "building_sell");
+
+	SendFormattedMessage(playerid, -1, "Hai venduto il tuo edificio (%s) per $%d.", name, price);
+
+	Character_SetBuildingKey(playerid, 0);
+	Building_ResetOwner(buildingid);
+
+	return 1;
+}
+
+Dialog:Dialog_BuildingSellToPlayer(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+		return Character_ShowBizDialog(playerid);
+	
+	new buildingid = Character_GetNearBuildingIDMenu(playerid);
+
+	if(!Building_IsValid(buildingid) || Building_GetOwnerID(buildingid) != Character_GetID(playerid))
+		return 0;
+	
+	new id, money;
+
+	if(sscanf(inputtext, "k<u>d", id, money))
+		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il formato inserito non è giusto.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
+
+	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
+		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il giocatore non è collegato.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
+
+	if(!IsPlayerInRangeOfPlayer(playerid, id, 8.0))
+		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il giocatore è troppo distante.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
+
+	if(money < 0 || money > Character_GetMoney(id))
+		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il giocatore non ha abbastanza denaro.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
+
+	if(Character_HasBuildingKey(id))
+		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il giocatore possiede già un edificio.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
+
+	Character_SetRequest(playerid, id, REQUEST_TYPE_BUILDING, buildingid, money);
+	SendFormattedMessage(id, COLOR_RECEIVE_REQUEST, "%s vuole venderti il suo edificio per $%d.", Character_GetRolePlayName(playerid), money);
+	SendFormattedMessage(playerid, COLOR_SEND_REQUEST, "Hai proposto il tuo edificio a %s per $%d.", Character_GetRolePlayName(id), money);
+	return 1;
 }

@@ -6,6 +6,16 @@ hook OnCharacterSpawn(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
+hook OnCharacterDeath(playerid, killerid, reason)
+{
+	if(Character_IsAnimLoop(playerid))
+	{
+		Character_SetAnimLoop(playerid, false);
+		TextDrawHideForPlayer(playerid, txtAnimHelper);
+	}
+	return 1;
+}
+
 hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
 	if(newkeys & KEY_NO/* && (GetTickCount() - PlayerInfo[playerid][pKeyTick]) > 2500*/)

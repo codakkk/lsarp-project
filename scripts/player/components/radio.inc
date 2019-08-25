@@ -13,7 +13,7 @@ hook OnGameModeInit()
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-stock Character_CreateRadioGZ(playerid, Float:range, frequency) 
+static Character_CreateRadioGZ(playerid, Float:range, frequency) 
 {
 	new 
 		Float:posX,

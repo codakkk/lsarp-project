@@ -18,12 +18,16 @@ stock Character_PayDay(playerid)
 {
 
     SendClientMessage(playerid, COLOR_YELLOW, "_______________________[PAYDAY]_____________________");
-    new paycheck = 0;
+    
+	new 
+		paycheck = 0,
+		currentPremiumLevel = Account_GetPremiumLevel(playerid)
+	;
 
-	if(Account_GetPremiumLevel(playerid) > 0)
+	if(currentPremiumLevel > 0)
 	{
-		static const premiumPaycheck[] = {500, 1000, 1500};
-		paycheck += premiumPaycheck[Account_GetPremiumLevel(playerid)-1];
+		static const premiumPaycheck[] = {1000, 2000, 3000};
+		paycheck += premiumPaycheck[currentPremiumLevel-1];
 		SendFormattedMessage(playerid, COLOR_YELLOW, "Hai ricevuto $%d aggiuntivi come bonus Premium.", paycheck);
 	}
 
@@ -33,8 +37,22 @@ stock Character_PayDay(playerid)
 		new salary = Faction_GetRankSalary(factionid, Character_GetRank(playerid));
 		if(salary > 0)
 		{
+			
+			if(currentPremiumLevel > 1)
+			{
+				new percentage = currentPremiumLevel == 2 ? 25 : 50;
+				new value = (salary * percentage) / 100;
+				salary += value;
+
+				SendFormattedMessage(playerid, COLOR_YELLOW, "Hai ricevuto $%d aggiuntivi perché fai parte di una fazione.", salary);
+				SendFormattedMessage(playerid, COLOR_YELLOW, "Inoltre, hai ricevuto un bonus del %d percento poiché Premium.", percentage);
+			}
+			else
+			{
+				SendFormattedMessage(playerid, COLOR_YELLOW, "Hai ricevuto $%d aggiuntivi perché fai parte di una fazione.", salary);
+			}
+
 			paycheck += salary;
-			SendFormattedMessage(playerid, COLOR_YELLOW, "Hai ricevuto $%d aggiuntivi perché fai parte di una fazione.", salary);
 		}
 	}
 
@@ -56,8 +74,15 @@ stock Character_PayDay(playerid)
 	if(paycheck > 0)
 		SendClientMessage(playerid, COLOR_YELLOW, "Dirigiti verso NOMEPOSTO per ritirare il tuo stipendio.");
     
-	Account_IncreaseLevel(playerid, 1);
+	static const levels[] = {1, 1, 2, 3};
+	new level = levels[Account_GetPremiumLevel(playerid)];
+	Account_IncreaseLevel(playerid, level);
 	
+	if(level > 1)
+		SendFormattedMessage(playerid, COLOR_YELLOW, "Livello incrementato di %d punti. (Bonus Premium)", level);
+	else
+		SendClientMessage(playerid, COLOR_YELLOW, "Livello incrementato di 1 punto.");
+
 	/*if(Character_GetExp(playerid) < expForNewLevel)
     {
 	   SendFormattedMessage(playerid, COLOR_YELLOW, "Livello attuale: %d. Attualmente hai %d/%d punti esperienza.", Character_GetLevel(playerid), Character_GetExp(playerid), expForNewLevel);
@@ -83,7 +108,6 @@ stock Character_PayDay(playerid)
 	}
     SendClientMessage(playerid, COLOR_YELLOW, "____________________________________________________");
 
-	Account_Save(playerid);
     GameTextForPlayer(playerid, "~y~PayDay", 5000, 1);
 	return 1;
 }

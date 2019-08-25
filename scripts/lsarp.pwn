@@ -29,9 +29,9 @@
 		https://www.burgershot.gg/showthread.php?tid=314 -> PawnPlus extension MySQL CHECK IT OUT
 */
 #pragma warning disable 208 // actually just a good way to prevent warning: "function with tag result used before definition, forcing reparse".
-#define ENABLE_MAPS
+//#define ENABLE_MAPS
 //#define LSARP_DEBUG
-#define ALLOW_NEW_USERS 0
+#define ALLOW_NEW_USERS 1
 
 #if defined LSARP_DEBUG
 	#warning LSARP_DEBUG is enabled. Care!!
@@ -40,7 +40,10 @@
 //#define FAKE_LOGIN 1
 // CAR_DEAD_LHS
 #include <a_samp>
-native IsValidVehicle(vehicleid);
+//native IsValidVehicle(vehicleid);
+
+// Define this for some bugs related to MySQL_TQueryInline
+#define YSI_NO_HEAP_MALLOC
 
 #define FIXES_Single
 #define FIX_const 0
@@ -90,12 +93,13 @@ native IsValidVehicle(vehicleid);
 
 #define PP_SYNTAX 1
 //#define PP_SYNTAX_GENERIC 1
-#define PP_ADDITIONAL_TAGS E_ITEM_DATA, Text3D, Pool
+#define PP_ADDITIONAL_TAGS E_ITEM_DATA, Text3D, Pool, Inventory
 #include <PawnPlus>
 // #include <pp-mysql> // Must update pp first
 #include <OPA>
 
 #include <miscellaneous\pp_wrappers>
+#include <PreviewModelDialog>
 #include <easyDialogs>
 
 #include <sa_zones>
@@ -128,6 +132,7 @@ DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
 #define AC_GetPlayerArmour AntiCheatGetArmour
 #define AC_SetPlayerArmour SetPlayerArmour
 
+
 #include <defines>
 #include <utils\iterators>
 #include <forwarded_functions>
@@ -140,8 +145,8 @@ DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
 
 #include <server\core>
 
+#include <player\enum>
 #include <admin\enum>
-#include <dealership\enum>
 #include <inventory\enum>
 #include <building\enum>
 #include <weapon_system\enum>
@@ -172,9 +177,12 @@ DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
 #include <utils\utils>
 #include <utils\maths>
 
+//#include <anticheat\cheats\triggerbot>
 
 #include <YSI_Coding\y_hooks> // Place hooks after this. Everything included before this, is hooked first.
 
+#define VEHICLE_MIN_HEALTH	250.0
+#define VEHICLE_MIN_HEALTH_FOR_ENGINE	350.0
 
 forward OnCharacterDamageDone(playerid, Float:amount, issuerid, weaponid, bodypart);
 
@@ -186,7 +194,6 @@ main()
 	// Should I initialize them in a OnGameModeInit hook?
 	PlayerInventory = map_new();
 	VehicleInventory = map_new();
-	HouseInventory = map_new();
 }
 
 
@@ -205,9 +212,6 @@ hook OnGameModeInit()
 
 	SetWorldTime(0);
 
-	// /ritirastipendio
-	Pickup_Create(1239, 0, 292.3752, 180.7307, 1007.1790, ELEMENT_TYPE_PAYCHECK, -1, 3);
-	CreateDynamic3DTextLabel("/ritirastipendio", COLOR_BLUE, 292.3752, 180.7307, 1007.1790 + 0.55, 20.0, .worldid = -1, .interiorid = 3);
 	// /lasciacarcere
 	Pickup_Create(1239, 0, 2649.7790, -1948.9510, -58.7273, ELEMENT_TYPE_JAIL_EXIT, .worldid = -1, .interiorid = 0);
 	CreateDynamic3DTextLabel("/lasciacarcere", COLOR_BLUE, 2649.7790, -1948.9510, -58.7273 + 0.55, 20.0, .worldid = -1, .interiorid = 0);
@@ -244,29 +248,6 @@ hook OnPlayerUpdate(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-public OnPlayerDeath(playerid, killerid, reason)
-{
-	printf("PlayerDeath");
-	if(IsPlayerNPC(playerid))
-		return 1;
-	
-	if(killerid != INVALID_PLAYER_ID)
-		Log(Character_GetOOCName(playerid), Character_GetOOCName(killerid), "OnPlayerDeath", reason);
-	
-	SetPlayerDrunkLevel(playerid, 0);
-	if(Character_IsAnimLoop(playerid))
-	{
-		Character_SetAnimLoop(playerid, false);
-		TextDrawHideForPlayer(playerid, txtAnimHelper);
-	}
-
-	// Just a workaround for unable to hook OnPlayerDeath with weaponconfig
-	CallLocalFunction(#OnCharacterDeath, "ddd", playerid, killerid, reason);
-	printf("lsarp.pwn\\OnPlayerDeath");
-	//CallLocalFunction(#OnCharacterDeath, "ddd", playerid, killerid, reason);
-	return 1;
-}
-
 
 public OnPlayerDamageDone(playerid, Float:amount, issuerid, weapon, bodypart)
 {
@@ -286,12 +267,34 @@ public OnPlayerDamage(&playerid, &Float:amount, &issuerid, &weapon, &bodypart)
 		return 0;
 	if(Character_IsDead(playerid))
 		return 0;
+	if(Character_IsInvincible(playerid))
+	{
+		amount = 0.0;
+		return 0;
+	}
 	if(issuerid != INVALID_PLAYER_ID)
 	{
-		if(weapon == 23 && Character_HasTaser(issuerid))
-			amount = 3;
-		else if(weapon == 25 && Character_HasBeanBag(issuerid))
-			amount = 5;
+		if(Character_HasTaser(playerid) || Character_HasBeanBag(playerid))
+		{
+			new isNear = ProxDetectorS(15.0, issuerid, playerid);
+
+			if(weapon == 23)
+			{
+				if(isNear)
+					amount = 3;
+				else 
+					amount = 0;
+			}
+			else if(weapon == 25)
+			{
+				if(isNear)
+					amount = 5;
+				else
+					amount = 0;
+			}
+		
+
+		}
 	}
 	return 1;
 }
@@ -454,7 +457,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 	new factionid = Character_GetFaction(playerid);
 	if(flags & CMD_POLICE)
 	{
-		if(factionid == INVALID_FACTION_ID || Faction_GetType(factionid) != FACTION_TYPE_POLICE || !Character_IsAlive(playerid))
+		if(!Faction_IsValid(factionid) || Faction_GetType(factionid) != FACTION_TYPE_POLICE || !Character_IsAlive(playerid) || !Character_IsFactionDuty(playerid))
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Devi essere un membro della Guardia Nazionale in servizio per utilizzare questo comando.");
 			return 0;
@@ -544,6 +547,7 @@ hook OnPlayerDisconnect(playerid, reason)
 	string = str_format("%s è uscito dal server. [%s]", name, reasonName[reason]);
 	SendClientMessageToAllStr(COLOR_GREY, string);
 	TextDrawHideForPlayer(playerid, Clock);
+	
 	if(Character_IsLogged(playerid))
 	{
 		CallLocalFunction(#OnCharacterDisconnected, "i", playerid);
@@ -560,6 +564,7 @@ hook OnPlayerConnect(playerid)
 {
 	wait_ticks(1);
 	
+	SetPlayerScore(playerid, 0);
 	SetPlayerColor(playerid, 0xFFFFFFFF);
 	
 	Account_SetLogged(playerid, false);
@@ -568,7 +573,7 @@ hook OnPlayerConnect(playerid)
 	
 	CallLocalFunction(#OnPlayerClearData, "d", playerid);
 
-	for(new i = 0; i < 60; ++i)
+	for(new i = 0; i < 100; ++i)
 	{
 		SendClientMessage(playerid, -1, " ");
 	}
@@ -698,6 +703,12 @@ SSCANF:item(string[])
 	}
 	else
 	{
+		new len = strlen(string);
+		for(new i = 0; i < len; ++i)
+		{
+			if(string[i] == '_')
+				string[i] = ' ';
+		}
 		foreach(new item : ServerItems)
 		{
 			if(!strcmp(ServerItem[item][sitemName], string, true) || strfind(ServerItem[item][sitemName], string, true) > -1)
@@ -762,11 +773,9 @@ stock HexToInt(string[])
 
 // ===== [ DEALERSHIP SYSTEM ] =====
 #include <dealership\core>
-#include <dealership\player>
 
 // ===== [ HOUSE SYSTEM ] =====
 #include <house_system\core>
-#include <house_system\inventory>
 // ===== [ BUILDING SYSTEM ] =====
 #include <building\core>
 
@@ -796,7 +805,6 @@ stock HexToInt(string[])
 #include <house_system\commands>
 #include <admin\commands>
 #include <admin\supporter_commands>
-#include <dealership\commands>
 #include <animation_system\commands>
 // ========== [ DIALOGS ] ==========
 #include <player\dialogs>

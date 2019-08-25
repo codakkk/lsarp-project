@@ -19,7 +19,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
 	if(!Character_IsAlive(playerid))
 		return Y_HOOKS_CONTINUE_RETURN_1;
-	if(PRESSED(KEY_CROUCH))
+	if(Character_CanInteract(playerid) && PRESSED(KEY_CROUCH))
 	{
 		new eID, E_ELEMENT_TYPE:eType;
 		if( Character_GetNearestPickup(playerid, eID, eType) && eType == ELEMENT_TYPE_DROP)

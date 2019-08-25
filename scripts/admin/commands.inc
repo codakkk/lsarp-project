@@ -7,28 +7,30 @@ CMD:acmds(playerid, params[])
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /gotopos - /check - /invcheck - /freeze - /unfreeze");
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /masks - /n - /setweather - /settimeadd - /resetinv");
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /resetdrugstats - /drugstats - /setvw - /kick - /aslap");
+		SendClientMessage(playerid, -1, "[MODERATORE JR]: /gotobuilding");
 		
 	}
 	if(Account_GetAdminLevel(playerid) >= 3)
 	{
 		SendClientMessage(playerid, -1, "[MODERATORE]: /setskin - /sethp - /setvhp - /setarmour - /ajail - /unjail - /setfaction");
 		SendClientMessage(playerid, -1, "[MODERATORE]: /vcreate - /vdelete - (/fix)veh - /gotov - /getvhere - /avcolor");
-		SendClientMessage(playerid, -1, "[MODERATORE]: /bancharacter - /unbancharacter - /apark - /avplate - /factionkick");
+		SendClientMessage(playerid, -1, "[MODERATORE]: /bancharacter - /unbancharacter - /apark - /avplate - /aafactionkick");
+		SendClientMessage(playerid, -1, "[MODERATORE]: /aplacefurniture - /adeletefurniture - /atextureobject");
 	}
 	if(Account_GetAdminLevel(playerid) >= 4)
 	{
 		SendClientMessage(playerid, -1, "[ADMIN]: /amm - /giveitem - /givevehicleitem  - /vowner - /vsave - /vdespawn");
-		SendClientMessage(playerid, -1, "[ADMIN]: /gotobuilding - /banaccount - /unbanaccount - /banofflineaccount - /banip");
+		SendClientMessage(playerid, -1, "[ADMIN]: /banaccount - /unbanaccount - /banofflineaccount - /banip");
 		SendClientMessage(playerid, -1, "[ADMIN]: /gcreate - /gedit");
 	}
 	if(Account_GetAdminLevel(playerid) >= 5)
 	{
-		SendClientMessage(playerid, -1, "[DEVELOPER]: /update - /kickall - /afactioncmds");
+		SendClientMessage(playerid, -1, "[DEVELOPER]: /update - /kickall - /afactioncmds - /abuildingcmds - /adealershipcmds");
+		SendClientMessage(playerid, -1, "[DEVELOPER]: /ahousecmds");
 	}
 	if(IsPlayerAdmin(playerid))
 	{
-		SendClientMessage(playerid, -1, "[RCON]: /setadmin - /givemoney - /payday - /afactioncmds");
-		SendClientMessage(playerid, -1, "[RCON]: /abuildingcmds - /adealershipcmds - /ahousecmds");
+		SendClientMessage(playerid, -1, "[RCON]: /setadmin - /givemoney - /payday");
 	}
     return 1;
 }
@@ -67,6 +69,8 @@ CMD:disablealerts(playerid, params[])
 	return 1;
 }
 
+static LastColor[MAX_PLAYERS];
+
 flags:aduty(CMD_JR_MODERATOR);
 CMD:aduty(playerid, params[])
 {
@@ -80,8 +84,9 @@ CMD:aduty(playerid, params[])
 		AC_SetPlayerHealth(playerid, 100);
 		AC_SetPlayerArmour(playerid, 0);
 		SendMessageToAdmins(0, COLOR_ADMINCHAT, "[ADMIN] %s (%d) non è più in servizio.", Account_GetName(playerid), playerid);
-		SetPlayerColor(playerid, 0xFFFFFFFF);
 		
+		SetPlayerColor(playerid, LastColor[playerid]);
+		LastColor[playerid] = 0xFFFFFFFF;
 		Character_EnableSomeAntiCheats(playerid, 1);
 	}    
 	else
@@ -89,13 +94,19 @@ CMD:aduty(playerid, params[])
 		if(Character_IsMasked(playerid))
 			pc_cmd_sconosciuto(playerid, "");
 		
+		Character_SetMasked(playerid, false);
+		
 		Account_SetAdminDuty(playerid, true);
 		SetPlayerName(playerid, Account_GetName(playerid));
 		AC_SetPlayerHealth(playerid, 99999.0);
 		AC_SetPlayerArmour(playerid, 99999.0);
 		//pc_cmd_jetpack(playerid, NULL);
 		SendMessageToAdmins(0, COLOR_ADMINCHAT, "[ADMIN] %s (%d) è in servizio.", Account_GetName(playerid), playerid);
+		
+		LastColor[playerid] = GetPlayerColor(playerid);
+		
 		SetPlayerColor(playerid, 0xFF6347FF);
+
 		Character_ResetDeathState(playerid);
 		Character_EnableSomeAntiCheats(playerid, 0);
 	}
@@ -178,7 +189,6 @@ CMD:setadmin(playerid, params[])
 	}
 	Log(Account_GetName(playerid), Account_GetName(id), "/setadmin", lvl);
 	Account_SetAdminLevel(id, lvl);
-	Account_Save(id);
 	return 1;
 }
 
@@ -269,7 +279,7 @@ CMD:vcreate(playerid, params[])
 	Vehicle_SetTemporary(id, true);
 	Vehicle_SetFuel(id, 100);
 	PutPlayerInVehicle(playerid, id, 0);
-	Vehicle_SetEngineOn(id);
+	Vehicle_SetEngineStatus(id, true);
 
 	SendFormattedMessage(playerid, COLOR_GREEN, "Veicolo %d creato. Non dimenticare di distruggerlo con /vdelete (a bordo).", id);
 	
@@ -307,9 +317,10 @@ CMD:vfaction(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "/vfaction <factionid>");
 	if(!Faction_IsValid(factionid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Fazione non valida.");
+
 	Vehicle_SetFaction(vehicleid, factionid);
 	Vehicle_CancelDespawn(vehicleid);
-	Vehicle_Save(vehicleid);
+
 	SendMessageToAdmins(false, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha settato il veicolo id %d nella fazione id %d.", Account_GetName(playerid), vehicleid, factionid);
 	Log(Account_GetName(playerid), "", "/vfaction", factionid);
 	return 1;
@@ -422,7 +433,7 @@ CMD:gotovehicle(playerid, params[])
 
     new Float:x, Float:y, Float:z;
     GetVehiclePos(id, x, y, z);
-    SetPlayerPos(playerid, x, y, z);
+    SetPlayerPos(playerid, x, y, z+5.0);
     SetPlayerInterior(playerid, 0);
     Character_SetVirtualWorld(playerid, GetVehicleVirtualWorld(id)); 
     return 1;
@@ -441,7 +452,7 @@ CMD:getvhere(playerid, params[])
 
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
-    SetVehiclePos(id, x, y, z);
+    SetVehiclePos(id, x, y+5.0, z);
 	SetVehicleVirtualWorld(id, Character_GetVirtualWorld(playerid));
 	LinkVehicleToInterior(id, GetPlayerInterior(playerid));
     return 1;
@@ -723,8 +734,9 @@ CMD:vowner(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
 	if(Character_GetOwnedVehicleCount(id) == MAX_VEHICLES_PER_PLAYER)
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore possiede già il massimo di veicoli personali.");
+	
 	Character_AddOwnedVehicle(id, vehicleid);
-	Vehicle_Save(vehicleid);
+	
 	SendFormattedMessage(id, COLOR_GREEN, "L'admin %s (%d) ti ha settato proprietario del veicolo %d.", Account_GetName(playerid), playerid, vehicleid);
 	SendMessageToAdmins(true, COLOR_YELLOW, "[ADMIN ALERT]: %s (%d) ha settato %s (%d) proprietario del veicolo %d.", Account_GetName(playerid), playerid, Character_GetOOCName(id), id, vehicleid);
 	return 1;

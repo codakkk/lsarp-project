@@ -75,7 +75,7 @@ stock Character_ShowDrugStats(playerid, targetid)
 	for(new i = 0, j = MAX_PLAYER_DRUGS; i < j; ++i)
 	{
 		new drugid = Character_GetDrug(playerid, i);
-		if(!ServerItem_IsDrug(drugid))
+		if(!ServerItem_IsDrug(drugid) || !DrugItem_CanGetDependent(drugid))//|| drugid == gItem_Marijuana || drugid == gItem_Hashish)
 			continue;
 		if(Character_GetAddictionState(playerid, drugid) == ADDICTION_STATE_NONE)
 			set(s, "No");
@@ -88,7 +88,6 @@ stock Character_ShowDrugStats(playerid, targetid)
 	}
 	if(count <= 0)
 		SendClientMessage(targetid, COLOR_ERROR, "Niente da mostrare.");
-	SendClientMessage(targetid, COLOR_ERROR, "________________________________");
 	return 1;
 }
 
@@ -172,6 +171,10 @@ hook OnCharacterUseItem(playerid, slotid, itemid)
 	if(!ServerItem_IsDrug(itemid))
 		return Y_HOOKS_CONTINUE_RETURN_1;
 	
+	// Those are handled by player\components\effects\smoking.inc
+	if(itemid == gItem_Marijuana || itemid == gItem_Hashish)
+		return 1;
+
 	SendFormattedMessage(playerid, -1, "Hai assunto una dose di %s.", ServerItem_GetName(itemid));
 
 	Character_AMe(playerid, "assume una dose di %s.", ServerItem_GetName(itemid));
@@ -319,15 +322,15 @@ static stock Character_LoadDrugAddiction(playerid)
 		new drugIndex, drugid;
 		for(new i = 0; i < rows; ++i)
 		{
-			cache_get_value_index_int(i, 1, drugid);
+			cache_get_value_name_int(i, "drug_id", drugid);
 			drugIndex = GetDrugIndex(drugid);
 			PlayerDrugAddictionInfo[playerid][drugIndex][Drug] = drugid;
-			cache_get_value_index_int(i, 2, PlayerDrugAddictionInfo[playerid][drugIndex][LastUsageTime]);
-			cache_get_value_index_int(i, 3, PlayerDrugAddictionInfo[playerid][drugIndex][UsageCounter]);
-			cache_get_value_index_int(i, 4, PlayerDrugAddictionInfo[playerid][drugIndex][NextUsageTime]);
+			cache_get_value_name_int(i, "last_usage_time", PlayerDrugAddictionInfo[playerid][drugIndex][LastUsageTime]);
+			cache_get_value_name_int(i, "usage_counter", PlayerDrugAddictionInfo[playerid][drugIndex][UsageCounter]);
+			cache_get_value_name_int(i, "next_usage_time", PlayerDrugAddictionInfo[playerid][drugIndex][NextUsageTime]);
 		}
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnLoadAddiction, "SELECT * FROM `character_drug_info` WHERE CharacterID = '%d';", Character_GetID(playerid));
+	MySQL_TQueryInline(gMySQL, using inline OnLoadAddiction, "SELECT * FROM `character_drug_info` WHERE character_id = '%d';", Character_GetID(playerid));
 }
 
 static stock Character_SaveDrugAddiction(playerid)
@@ -339,7 +342,7 @@ static stock Character_SaveDrugAddiction(playerid)
 		drugid = Character_GetDrug(playerid, i);
 		if(drugid == 0)
 		{
-			mysql_tquery_f(gMySQL, "DELETE FROM `character_drug_info` WHERE CharacterID = '%d' AND DrugID = '%d';", Character_GetID(playerid), drugid);
+			mysql_tquery_f(gMySQL, "DELETE FROM `character_drug_info` WHERE character_id = '%d' AND drug_id = '%d';", Character_GetID(playerid), drugid);
 			continue;
 		}
 		if(!ServerItem_IsDrug(drugid))
@@ -347,11 +350,11 @@ static stock Character_SaveDrugAddiction(playerid)
 			printf("Unable to save. Drug id invalid. ID: %d", drugid);
 			continue;
 		}
-		mysql_tquery_f(gMySQL, "INSERT INTO `character_drug_info` (CharacterID, DrugID, LastUsageTime, UsageCounter, NextUsageTime) VALUES('%d', '%d', '%d', '%d', '%d') \
+		mysql_tquery_f(gMySQL, "INSERT INTO `character_drug_info` (character_id, drug_id, last_usage_time, usage_counter, next_usage_time) VALUES('%d', '%d', '%d', '%d', '%d') \
 		ON DUPLICATE KEY UPDATE \
-		LastUsageTime = VALUES(LastUsageTime), \
-		UsageCounter = VALUES(UsageCounter), \
-		NextUsageTime = VALUES(NextUsageTime) \
+		last_usage_time = VALUES(last_usage_time), \
+		usage_counter = VALUES(usage_counter), \
+		next_usage_time = VALUES(next_usage_time) \
 		;", 
 		Character_GetID(playerid),
 		Character_GetDrug(playerid, i),

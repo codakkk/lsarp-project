@@ -12,6 +12,7 @@
 
 #include <player\components\editobject>
 #include <player\components\death_system>
+#include <player\components\death_history>
 #include <player\components\inventory>
 #include <player\components\drop>
 #include <player\components\payday>
@@ -34,6 +35,7 @@
 #include <player\components\wear_objects>
 #include <player\components\privileges>
 #include <player\components\radio>
+
 // EFFECTS 
 #include <player\components\effects\mask>
 #include <player\components\effects\drag>
@@ -41,6 +43,8 @@
 #include <player\components\effects\ame>
 #include <player\components\effects\blindfold>
 #include <player\components\effects\freeze>
+#include <player\components\effects\smoking>
+#include <player\components\effects\invincible>
 
 #include <player\components\spawn>
 
@@ -49,8 +53,6 @@
 
 forward OnCharacterLoad(playerid); // Called when a Player select a character.
 forward OnCharacterLateLoad(playerid);
-
-forward OnCharacterPreSaveData(playerid, disconnect);
 
 forward OnPlayerClearData(playerid); // Callbacks called when character's data (or account data) must/can be cleared.
 
@@ -111,6 +113,8 @@ stock Character_GetVirtualWorld(playerid)
 // Returns true if character isn't stunned or other things
 stock Character_CanInteract(playerid)
 {
+	if(!Character_IsLogged(playerid))
+		return 0;
 	return !(Character_IsStunned(playerid) || Character_IsCuffed(playerid) || Character_IsDragged(playerid) || Character_IsDead(playerid));
 }
 
@@ -146,11 +150,11 @@ stock Character_ShowStats(playerid, targetid)
     SendFormattedMessage(targetid, -1, "[Salute] HP: %.2f - Armatura: %.2f - Alimentazione: %d", hp, armour, Character_GetHunger(playerid));
     
 	if(Character_HasBuildingKey(playerid) && Character_HasHouseKey(playerid))
-	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietà]: Edificio: %d - Casa: %d", Character_GetBuildingKey(playerid), Character_GetHouseKey(playerid));
+	   SendFormattedMessage(targetid, -1, "[Proprietà]: Edificio: %d - Casa: %d", Character_GetBuildingKey(playerid), Character_GetHouseKey(playerid));
     else if(Character_HasBuildingKey(playerid))
-	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietà]: Edificio: %d", Character_GetBuildingKey(playerid));
+	   SendFormattedMessage(targetid, -1, "[Proprietà]: Edificio: %d", Character_GetBuildingKey(playerid));
     else if(Character_HasHouseKey(playerid))
-	   SendFormattedMessage(targetid, COLOR_YELLOW, "[Proprietà]: Casa: %d", Character_GetHouseKey(playerid));
+	   SendFormattedMessage(targetid, -1, "[Proprietà]: Casa: %d", Character_GetHouseKey(playerid));
 	
 	SendFormattedMessage(targetid, -1, "[Altro] Soldi: $%d - Stipendio: $%d - Interior: %d - VW: %d", Character_GetMoney(playerid), Character_GetPayCheck(playerid), GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
 	
@@ -159,15 +163,15 @@ stock Character_ShowStats(playerid, targetid)
 		static premiumNames[][8] = {"Bronze", "Silver", "Gold"};
 		TimestampToDate(Account_GetPremiumExpiry(playerid), year, month, day, hours, minutes, seconds, 0);
 
-		SendFormattedMessage(targetid, COLOR_YELLOW, "Premium %s - Scadenza: %d/%d/%d - %d:%d", premiumNames[Account_GetPremiumLevel(playerid)-1], day, month, year, hours, minutes);
+		SendFormattedMessage(targetid, -1, "Premium %s - Scadenza: %d/%d/%d - %d:%d", premiumNames[Account_GetPremiumLevel(playerid)-1], day, month, year, hours, minutes);
 	}
 	
 	if(Account_GetAdminLevel(playerid) > 0)
-		SendFormattedMessage(targetid, COLOR_YELLOW, "[Staff]: %s", GetAdminLevelName(Account_GetAdminLevel(playerid)));
+		SendFormattedMessage(targetid, -1, "[Staff]: %s", GetAdminLevelName(Account_GetAdminLevel(playerid)));
 
 	//SendFormattedMessage(targetid, -1, "Ti mancano %d/%d punti esperienza per salire di livello.", Character_GetExp(playerid), expForNewLevel);
-    SendFormattedMessage(targetid, COLOR_YELLOW, "Tempo rimanente al PayDay: %d minuti", 60 - Account_GetPayDay(playerid));
-    SendClientMessage(targetid, COLOR_GREEN, "_______________________________________________________");
+    SendFormattedMessage(targetid, -1, "Tempo rimanente al PayDay: %d minuti", 60 - Account_GetPayDay(playerid));
+    //SendClientMessage(targetid, COLOR_GREEN, "_______________________________________________________");
     return 1;
 }
 
@@ -229,6 +233,8 @@ stock Character_SetLogged(playerid, bool:logged)
 
 stock Character_IsLogged(playerid)
 {
+	if(!IsPlayerConnected(playerid))
+		return 0;
 	return Bit_Get(gCharacterBitState[e_pCharacterLogged], playerid);
 }
 
@@ -373,8 +379,6 @@ stock Character_GetNearHouseID(playerid, bool:inside = false)
 	if(inside)
 	{
 		return Character_GetHouseID(playerid);
-		//if(Pickup_GetInfo(pickupid, id, type) && (type == ELEMENT_TYPE_HOUSE_EXIT) && IsPlayerInRangeOfPickup(playerid, pickupid, 3.0))
-			//return id;
 	}
 	else
 	{
@@ -382,15 +386,15 @@ stock Character_GetNearHouseID(playerid, bool:inside = false)
 		if(Character_GetNearestPickup(playerid, id, type) && (type == ELEMENT_TYPE_HOUSE_ENTRANCE || type == ELEMENT_TYPE_HOUSE_EXIT))
 			return id;
 	}
-	return -1;
+	return INVALID_HOUSE_ID;
 }
 
 stock Character_GetNearHouseIDMenu(playerid)
 {
 	new houseid = Character_GetNearHouseID(playerid, true);
-	if(houseid == -1)
+	if(!House_IsValid(houseid))
 		houseid = Character_GetNearHouseID(playerid, false);
-	if(houseid != -1)
+	if(House_IsValid(houseid))
 	{
 		if(Account_IsAdminDuty(playerid))
 			return houseid;
@@ -399,13 +403,13 @@ stock Character_GetNearHouseIDMenu(playerid)
 		if(House_GetID(houseid) == Character_GetHouseKey(playerid))
 			return houseid;
 	}
-	return -1;
+	return INVALID_HOUSE_ID;
 }
 
 stock Character_GetHouseID(playerid)
 {
 	if(Character_GetVirtualWorld(playerid) < HOUSE_START_WORLD)
-		return -1;
+		return INVALID_HOUSE_ID;
 	return Character_GetVirtualWorld(playerid) - HOUSE_START_WORLD;
 }
 

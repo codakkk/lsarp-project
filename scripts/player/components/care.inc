@@ -1,27 +1,48 @@
 #include <YSI_Coding\y_hooks>
 
 static
-	pCare[MAX_PLAYERS],
-	pInCare[MAX_PLAYERS char],
-	pCareTime[MAX_PLAYERS]
+	CareTicks[MAX_PLAYERS char]
 ;
 
 hook OnPlayerClearData(playerid)
 {
-	Character_SetCarePlayer(playerid, INVALID_PLAYER_ID);
-	Character_SetCareTime(playerid, 0);
-	Character_SetCareTick(playerid, 0);
+	CareTicks{playerid} = 0;
 	return Y_HOOKS_CONTINUE_RETURN_1;
+}
+
+hook OnCharacterSpawn(playerid)
+{
+	CareTicks{playerid} = 0;
+	if(Request_IsPending(playerid, REQUEST_TYPE_CARE))
+	{
+		new sender = Request_GetSender(playerid, REQUEST_TYPE_CARE);
+		new receiver = Request_GetReceiver(playerid, REQUEST_TYPE_CARE);
+		ResetPendingRequest(sender, REQUEST_TYPE_CARE);
+		ResetPendingRequest(receiver, REQUEST_TYPE_CARE);
+	}
+	return 1;
+}
+
+hook OnCharacterDeath(playerid, killerid, reason)
+{
+	if(Request_IsPending(playerid, REQUEST_TYPE_CARE))
+	{
+		new sender = Request_GetSender(playerid, REQUEST_TYPE_CARE);
+		new receiver = Request_GetReceiver(playerid, REQUEST_TYPE_CARE);
+		ResetPendingRequest(sender, REQUEST_TYPE_CARE);
+		ResetPendingRequest(receiver, REQUEST_TYPE_CARE);
+	}
+	return 1;
 }
 
 ptask OnCharacterCareUpdateTimer[1000](playerid)
 {
 	if(!Character_IsLogged(playerid))
 		return 0;
-	if(Character_GetCareTicks(playerid) > 0)
+	if(CareTicks{playerid} > 0)
 	{
-		Character_DecreaseCareTick(playerid);
-		if(Character_GetCareTicks(playerid) <= 0)
+		CareTicks{playerid}--;
+		if(CareTicks{playerid} <= 0)
 		{
 			// With weapon-config, this isn't needed.
 			/*for(new i = 0; i < 13; ++i)
@@ -32,7 +53,8 @@ ptask OnCharacterCareUpdateTimer[1000](playerid)
 			Character_SetFreezed(playerid, false);
 			if(Character_IsCuffed(playerid))
 			{
-				Character_SetCuffed(playerid, true);
+				Character_SetCuffed(playerid, false); // FIrst reset state
+				Character_SetCuffed(playerid, true); // Then reapply
 			}
 			SetPlayerDrunkLevel(playerid, 0);
 		}
@@ -42,12 +64,13 @@ ptask OnCharacterCareUpdateTimer[1000](playerid)
 
 stock Character_AcceptCare(playerid)
 {
-	new senderid = Character_GetCarePlayer(playerid);
-	if(senderid == INVALID_PLAYER_ID)
-		return 0;
+	new senderid = Request_GetSender(playerid, REQUEST_TYPE_CARE);
 	
+	if(!Character_CanInteract(senderid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non puo' curarti in questo momento."), 0;
+
 	if(!Character_IsInjured(playerid))
-		return 1;
+		return 0;
 
 	if(!IsPlayerInRangeOfPlayer(playerid, senderid, 5.0) || !Character_IsLogged(senderid))
 	{
@@ -57,19 +80,20 @@ stock Character_AcceptCare(playerid)
 	
 	Character_SetFreezed(playerid, false);
 	
-	Character_SetCarePlayer(playerid, INVALID_PLAYER_ID);
+	ResetPendingRequest(playerid, REQUEST_TYPE_CARE);
+	ResetPendingRequest(senderid, REQUEST_TYPE_CARE);
 
 	if(!Account_IsAdminDuty(playerid) && !Account_IsAdminDuty(senderid))
 	{
 		ApplyAnimation(senderid, "MEDIC", "CPR", 4.1, 0, 0, 0, 0, 0, 1);
 		ApplyAnimation(playerid, "PED", "KO_shot_stom", 4.0, 0, 1, 1, 1, 0, 1);
-		Character_SetCareTick(playerid, 10);
+		CareTicks{playerid} = 10;
 	}
 	else 
-		Character_SetCareTick(playerid, 1);
+		CareTicks{playerid} = 1;
 
 	Character_SetLegHit(playerid, false);
-	
+	Character_ResetDamages(playerid);
 	Character_ResetDeathState(playerid);
 	
 	PlayerTextDrawHide(playerid, pDeathTextDraw[playerid]);
@@ -78,39 +102,4 @@ stock Character_AcceptCare(playerid)
 	SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s ha accettato le tue cure.", Character_GetRolePlayName(playerid));
 	Log(Character_GetOOCName(senderid), Character_GetOOCName(playerid), "/accetta cure");
 	return 1;
-}
-
-stock Character_GetCarePlayer(playerid)
-{
-	return pCare[playerid];
-}
-
-stock Character_SetCarePlayer(playerid, id)
-{
-	pCare[playerid] = id;
-}
-
-stock Character_GetCareTime(playerid)
-{
-	return pCareTime[playerid];
-}
-
-stock Character_SetCareTime(playerid, time)
-{
-	pCareTime[playerid] = time;
-}
-
-stock Character_GetCareTicks(playerid)
-{
-	return pInCare{playerid};
-}
-
-stock Character_SetCareTick(playerid, ticks)
-{
-	pInCare{playerid} = ticks;
-}
-
-stock Character_DecreaseCareTick(playerid)
-{
-	pInCare{playerid}--;
 }

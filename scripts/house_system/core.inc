@@ -1,3 +1,4 @@
+#include <house_system\components\inventory>
 #include <YSI_Coding\y_hooks>
 
 static enum _:E_HOUSE_DATA
@@ -42,10 +43,10 @@ stock Map:GetHousesMap()
 hook OnGameModeInit()
 {
     Houses = map_new();
-
     House_LoadAll();
     return 1;
 }
+
 
 hook OnCharacterLoad(playerid)
 {
@@ -65,7 +66,7 @@ hook OnCharacterLoad(playerid)
 stock House_Create(Float:x, Float:y, Float:z, int, world, interiorid)
 {
     new Cache:result = mysql_query_f(gMySQL, true, "INSERT INTO `houses` \
-    (OwnerID, OwnerName, EnterX, EnterY, EnterZ, EnterInterior, EnterWorld, Price, Locked) \
+    (owner_id, owner_name, enter_x, enter_y, enter_z, enter_interior, enter_world, price, locked) \
     VALUES(0, '', %f, %f, %f, %d, %d, 0, 1)", x, y, z, int, world);
 
     new 
@@ -90,6 +91,8 @@ stock House_Create(Float:x, Float:y, Float:z, int, world, interiorid)
     data[ExitZ] = 0.0;
     data[ExitInterior] = 0;
 
+    data[ExitWorld] = HOUSE_START_WORLD + id;
+
     data[Locked] = 1;
 
     map_add_arr(Houses, id, data);
@@ -107,11 +110,11 @@ stock House_Delete(houseid)
         return 0;
 
     new query[64];
-    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `houses` WHERE id = '%d'", houseid);
+    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `houses` WHERE id = '%d'", House_GetID(houseid));
     mysql_tquery(gMySQL, query);
 
     House_DestroyObjects(houseid);
-    map_remove_deep(Houses, houseid);
+    map_remove_deep(Houses, House_GetID(houseid));
     return 1;
 }
 
@@ -134,7 +137,12 @@ stock House_CreateObjects(houseid)
 
     new zone[32];
 
-    Get2DZoneName(x, y, z, zone, sizeof(zone));
+    if(enterWorld != 0)
+    {
+        format(zone, sizeof(zone), "Casa");
+    }
+    else
+        Get2DZoneName(x, y, z, zone, sizeof(zone));
 
     new 
 	   enterPickupid = Pickup_Create(1273, houseid, x, y, z, ELEMENT_TYPE_HOUSE_ENTRANCE, enterWorld, interior),
@@ -448,11 +456,18 @@ stock House_SetMoney(houseid, amount)
     return 1;
 }
 
+stock House_GetAddress(houseid)
+{
+    new zone[32], Float:x, Float:y, Float:z;
+    House_GetEnterPosition(houseid, x, y, z);
+    Get2DZoneName(x, y, z, zone, sizeof(zone));
+    return zone;
+}
+
 stock House_LoadAll()
 {
     inline OnLoad()
     {
-	   printf("Loading houses...");
 	   new count = cache_num_rows(), data[E_HOUSE_DATA];
 	   for(new i = 0; i < count; ++i)
 	   {
@@ -490,22 +505,6 @@ stock House_LoadAll()
 	   printf("%d houses loaded.", count);
     }
     MySQL_PQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `houses` ORDER BY id");
-}
-
-stock House_ShowInventory(houseid, playerid)
-{
-    if(!House_IsValid(houseid))
-        return 0;
-    #pragma unused houseid, playerid
-    new Inventory:inventory = House_GetInventory(houseid);
-	Inventory_ShowStr(inventory, playerid, str_format("Inventario Casa (%d/%d)", Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory)), Dialog_HouseInventory, "Avanti", "Chiudi");
-	return 1;
-}
-
-Dialog:Dialog_HouseInventory(playerid, response, listitem, inputtext[])
-{
-	
-	return 1;
 }
 
 

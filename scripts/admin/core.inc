@@ -1,3 +1,4 @@
+#include <admin\components\recon>
 #include <YSI_Coding\y_hooks>
 
 
@@ -14,7 +15,7 @@ stock GetAdminLevelName(level)
     new l[16];
     switch(level)
     {
-	   case 1: l = "Supporter";
+	   case 1: l = "Tester";
 	   case 2: l = "Junior Mod";
 	   case 3: l = "Moderatore";
 	   case 4: l = "Amministratore"; // del condominio
@@ -26,14 +27,17 @@ stock GetAdminLevelName(level)
 
 stock SendMessageToAdminsStr(forceAlert, color, String:string)
 {
-	new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
+	/*new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
     amx_to_ref(var, ptr);
-    str_get(string, ptr[0], .size=size);
+    str_get(string, ptr[0], .size=size);*/
 
-    new result = SendMessageToAdmins(forceAlert, color, ptr[0]);
+	static str[256];
+	str_get(string, str);
 
-    amx_free(var);
-    amx_delete(var);
+    new result = SendMessageToAdmins(forceAlert, color, str);
+
+    /*amx_free(var);
+    amx_delete(var);*/
 	return result;
 }
 
@@ -143,13 +147,15 @@ stock SendMessageToTesters(forceAlert, color, str[], {Float,_}:...)
 
 stock SendMessageToTestersStr(forceAlert, color, String:string)
 {
-	new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
+	/*new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
     amx_to_ref(var, ptr);
-    str_get(string, ptr[0], .size=size);
+    str_get(string, ptr[0], .size=size);*/
 
-    new result = SendMessageToTesters(forceAlert, color, ptr[0]);
+	static str[256];
+	str_get(string, str);
+    new result = SendMessageToTesters(forceAlert, color, str);
 
-    amx_free(var);
-    amx_delete(var);
+    /*amx_free(var);
+    amx_delete(var);*/
 	return result;
 }
