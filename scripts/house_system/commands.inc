@@ -16,31 +16,61 @@ CMD:gotohouse(playerid, params[])
 	return 1;
 }
 
-flags:hcreate(CMD_DEVELOPER);
+flags:hinttypes(CMD_JR_MODERATOR);
+CMD:hinttypes(playerid, params[])
+{
+	new type;
+	if(sscanf(params, "d", type) || !HouseInterior_IsValidType(type))
+	{
+		SendClientMessage(playerid, COLOR_ERROR, "/hinttypes <tipo interno>");
+		SendClientMessage(playerid, COLOR_GREY, "1: Casa molto piccola - 2: Casa piccola - 3: Casa media - 4: Casa grande");
+		SendClientMessage(playerid, COLOR_GREY, "5: Casa molto grande - 6: Roulotte molto piccola - 7: Roulotte piccola");
+		SendClientMessage(playerid, COLOR_GREY, "8: Roulotte media - 9: Roulotte grande");
+		return 1;
+	}
+	new 
+		count = 0,
+		List:interiors = HouseInterior_GetListByType(type);
+	
+	SendFormattedMessage(playerid, COLOR_GREEN, "INTERIOR ID DISPONIBILI PER: %s", GetInteriorTypeName(type));
+	for_list(i : interiors)
+	{
+		SendFormattedMessage(playerid, COLOR_GREEN, "Interior %d", count);
+		++count;
+	}
+	return 1;
+}
+
+flags:hcreate(CMD_JR_MODERATOR);
 CMD:hcreate(playerid, params[])
 {
-    new interior;
-    if(sscanf(params, "d", interior))
-	   return SendClientMessage(playerid, COLOR_ERROR, "/hcreate <interno base>");
+    new type;
+    if(sscanf(params, "d", type))
+	{
+		SendClientMessage(playerid, COLOR_ERROR, "/hcreate <tipo interno>");
+		SendClientMessage(playerid, COLOR_GREY, "Usa /hinttypes per una lista.");
+		return 1;
+	}
     
-    if(interior < 0 || interior >= sizeof(allHouseInteriors))
-	   return SendClientMessage(playerid, COLOR_ERROR, "Interno base non valido");
+    if(!HouseInterior_IsValidType(type))
+	   return SendClientMessage(playerid, COLOR_ERROR, "Tipo interno non valido.");
 
 
     new Float:x, Float:y, Float:z;
 	GetPlayerPos(playerid, x, y, z);
 	
-	new id = House_Create(x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid), interior);
+	new id = House_Create(x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid), type);
 	
-	if(id == 0)
-		return 0;
+	if(id <= 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non è stato possibile creare la casa. Contatta Coda.");
 	
-    SendFormattedMessage(playerid, COLOR_GREEN, "Casa id %d creata. Interno: %d.", id, interior);
-	SendMessageToAdmins(true, COLOR_ORANGE, "L'admin %s (%d) ha creato la casa id %d. Interno: %d", Account_GetName(playerid), playerid, id, interior);
+
+    SendFormattedMessage(playerid, COLOR_GREEN, "Casa id %d creata. Tipo Interno: %s - ID Interno: %d.", id, GetInteriorTypeName(type), 0);
+	SendMessageToAdmins(true, COLOR_ORANGE, "AmdCmd: %s (%d) ha creato la casa id %d. Tipo Interno: %s - ID Interno: %d", Account_GetName(playerid), playerid, id, GetInteriorTypeName(type), 0);
     return 1;
 }
 
-flags:hdelete(CMD_DEVELOPER);
+flags:hdelete(CMD_JR_MODERATOR);
 CMD:hdelete(playerid, params[])
 {
 	new houseid = strval(params);
@@ -57,7 +87,7 @@ CMD:hdelete(playerid, params[])
 	return 1;
 }
 
-flags:hresetowner(CMD_DEVELOPER);
+flags:hresetowner(CMD_JR_MODERATOR);
 CMD:hresetowner(playerid, params[])
 {
 	new houseid = strval(params);
@@ -79,11 +109,11 @@ CMD:hresetowner(playerid, params[])
 	return 1;
 }
 
-flags:hedit(CMD_DEVELOPER);
+flags:hedit(CMD_JR_MODERATOR);
 CMD:hedit(playerid, params[])
 {
-    new houseid, command[16], value;
-    if(sscanf(params, "ds[16]D(-1)", houseid, command, value))
+    new houseid, command[16], value, value2;
+    if(sscanf(params, "ds[16]D(-1)D(-1)", houseid, command, value, value2))
 	   return SendClientMessage(playerid, COLOR_ERROR, "/hedit <houseid> <pos - interior - price - lock>");
     
     if(!House_IsValid(houseid))
@@ -104,12 +134,21 @@ CMD:hedit(playerid, params[])
     }
     else if(!strcmp(command, "interior", true))
     {
-	   if(value == -1)
-		  return SendClientMessage(playerid, COLOR_ERROR, "/hedit <houseid> <interior> <interiorid>");
-	   if(value < 0 || value >= sizeof(allHouseInteriors))
-		  return SendClientMessage(playerid, COLOR_ERROR, "Interior non valido");
-	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato l'interior della casa %d. Nuovo: %d", houseid, value);
-	   House_SetInterior(houseid, value);
+	   	if(value == -1 || value2 == -1)
+		{
+			SendClientMessage(playerid, COLOR_ERROR, "/hedit <houseid> <interior type> <interior id>");
+			SendClientMessage(playerid, COLOR_GREY, "Usa /hinttypes per una lista");
+			return 0;
+		}
+	   	if(!HouseInterior_IsValidType(value))
+			return SendClientMessage(playerid, COLOR_ERROR, "Tipo interior non valido");
+		
+	   	if(House_SetInterior(houseid, value, value2))
+		{
+	   		SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato l'interior della casa %d. Tipo: %s - ID: %d", houseid, GetInteriorTypeName(value), value2);
+		}
+		else
+			SendClientMessage(playerid, COLOR_ERROR, "Non è stato possibile settare l'interior.");
     }
     else if(!strcmp(command, "price", true))
     {
@@ -136,7 +175,7 @@ CMD:hedit(playerid, params[])
     return 1;
 }
 
-flags:ahousecmds(CMD_DEVELOPER);
+flags:ahousecmds(CMD_JR_MODERATOR);
 CMD:ahousecmds(playerid, params[])
 {
     SendClientMessage(playerid, COLOR_WHITE, "[HOUSES]: /hcreate - /hedit - /resethousefurnitures - /resethouseexterior - /hresetowner");
@@ -150,7 +189,7 @@ CMD:casa(playerid, params[])
 }
 alias:casa("cmenu");
 
-flags:resethousefurnitures(CMD_DEVELOPER);
+flags:resethousefurnitures(CMD_JR_MODERATOR);
 CMD:resethousefurnitures(playerid, params[])
 {
     new houseid;

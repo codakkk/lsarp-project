@@ -95,11 +95,16 @@ CMD:paga(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
 	if(!Character_IsAlive(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
+	if(Account_GetLevel(playerid) <= 3)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi ancora utilizzare questo comando.");
 	Character_GiveMoney(playerid, -amount);
 	Character_GiveMoney(id, amount);
 	Character_AMe(playerid, "prende dei soldi e li da a %s.", Character_GetRolePlayName(id));
 	SendFormattedMessage(id, COLOR_GREEN, "%s ti ha dato $%d.", Character_GetRolePlayName(playerid), amount);
 	SendFormattedMessage(playerid, COLOR_GREEN, "Hai dato $%d a %s.", amount, Character_GetRolePlayName(id));
+
+	if(amount >= 10000)
+		SendMessageToAdmins(1, COLOR_ORANGE, "AdmAlert: %s ha pagato $%d a %s.", Character_GetOOCName(playerid), amount, Character_GetOOCName(id));
 	return 1;
 }
 
@@ -202,8 +207,8 @@ CMD:accetta(playerid, params[])
 	else
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "/accetta <oggetto>");
-		SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma, oggetto, morte, cure,  veicolo, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
-		SendClientMessage(playerid, COLOR_ERROR, "... (edi)ficio (biz), (faz)ione, veicolo");
+		SendClientMessage(playerid, COLOR_GREY, "Oggetti: arma, oggetto, morte, cure,  veicolo, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
+		SendClientMessage(playerid, COLOR_GREY, "... (edi)ficio (biz), (faz)ione, veicolo");
 	}
     return 1;
 }
@@ -257,8 +262,8 @@ CMD:rifiuta(playerid, params[])
 	else 
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "/rifiuta <text>");
-		SendClientMessage(playerid, COLOR_ERROR, "Text: arma, oggetto, morte, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
-		SendClientMessage(playerid, COLOR_ERROR, "... (edi)ficio (biz), cure, veicolo");
+		SendClientMessage(playerid, COLOR_GREY, "Text: arma, oggetto, morte, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
+		SendClientMessage(playerid, COLOR_GREY, "... (edi)ficio (biz), cure, veicolo");
 	}
 	return 1;
 }
@@ -348,8 +353,8 @@ CMD:annulla(playerid, params[])
 	else 
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "/annulla <text>");
-		SendClientMessage(playerid, COLOR_ERROR, "Text: arma, oggetto, cure, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
-		SendClientMessage(playerid, COLOR_ERROR, "... (edi)ficio (biz)");
+		SendClientMessage(playerid, COLOR_GREY, "Text: arma, oggetto, cure, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
+		SendClientMessage(playerid, COLOR_GREY, "... (edi)ficio (biz)");
 	}
 	return 1;
 }

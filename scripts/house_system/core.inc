@@ -25,7 +25,8 @@ static enum _:E_HOUSE_DATA
     ExitInterior,
     ExitWorld,
 	
-	Interior,
+    InteriorType,
+	InteriorID,
 
     EnterPickup,
     ExitPickup,
@@ -62,12 +63,26 @@ hook OnCharacterLoad(playerid)
 	return 1;
 }
 
+hook OnCharacterChangeName(playerid, newCharacterName[])
+{
+	for_map(i : Houses)
+	{
+        new houseid = iter_get_key(i);
+		if(House_GetOwnerID(houseid) == Character_GetID(playerid))
+		{
+			new Iter:it = map_iter_at(Houses, houseid);
+            iter_set_cells(it, OwnerName, newCharacterName, MAX_PLAYER_NAME);
+		}
+	}
+	return 1;
+}
 
-stock House_Create(Float:x, Float:y, Float:z, int, world, interiorid)
+
+stock House_Create(Float:x, Float:y, Float:z, int, world, interiorType)
 {
     new Cache:result = mysql_query_f(gMySQL, true, "INSERT INTO `houses` \
-    (owner_id, owner_name, enter_x, enter_y, enter_z, enter_interior, enter_world, price, locked) \
-    VALUES(0, '', %f, %f, %f, %d, %d, 0, 1)", x, y, z, int, world);
+    (owner_id, enter_x, enter_y, enter_z, enter_interior, enter_world, price, locked) \
+    VALUES(0, %f, %f, %f, %d, %d, 0, 1)", x, y, z, int, world);
 
     new 
         id = cache_insert_id(),
@@ -97,9 +112,9 @@ stock House_Create(Float:x, Float:y, Float:z, int, world, interiorid)
 
     map_add_arr(Houses, id, data);
 
-    House_SetInterior(id, interiorid);
+    House_SetInterior(id, interiorType, 0);
     // House_CreateObjects(id); // Already called by House_SetInterior
-
+    CallLocalFunction(#OnHouseLoaded, "d", data[ID]);
     cache_delete(result);
     return id;
 }
@@ -217,7 +232,7 @@ stock House_SetOwner(houseid, playerid)
     new Iter:it = map_iter_at(Houses, houseid);
     iter_set_cells(it, OwnerName, Character_GetOOCName(playerid));
 
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET owner_id = '%d', owner_name = '%e' WHERE id = '%d'", Character_GetID(playerid), Character_GetOOCName(playerid), House_GetID(houseid));
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), House_GetID(houseid));
     return 1;
 }
 
@@ -229,7 +244,7 @@ stock House_ResetOwner(houseid)
     new Iter:it = map_iter_at(Houses, houseid);
     iter_set_cells(it, OwnerName, "");
 
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET owner_id = '0', owner_name = '' WHERE id = '%d'", House_GetID(houseid));
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET owner_id = '0' WHERE id = '%d'", House_GetID(houseid));
     
     return 1;
 }
@@ -368,22 +383,48 @@ stock House_GetExitInterior(houseid)
     return map_get(Houses, houseid, ExitInterior);
 }
 
-stock House_SetInterior(houseid, interiorid)
+stock House_SetInterior(houseid, interiorType, interiorid)
 {
-    if(!House_IsValid(houseid))
+    if(!House_IsValid(houseid) || !HouseInterior_IsValidType(interiorType))
 	   return 0;
-    map_set_cell(Houses, houseid, Interior, interiorid);
-    House_SetExitPosition(houseid, allHouseInteriors[interiorid][iHouseX], allHouseInteriors[interiorid][iHouseY], allHouseInteriors[interiorid][iHouseZ]);
-    House_SetExitInterior(houseid, allHouseInteriors[interiorid][iHouseInt]);
+
+    new data[E_INTERIORS_HOUSE];
+    if(!HouseInterior_Get(interiorType, interiorid, data))
+        return 0;
+
+    map_set_cell(Houses, houseid, InteriorType, interiorType);
+    map_set_cell(Houses, houseid, InteriorID, interiorid);
+
+    if(House_GetID(houseid) > 0)
+        mysql_tquery_f(gMySQL, "UPDATE `houses` SET interior_id = '%d', interior_type = '%d' WHERE id = '%d'", interiorid, interiorType, House_GetID(houseid));
+    
+    House_SetExitPosition(houseid, data[iHouseX], data[iHouseY], data[iHouseZ]);
+    House_SetExitInterior(houseid, data[iHouseInt]);
     House_CreateObjects(houseid);
     return 1;
 }
+
+stock House_GetInteriorType(houseid)
+{
+    if(!House_IsValid(houseid))
+        return HOUSE_BUGGED;
+    return map_get(Houses, houseid, InteriorType);
+}
+
 
 stock House_GetInteriorID(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
-    return map_get(Houses, houseid, Interior);
+    return map_get(Houses, houseid, InteriorID);
+}
+
+stock bool:House_IsRoulotte(houseid)
+{
+    if(!House_IsValid(houseid))
+        return false;
+    new type = House_GetInteriorType(houseid);
+    return (type == ROULOTTE_VERY_SMALL || type == ROULOTTE_SMALL || type == ROULOTTE_MEDIUM || type == ROULOTTE_BIG);
 }
 
 stock House_GetEnterPickup(houseid)
@@ -468,41 +509,60 @@ stock House_LoadAll()
 {
     inline OnLoad()
     {
-	   new count = cache_num_rows(), data[E_HOUSE_DATA];
-	   for(new i = 0; i < count; ++i)
-	   {
-			cache_get_value_name_int(i, "id", data[ID]);
-			cache_get_value_name_int(i, "owner_id", data[OwnerID]);
-			cache_get_value_name(i, "owner_name", data[OwnerName]);
+        new count = cache_num_rows(), data[E_HOUSE_DATA];
+        for(new i = 0; i < count; ++i)
+        {
+            cache_get_value_name_int(i, "id", data[ID]);
+            cache_get_value_name_int(i, "owner_id", data[OwnerID]);
 
-			cache_get_value_name_float(i, "enter_x", data[EnterX]);
-			cache_get_value_name_float(i, "enter_y", data[EnterY]);
-			cache_get_value_name_float(i, "enter_z", data[EnterZ]);
-			cache_get_value_name_int(i, "enter_interior", data[EnterInterior]);
-			cache_get_value_name_int(i, "enter_world", data[EnterWorld]);
+            cache_get_value_name_float(i, "enter_x", data[EnterX]);
+            cache_get_value_name_float(i, "enter_y", data[EnterY]);
+            cache_get_value_name_float(i, "enter_z", data[EnterZ]);
+            cache_get_value_name_int(i, "enter_interior", data[EnterInterior]);
+            cache_get_value_name_int(i, "enter_world", data[EnterWorld]);
 
-			cache_get_value_name_float(i, "exit_x", data[ExitX]);
-			cache_get_value_name_float(i, "exit_y", data[ExitY]);
-			cache_get_value_name_float(i, "exit_z", data[ExitZ]);
-			cache_get_value_name_int(i, "exit_interior", data[ExitInterior]);
+            cache_get_value_name_float(i, "exit_x", data[ExitX]);
+            cache_get_value_name_float(i, "exit_y", data[ExitY]);
+            cache_get_value_name_float(i, "exit_z", data[ExitZ]);
+            cache_get_value_name_int(i, "exit_interior", data[ExitInterior]);
             //cache_get_value_name_int(i, 12, data[ExitWorld]);
 
-			cache_get_value_name_int(i, "price", data[Price]);
-			cache_get_value_name_int(i, "locked", data[Locked]);
-			cache_get_value_name_int(i, "money", data[Money]);
-			cache_get_value_name_int(i, "interior", data[Interior]);
+            cache_get_value_name_int(i, "price", data[Price]);
+            cache_get_value_name_int(i, "locked", data[Locked]);
+            cache_get_value_name_int(i, "money", data[Money]);
+
+            cache_get_value_name_int(i, "interior_id", data[InteriorID]);
+            cache_get_value_name_int(i, "interior_type", data[InteriorType]);
 
             cache_get_value_name_int(i, "created", data[Created]);
 
             data[ExitWorld] = HOUSE_START_WORLD + data[ID];
             data[Created] = 1;
 
-			map_add_arr(Houses, data[ID], data);
-			House_CreateObjects(data[ID]);
-			
-			CallLocalFunction(#OnHouseLoaded, "d", data[ID]);
-	   }
-	   printf("%d houses loaded.", count);
+            printf("House id: %d", data[ID]);
+            map_add_arr(Houses, data[ID], data);
+            House_CreateObjects(data[ID]);
+            
+            CallLocalFunction(#OnHouseLoaded, "d", data[ID]);
+        }
+        printf("%d houses loaded.", count);
+
+        for_map(i : Houses)
+        {
+            new houseid = iter_get_key(i);
+            if(House_GetOwnerID(houseid) > 0)
+            {
+                new Cache:cache = mysql_query_f(gMySQL, true, "SELECT name FROM `characters` WHERE id = '%d'", House_GetID(houseid));
+                if(cache_num_rows() > 0)
+                {
+                    new name[MAX_PLAYER_NAME];
+                    cache_get_value_name(0, "name", name);
+                    iter_set_cells(i, OwnerName, name);
+                }
+                cache_delete(cache);
+            }
+
+        }
     }
     MySQL_PQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `houses` ORDER BY id");
 }

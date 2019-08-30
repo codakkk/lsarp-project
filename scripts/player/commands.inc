@@ -61,7 +61,7 @@ CMD:tog(playerid, params[])
 	return 1;
 }
 
-flags:domanda(CMD_USER);
+/*flags:domanda(CMD_USER);
 CMD:domanda(playerid, params[])
 {
     if(isnull(params))
@@ -71,19 +71,43 @@ CMD:domanda(playerid, params[])
 	   return SendFormattedMessage(playerid, COLOR_ERROR, "Puoi inviare una domanda ogni %d secondi.", seconds);
     if(Account_GetPremiumLevel(playerid) > 0)
     {
-	   SendMessageToAdmins(0, 0xEA7500FF, "(( [PREMIUM] %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);
+	   SendMessageToAdmins(0, COLOR_ORANGE, "(( [PREMIUM] %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);
 	   SendClientMessage(playerid, -1, "La domanda è stata inviata ai moderatori online. Attendi.");
 	   SendClientMessage(playerid, -1, "Essendo un utente Premium, la tua domanda avrà maggiore priorità.");
     }
     else
     {
-	   SendMessageToAdmins(0, 0xEA7500FF, "(( %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);
+	   SendMessageToAdmins(0, COLOR_ORANGE, "(( %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);
 	   SendClientMessage(playerid, -1, "La domanda è stata inviata ai moderatori online. Attendi.");
     }
     pLastAdminQuestionTime[playerid] = GetTickCount();
     return 1;
 }
-alias:domanda("dom");
+alias:domanda("dom");*/
+
+flags:report(CMD_USER);
+CMD:report(playerid, params[])
+{
+	new seconds = (Account_GetPremiumLevel(playerid) > 0) ? 10 : 30;
+    if(GetTickCount() - pLastAdminQuestionTime[playerid] < 1000 * seconds)
+	   return SendFormattedMessage(playerid, COLOR_ERROR, "Puoi inviare una domanda/report ogni %d secondi.", seconds);
+
+	new id, reason[128];
+	if(sscanf(params, "k<u>s[128]", id, reason))
+		return SendClientMessage(playerid, COLOR_ERROR, "/report <playerid/partofname/#####> <motivo>");
+	
+	if(!Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+	
+	if(playerid == id)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi reportare te stesso.");
+	
+	SendMessageToAdmins(0, COLOR_ORANGE, "%s (%d) ha reportato %s (%d). Motivo: %s", Character_GetOOCName(playerid), playerid, Character_GetOOCName(id), id, reason);
+	SendFormattedMessage(playerid, -1, "Hai reportato %s (%d). Motivo: %s", Character_GetOOCName(id), id, reason);
+
+	pLastAdminQuestionTime[playerid] = GetTickCount();
+	return 1;
+}
 
 flags:afk(CMD_USER);
 CMD:afk(playerid, params[])
@@ -103,12 +127,13 @@ CMD:afk(playerid, params[])
 flags:aiuto(CMD_USER);
 CMD:aiuto(playerid, params[])
 {
-    SendClientMessage(playerid, -1, "[GENERALE]: /info - (/dom)anda - /compra - /annulla - /sconosciuto - /oggetto - /rimuovimaschera");
-    SendClientMessage(playerid, -1, "[GENERALE]: /rimuovi - /hotkeys - /arma - /id - /dp - /blindfold - /lostitems");
-	SendClientMessage(playerid, -1, "[GENERALE]: /afk - /stilechat - /stilelotta - /stilecamminata - /flascia - /cambiapassword");
-	SendClientMessage(playerid, -1, "[GENERALE]: /accetta - /rifiuta - /cancello - /onduty - /chiediaiuto - /casa - /biz");
-    SendClientMessage(playerid, -1, "[ALTRO]: /chatcmds - /animlist - /vcmds - /invcmds - /zpoints - /furniturecmds");
-	SendClientMessage(playerid, -1, "[ALTRO]: /fcmds");
+    SendClientMessage(playerid, -1, "[GENERALE]: /info - (/dom)anda - /chiudiaiuto - /afk - /hotkeys - /id - /dp");
+    SendClientMessage(playerid, -1, "[GENERALE]: /arma - /oggetto - /staff - /tester - /onduty - /report - /aiutami");
+	SendClientMessage(playerid, -1, "[GENERALE]: /casa - /biz - /zpoints - /animlist - /cancello - /rimuovimaschera");
+	SendClientMessage(playerid, -1, "[GENERALE]: /compra - /annulla - /accetta - /rifiuta - /rimuovi - /lostitems");
+	SendClientMessage(playerid, -1, "[GENERALE]: /stilechat - /stilelotta - /stilecamminata - /sconosciuto - /blindfold");
+    SendClientMessage(playerid, -1, "[ALTRO]: /chatcmds - /invcmds - /vcmds - /furniturecmds");
+	SendClientMessage(playerid, -1, "[ALTRO]: (/cambiapass)word - /fcmds - /animlist - /tcmds - /acmds");
 	new factionid = Character_GetFaction(playerid);
 	if(factionid != -1)
 	{
@@ -161,20 +186,21 @@ CMD:hotkeys(playerid, params[])
 		SendClientMessage(playerid, COLOR_GREEN, "Hai abilitato le HotKeys.");
 		SendClientMessage(playerid, -1, "Ora puoi utilizzare anche:");
 		//SendClientMessage(playerid, -1, "{00FF00}ENTER/INVIO{FFFFFF}: Entrare/Uscire da un edificio.");
-		SendClientMessage(playerid, -1, "{00FF00}Y{FFFFFF}: Entrare/uscire da un edificio e per accendere/spegnere un veicolo.");
-		SendClientMessage(playerid, -1, "{00FF00}N{FFFFFF}: Apri/Chiudi veicolo.");
-		SendClientMessage(playerid, -1, "{00FF00}2{FFFFFF}: Accendi/Spegni fari.");
-		SendClientMessage(playerid, -1, "{00FF00}LALT{FFFFFF}: Gestire la propria casa.");
+		SendClientMessage(playerid, -1, "{00FF00}Y{FFFFFF}: entra/esci da un edificio oppure accendere/spegnere un veicolo.");
+		SendClientMessage(playerid, -1, "{00FF00}N{FFFFFF}: apri/chiudi un veicolo.");
+		SendClientMessage(playerid, -1, "{00FF00}2{FFFFFF}: accendi/spegni fari.");
+		SendClientMessage(playerid, -1, "{00FF00}C{FFFFFF}: raccogli un oggetto da terra.");
+		SendClientMessage(playerid, -1, "{00FF00}LALT{FFFFFF}: per interagire con case/biz/concessionarie.");
 		SendClientMessage(playerid, COLOR_GREEN, "N.B: I comandi sono relativi al mapping default di GTA.");
 		SendClientMessage(playerid, COLOR_GREEN, "Se hai cambiato il mapping default, i tasti potrebbero essere diversi.");
 	}
 	else
 	{
 		SendClientMessage(playerid, COLOR_GREEN, "Hai disabilitato le HotKeys. Ora puoi utilizzare soltanto i comandi.");
-		SendClientMessage(playerid, COLOR_GREEN, "/entra: entrare/uscire da un edificio.");
-		SendClientMessage(playerid, COLOR_GREEN, "/motore: accendere/spegnere un veicolo.");
-		SendClientMessage(playerid, COLOR_GREEN, "/vluci: accendere/spegnere li fari del veicolo.");
-		SendClientMessage(playerid, COLOR_GREEN, "/raccogli: raccogliere un oggetto da terra.");
+		SendClientMessage(playerid, -1, "{00FF00}/entra{FFFFFF}: entra/usci da un edificio.");
+		SendClientMessage(playerid, -1, "{00FF00}/motore{FFFFFF}: accende/spegne un veicolo.");
+		SendClientMessage(playerid, -1, "{00FF00}/vluci{FFFFFF}: accende/spegne i fari di un veicolo.");
+		SendClientMessage(playerid, -1, "{00FF00}/raccogli{FFFFFF}: raccogli un oggetto da terra.");
 	}
 	return 1;
 }
@@ -269,9 +295,10 @@ CMD:stilelotta(playerid, params[])
 flags:onduty(CMD_USER);
 CMD:onduty(playerid, params[])
 {
-	new count = 0, factionid = Character_GetFaction(playerid);
+	new count = 0, factionid = 0;
 	foreach(new i : Player)
 	{
+		factionid = Character_GetFaction(i);
 		if(!Character_IsLogged(i) || !Faction_IsValid(factionid) || Faction_GetType(factionid) != FACTION_TYPE_POLICE)
 			continue;
 		count++;
@@ -291,6 +318,7 @@ CMD:cambiapassword(playerid, params[])
 	Dialog_Show(playerid, Dialog_ChangePassword, DIALOG_STYLE_INPUT, "Cambia Password", "Inserisci la tua password attuale.", "Continua", "Chiudi");
 	return 1;
 }
+alias:cambiapassword("cambiapass");
 
 Dialog:Dialog_ChangePassword(playerid, response, listitem, inputtext[])
 {

@@ -63,8 +63,24 @@ hook OnPlayerText(playerid, text[])
 		}
 		else
 		{
-			new String:string = str_format("%s dice: %s", Character_GetRolePlayName(playerid), text);
-			ProxDetectorStr(playerid, 15.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
+			new 
+				String:prefix = @(""),
+				Float:range = 20.0;
+			if(IsPlayerInAnyVehicle(playerid) && !IsABike(GetPlayerVehicleID(playerid)) && !IsAMotorBike(GetPlayerVehicleID(playerid)))
+			{
+				if(Character_IsVehicleWindowOpen(playerid))
+				{
+					prefix = @("[Finestrino Aperto]");
+					range = 20.0;
+				}
+				else
+				{
+					prefix = @("[Finestrino Chiuso]");
+					range = 5.0;
+				}
+			}
+			new String:string = str_format("%S %s dice: %s", prefix, Character_GetRolePlayName(playerid), text);
+			ProxDetectorStr(playerid, range, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
 		}
 	}
 	return Y_HOOKS_CONTINUE_RETURN_0;

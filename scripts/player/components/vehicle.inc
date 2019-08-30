@@ -55,8 +55,14 @@ CMD:veicolo(playerid, params[])
 			else
 				Character_AMe(playerid, Vehicle_IsLocked(vehicleid) ? ("prende le chiavi e apre il suo veicolo.") : ("prende le chiavi e chiude il suo veicolo."));
 			
-			Vehicle_Lock(vehicleid);
-			return SendFormattedMessage(playerid, COLOR_GREEN, "Hai chiuso il tuo veicolo (%s).", Vehicle_GetName(vehicleid));
+			Vehicle_SetLocked(vehicleid, !Vehicle_IsLocked(vehicleid));
+			
+			if(Vehicle_IsLocked(vehicleid))
+				SendFormattedMessage(playerid, COLOR_GREEN, "Hai chiuso il tuo veicolo (%s).", Vehicle_GetName(vehicleid));
+			else
+				SendFormattedMessage(playerid, COLOR_GREEN, "Hai aperto il tuo veicolo (%s).", Vehicle_GetName(vehicleid));
+
+			return 1;
 		}
 	}
 	else if(!strcmp(command, "motore", true))
@@ -71,7 +77,7 @@ CMD:veicolo(playerid, params[])
 		{
 			if(Vehicle_GetFuel(vehicleid) < 0.5)
 				return SendClientMessage(playerid, COLOR_ERROR, "Non c'è benzina nel veicolo.");
-			if(Vehicle_GetHealth(vehicleid) < VEHICLE_MIN_HEALTH_FOR_ENGINE && !Account_IsAdminDuty(playerid))
+			if(Vehicle_GetHealth(vehicleid) <= VEHICLE_MIN_HEALTH_FOR_ENGINE && !Account_IsAdminDuty(playerid))
 				return SendClientMessage(playerid, COLOR_ERROR, "Il motore del veicolo è danneggiato.");
 		}
 
@@ -257,7 +263,7 @@ Dialog:Dialog_SellVehicleToPlayer(playerid, response, listitem, inputtext[])
 	SendFormattedMessage(id, COLOR_RECEIVE_REQUEST, "%s vuole venderti il suo veicolo (%s) per $%d.", Character_GetRolePlayName(playerid), Vehicle_GetName(vehicleid), price);
     SendClientMessage(id, COLOR_RECEIVE_REQUEST, "Digita \"/accetta veicolo\" per accettare o \"/rifiuta veicolo\" per rifiutare.");
     
-    SendFormattedMessage(playerid, COLOR_SEND_REQUEST, "Hai inviato la richiesta di vendita a %s per $%d. Digita \"/annulla veicolo\" per annullare", Character_GetRolePlayName(id), price);
+    SendFormattedMessage(playerid, COLOR_SEND_REQUEST, "Hai inviato la richiesta di vendita a %s per $%d. Digita \"/annulla veicolo\" per annullare.", Character_GetRolePlayName(id), price);
 	return 1;
 }
 
@@ -281,8 +287,8 @@ stock Character_AcceptVehicleRequest(playerid)
 	Character_GiveMoney(senderid, price, "vehicle_sell_to_player");
 	Character_GiveMoney(-receiver, -price, "vehicle_buy_by_player");
 
-	SendFormattedMessage(senderid, COLOR_ORANGE, "%s ha accettato la tua richiesta ed è ora proprietario del tuo veicolo (%s). Hai guadagnato: $%d", Character_GetRolePlayName(receiver), Vehicle_GetName(vehicleid), price);
-	SendFormattedMessage(senderid, COLOR_ORANGE, "Hai accettato il veicolo (%s) di %s per $%d.", Vehicle_GetName(vehicleid), Character_GetRolePlayName(receiver), price);
+	SendFormattedMessage(senderid, COLOR_ORANGE, "%s ha accettato la tua richiesta ed è ora proprietario del tuo veicolo (%s). Hai guadagnato: $%d.", Character_GetRolePlayName(receiver), Vehicle_GetName(vehicleid), price);
+	SendFormattedMessage(receiver, COLOR_ORANGE, "Hai accettato il veicolo (%s) di %s per $%d.", Vehicle_GetName(vehicleid), Character_GetRolePlayName(receiver), price);
 	
 	Vehicle_SetOwner(vehicleid, receiver);
 	
@@ -309,50 +315,55 @@ CMD:vehmode(playerid, params[])
 
 stock Character_SpawnVehicle(playerid, slotid)
 {
-	inline OnLoad()
+	new query[160];
+	mysql_format(gMySQL, query, sizeof(query), "SELECT id, spawned, model, x, y, z FROM `vehicles` WHERE owner_id = '%d'", Character_GetID(playerid));
+	mysql_tquery(gMySQL, query, #LoadCharacterVehicle, "dd", playerid, slotid);
+	return 1;
+}
+
+forward LoadCharacterVehicle(playerid, slotid);
+public LoadCharacterVehicle(playerid, slotid)
+{
+	new rows = cache_num_rows();
+	if(rows <= 0 || rows < slotid)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non c'è un veicolo in questo slot.");
+
+	slotid--;
+
+	new id, modelid, spawned, Float:x, Float:y, Float:z;
+
+	cache_get_value_name_int(slotid, "id", id);
+	cache_get_value_name_int(slotid, "spawned", spawned);
+	cache_get_value_name_int(slotid, "model", modelid);
+	cache_get_value_name_float(slotid, "x", x);
+	cache_get_value_name_float(slotid, "y", y);
+	cache_get_value_name_float(slotid, "z", z);
+
+	new bool:canSpawn = true;
+
+	if(spawned)
 	{
-		
-		new rows = cache_num_rows();
-		if(rows <= 0 || rows < slotid)
-			return SendClientMessage(playerid, COLOR_ERROR, "Non c'è un veicolo in questo slot.");
-
-		slotid--;
-
-		new id, modelid, spawned, Float:x, Float:y, Float:z;
-
-		cache_get_value_name_int(slotid, "id", id);
-		cache_get_value_name_int(slotid, "spawned", spawned);
-		cache_get_value_name_int(slotid, "model", modelid);
-		cache_get_value_name_float(slotid, "x", x);
-		cache_get_value_name_float(slotid, "y", y);
-		cache_get_value_name_float(slotid, "z", z);
-
-		new bool:canSpawn = true;
-
-		if(spawned)
+		foreach(new v : Vehicle)
 		{
-			foreach(new v : Vehicle)
+			if(Vehicle_GetID(v) == id)
 			{
-				if(Vehicle_GetID(v) == id)
-				{
-					canSpawn = false;
-					SendClientMessage(playerid, COLOR_ERROR, "Il veicolo risulta già spawnato.");
-					break;
-				}
+				canSpawn = false;
+				SendClientMessage(playerid, COLOR_ERROR, "Il veicolo risulta già spawnato.");
+				break;
 			}
 		}
-		
-		if(!canSpawn)
-			return 0;
-
-		printf("SELECT * FROM `vehicles` WHERE id = '%d'", id);
-		mysql_tquery_f_callback(gMySQL, #Vehicle_LoadAll, "", "SELECT * FROM `vehicles` WHERE id = '%d'", id);
-
-		SendFormattedMessage(playerid, COLOR_ORANGE, "Hai spawnato il tuo veicolo (%s). Segui il checkpoint per trovarlo.", Vehicle_GetNameFromModel(modelid));
-
-		SetPlayerCheckpoint(playerid, x, y, z, 5.0);
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT id, spawned, model, x, y, z FROM `vehicles` WHERE owner_id = '%d'", Character_GetID(playerid));
+	
+	if(!canSpawn)
+		return 0;
+
+	printf("SELECT * FROM `vehicles` WHERE id = '%d'", id);
+	mysql_tquery_f_callback(gMySQL, #Vehicle_LoadAll, "", "SELECT * FROM `vehicles` WHERE id = '%d'", id);
+
+	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai spawnato il tuo veicolo (%s). Segui il checkpoint per trovarlo.", Vehicle_GetNameFromModel(modelid));
+
+	SetPlayerCheckpoint(playerid, x, y, z, 5.0);
+
 	return 1;
 }
 
@@ -435,17 +446,6 @@ ptask OnVehicleFuelTextDrawTimer[1000](playerid)
 	return 1;
 }
 
-/*hook OnCharacterDisconnected(playerid)
-{
-	foreach(new v : Vehicle)
-	{
-		if(!Vehicle_GetID(v) || Vehicle_GetOwnerID(v) != Character_GetID(playerid) || Vehicle_GetModel(v) == 0 || Vehicle_GetFaction(v) != INVALID_FACTION_ID)
-			continue;
-		Vehicle_SetToDespawn(v, 60);
-	}
-	return 1;
-}*/
-
 hook OnPlayerExitVehicle(playerid, vehicleid)
 {
 	new seat = GetPlayerVehicleSeat(playerid);
@@ -468,7 +468,6 @@ hook OnPlayerExitVehicle(playerid, vehicleid)
 
 hook OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
 {
-	printf("OnPlayerEnterVehicle - %d - %d", vehicleid, Vehicle_IsLocked(vehicleid) ? 1 : 0);
 	if(Vehicle_IsLocked(vehicleid) && !Account_IsAdminDuty(playerid))
 	{
 		/*if(Vehicle_IsOwner(vehicleid, playerid, false))
@@ -494,7 +493,7 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
 	if(newstate == PLAYER_STATE_DRIVER)
     {
 		new vehicleid = GetPlayerVehicleID(playerid);
-		if(Vehicle_GetModel(vehicleid) != 0) // Probably a useless check
+		if(Vehicle_IsValid(vehicleid) && Vehicle_GetModel(vehicleid) != 0) // Probably a useless check
 		{
 			if(!IsABike(vehicleid))
 			{
@@ -503,12 +502,11 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
 			}
 			if(Vehicle_GetOwnerID(vehicleid) > 0)
 			{
-				/*new despawnTime = Vehicle_GetSpawnExpiry(vehicleid);
-				if(Vehicle_IsDespawn(vehicleid) && gettime() < despawnTime && Vehicle_GetFaction(vehicleid) == INVALID_FACTION_ID)
-				{
-					SendTwoLinesMessage(playerid, COLOR_ERROR, "(( Attenzione: Il proprietario del veicolo si è disconnesso. Il veicolo verrà despawnato in %d minuti. ))", (despawnTime - gettime())/60);
-				}*/
 				SendFormattedMessage(playerid, COLOR_GREEN, "(( Questo veicolo (%s) appartiene a %s ))", Vehicle_GetName(vehicleid), Vehicle_GetOwnerName(vehicleid));
+			}
+			if(Vehicle_IsNextToBreakEngine(vehicleid))
+			{
+				SendClientMessage(playerid, COLOR_ERROR, "(( Il veicolo è stato distrutto di recente. Il motore si romperà definitivamente la prossima volta. ))");
 			}
 		}
 		SetPlayerArmedWeapon(playerid, 0);
@@ -542,24 +540,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 			}
 			if(PRESSED(KEY_NO))
 			{
-				new vehicleid = GetPlayerVehicleID(playerid);
-				if(vehicleid <= 0)
-					vehicleid = Character_GetClosestVehicle(playerid, 3.5);
-				if(vehicleid > 0 && Vehicle_IsOwner(vehicleid, playerid, false)) //We're owners
-				{
-					if(Vehicle_IsLocked(vehicleid))
-					{
-						SendFormattedMessage(playerid, COLOR_GREEN, "Hai aperto il tuo veicolo (%s).", Vehicle_GetName(vehicleid));
-						Character_AMe(playerid, "prende le chiavi e apre il suo veicolo.");
-						Vehicle_UnLock(vehicleid);
-					}
-					else
-					{
-						SendFormattedMessage(playerid, COLOR_GREEN, "Hai chiuso il tuo veicolo (%s).", Vehicle_GetName(vehicleid));
-						Character_AMe(playerid, "prende le chiavi e chiude il suo veicolo.");
-						Vehicle_Lock(vehicleid);
-					}
-				}
+				pc_cmd_veicolo(playerid, "sicura");
 			}
 		}
 	}
@@ -624,7 +605,7 @@ stock Character_GetVehicleCount(playerid)
 	new count = 0;
 	
 	new Cache:cache = mysql_query_f(gMySQL, true, "SELECT COUNT(*) FROM `vehicles` WHERE owner_id = '%d'", Character_GetID(playerid));
-	count = cache_num_rows();
+	cache_get_value_index_int(0, 0, count);
 	cache_delete(cache);
 	return count;
 }
@@ -654,4 +635,13 @@ stock Character_IsNearVehicle(playerid, vehicleid, Float:dist = 5.0)
 	new Float:x, Float:y, Float:z;
 	GetVehiclePos(vehicleid, x, y, z);
 	return IsPlayerInRangeOfPoint(playerid, dist, x, y, z);
+}
+
+stock bool:Character_IsVehicleWindowOpen(playerid)
+{
+	new status[4], seat = GetPlayerVehicleSeat(playerid);
+	GetVehicleParamsCarWindows(GetPlayerVehicleID(playerid), status[0], status[1], status[2], status[3]);
+	if(0 <= seat <= 3)
+		return !status[seat];
+	return false;
 }

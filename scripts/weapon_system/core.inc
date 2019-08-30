@@ -175,7 +175,9 @@ stock Weapon_GetName(weaponid)
 		"Visore Termico", "Paracadute","Fake Pistol", 
 		"Calcio Arma", "Veicolo", "Eliche Elicottero", 
 		"Esplosione", "Investito", "Annegamento", 
-		"Caduta", "Splat", "Unknown"
+		"Caduta", "Splat", "Sconosciuto"
 	};
+	if(weaponid < 0 || weaponid >= sizeof(gsWeaponNames))
+		return gsWeaponNames[sizeof(gsWeaponNames)-1];
     return gsWeaponNames[weaponid];
 }

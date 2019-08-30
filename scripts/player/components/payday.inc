@@ -72,7 +72,7 @@ stock Character_PayDay(playerid)
 	SendFormattedMessage(playerid, COLOR_YELLOW, "Stipendio: $%d.", Character_GetPayCheck(playerid));
 
 	if(paycheck > 0)
-		SendClientMessage(playerid, COLOR_YELLOW, "Dirigiti verso NOMEPOSTO per ritirare il tuo stipendio.");
+		SendClientMessage(playerid, COLOR_YELLOW, "Dirigiti verso la zona Governativa per ritirare il tuo stipendio.");
     
 	static const levels[] = {1, 1, 2, 3};
 	new level = levels[Account_GetPremiumLevel(playerid)];

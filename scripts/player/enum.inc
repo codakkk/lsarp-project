@@ -61,6 +61,8 @@ stock GetRequestTypeName(type)
 	   case REQUEST_TYPE_SEARCH: l = "Perquisizione";
 	   case REQUEST_TYPE_BUILDING: l = "Edificio";
 	   case REQUEST_TYPE_CARE: l = "Cura";
+	   case REQUEST_TYPE_FACTION: l = "Fazione";
+	   case REQUEST_TYPE_VEHICLE: l = "Veicolo";
 	   default: l = "Sconosciuto";
     }
     return l;

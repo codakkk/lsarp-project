@@ -547,6 +547,8 @@ stock IsValidEMail(email[])
 	}
 	if (cstate < 1) return false;
 	if (len < 6) return false;
+	new mail[65], domain[16];
+	printf("domain: %s", domain);
 	// A toplevel domain has only 3 to 4 signs :-)
 	if ((email[len-3] == '.') || (email[len-4] == '.') || (email[len-5] == '.')) return true;
 	return false;

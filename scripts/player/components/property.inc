@@ -155,7 +155,7 @@ static Internal_EnterGarage(playerid, buildingid)
 	}
 	else
 	{
-		SetPlayerPos(playerid, x, y, z);
+		Character_SetSafePosition(playerid, x, y, z, interiorId, world);
 	}
 	return 1;
 }
@@ -186,7 +186,7 @@ static Internal_EnterBuilding(playerid, buildingid)
     SetPlayerInterior(playerid, interiorId);
     Character_SetVirtualWorld(playerid, world);
     // Should I use Fading?
-	SetPlayerPos(playerid, x, y, z);
+	Character_SetSafePosition(playerid, x, y, z, interiorId, world);
 
 	CallLocalFunction(#OnPlayerEnterBuilding, "dd", playerid, buildingid);
 	return 1;
@@ -213,7 +213,7 @@ static Internal_EnterHouse(playerid, houseid)
     SetPlayerInterior(playerid, interiorId);
     Character_SetVirtualWorld(playerid, world);
     // Should I use Fading?
-	SetPlayerPos(playerid, x, y, z);
+	Character_SetSafePosition(playerid, x, y, z, interiorId, world);
 	return 1;
 }
 
@@ -251,10 +251,11 @@ static Internal_ExitGarage(playerid, buildingid)
 
 	new vehicleid = GetPlayerVehicleID(playerid);
 	
+	
 	SetPlayerInterior(playerid, interiorId);
 	Character_SetVirtualWorld(playerid, world);
 	
-	if(vehicleid > 0)
+	if(vehicleid > 0 && GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
 	{
 		LinkVehicleToInterior(vehicleid, interiorId);
 		SetVehicleVirtualWorld(vehicleid, world);
@@ -262,7 +263,7 @@ static Internal_ExitGarage(playerid, buildingid)
 	}
 	else
 	{
-		SetPlayerPos(playerid, x, y, z);
+		Character_SetSafePosition(playerid, x, y, z, interiorId, world);
 	}
 	return 1;
 }
@@ -288,7 +289,7 @@ static Internal_ExitHouse(playerid, houseid)
 	
 	House_GetEnterPosition(houseid, x, y, z);
     Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
-    SetPlayerPos(playerid, x, y, z);
+    Character_SetSafePosition(playerid, x, y, z, interiorId, world);
 	return 1;
 }
 
@@ -313,7 +314,7 @@ static Internal_ExitBuilding(playerid, buildingid)
 	
 	Building_GetEnterPos(buildingid, x, y, z);
     Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
-    SetPlayerPos(playerid, x, y, z);
+    Character_SetSafePosition(playerid, x, y, z, interiorId, world);
 	return 1;
 }
 

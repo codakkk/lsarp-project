@@ -51,7 +51,6 @@ hook OnGameModeInit()
 	mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS `buildings` ( \
 						`id` int(11) NOT NULL AUTO_INCREMENT, \
 						`name` varchar(64) DEFAULT NULL, \
-						`owner_name` varchar(24) DEFAULT NULL, \
 						`welcome_text` varchar(120) DEFAULT NULL, \
 						`enter_x` float DEFAULT '0', \
 						`enter_y` float DEFAULT '0', \
@@ -91,6 +90,22 @@ hook OnCharacterLoad(playerid)
 	return 1;
 }
 
+
+hook OnCharacterChangeName(playerid, newCharacterName[])
+{
+	for_map(i : Buildings)
+	{
+        new buildingid = iter_get_key(i);
+		if(Building_GetOwnerID(buildingid) == Character_GetID(playerid))
+		{
+			new Iter:iter = Iter:map_iter_at(Buildings, buildingid);
+			iter_set_cells(iter, OwnerName, newCharacterName, MAX_PLAYER_NAME);
+		}
+	}
+	return 1;
+}
+
+
 stock Building_Create(Float:x, Float:y, Float:z, interior, world)
 {
     inline OnInsert()
@@ -120,56 +135,79 @@ stock Building_Create(Float:x, Float:y, Float:z, interior, world)
 
 		CallLocalFunction(#OnBuildingLoaded, "d", id);
     }
-    MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO buildings (name, owner_name, welcome_text, enter_x, enter_y, enter_z, enter_interior, enter_world, exit_x, exit_y, exit_z, exit_interior, ownable, owner_id, price, locked) \
-						   VALUES('SET_NAME', '', '', '%f', '%f', '%f', '%d', '%d', '0.0', '0.0', '0.0', '0', '0', '0', '0', '1')", 
+    MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO buildings (name, welcome_text, enter_x, enter_y, enter_z, enter_interior, enter_world, exit_x, exit_y, exit_z, exit_interior, ownable, owner_id, price, locked) \
+						   VALUES('SET_NAME', '', '%f', '%f', '%f', '%d', '%d', '0.0', '0.0', '0.0', '0', '0', '0', '0', '1')", 
 										  x, y, z, interior, world);
     return 1;
 }
 
 stock Building_LoadAll()
 {
-	new Cache:result = mysql_query(gMySQL, "SELECT * FROM `buildings` ORDER BY id", true);
-
-	new count = cache_num_rows();
-	new data[E_BUILDING_INFO];
-	for(new i = 0; i < count; ++i)
+	inline OnLoad()
 	{
-		cache_get_value_name_int(i, "id", data[ID]);
-		cache_get_value_name(i, "name", data[Name]);
-		cache_get_value_name(i, "owner_name", data[OwnerName]);
-		cache_get_value_name(i, "welcome_text", data[WelcomeText]);
-		cache_get_value_name_float(i, "enter_x", data[EnterX]);
-		cache_get_value_name_float(i, "enter_y", data[EnterY]);
-		cache_get_value_name_float(i, "enter_z", data[EnterZ]);
-		cache_get_value_name_int(i, "enter_interior", data[EnterInterior]);
-		cache_get_value_name_int(i, "enter_world", data[EnterWorld]);
-		cache_get_value_name_float(i, "exit_x", data[ExitX]);
-		cache_get_value_name_float(i, "exit_y", data[ExitY]);
-		cache_get_value_name_float(i, "exit_z", data[ExitZ]);
-		cache_get_value_name_int(i, "exit_interior", data[ExitInterior]);
-		cache_get_value_name_int(i, "ownable", data[Ownable]);
-		cache_get_value_name_int(i, "owner_id", data[OwnerID]);
-		cache_get_value_name_int(i, "price", data[Price]);
-		cache_get_value_name_int(i, "locked", data[Locked]);
-		cache_get_value_name_int(i, "faction", data[Faction]);
-		cache_get_value_name_int(i, "type", data[Type]);
+		new count = 0;
+		cache_get_row_count(count);
+		new data[E_BUILDING_INFO], did;
+		for(new i = 0; i < count; ++i)
+		{
+			cache_get_value_name_int(i, "id", data[ID]);
+			cache_get_value_name(i, "name", data[Name]);
+			cache_get_value_name(i, "welcome_text", data[WelcomeText]);
+			cache_get_value_name_float(i, "enter_x", data[EnterX]);
+			cache_get_value_name_float(i, "enter_y", data[EnterY]);
+			cache_get_value_name_float(i, "enter_z", data[EnterZ]);
+			cache_get_value_name_int(i, "enter_interior", data[EnterInterior]);
+			cache_get_value_name_int(i, "enter_world", data[EnterWorld]);
+			cache_get_value_name_float(i, "exit_x", data[ExitX]);
+			cache_get_value_name_float(i, "exit_y", data[ExitY]);
+			cache_get_value_name_float(i, "exit_z", data[ExitZ]);
+			cache_get_value_name_int(i, "exit_interior", data[ExitInterior]);
+			cache_get_value_name_int(i, "ownable", data[Ownable]);
+			cache_get_value_name_int(i, "owner_id", data[OwnerID]);
+			cache_get_value_name_int(i, "price", data[Price]);
+			cache_get_value_name_int(i, "locked", data[Locked]);
+			cache_get_value_name_int(i, "faction", data[Faction]);
+			cache_get_value_name_int(i, "type", data[Type]);
 
-		cache_get_value_name_int(i, "money", data[Money]);
+			cache_get_value_name_int(i, "money", data[Money]);
 
-		data[ExitWorld] = BUILDING_START_WORLD + data[ID];
+			data[ExitWorld] = BUILDING_START_WORLD + data[ID];
 
-		data[Exists] = 1;
+			data[Exists] = 1;
 
-		map_add_arr(Buildings, data[ID], data);
 
-		Building_CreateElements(data[ID]);
 
-		CallLocalFunction(#OnBuildingLoaded, "d", data[ID]);
-		//printf("Type: %d", BuildingInfo[i][Type]);
-		//Iter_Add(Buildings, i);
+			printf("Building ID: %d - %d", data[ID], i);
+			map_add_arr(Buildings, data[ID], data);
+
+			Building_CreateElements(data[ID]);
+
+			CallLocalFunction(#OnBuildingLoaded, "d", data[ID]);
+			//printf("Type: %d", BuildingInfo[i][Type]);
+			//Iter_Add(Buildings, i);
+		}
+		printf("%d buildings loaded.\n", count);
+
+		for_map(i : Buildings)
+		{
+			// DON'T USE CACHE FUNCTIONS AFTER THIS IF
+			new buildingid = iter_get_key(i);
+			if(Building_GetOwnerID(buildingid) > 0)
+			{
+				new Cache:cache = mysql_query_f(gMySQL, true, "SELECT name FROM `characters` WHERE id = '%d'", Building_GetOwnerID(buildingid));
+				if(cache_num_rows() > 0)
+				{
+					new name[MAX_PLAYER_NAME];
+					cache_get_value_name(0, "name", name);
+
+					iter_set_cells(i, OwnerName, name);
+				}
+				cache_delete(cache);
+			}
+		}
 	}
-	printf("%d buildings loaded.\n", count);
-	cache_delete(result);
+
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `buildings`");
 	return 1;
 }
 
@@ -286,8 +324,7 @@ stock Building_SetOwner(buildingid, playerid)
 	new Iter:iter = Iter:map_iter_at(Buildings, buildingid);
 	iter_set_cells(iter, OwnerName, Character_GetOOCName(playerid));
 
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET owner_name = '%e', owner_id = '%d' WHERE id = '%d'", 
-					Character_GetOOCName(playerid), Character_GetID(playerid), Building_GetID(buildingid));
+	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), Building_GetID(buildingid));
 
     Log(Character_GetOOCName(playerid), "", "Building_SetOwner", buildingid);
     return 1;
@@ -301,7 +338,7 @@ stock Building_ResetOwner(buildingid)
 	new Iter:iter = Iter:map_iter_at(Buildings, buildingid);
 	iter_set_cells(iter, OwnerName, "");
 
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET owner_name = '', owner_id = '0' WHERE id = '%d'", Building_GetID(buildingid));
+	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET owner_id = '0' WHERE id = '%d'", Building_GetID(buildingid));
 	mysql_tquery_f(gMySQL, "UPDATE `characters` SET building_key = '0' WHERE building_key = '%d'", Building_GetID(buildingid));
 	
 	foreach(new i : Player)
@@ -590,6 +627,8 @@ stock Character_AcceptBuilding(playerid)
     Character_GiveMoney(playerid, -price, "accept_building");
     Character_GiveMoney(senderid, price, "sell_building_to_player");
     
+	Building_SetOwner(buildingid, playerid);
+
     SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s ha accettato la tua richiesta di vendita del tuo edificio. Hai guadagnato $%d.", Character_GetRolePlayName(playerid), price);
     SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "%s ti ha venduto il suo edificio per $%d.", Character_GetRolePlayName(senderid), price);
 

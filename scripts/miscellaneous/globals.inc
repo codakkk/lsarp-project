@@ -3,7 +3,8 @@
 // Should I put here all globals? (gCharacterLogged, etc?)
 
 new Text:txtAnimHelper,
-	Text:Clock
+	Text:Clock,
+	Text:LoginScreenText
 ;
 
 // Player Texts

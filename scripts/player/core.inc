@@ -35,7 +35,7 @@
 #include <player\components\wear_objects>
 #include <player\components\privileges>
 #include <player\components\radio>
-
+#include <player\components\help_requests>
 // EFFECTS 
 #include <player\components\effects\mask>
 #include <player\components\effects\drag>
@@ -115,7 +115,15 @@ stock Character_CanInteract(playerid)
 {
 	if(!Character_IsLogged(playerid))
 		return 0;
-	return !(Character_IsStunned(playerid) || Character_IsCuffed(playerid) || Character_IsDragged(playerid) || Character_IsDead(playerid));
+	if(Character_IsStunned(playerid))
+		return 0;
+	if(Character_IsCuffed(playerid))
+		return 0;
+	if(Character_IsDragged(playerid))
+		return 0;
+	if(Character_IsDead(playerid))
+		return 0;
+	return 1;
 }
 
 stock Character_ShowStats(playerid, targetid)
@@ -133,8 +141,8 @@ stock Character_ShowStats(playerid, targetid)
 	getdate(year, month, day);
 	gettime(hours, minutes, seconds);
 	
-    SendFormattedMessage(targetid, COLOR_GREEN, "_____________________[STATISTICHE - %d/%d/%d @ %d/%d]_____________________", day, month, year, hours, minutes);
-	SendFormattedMessage(targetid, -1, "[Account] Account: %s - Livello: %d - E-Mail: %s", Account_GetName(playerid), Account_GetLevel(playerid), Account_GetEMail(playerid));
+    SendFormattedMessage(targetid, COLOR_GREEN, "_____________________[STATISTICHE - %d/%d/%d @ %d:%d]_____________________", day, month, year, hours, minutes);
+	SendFormattedMessage(targetid, -1, "[Account] Nome: %s - Livello: %d - E-Mail: %s", Account_GetName(playerid), Account_GetLevel(playerid), Account_GetEMail(playerid));
     
 	if(Character_GetFaction(playerid) != INVALID_FACTION_ID)
 	{
@@ -150,24 +158,24 @@ stock Character_ShowStats(playerid, targetid)
     SendFormattedMessage(targetid, -1, "[Salute] HP: %.2f - Armatura: %.2f - Alimentazione: %d", hp, armour, Character_GetHunger(playerid));
     
 	if(Character_HasBuildingKey(playerid) && Character_HasHouseKey(playerid))
-	   SendFormattedMessage(targetid, -1, "[Proprietà]: Edificio: %d - Casa: %d", Character_GetBuildingKey(playerid), Character_GetHouseKey(playerid));
+	   SendFormattedMessage(targetid, -1, "[Proprietà] Edificio: %d - Casa: %d", Character_GetBuildingKey(playerid), Character_GetHouseKey(playerid));
     else if(Character_HasBuildingKey(playerid))
-	   SendFormattedMessage(targetid, -1, "[Proprietà]: Edificio: %d", Character_GetBuildingKey(playerid));
+	   SendFormattedMessage(targetid, -1, "[Proprietà] Edificio: %d", Character_GetBuildingKey(playerid));
     else if(Character_HasHouseKey(playerid))
-	   SendFormattedMessage(targetid, -1, "[Proprietà]: Casa: %d", Character_GetHouseKey(playerid));
+	   SendFormattedMessage(targetid, -1, "[Proprietà] Casa: %d", Character_GetHouseKey(playerid));
 	
 	SendFormattedMessage(targetid, -1, "[Altro] Soldi: $%d - Stipendio: $%d - Interior: %d - VW: %d", Character_GetMoney(playerid), Character_GetPayCheck(playerid), GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
 	
 	if(Account_GetPremiumLevel(playerid) > 0 && Account_GetPremiumExpiry(playerid) > gettime())
 	{
-		static premiumNames[][8] = {"Bronze", "Silver", "Gold"};
-		TimestampToDate(Account_GetPremiumExpiry(playerid), year, month, day, hours, minutes, seconds, 0);
+		static premiumNames[][16] = {"Nerone", "Caligola", "Giulio Cesare"};
+		TimestampToDate(Account_GetPremiumExpiry(playerid), year, month, day, hours, minutes, seconds, 1);
 
 		SendFormattedMessage(targetid, -1, "Premium %s - Scadenza: %d/%d/%d - %d:%d", premiumNames[Account_GetPremiumLevel(playerid)-1], day, month, year, hours, minutes);
 	}
 	
 	if(Account_GetAdminLevel(playerid) > 0)
-		SendFormattedMessage(targetid, -1, "[Staff]: %s", GetAdminLevelName(Account_GetAdminLevel(playerid)));
+		SendFormattedMessage(targetid, -1, "[Staff] %s", GetAdminLevelName(Account_GetAdminLevel(playerid)));
 
 	//SendFormattedMessage(targetid, -1, "Ti mancano %d/%d punti esperienza per salire di livello.", Character_GetExp(playerid), expForNewLevel);
     SendFormattedMessage(targetid, -1, "Tempo rimanente al PayDay: %d minuti", 60 - Account_GetPayDay(playerid));
@@ -445,9 +453,45 @@ stock LoadCharacterResult(playerid)
 
 		cache_get_value_name_int(0, "faction_duty", tmp);
 		Character_SetFactionDuty(playerid, tmp ? true : false);
+
+		new id, isBanned, banTime;
+		cache_get_value_name_int(0, "banned", isBanned);
+		cache_get_value_name_int(0, "ban_expiry", banTime);
+
+		if(isBanned)
+		{
+			if(gettime() < banTime)
+			{
+				Dialog_Show(playerid, DialogNull, DIALOG_STYLE_MSGBOX, "Personaggio Bannato", "Questo personaggio risulta bannato.\nData di scadenza: %s.\nSe pensi sia stato un errore, visita www.lsarp.it", "Ok", "", date(banTime));
+				KickEx(playerid);
+				return 0;
+			}
+			else
+			{
+				mysql_tquery_f(gMySQL, "UPDATE `characters` SET banned = '0', ban_expiry = '0' WHERE id = '%d'", Character_GetID(playerid));
+			}
+		}
 		return 1;
     }
     return 0;
+}
+
+stock Character_SetSafePosition(playerid, Float:x, Float:y, Float:z, interior = -1, world = -1)
+{
+	if(!Character_IsLogged(playerid))
+		return 0;
+
+	if(interior == -1)
+		interior = GetPlayerInterior(playerid);
+	if(world == -1)
+		world = Character_GetVirtualWorld(playerid);
+	
+	Streamer_UpdateEx(playerid, x, y, z, world, interior);
+	SetPlayerPos(playerid, x, y, z);
+	SetPlayerInterior(playerid, interior);
+	Character_SetVirtualWorld(playerid, world);
+	Character_FreezeForTime(playerid, 2000);
+	return 1;
 }
 
 stock Character_Clear(playerid)

@@ -35,6 +35,9 @@ CMD:blockpm(playerid, params[])
 	if(Account_GetPremiumLevel(playerid) < 1 && !Account_HasBlockPM(playerid) && Account_GetAdminLevel(playerid) < 2)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei un premium di almeno livello Bronzo o non hai acquistato il blocco PM.");
 	
+    if(isnull(params) || strlen(params) <= 0)
+        return SendClientMessage(playerid, COLOR_ERROR, "/blockpm <all o playerid/partofname>");
+
     if(!strcmp(params, "all", true))
     {
         Account_SetPMAllEnabled(playerid, !Account_HasPMAllEnabled(playerid));
@@ -47,9 +50,9 @@ CMD:blockpm(playerid, params[])
         new id;
         if(sscanf(params, "k<u>", id))
             return SendClientMessage(playerid, COLOR_ERROR, "/blockpm <all o playerid/partofname>");
-		if(Account_HasPMAllEnabled(playerid))
+		if(!Account_HasPMAllEnabled(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Hai già disabilitato i PM da e verso tutti.");
-        if(id == playerid || !IsPlayerConnected(id) || !Character_IsLogged(id))
+        if(id == playerid || !Character_IsLogged(id))
             return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
         if(Iter_Contains(pTogglePM[playerid], id))
         {
@@ -84,7 +87,7 @@ CMD:blockb(playerid, params[])
             return SendClientMessage(playerid, COLOR_ERROR, "/blockb <all o playerid/partofname>");
 		if(!Account_HasOOCEnabled(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Hai già disabilitato la chat OOC da e verso tutti.");
-        if(id == playerid || !IsPlayerConnected(id) || !Character_IsLogged(id))
+        if(id == playerid || !Character_IsLogged(id))
             return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
         if(Iter_Contains(pToggleOOC[playerid], id))
         {
@@ -114,7 +117,7 @@ CMD:setpremium(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Giorni < 0");
 	
 	Account_SetPremiumLevel(id, premiumid);
-	Account_SetPremiumExpiry(playerid, time ? (gettime() + 3600 * 24 * time) : 0);
+	Account_SetPremiumExpiry(id, time ? (gettime() + 3600 * 24 * time) : 0);
 
 	SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-ALERT]: %s (%d) ha settato %s (%d) premium livello %d.", 
 	Account_GetName(playerid), playerid, Account_GetName(id), id, premiumid);

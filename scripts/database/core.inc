@@ -13,7 +13,7 @@ hook OnGameModeInit()
     }
 	mysql_log(ERROR | WARNING);
 	
-    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS accounts \
+    mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS accounts \
 						(`id` INT(11) NOT NULL AUTO_INCREMENT, \
 						`name` VARCHAR(24) NOT NULL, \
 						`password` TEXT NOT NULL, \
@@ -25,16 +25,9 @@ hook OnGameModeInit()
 						`characters_slot` tinyint(4) DEFAULT 0, \
 						`banned` tinyint(4) DEFAULT 0, \
 						`ban_expiry` INT(11) DEFAULT 0, \
-						PRIMARY KEY (`id`))", false);
-	
-	mysql_query(gMySQL, "CREATE TABLE `account_options` ( \
-						`account_id` int(11) NOT NULL, \
-						`hotkeys` int(11) NOT NULL DEFAULT '0', \
-						`inv_mode` int(11) NOT NULL DEFAULT '0', \
-						PRIMARY KEY (`account_id`), \
-						CONSTRAINT `AccountOptions` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE \
-						) ENGINE=InnoDB DEFAULT CHARSET=latin1;", false);
-	mysql_query(gMySQL, "CREATE TABLE `characters` ( \
+						PRIMARY KEY (`id`))");
+					
+	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `characters` ( \
 						`id` int(11) NOT NULL AUTO_INCREMENT, \
 						`account_id` int(11) NOT NULL, \
 						`name` varchar(32) NOT NULL, \
@@ -57,36 +50,36 @@ hook OnGameModeInit()
 						`last_chop_shop_time` int(11) NOT NULL DEFAULT '0', \
 						PRIMARY KEY (`id`), \
 						KEY `Account-Characters` (`account_id`), \
-						CONSTRAINT `Account-Characters` FOREIGN KEY (`AccountID`) REFERENCES `accounts` (`id`) ON DELETE CASCADE \
-						) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;", false);
+						CONSTRAINT `Account-Characters` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE \
+						) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;");
 
-	mysql_query(gMySQL, "CREATE TABLE `character_privileges` (\
+	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `character_privileges` (\
 						`character_id` INT(11) NOT NULL, \
 						`chop_shop` INT(11) NOT NULL DEFAULT 0, \
 						PRIMARY KEY (`character_id`), \
 						CONSTRAINT `CharacterPrivileges` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE \
-						) ENGINE=InnoDB DEFAULT CHARSET=latin1;", false);
+						) ENGINE=InnoDB DEFAULT CHARSET=latin1;");
 
 
-    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS character_inventory \
+    mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS character_inventory \
 						(`character_id` INT(11) NOT NULL, \
 						`slot_id` INT(11) NOT NULL, \
 						`item` INT(11) NOT NULL, \
 						`amount` INT(11) NOT NULL, \
 						`extra` INT(11) NOT NULL, \
-						PRIMARY KEY (`character_id`))", false);
+						PRIMARY KEY (`character_id`))");
 
-    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS vehicle_inventory \
-						(`VehicleID` INT(11) NOT NULL, \
-						`Items` VARCHAR(255) NULL, \
-						`ItemsAmount` VARCHAR(255) NULL, \
-						`ItemsExtraData` VARCHAR(255) NULL, \
-						PRIMARY KEY (`VehicleID`))", false);
+    mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS vehicle_inventory \
+						(`vehicle_id` INT(11) NOT NULL, \
+						`slot_id` INT(4) NULL, \
+						`item` INT(6) NULL, \
+						`amount` INT(6) NULL, \
+						`extra` INT(6) NULL, \
+						PRIMARY KEY (`vehicle_id`))");
     
-    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS houses \
+    mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS houses \
 						(`id` INT(11) NOT NULL AUTO_INCREMENT, \
 						`owner_id` INT(11) NULL, \
-						`owner_name` VARCHAR(24) NULL, \
 						`enter_x` FLOAT NULL, \
 						`enter_y` FLOAT NULL, \
 						`enter_z` FLOAT NULL, \
@@ -101,21 +94,9 @@ hook OnGameModeInit()
 						`money` INT(11) NULL, \
 						`interior` INT(11) NULL, \
 						`created` INT(11) NULL, \
-						PRIMARY KEY (`id`))", false);
-
-    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS loot_zones \
-						(`ID` INT(11) NOT NULL AUTO_INCREMENT, \
-						`lzX` FLOAT NULL, \
-						`lzY` FLOAT NULL, \
-						`lzZ` FLOAT NULL, \
-						`lz_interior` INT(11) NULL, \
-						`lz_virtual_world` INT(11) NULL, \
-						`lz_possible_items` VARCHAR(255) NULL, \
-						`lz_possible_items_amount` VARCHAR(255) NULL, \
-						`lz_items_rarity` VARCHAR(255) NULL, \
-						PRIMARY KEY (`ID`))", false);
+						PRIMARY KEY (`id`))");
 	
-	mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS `character_drug_info` ( \
+	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `character_drug_info` ( \
 						`character_id` int(11) NOT NULL, \
 						`drug_id` int(11) NOT NULL, \
 						`last_usage_time` int(11) NOT NULL, \
@@ -123,9 +104,9 @@ hook OnGameModeInit()
 						`next_usage_time` int(11) NOT NULL, \
 						PRIMARY KEY (`character_id`), \
 						CONSTRAINT `character_drugs` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE \
-						) ENGINE=InnoDB DEFAULT CHARSET=latin1", false);
+						) ENGINE=InnoDB DEFAULT CHARSET=latin1");
 
-	mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS `character_custom_animations` ( \
+	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `character_custom_animations` ( \
 						`id` int(11) NOT NULL AUTO_INCREMENT, \
 						`character_id` int(11) NOT NULL, \
 						`name` VARCHAR(32) NOT NULL, \
@@ -134,9 +115,9 @@ hook OnGameModeInit()
 						`is_loop` tinyint(4) NOT NULL, \
 						CONSTRAINT IDCharacterID PRIMARY KEY (`id`, `character_id`), \
 						CONSTRAINT `CharacterCustomAnimations` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE \
-						) ENGINE=InnoDB DEFAULT CHARSET=latin1", false);
+						) ENGINE=InnoDB DEFAULT CHARSET=latin1");
 
-	mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS furnitures \
+	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS furnitures \
 						(`id` INT(11) NOT NULL AUTO_INCREMENT,\
 						`object_id` INT(11) DEFAULT '0', \
 						`world` INT(11) DEFAULT '0', \
@@ -154,14 +135,39 @@ hook OnGameModeInit()
 						`created_by_character` INT(11) DEFAULT '0', \
 						`last_edit_by_account` INT(11) DEFAULT '0', \
 						`last_edit_by_character` INT(11) DEFAULT '0', \
-						PRIMARY KEY (`ID`))", false);
+						PRIMARY KEY (`id`))");
 						
-	mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS loaded_furnitures \
-						(`world` INT(11) )", false);
+	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS loaded_furnitures \
+						(`world` INT(11) )");
+
+	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `bans` ( \
+							`ip` varchar(24) NOT NULL DEFAULT '', \
+							`serial` varchar(44) NOT NULL DEFAULT '' \
+							) ENGINE=MyISAM DEFAULT CHARSET=latin1");
+
+	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `connections` ( \
+						`id` int(11) NOT NULL AUTO_INCREMENT, \
+						`account_id` int(11) NOT NULL, \
+						`ip` VARCHAR(24) NOT NULL, \
+						`gpci` VARCHAR(44) NOT NULL, \
+						PRIMARY KEY (`id`) \
+						CONSTRAINT `connections_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT \
+						) ENGINE=InnoDB DEFAULT CHARSET=latin1");
 
     printf("Database Connected.");
     return 1;
 }
+
+hook OnAccountLogin(playerid)
+{
+	new ip[16], serial[41];
+	GetPlayerIp(playerid, ip, sizeof(ip));
+	gpci(playerid, serial, sizeof(serial));
+
+	mysql_tquery_f(gMySQL, "INSERT INTO `connections` (account_id, ip, gpci) VALUES('%d', '%e', '%e')", Account_GetID(playerid), ip, serial);
+	return 1;
+}
+
 
 public OnQueryError(errorid, const error[], const callback[], const query[], MySQL:handle)
 {
@@ -195,4 +201,24 @@ stock Cache:mysql_query_f(MySQL:handle, bool:useCache, const query[], GLOBAL_TAG
 	mysql_format(handle, YSI_UNSAFE_HUGE_STRING, YSI_UNSAFE_HUGE_LENGTH, query, ___(3));
 	new Cache:cache = mysql_query(handle, YSI_UNSAFE_HUGE_STRING, useCache);
 	return cache;
+}
+
+stock mysql_pquery_f(MySQL:handle, const query[], GLOBAL_TAG_TYPES:...)
+{
+	new ret = mysql_format(handle, YSI_UNSAFE_HUGE_STRING, YSI_UNSAFE_HUGE_LENGTH, query, ___(2));
+	if(ret)
+	{
+		ret = mysql_pquery(handle, YSI_UNSAFE_HUGE_STRING);
+	}
+	return ret;
+}
+
+stock mysql_pquery_f_callback(MySQL:handle, const callback[] = "", const format[] = "", const query[], GLOBAL_TAG_TYPES:...)
+{
+	new ret = mysql_format(handle, YSI_UNSAFE_HUGE_STRING, YSI_UNSAFE_HUGE_LENGTH, query, ___(4));
+	if(ret)
+	{
+		ret = mysql_pquery(handle, YSI_UNSAFE_HUGE_STRING, callback, format);
+	}
+	return ret;
 }

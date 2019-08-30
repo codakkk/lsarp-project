@@ -88,7 +88,7 @@ stock CheckAccount(playerid)
     {
 		new 
 			String:string,
-			p_name[24];
+			p_name[MAX_PLAYER_NAME];
 			
 		GetPlayerName(playerid, p_name, sizeof(p_name));
 		printf("AccountCheckCallback");
@@ -102,8 +102,23 @@ stock CheckAccount(playerid)
 		}
 		else
 		{
+			new bool:isValid = true;
+			for(new i = 0, j = strlen(p_name); i < j; ++i)
+			{
+				if(p_name[i] == '_')
+				{
+					isValid = false;
+					break;
+				}
+			}
+			if(!isValid)
+			{
+				Dialog_Show(playerid, DialogNull, DIALOG_STYLE_MSGBOX, "Account non valido", "Il tuo nome contiene caratteri non validi (_).\nRilogga con un account valido.", "Ok", "");
+				KickEx(playerid);
+				return 1;
+			}
 			#if ALLOW_NEW_USERS
-				string = str_format("Benvenuto %s.\nQuesto account non risulta registrato.\nInserisci una password per registrarti!\nN.B: Minimo 6 caratteri. Massimo 16.", p_name);
+				string = str_format("Benvenuto %s.\nQuesto account non risulta registrato.\nInserisci una password per registrarti!\nN.B: Minimo 6 caratteri. Massimo 16.\n\nRicorda che la password deve contenere almeno:\n- 8 caratteri.\n- Almeno una lettera maiuscola.\n- Almeno un numero.\n- Almeno un carattere speciale.\nLa password non puo':\n- Cominciare o finire con uno spazio\n- Contenere come caratteri speciali: %%, \\, ', `, \".", p_name);
 				Dialog_Show_s(playerid, Dialog_Register, DIALOG_STYLE_PASSWORD, @("Account non registrato"), string, "Ok", "");
 			#else
 				Dialog_Show_s(playerid, Dialog_Register, DIALOG_STYLE_PASSWORD, @("Account non registrato"), @("Benvenuto.\nQuesto account non risulta registrato.\nAttualmente non è possibile effettuare l'accesso.\nSe fai parte del team dei tester, contatta Coda.\nBYE"), "Oh shit", "");
@@ -137,13 +152,13 @@ hook OnPlayerRequestClass(playerid, classid)
 	return 1;
 }
 
-stock Account_CreateCharacter(playerid, const characterName[MAX_PLAYER_NAME])
+stock Account_CreateCharacter(playerid, const characterName[MAX_PLAYER_NAME], skinid = 46)
 {
 	inline OnCreate()
 	{	
 		CallLocalFunction(#OnCharacterCreated, "dd", playerid, cache_insert_id());
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnCreate, "INSERT INTO `characters` (name, account_id) VALUES('%e', '%d')", characterName, Account_GetID(playerid));
+	MySQL_TQueryInline(gMySQL, using inline OnCreate, "INSERT INTO `characters` (name, account_id, skin) VALUES('%e', '%d', '%d')", characterName, Account_GetID(playerid), skinid);
 	Log(Account_GetName(playerid), characterName, "CharacterCreation");
 	return 1;
 }

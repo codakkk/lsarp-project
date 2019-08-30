@@ -6,7 +6,7 @@ hook OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
 {
     if(Account_GetAdminLevel(playerid) <= 0 || !Account_IsAdminDuty(playerid))
 	   return 0;
-    SetPlayerPos(playerid, fX, fY, fZ);
+    Character_SetSafePosition(playerid, fX, fY, fZ);
     return 1;
 }
 

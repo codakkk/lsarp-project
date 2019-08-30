@@ -1,4 +1,4 @@
-#define MAILER_URL "185.25.204.170/server_mailer/emailconfig.php" // This has to be defined BEFORE you include mailer.
+#define MAILER_URL "localhost/server_mailer/emailconfig.php" // This has to be defined BEFORE you include mailer.
 
 stock SendMail( const szReceiver[ ], const szSubject[ ], const szMessage[ ] )
 {

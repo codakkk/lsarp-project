@@ -84,6 +84,9 @@ hook OnGameModeInit()
 	gItem_Radio = ServerItem_ManualInitializeItem(97, "Radio", ITEM_TYPE_GENERAL, 1212, 1);
 
 	gItem_Cigarette = ServerItem_ManualInitializeItem(98, "Sigarette", ITEM_TYPE_GENERAL, 1212, 1);
+
+	gItem_Dress = ServerItem_ManualInitializeItem(99, "Vestito", ITEM_TYPE_GENERAL, 2846, 1);
+
     printf("Items loaded. N: %d\n", Iter_Count(ServerItems));
     return 1;
 }
@@ -101,7 +104,7 @@ stock ServerItem_InitializeDrugItem(id, const name[], modelid = 0, amountForAddi
 
 stock ServerItem_InitializeFoodItem(id, const name[], modelId, foodAmount, health = 0)
 {
-	return ServerItem_ManualInitializeItem(id, name, ITEM_TYPE_FOOD, modelId, 2, foodAmount, health);
+	return ServerItem_ManualInitializeItem(id, name, ITEM_TYPE_FOOD, modelId, 15, foodAmount, health);
 }
 
 stock ServerItem_InitializeMedicItem(id, const name[], modelId, maxStacks, healthAmount)

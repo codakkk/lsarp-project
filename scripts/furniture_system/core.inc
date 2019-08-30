@@ -69,6 +69,11 @@ hook OnPlayerClearData(playerid)
     {
         Furniture_DeleteLabels(playerid);
     }
+
+    if(EditObject_GetType(playerid) == EDIT_TYPE_BUYING_FURNITURE)
+    {
+        Furniture_CancelBuy(playerid);
+    }
     return 1;
 }
 
@@ -171,7 +176,7 @@ hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float
             {
                 SetDynamicObjectPos(objectid, tx, ty, tz);
                 SetDynamicObjectRot(objectid, trx, try, trz);
-                return SendClientMessage(playerid, COLOR_ERROR, "Non puoi piazzare l'oggetto troppo lontano dalla tua casa."), 0;
+                return SendClientMessage(playerid, COLOR_ERROR, "Non puoi piazzare l'oggetto troppo lontano dalla tua casa."), EditObject_End(playerid), 0;
             }
 
             Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
@@ -238,6 +243,8 @@ Dialog:Dialog_CategorySelect(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_ManualFurnitureID(playerid, response, listitem, inputtext[])
 {
+    if(!response)
+        return 0;
     new objectid = strval(inputtext);
     if(objectid <= 0)
         return Dialog_Show(playerid, Dialog_ManualFurnitureID, DIALOG_STYLE_INPUT, "L'ID inserito non è valido.\nInserisci l'ID dell'arredamento", "Inserisci l'objectid che vuoi piazzare.\nRicorda di seguire le regole e di evitare abusi.", "Piazza", "Annulla");
@@ -329,6 +336,8 @@ Dialog:Dialog_FurnitureOptions(playerid, response, listitem, inputtext[])
         }
         case 4: // GOTO
         {
+            if(!Account_IsAdminDuty(playerid))
+                return 0;
             SetPlayerPos(playerid, x, y, z);
             SetPlayerInterior(playerid, Streamer_GetIntData(STREAMER_TYPE_OBJECT, selected, E_STREAMER_INTERIOR_ID));
             Character_SetVirtualWorld(playerid, Streamer_GetIntData(STREAMER_TYPE_OBJECT, selected, E_STREAMER_WORLD_ID));
@@ -445,6 +454,7 @@ stock Furniture_Load(worldid)
     if(Furniture_AreLoaded(worldid))
         return printf("Furnitures already loaded for world %d.", worldid);
     
+    map_add(Furnitures, worldid, pool_new());
     inline OnLoad()
     {
         
@@ -458,35 +468,36 @@ stock Furniture_Load(worldid)
             Float:x, Float:y, Float:z,
             Float:rx, Float:ry, Float:rz
             ;
-        new Pool:pool = pool_new();
+        new Pool:pool = Pool:map_get(Furnitures, worldid);
 
         for(new i = 0; i < rows; ++i)
         {
-            cache_get_value_index_int(i, 0, FurnitureCustomData[FURNITURE_DATABASE_ID]);
-            cache_get_value_index_int(i, 2, vw);
-            cache_get_value_index_int(i, 3, interior);
-            cache_get_value_index_int(i, 4, modelid);
-            cache_get_value_index_int(i, 5, FurnitureCustomData[FURNITURE_PRICE]);
+            cache_get_value_name_int(i, "id", FurnitureCustomData[FURNITURE_DATABASE_ID]);
+            cache_get_value_name_int(i, "world", vw);
+            cache_get_value_name_int(i, "interior", interior);
+            cache_get_value_name_int(i, "model", modelid);
+            cache_get_value_name_int(i, "price", FurnitureCustomData[FURNITURE_PRICE]);
             
-            cache_get_value_index_float(i, 6, x);
-            cache_get_value_index_float(i, 7, y);
-            cache_get_value_index_float(i, 8, z);
+            cache_get_value_name_float(i, "pos_x", x);
+            cache_get_value_name_float(i, "pos_y", y);
+            cache_get_value_name_float(i, "pos_z", z);
 
-            cache_get_value_index_float(i, 9, rx);
-            cache_get_value_index_float(i, 10, ry);
-            cache_get_value_index_float(i, 11, rz);
+            cache_get_value_name_float(i, "rot_x", rx);
+            cache_get_value_name_float(i, "rot_y", ry);
+            cache_get_value_name_float(i, "rot_z", rz);
 
-            cache_get_value_index(i, 12, FurnitureCustomData[FURNITURE_NAME]);
+            cache_get_value_name(i, "name", FurnitureCustomData[FURNITURE_NAME]);
 
-            cache_get_value_index_int(i, 13, FurnitureCustomData[FURNITURE_CREATED_BY_ACCOUNT]);
-            cache_get_value_index_int(i, 14, FurnitureCustomData[FURNITURE_CREATED_BY_CHARACTER]);
-            cache_get_value_index_int(i, 15, FurnitureCustomData[FURNITURE_LAST_EDIT_ACCOUNT]);
-            cache_get_value_index_int(i, 16, FurnitureCustomData[FURNITURE_LAST_EDIT_CHARACTER]);
+            cache_get_value_name_int(i, "created_by_account", FurnitureCustomData[FURNITURE_CREATED_BY_ACCOUNT]);
+            cache_get_value_name_int(i, "created_by_character", FurnitureCustomData[FURNITURE_CREATED_BY_CHARACTER]);
+            cache_get_value_name_int(i, "last_edit_by_account", FurnitureCustomData[FURNITURE_LAST_EDIT_ACCOUNT]);
+            cache_get_value_name_int(i, "last_edit_by_character", FurnitureCustomData[FURNITURE_LAST_EDIT_CHARACTER]);
 
-            cache_get_value_index_int(i, 17, FurnitureCustomData[FURNITURE_LINKED_TO]);
+            cache_get_value_name_int(i, "linked_to", FurnitureCustomData[FURNITURE_LINKED_TO]);
 
             new objectid = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, vw, interior);
-
+            if(IsOpenableDoor(modelid))
+                printf("Create object: %d - ID: %d", objectid, FurnitureCustomData[FURNITURE_DATABASE_ID]);
             Furniture_LoadTextures(objectid);
 
             Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
@@ -501,6 +512,7 @@ stock Furniture_Load(worldid)
         //printf("%d furnitures loaded for world %d.", rows, worldid);
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM furnitures WHERE world = '%d' AND object_id = '0';", worldid);
+
     return 1;
 }
 
@@ -568,7 +580,9 @@ stock Furniture_FinishBuy(playerid, objectid)
 stock Furniture_CancelBuy(playerid)
 {
     new objectid = EditObject_GetObjectID(playerid);
-    DestroyDynamicObject(objectid);
+
+    if(IsValidDynamicObject(objectid))
+        DestroyDynamicObject(objectid);
     
     SendClientMessage(playerid, -1, "Hai cancellato l'acquisto del mobile.");
     
@@ -870,6 +884,7 @@ stock Furniture_DeleteLabels(playerid)
         DestroyDynamic3DTextLabel(Text3D:iter_get(i));
     }
     list_delete(FurnitureLabels[playerid]);
+    ShowingLabelsForWorld[playerid] = -1;
     return 1;
 }
 

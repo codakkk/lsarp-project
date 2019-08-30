@@ -6,6 +6,7 @@
 static enum _:E_GATE_INFO
 {
     ID,
+    ModelID,
     Float:StartX,
     Float:StartY,
     Float:StartZ,
@@ -128,10 +129,10 @@ hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float
     return 1;
 }
 
-stock Gate_Create(Float:x, Float:y, Float:z)
+stock Gate_Create(modelid, Float:x, Float:y, Float:z)
 {
     
-    new Cache:result = mysql_query_f(gMySQL, true, "INSERT INTO `gates` (model_id, faction_id, owner_id) VALUES(19912, '%d', '0')", INVALID_FACTION_ID);
+    new Cache:result = mysql_query_f(gMySQL, true, "INSERT INTO `gates` (model_id, faction_id, owner_id) VALUES('%d', '%d', '0')", modelid, INVALID_FACTION_ID);
 
     new 
         id = cache_insert_id(),
@@ -139,6 +140,7 @@ stock Gate_Create(Float:x, Float:y, Float:z)
     ;
 
     data[ID] = id;
+    data[ModelID] = modelid;
     data[StartX] = x;
     data[StartY] = y;
     data[StartZ] = z;
@@ -155,7 +157,7 @@ stock Gate_Create(Float:x, Float:y, Float:z)
     data[OwnerID] = 0;
     
     GateState{id} = false;
-    data[ObjectID] = CreateDynamicObject(19912, x, y, z, 0, 0, 0, -1, -1, -1, STREAMER_OBJECT_SD, STREAMER_OBJECT_DD);
+    data[ObjectID] = CreateDynamicObject(data[ModelID], x, y, z, 0, 0, 0, -1, -1, -1, STREAMER_OBJECT_SD, STREAMER_OBJECT_DD);
     Streamer_SetIntData(STREAMER_TYPE_OBJECT, data[ObjectID], E_STREAMER_EXTRA_ID, id);
     
     map_add_arr(Gates, id, data);
@@ -186,29 +188,30 @@ stock Gate_LoadAll()
             data[E_GATE_INFO];
         for(new i = 0; i < rows; ++i)
         {
-            cache_get_value_index_int(i, 0, data[ID]);
+            cache_get_value_name_int(i, "id", data[ID]);
+            cache_get_value_name_int(i, "model_id", data[ModelID]);
 
-            cache_get_value_index_float(i, 2, data[StartX]);
-            cache_get_value_index_float(i, 3, data[StartY]);
-            cache_get_value_index_float(i, 4, data[StartZ]);
+            cache_get_value_name_float(i, "start_x", data[StartX]);
+            cache_get_value_name_float(i, "start_y", data[StartY]);
+            cache_get_value_name_float(i, "start_z", data[StartZ]);
 
-            cache_get_value_index_float(i, 5, data[StartRotX]);
-            cache_get_value_index_float(i, 6, data[StartRotY]);
-            cache_get_value_index_float(i, 7, data[StartRotZ]);
+            cache_get_value_name_float(i, "start_rot_x", data[StartRotX]);
+            cache_get_value_name_float(i, "start_rot_y", data[StartRotY]);
+            cache_get_value_name_float(i, "start_rot_z", data[StartRotZ]);
 
-            cache_get_value_index_float(i, 8, data[EndX]);
-            cache_get_value_index_float(i, 9, data[EndY]);
-            cache_get_value_index_float(i, 10, data[EndZ]);
+            cache_get_value_name_float(i, "end_x", data[EndX]);
+            cache_get_value_name_float(i, "end_y", data[EndY]);
+            cache_get_value_name_float(i, "end_z", data[EndZ]);
 
-            cache_get_value_index_float(i, 11, data[EndRotX]);
-            cache_get_value_index_float(i, 12, data[EndRotY]);
-            cache_get_value_index_float(i, 13, data[EndRotZ]);
+            cache_get_value_name_float(i, "end_rot_x", data[EndRotX]);
+            cache_get_value_name_float(i, "end_rot_y", data[EndRotY]);
+            cache_get_value_name_float(i, "end_rot_z", data[EndRotZ]);
 
-            cache_get_value_index_int(i, 14, data[FactionID]);
+            cache_get_value_name_int(i, "faction_id", data[FactionID]);
 
-            cache_get_value_index_int(i, 15, data[OwnerID]);
+            cache_get_value_name_int(i, "owner_id", data[OwnerID]);
 
-            data[ObjectID] = CreateDynamicObject(19912, data[StartX], data[StartY], data[StartZ], data[StartRotX], data[StartRotY], data[StartRotZ], -1, -1, -1, STREAMER_OBJECT_SD, STREAMER_OBJECT_DD);
+            data[ObjectID] = CreateDynamicObject(data[ModelID], data[StartX], data[StartY], data[StartZ], data[StartRotX], data[StartRotY], data[StartRotZ], -1, -1, -1, STREAMER_OBJECT_SD, STREAMER_OBJECT_DD);
 
             GateState{i} = false;
             
@@ -441,11 +444,20 @@ CMD:gcreate(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
+    
+    new val = strval(params);
+
+    if(isnull(params) || val <= 0)
+        return SendClientMessage(playerid, COLOR_ERROR, "/gcreate <modelid>");
+    
+    if(val != 19912 && val != 985)
+        return SendClientMessage(playerid, COLOR_ERROR, "Modelli utilizzabili: 19912, 985");
+
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
-    new gateid = Gate_Create(x, y, z);
+    new gateid = Gate_Create(val, x, y, z);
     if(gateid != -1)
-        SendFormattedMessage(playerid, -1, "Cancello id %d creato con successo. Usa /gedit %d per modificarlo.", gateid, gateid);
+        SendFormattedMessage(playerid, -1, "Cancello id %d con modello %d creato con successo. Usa /gedit %d per modificarlo.", gateid, val, gateid);
     else
         SendClientMessage(playerid, COLOR_ERROR, "Non è stato possibile creare il cancello. Contatta il mast Coda.");
     return 1;

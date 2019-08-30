@@ -6,15 +6,11 @@ stock Character_LoadData(playerid)
     if(LoadCharacterResult(playerid))
 	{
 		Character_SetLogged(playerid, true);
-		
-		CallLocalFunction(#OnCharacterLoad, "i", playerid);
-		
 
-		
+		CallLocalFunction(#OnCharacterLoad, "i", playerid);
 
 		SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
 		SpawnPlayer(playerid);
-		
 	}
 	else return KickEx(playerid);
 	return 1;
@@ -79,7 +75,6 @@ stock Character_Delete(playerid, character_db_id, character_name[])
 
     return 1;
 }
-
 
 // 283,75
 // 284

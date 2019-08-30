@@ -21,18 +21,35 @@ hook OnPlayerFinishedDwnling(playerid, virtualworld)
 {
 	if(!Account_IsLogged(playerid))
 	{
-		SendClientMessage(playerid, -1, "Hai 60 secondi per registrarti o effettuare il login prima di essere kickato.");
-		LoginTimer[playerid] = defer LoginKickTimer(playerid);
+		//SendClientMessage(playerid, -1, "Hai 60 secondi per registrarti o effettuare il login prima di essere kickato.");
+		//LoginTimer[playerid] = defer LoginKickTimer(playerid);
 	}
 	return 1;
 }
+
+Dialog:Dialog_LoginOptions(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+	{
+		Dialog_Show(playerid, Dialog_Login, DIALOG_STYLE_PASSWORD, "Login", "{FFFFFF}Inserisci la tua password per effettuare il login.\nTentativo: {FF0000}%d/%d{FFFFFF}", "Login", "Esci", gLoginAttempts{playerid}, MAX_LOGIN_ATTEMPTS);
+		return 1;
+	}
+	if(listitem == 0)
+	{
+
+	}
+	else
+		KickEx(playerid);
+	return 1;
+}
+
 
 Dialog:Dialog_Login(playerid, response, listitem, inputtext[])
 {
     if(!response)
     {
-	   KickEx(playerid);
-	   return 1;
+	   //Dialog_Show(playerid, Dialog_LoginOptions, DIALOG_STYLE_LIST, "Altro", "Resetta Password\nEsci", "Seleziona", "Indietro"); 
+	   return KickEx(playerid);
     }
     inline OnCheck()
     {
@@ -121,8 +138,8 @@ Dialog:Dialog_EMail(playerid, response, listitem, inputtext[])
 
 			new content[256];
 			format(content, sizeof(content), "Di seguito il codice per poter verificare la tua e-mail\nCodice <b>%d</b>", AccountEMailCode[playerid]);
-			SendMail(TempMail[playerid], "Codice di Verifica", content);
-			
+			//SendMail(TempMail[playerid], "Codice di Verifica", content);
+			SendEmail("Los Santos Apocalypse", TempMail[playerid], "Codice di verifica", content);
 			Dialog_Show(playerid, Dialog_EMailConfirm, DIALOG_STYLE_INPUT, "Conferma E-Mail", "{FFFFFF}E' stata inviata un e-mail all'indirizzo {00FF00}'%s'{FFFFFF} con il codice di verifica.\nInserisci il codice di verifica per attivare il tuo account.\n{FF0000}ATTENZIONE: Potrebbe volerci qualche minuto per ricevere la e-mail.", "Verifica", "Esci", TempMail[playerid]);
 		}
 	}

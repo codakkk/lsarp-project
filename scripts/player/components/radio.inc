@@ -123,7 +123,7 @@ stock Radio_SendTraceTrigger(frequency)
 flags:frequenza(CMD_ALIVE_USER);
 CMD:frequenza(playerid, params[])
 {
-	if(!Character_HasItem(playerid, gItem_Radio))
+	if(!Character_HasItem(playerid, gItem_Radio) && Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE)
     	return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi una radio.");
 
     new inputFrequency;
@@ -145,7 +145,7 @@ alias:frequenza("freq");
 flags:radio(CMD_ALIVE_USER);
 CMD:radio(playerid, params[])
 {
-    if(!Character_HasItem(playerid, gItem_Radio, 1))
+    if(!Character_HasItem(playerid, gItem_Radio, 1) && Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE)
     	return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi una radio.");
 
     if(Character_GetRadioFrequency(playerid) <= 0)
@@ -156,7 +156,9 @@ CMD:radio(playerid, params[])
 
     new frequency = Character_GetRadioFrequency(playerid);
 
-    ProxDetectorStr(playerid, 15.0, str_format("(Radio) %s dice: %s", Character_GetRolePlayName(playerid), params), COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false, false);
+	new str[128];
+	format(str, sizeof(str), "(Radio) %s dice: %s", Character_GetRolePlayName(playerid), params);
+    ProxDetector(playerid, 15.0, str, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false, false);
     
     SendMessageToRadio(playerid, frequency, COLOR_YELLOW, "** [CH: %d] %s: %s", frequency, Character_GetRolePlayName(playerid), params);	
     return 1;
@@ -166,7 +168,7 @@ alias:radio("r");
 flags:radiolow(CMD_ALIVE_USER);
 CMD:radiolow(playerid, params[])
 {
-    if(!Character_HasItem(playerid, gItem_Radio, 1))
+    if(!Character_HasItem(playerid, gItem_Radio, 1) && Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE)
     	return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi una radio.");
 
     if(Character_GetRadioFrequency(playerid) <= 0)
@@ -176,8 +178,10 @@ CMD:radiolow(playerid, params[])
     	return SendClientMessage(playerid, COLOR_ERROR, "/rlow <testo>.");
 
     new frequency = Character_GetRadioFrequency(playerid);
-
-    ProxDetectorStr(playerid, 5.0, str_format("(Radio) %s dice: %s", Character_GetRolePlayName(playerid), params), COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false, false);
+	
+	new str[128];
+	format(str, sizeof(str), "(Radio) %s dice: %s", Character_GetRolePlayName(playerid), params);
+    ProxDetector(playerid, 5.0, str, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false, false);
     
     SendMessageToRadio(playerid, frequency, COLOR_YELLOW, "** [CH: %d] %s: %s", frequency, Character_GetRolePlayName(playerid), params);	
     return 1;
@@ -187,7 +191,7 @@ alias:radiolow("rlow");
 flags:rtrace(CMD_POLICE);
 CMD:rtrace(playerid, params[])
 {
-    if(!Character_HasItem(playerid, gItem_Radio, 1))
+    if(!Character_HasItem(playerid, gItem_Radio, 1) && Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE)
     	return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi una radio.");
 
     new inputFrequency;

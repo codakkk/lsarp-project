@@ -1,14 +1,14 @@
 #include <YSI_Coding\y_hooks>
 
-enum e_CharacterDamageInfo
+static enum e_CharacterDamageInfo
 {
-	damageUsed,
-	damageIssuerName[MAX_PLAYER_NAME],
-	damageWeapon,
-	Float:damageAmount,
-	damageBodyPart,
+	Used,
+	IssuerName[MAX_PLAYER_NAME],
+	Weapon,
+	Float:Damage,
+	BodyPart,
 };
-new 
+static 
 	CharacterDamageInfo[MAX_PLAYERS][MAX_DAMAGES_PER_PLAYER][e_CharacterDamageInfo];
 
 hook OnPlayerClearData(playerid)
@@ -74,9 +74,9 @@ CMD:danni(playerid, params[])
 	new String:str = @("Utente\tArma\tDanni\tParte\n"), count = 0;
 	for(new i = 0; i < MAX_DAMAGES_PER_PLAYER; ++i)
 	{
-		if(!CharacterDamageInfo[id][i][damageUsed])
+		if(!CharacterDamageInfo[id][i][Used] || CharacterDamageInfo[id][i][Weapon] < 0)
 			continue;
-		str += str_format("%s\t%s\t%f\t%s\n", CharacterDamageInfo[id][i][damageIssuerName], Weapon_GetName(CharacterDamageInfo[id][i][damageWeapon]), CharacterDamageInfo[id][i][damageAmount], partName[CharacterDamageInfo[id][i][damageBodyPart]-3]);
+		str += str_format("%s\t%s\t%f\t%s\n", CharacterDamageInfo[id][i][IssuerName], Weapon_GetName(CharacterDamageInfo[id][i][Weapon]), CharacterDamageInfo[id][i][Damage], partName[CharacterDamageInfo[id][i][BodyPart]-3]);
 		count++;
 	}
 
@@ -91,11 +91,11 @@ stock Character_AddDamage(playerid, const issuerName[], weaponid, Float:amount, 
 	new id = Character_FreeDamageIndex(playerid);
 	if(id == -1)
 		return 0;
-	CharacterDamageInfo[playerid][id][damageUsed] = 1;
-	set(CharacterDamageInfo[playerid][id][damageIssuerName], issuerName);
-	CharacterDamageInfo[playerid][id][damageWeapon] = weaponid;
-	CharacterDamageInfo[playerid][id][damageAmount] = amount;
-	CharacterDamageInfo[playerid][id][damageBodyPart] = bodyPart;
+	CharacterDamageInfo[playerid][id][Used] = 1;
+	set(CharacterDamageInfo[playerid][id][IssuerName], issuerName);
+	CharacterDamageInfo[playerid][id][Weapon] = weaponid;
+	CharacterDamageInfo[playerid][id][Damage] = amount;
+	CharacterDamageInfo[playerid][id][BodyPart] = bodyPart;
 	return 1;
 }
 
@@ -111,7 +111,7 @@ stock Character_FreeDamageIndex(playerid)
 {
 	for(new i = 0; i < MAX_DAMAGES_PER_PLAYER; ++i)
 	{
-		if(!CharacterDamageInfo[playerid][i][damageUsed]) 
+		if(!CharacterDamageInfo[playerid][i][Used]) 
 			return i;
 	}
 	return -1;

@@ -1,6 +1,8 @@
 
 #include <YSI_Coding\y_hooks>
 
+forward OnCharacterChangeName(playerid, newCharacterName[]);
+
 static enum e_RewardData
 {
 	rdPoints,
@@ -15,7 +17,7 @@ static const RewardInfo[][e_RewardData] =
 	{750, "Premium Caligola (1 mese)"},
 	{1000, "Premium Giulio Cesare (1 mese)"},
 	{500, "+1 Slot Personaggio"},
-	{200, "+1 Livello"}
+	{50, "+1 Livello"}
 };
 
 static enum E_PLAYER_REWARD_DATA
@@ -187,12 +189,71 @@ Dialog:Dialog_ZPointsUseReward(playerid, response, listitem, inputtext[])
 		{
 			if(!Account_HasChangeName(playerid))
 				return SendClientMessage(playerid, COLOR_ERROR, "Non disponi di cambi nomi.");
-			
+			Dialog_Show(playerid, Dialog_ChangeName, DIALOG_STYLE_INPUT, "Cambio Nome", "Inserisci il nuovo nome per il personaggio.", "Cambia", "Annulla");
 			return 1;
 		}
 	}
 	return 1;
 }
+
+Dialog:Dialog_ChangeName(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+		return 0;
+	
+	if(strlen(inputtext) > 22)
+		return Dialog_Show(playerid, Dialog_ChangeName, DIALOG_STYLE_INPUT, "Cambio Nome", "{FF0000}Il nome è troppo lungo (22 caratteri max).{FFFFFF}\nInserisci il nuovo nome per il personaggio.", "Cambia", "Annulla");
+	
+	inputlength(inputtext, MAX_PLAYER_NAME);
+	
+	new 
+		retFirst[MAX_PLAYER_NAME],
+		retLast[MAX_PLAYER_NAME];
+
+	// Must be static or breaks the inline functions
+	static characterName[MAX_PLAYER_NAME];
+
+	for(new i = 0, len = strlen(inputtext); i < len; ++i)
+	{
+		characterName[i] = (inputtext[i] == ' ') ? (characterName[i] = '_') : (characterName[i] = inputtext[i]); // () crashes compiler porca madonna
+	}
+	
+	if(!IsValidRPName(characterName, retFirst, retLast))
+		return Dialog_Show(playerid, Dialog_ChangeName, DIALOG_STYLE_INPUT, "Cambio Nome", "{FF0000}Il nome è inserito non rispetta i criteri minimi.{FFFFFF}\nInserisci il nuovo nome per il personaggio.", "Cambia", "Annulla");
+	
+	inline OnLoad()
+	{
+		
+		if(cache_num_rows() > 0)
+		{
+			return Dialog_Show(playerid, Dialog_ChangeName, DIALOG_STYLE_INPUT, "Cambio Nome", "{FF0000}Esiste già un personaggio con questo nome.{FFFFFF}\nInserisci il nuovo nome per il personaggio.", "Cambia", "Annulla");
+		}
+		else
+		{
+			
+			printf("Name: %s", characterName);
+
+			Account_AddChangeName(playerid, -1);
+
+			mysql_tquery_f(gMySQL, "UPDATE `characters` SET name = '%e' WHERE id = '%d'", characterName, Character_GetID(playerid));
+			SendMessageToAdmins(0, COLOR_ORANGE, "%s (%d) ha cambiato il proprio nome. Nuovo nome: %s", Character_GetOOCName(playerid), playerid, characterName);
+			
+			Log(Character_GetOOCName(playerid), characterName, "change_name_zpoints");
+
+			SendFormattedMessage(playerid, COLOR_ORANGE, "Hai cambiato il nome del tuo personaggio. Nuovo nome: %s", characterName);
+			SendClientMessage(playerid, COLOR_ORANGE, "Rilogga per apportare le modifiche.");
+
+			CallLocalFunction(#OnCharacterChangeName, "ds", playerid, characterName);
+
+			KickEx(playerid);
+		}
+	}
+	// here '%e' AS new_name is used to pass newCharacterName to Inline function
+	
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT id FROM `characters` WHERE name = '%e'", characterName);
+	return 1;
+}
+
 
 Dialog:Dialog_ZPointsBuyRewards(playerid, response, listitem, inputtext[])
 {

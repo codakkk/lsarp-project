@@ -83,7 +83,7 @@ CMD:vluci(playerid, params[])
 flags:vparcheggia(CMD_ALIVE_USER);
 CMD:vparcheggia(playerid, params[])
 {
-	return pc_cmd_veicolo(playerid, "percheggia");
+	return pc_cmd_veicolo(playerid, "parcheggia");
 }
 alias:vparcheggia("vpark");
 

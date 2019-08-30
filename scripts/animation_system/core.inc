@@ -34,8 +34,8 @@ stock ApplyAnimationEx(playerid, animlib[], animname[], Float:fDelta, loop, lock
 	ApplyAnimation(playerid, animlib, animname, fDelta, loop, lockx, locky, freeze, time, forcesync);
 
 	Character_SetAnimLoop(playerid, true);
-	//Player_Info(playerid, "Premi ~y~N~w~ per fermare l'animazione.");
-	TextDrawShowForPlayer(playerid,txtAnimHelper);
+	Player_Info(playerid, "Premi ~y~N~w~ per fermare l'animazione.");
+	//TextDrawShowForPlayer(playerid,txtAnimHelper);
 	return 1;
 }
 

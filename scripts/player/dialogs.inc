@@ -6,7 +6,7 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
     
 	new houseid = Character_GetNearHouseIDMenu(playerid);
 
-	if(!Character_IsNearPickupTypes(playerid, ELEMENT_TYPE_HOUSE_ENTRANCE) && houseid == -1)
+	if(!House_IsValid(houseid))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno della tua casa.");
 
 	switch(listitem)
@@ -42,15 +42,27 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
 		}
 		case 6: // Cambia interior
 		{
-			new String:string, interiorid = House_GetInteriorID(houseid);
-			for(new i = 0, sz = sizeof(allHouseInteriors); i < sz; ++i)
+			if(House_IsValid(Character_GetHouseID(playerid)))
+				return SendClientMessage(playerid, COLOR_ERROR, "Devi essere all'esterno della casa per poter cambiare interior.");
+			
+			if(House_IsRoulotte(Character_GetHouseID(playerid)))
+				return SendClientMessage(playerid, COLOR_ERROR, "Non puoi cambiare l'interno di una roulotte.");
+			
+			new String:string, interiorType = House_GetInteriorType(houseid);
+			
+			new List:list = HouseInterior_GetListByType(interiorType);
+
+			if(!list_valid(list) || list_size(list) <= 0)
+				return SendClientMessage(playerid, COLOR_ERROR, "Non è possibile cambiare l'interno di questa casa.");
+
+			new count = 0;
+			
+			for_list(i : list)
 			{
-				if(allHouseInteriors[interiorid][iType] != allHouseInteriors[i][iType])
-				string += @("{FF0000}");
-				string += str_format("Interno %d", i);
-				string += @("{FFFFFF}\n");
+				string += str_format("Interno %d\n", count);
+				count++;
 			}
-			return Dialog_Show_s(playerid, Dialog_HouseInterior, DIALOG_STYLE_LIST, @("Cambio Interior"), string, "Vendi", "Annulla");
+			return Dialog_Show_s(playerid, Dialog_HouseInterior, DIALOG_STYLE_LIST, str_format("Cambio Interior - %s", GetInteriorTypeName(interiorType)), string, "Vendi", "Annulla");
 		}
 	}
     return 1;
@@ -109,16 +121,23 @@ Dialog:Dialog_HouseSell(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_HouseInterior(playerid, response, listitem, inputtext[])
 {
-    if(!response)
-	   return 0;
 	new houseid = Character_GetNearHouseIDMenu(playerid);
-	if(houseid == -1)
+    if(!response || !House_IsValid(houseid))
+	{
 		return 0;
+	}
 	if(!IsPlayerInRangeOfHouseEntrance(playerid, houseid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata della tua casa.");
-	if(allHouseInteriors[House_GetInteriorID(houseid)][iType] != allHouseInteriors[listitem][iType])
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi selezionare questo interno per questa casa.");
-    SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato l'interno della tua casa. Nuovo interno: %d.", listitem);
-    House_SetInterior(houseid, listitem);
+	{
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata della tua casa."), 0;
+	}
+
+    if(House_SetInterior(houseid, House_GetInteriorType(houseid), listitem))
+	{
+    	SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato l'interno della tua casa. Nuovo interior: %d.", listitem);
+	}
+	else
+	{
+		SendClientMessage(playerid, COLOR_ERROR, "Non è stato possibile settare l'interior della tua casa.");
+	}
     return 1;
 }

@@ -2,7 +2,7 @@
 #include <YSI_Coding\y_hooks>
 
 static 
-    SelectedCharacter[MAX_PLAYERS char],
+    SelectedCharacter[MAX_PLAYERS],
     TempCharacterName[MAX_PLAYERS][MAX_PLAYER_NAME],
     List:Characters[MAX_PLAYERS],
     DeleteCharacterCode[MAX_PLAYERS] = {0, ...};
@@ -27,79 +27,77 @@ stock Account_ShowCharactersList(playerid)
 {
     if(!Account_IsLogged(playerid))
 	   return 0;
-
-    inline OnLoad()
-    {
-		new count;
-		cache_get_row_count(count);
-		if(cache_num_rows() == 0)
-		{
-			Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Crea nuovo personaggio", "Attualmente non risultano personaggi creati.\nPer poter giocare, devi disporre di un personaggio.\nInserisci il nome del nuovo personaggio.\nEsempio: Mario Rossi", "Ok", "");
-			return 1;
-		}
-		
-		list_clear(Characters[playerid]);
-
-		new
-			String:content,
-			nameTemp[24], 
-			character_id = 0;
-
-		for(new i = 0; i < count; ++i)
-		{
-			cache_get_value_index_int(i, 0, character_id);
-			cache_get_value_index(i, 1, nameTemp, sizeof(nameTemp));
-			
-			content += str_format("%s\n", nameTemp);
-			
-			list_add(Characters[playerid], character_id);
-	   	}
-	   	return Dialog_Show_s(playerid, Dialog_CharacterSelect, DIALOG_STYLE_LIST, @("Gestione Personaggi"), content, "Seleziona", "Altro");
-    }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT id, name FROM `characters` WHERE account_id = '%d'", Account_GetID(playerid));
+	new f[128];
+	mysql_format(gMySQL, f, sizeof(f), "SELECT id, name FROM `characters` WHERE account_id = '%d'", Account_GetID(playerid));
+	mysql_tquery(gMySQL, f, #OnLoadCharactersList, "d", playerid);
     return 1;
+}
+
+stock Account_LoadCharacter(playerid, characterid)
+{
+	if(characterid <= 0)
+		return KickEx(playerid);
+	
+	new f[128];
+	mysql_format(gMySQL, f, sizeof(f), "SELECT * FROM `characters` WHERE id = '%d'", SelectedCharacter[playerid]);
+	mysql_tquery(gMySQL, f, #OnLoadCharacter, "d", playerid);
+	return 1;
+}
+
+forward OnLoadCharacter(playerid);
+public OnLoadCharacter(playerid)
+{
+	if(cache_num_rows() > 0)
+	{
+		Character_LoadData(playerid);
+	}
+	else KickEx(playerid);
+	return 1;
+}
+
+forward OnLoadCharactersList(playerid);
+public OnLoadCharactersList(playerid)
+{
+	new count = cache_num_rows();
+	if(count == 0)
+	{
+		Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Crea nuovo personaggio", "Attualmente non risultano personaggi creati.\nPer poter giocare, devi disporre di un personaggio.\nInserisci il nome del nuovo personaggio.\nEsempio: Mario Rossi", "Ok", "");
+		return 1;
+	}
+	
+	list_clear(Characters[playerid]);
+
+	new
+		String:content,
+		nameTemp[24], 
+		character_id = 0;
+
+	for(new i = 0; i < count; ++i)
+	{
+		cache_get_value_name_int(i, "id", character_id);
+		cache_get_value_name(i, "name", nameTemp, sizeof(nameTemp));
+		
+		content += str_format("%s\n", nameTemp);
+		printf("Character id: %d", character_id);
+		list_add(Characters[playerid], character_id);
+	}
+	return Dialog_Show_s(playerid, Dialog_CharacterSelect, DIALOG_STYLE_LIST, @("Gestione Personaggi"), content, "Seleziona", "Altro");
 }
 
 Dialog:Dialog_CharacterSelect(playerid, response, listitem, inputtext[])
 {
-	SelectedCharacter{playerid} = list_get(Characters[playerid], listitem);
+	SelectedCharacter[playerid] = list_get(Characters[playerid], listitem);
+	
+	if(SelectedCharacter[playerid] <= 0)
+		return KickEx(playerid);
+	
 	if(!response)
 	{
-		inline OnLoad()
-		{
-			cache_get_value_index(0, 0, TempCharacterName[playerid]);
-		}
-		MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT name FROM `characters` WHERE id = '%d'", SelectedCharacter{playerid});
+		TempCharacterName[playerid] = Character_GetNameFromDatabase(SelectedCharacter[playerid], false);
 		return Dialog_Show(playerid, Dialog_CharCreateOrDel, DIALOG_STYLE_LIST, "Personaggi", "Crea nuovo personaggio\nCancella personaggio", "Avanti", "Indietro");
 	}
-
-	inline OnLoad()
-	{
-		if(cache_num_rows() > 0)
-		{
-			new id, isBanned, banTime;
-			cache_get_value_name_int(0, "id", id);
-			cache_get_value_name_int(0, "banned", isBanned);
-			cache_get_value_name_int(0, "ban_expiry", banTime);
-			if(isBanned)
-			{
-				if(gettime() < banTime)
-				{
-					Dialog_Show(playerid, DialogNull, DIALOG_STYLE_MSGBOX, "Personaggio Bannato", "Questo personaggio risulta bannato.\nData di scadenza: %s.\nSe pensi sia stato un errore, visita www.lsarp.it", "Ok", "", date(banTime));
-					KickEx(playerid);
-					return 0;
-				}
-				else
-				{
-					mysql_tquery_f(gMySQL, "UPDATE `characters` SET banned = '0', ban_expiry = '0' WHERE id = '%d'", id);
-				}
-			}
-			Character_LoadData(playerid);
-
-		}
-        //CallLocalFunction(#OnCharacterSelected, "d", playerid);
-	}
-	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `characters` WHERE id = '%d'", SelectedCharacter{playerid});
+	printf("Character id: %d", SelectedCharacter[playerid]);
+	Account_LoadCharacter(playerid, SelectedCharacter[playerid]);
 	return 1;
 }
 
@@ -112,6 +110,14 @@ Dialog:Dialog_ShowCharacters(playerid, response, listitem, inputtext[])
     return 1;
 }
 
+Dialog:Dialog_MaxCharsNotify(playerid, response, listitem, inputtext[])
+{
+	if(!Account_IsLogged(playerid))
+		return KickEx(playerid), 0;
+	return Account_ShowCharactersList(playerid);
+}
+
+
 Dialog:Dialog_CharCreateOrDel(playerid, response, listitem, inputtext[])
 {
     if(!response)
@@ -120,7 +126,21 @@ Dialog:Dialog_CharCreateOrDel(playerid, response, listitem, inputtext[])
     }
     if(listitem == 0)
     {
-	   Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Crea nuovo personaggio", "Inserisci il nome del nuovo personaggio!\nEsempio: Mario Rossi", "Crea", "Indietro");
+		inline OnLoad()
+		{
+			new rows = 0;
+			cache_get_value_index_int(0, 0, rows);
+			
+			if(rows >= 3 + Account_GetCharactersSlot(playerid))
+			{
+				Dialog_Show(playerid, Dialog_MaxCharsNotify, DIALOG_STYLE_MSGBOX, "Limite Raggiunto", "Hai raggiunto il limite di personaggi creabili.\nAcquista il Premium o degli slot personaggio tramite /zpoints.\nPer maggiori informazioni visita www.lsarp.it", "Ok", "");
+			}
+			else
+			{
+				Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Crea nuovo personaggio", "Inserisci il nome del nuovo personaggio!\nEsempio: Mario Rossi", "Crea", "Indietro");
+			}
+		}
+		MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT COUNT(*) FROM `characters` WHERE account_id = '%d'", Account_GetID(playerid));
     }
     else if(listitem == 1)
     {
@@ -140,7 +160,7 @@ Dialog:Dialog_CharacterDelete(playerid, response, listitem, inputtext[])
     }
     if(strval(inputtext) == DeleteCharacterCode[playerid])
     {
-	   Character_Delete(playerid, SelectedCharacter{playerid}, TempCharacterName[playerid]);
+	   Character_Delete(playerid, SelectedCharacter[playerid], TempCharacterName[playerid]);
 	   DeleteCharacterCode[playerid] = 0;
 	   Account_ShowCharactersList(playerid);
 	   return 1;
@@ -205,7 +225,19 @@ Dialog:Dialog_ConfirmNewCharacter(playerid, response, listitem, inputtext[])
 	{
 		return Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Crea nuovo personaggio", "Inserisci il nome del nuovo personaggio!\nEsempio: Mario Rossi", "Crea", "Indietro");
 	}
-	Account_CreateCharacter(playerid, TempCharacterName[playerid]);
+	Dialog_Show(playerid, Dialog_ChooseSkin, DIALOG_STYLE_INPUT, "Creazione Personaggio", "Adesso inserisci la skin con cui vuoi iniziare\nDefault: 46.", "Continua", "");
+	return 1;
+}
+
+Dialog:Dialog_ChooseSkin(playerid, response, listitem, inputtext[])
+{
+	new val = strval(inputtext);
+	if(isnull(inputtext) || strlen(inputtext) <= 0)
+		val = 46;
+	if(!IsValidSkin(val))
+		return Dialog_Show(playerid, Dialog_ChooseSkin, DIALOG_STYLE_INPUT, "Personaggio Creato", "La skin id inserita non è valida.\nIl personaggio è stato creato con successo.", "Continua", "");
+	Account_CreateCharacter(playerid, TempCharacterName[playerid], val);
 	Dialog_Show(playerid, Dialog_ShowCharacters, DIALOG_STYLE_MSGBOX, "Personaggio Creato", "Il personaggio è stato creato con successo.", "Continua", "");
 	return 1;
 }
+

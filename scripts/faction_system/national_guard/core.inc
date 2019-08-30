@@ -13,8 +13,8 @@ static enum e_POLICE_ARREST
 };
 static PoliceArrestPositions[][e_POLICE_ARREST] = 
 {
-	{2638.6470, -1955.7460, -58.7273, 0},
-	{DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z, 0}
+	{2661.1257,-1949.2670,-58.7113, 0}
+	//{DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z, 0}
 };
 
 hook OnGameModeInit()
@@ -36,3 +36,14 @@ stock IsPlayerNearAnyArrestPos(playerid)
 	}
 	return 0;
 }
+
+/*flags:espulsionezona(CMD_POLICE);
+CMD:espulsionezona(playerid, params[])
+{
+	if(sscanf(params, "k<u>s[128]", id, reason))
+		return SendClientMessage(playerid, COLOR_ERROR, "/espulsionezona <playerid/partofname/#####> <motivo>");
+	
+	SendFormattedMessage(id, COLOR_ERROR, "Sei stato espulso dalla zona sicura da %s.", Character_GetOOCName(playerid));
+	SendFormattedMessage(playerid, COLOR_ERROR, "Hai espulso %s dalla zona governativa.", Character_GetOOCName(id));
+	return 1;
+}*/

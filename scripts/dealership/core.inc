@@ -337,7 +337,7 @@ stock Dealership_LoadAll()
 		}
 		printf("%d dealerships loaded.", map_size(Dealerships));
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `dealerships`");
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `dealerships` ORDER BY id");
 }
 
 static Dealership_LoadVehicles(dealershipid)
@@ -548,14 +548,14 @@ stock Dealership_ShowOptions(dealershipid, playerid)
 //
 //
 
-flags:adealershipcmds(CMD_DEVELOPER);
+flags:adealershipcmds(CMD_ADMIN);
 CMD:adealershipcmds(playerid, params[])
 {
 	SendClientMessage(playerid, -1, "[DEALERSHIP]: /acreatedealership - /adealershipmenu");
 	return 1;
 }
 
-flags:acreatedealership(CMD_DEVELOPER);
+flags:acreatedealership(CMD_ADMIN);
 CMD:acreatedealership(playerid, params[])
 {
     new Float:x, Float:y, Float:z;
@@ -571,7 +571,7 @@ CMD:acreatedealership(playerid, params[])
 	return 1;
 }
 
-flags:adealershipmenu(CMD_DEVELOPER);
+flags:adealershipmenu(CMD_ADMIN);
 CMD:adealershipmenu(playerid, params[])
 {
     Dealership_ShowList(playerid);

@@ -8,6 +8,7 @@ hook OnCharacterDisconnected(playerid)
 
 hook OnCharacterLateLoad(playerid)
 {
+	ResetPlayerWeapons(playerid);
 	Character_LoadWeapons(playerid);
 	return 1;
 }

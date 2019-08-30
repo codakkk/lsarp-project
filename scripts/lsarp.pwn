@@ -37,10 +37,16 @@
 	#warning LSARP_DEBUG is enabled. Care!!
 #endif
 
+#define CreateDynamicObjectWithHighDD CDD
+
+
+
 //#define FAKE_LOGIN 1
 // CAR_DEAD_LHS
 #include <a_samp>
 //native IsValidVehicle(vehicleid);
+
+#include <sampmailjs>
 
 // Define this for some bugs related to MySQL_TQueryInline
 #define YSI_NO_HEAP_MALLOC
@@ -57,11 +63,11 @@
 #include <SKY>
 
 
-#define CGEN_MEMORY 20000
+#define CGEN_MEMORY 30000
 
 //#define DEBUG 0
 
-#define E_MAIL_CHECK
+#define E_MAIL_CHECK 1
 
 #undef MAX_PLAYERS
 #define MAX_PLAYERS	(200)
@@ -89,6 +95,13 @@
 #include <Pawn.CMD>
 #include <whirlpool>
 #include <streamer>
+stock CDD(modelid, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz, worldid = -1, interiorid = -1, playerid = -1, Float:streamdistance = 300.0, Float:drawdistance = 1000.0)
+{
+	new oid;
+	oid = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, worldid, interiorid, playerid, streamdistance);
+	Streamer_SetFloatData(STREAMER_TYPE_OBJECT, oid, E_STREAMER_DRAW_DISTANCE, drawdistance);
+	return oid;
+}
 //#include <strlib>
 
 #define PP_SYNTAX 1
@@ -150,7 +163,7 @@ DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
 #include <inventory\enum>
 #include <building\enum>
 #include <weapon_system\enum>
-#include <house_system\enum>
+#include <house_system\components\interiors>
 #include <faction_system\enum>
 
 #include <database\core>
@@ -174,6 +187,9 @@ DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
 // ===== [ DP SYSTEM ] =====
 #include <dp_system\core>
 
+// ===== [ LOOT ZONE SYSTEM ] =====
+#include <loot_zone_system\core>
+
 #include <utils\utils>
 #include <utils\maths>
 
@@ -194,10 +210,14 @@ main()
 	// Should I initialize them in a OnGameModeInit hook?
 	PlayerInventory = map_new();
 	VehicleInventory = map_new();
+
+	new mail[256], domain[256], c[256];  
+	if(!sscanf("c@gmail.com", "{s[256]'@'s[256]'.'s[256]}", mail, domain, c))
+		printf("domain: %s", domain);
 }
 
 
-hook OnGameModeInit() 
+public OnGameModeInit() 
 {
 	SetGameModeText("ApocalypseV1");
 	SendRconCommand("query 1"); // Just safeness
@@ -218,6 +238,8 @@ hook OnGameModeInit()
 
 	Streamer_TickRate(30);
 	//Streamer_SetVisibleItems(STREAMER_TYPE_OBJECT, 900);
+	printf("GameModeInit");
+	CallLocalFunction(#OnGameModeLateInit, "");
 	return 1;
 }
 
@@ -274,7 +296,7 @@ public OnPlayerDamage(&playerid, &Float:amount, &issuerid, &weapon, &bodypart)
 	}
 	if(issuerid != INVALID_PLAYER_ID)
 	{
-		if(Character_HasTaser(playerid) || Character_HasBeanBag(playerid))
+		if(Character_HasTaser(issuerid) || Character_HasBeanBag(issuerid))
 		{
 			new isNear = ProxDetectorS(15.0, issuerid, playerid);
 
@@ -381,7 +403,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
         _I<cbug>, _I<cc>, _I<stopfind>, _I<master>, _I<hmo>, _I<setampl>, _I<kill>, _I<ton>, _I<off>, _I<non>,
         _I<noff>, _I<spy>, _I<incar>, _I<weap>, _I<sc>, _I<so>, _I<react>, _I<fd>, _I<fb>, _I<go>,
         _I<coords>, _I<note>, _I<line>, _I<get>, _I<set>, _I<top>, _I<dgun>, _I<slapall>, _I<eject>, _I<st>,
-        _I<kc>, _I<rel>, _I<target>, _I<rfast>, _I<rind>, _I<aim>, _I<tinfo>, _I<trollinfo>, _I<dpos>, _I<r2>,
+        _I<kc>, _I<rel>, _I<target>, _I<rfast>, _I<rind>, _I<tinfo>, _I<trollinfo>, _I<dpos>, _I<r2>,
         _I<fw>, _I<ccars>, _I<hp>, _I<hpu>, _I<tp>, _I<sm>, _I<showid>, _I<showcarid>, _I<s1>, _I<sswitch>,
         _I<lag>, _I<col>, _I<fwh>, _I<bm>, _I<reu>, _I<tpall>, _I<hpall>, _I<thr>, _I<small>, _I<smallc>,
         _I<safe>, _I<ohelp>, _I<oy>, _I<or>, _I<ob>, _I<ov>, _I<og>, _I<ow>, _I<oreset>, _I<opos>,
@@ -541,11 +563,17 @@ hook OnPlayerText(playerid, text[])
 hook OnPlayerDisconnect(playerid, reason)
 {
 	new const reasonName[3][16] = {"Crash", "Quit", "Kick/Ban"};
-	new String:string, name[MAX_PLAYER_NAME];
+	new name[MAX_PLAYER_NAME];
 
 	GetPlayerName(playerid, name, sizeof(name));
-	string = str_format("%s è uscito dal server. [%s]", name, reasonName[reason]);
-	SendClientMessageToAllStr(COLOR_GREY, string);
+	
+	if(Player_GetSpectatingPlayer(playerid) == INVALID_PLAYER_ID)
+	{
+		new string[128];
+		format(string,sizeof(string), "* %s è uscito dal server. [%s]", name, reasonName[reason]);
+		ProxDetector(playerid, 15.0, string, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY);
+	}
+
 	TextDrawHideForPlayer(playerid, Clock);
 	
 	if(Character_IsLogged(playerid))
@@ -577,10 +605,10 @@ hook OnPlayerConnect(playerid)
 	{
 		SendClientMessage(playerid, -1, " ");
 	}
-	SendClientMessage(playerid, COLOR_YELLOW, "________________________________________________________________");
-	SendClientMessage(playerid, COLOR_YELLOW, "Benvenuto su Los Santos Apocalypse Roleplay [www.lsarp.it].");
-	SendClientMessage(playerid, COLOR_YELLOW, "Alpha v0.1 - Righe GameMode: 25159");
-	SendClientMessage(playerid, COLOR_YELLOW, "________________________________________________________________");
+	SendClientMessage(playerid, -1, "________________________________________________________________");
+	SendClientMessage(playerid, -1, "Benvenuto su {8b0000}Los Santos Apocalypse Roleplay {FFFFFF}[{0000FF}www.lsarp.it{FFFFFF}].");
+	SendClientMessage(playerid, -1, "Apocalypse Z1 - Righe GameMode: 49985");
+	SendClientMessage(playerid, -1, "________________________________________________________________");
 	
 	// Anti Bot Attack
 	new
@@ -614,7 +642,27 @@ hook OnPlayerConnect(playerid)
 		Character_SetLogged(playerid, true);
 		SpawnPlayer(playerid);
 	#endif
-	//OnPlayerRequestClass(playerid, 0);
+
+	new serial[41];
+	gpci(playerid, serial, sizeof(serial));
+
+	new Cache:cache = mysql_query_f(gMySQL, true, "SELECT * FROM `bans` WHERE ip = '%e'", ip);
+
+	if(cache_num_rows() > 0)
+	{
+		SendClientMessage(playerid, COLOR_ERROR, "Risulti bannato permanentemente.");
+		return KickEx(playerid);
+	}
+
+	cache_delete(cache);
+
+	new name[MAX_PLAYER_NAME];
+	GetPlayerName(playerid, name, sizeof(name));
+	for(new i = 0, j = strlen(name); i < j;++i)
+	{
+		if(name[i] == '_')
+			return SendClientMessage(playerid, COLOR_ERROR, "Il tuo nome account contiene caratteri non consentiti."), KickEx(playerid), 0;
+	}
 	return 1;
 }
 
@@ -810,6 +858,9 @@ stock HexToInt(string[])
 #include <player\dialogs>
 
 // ========== [ MISCELLANEOUS ] ==========
-#if defined ENABLE_MAPS
-	#include <server\maps\maps>
-#endif
+
+CMD:forzanapoli(playerid, params[])
+{
+	SendClientMessage(playerid, COLOR_LIGHTBLUE, "FORZA NAPOLI!!!!");
+	return 1;
+}

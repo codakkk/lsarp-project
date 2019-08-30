@@ -7,6 +7,10 @@ stock bool:Character_InitializeInventory(playerid)
 {
 	//if(!Character_IsLogged(playerid))
 		//return false;
+	if(map_has_key(PlayerInventory, playerid))
+	{
+		map_remove_deep(PlayerInventory, playerid);
+	}
 	new Inventory:inventory = Inventory_New(PLAYER_INVENTORY_START_SIZE);
 	map_add(PlayerInventory, playerid, List:inventory);
 	return true;

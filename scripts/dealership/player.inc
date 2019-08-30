@@ -12,6 +12,8 @@ ptask OnPlayerDealershipTimer[500](playerid)
 {
 	if(!Character_IsLogged(playerid) || !Character_IsBuyingVehicle(playerid))
 		return 0;
+	if(!Player_HasHotKeysEnabled(playerid))
+		return 0;
     new keys, updown, leftright;
     GetPlayerKeys(playerid, keys, updown, leftright);
 	if(leftright == KEY_LEFT)
@@ -46,7 +48,7 @@ hook OnCharacterDisconnected(playerid)
 
 hook OnPlayerClearData(playerid)
 {
-    if(Character_IsBuyingVehicle(playerid) && SelectedVehicle[playerid])
+    if(Character_IsBuyingVehicle(playerid) && IsValidVehicle(SelectedVehicle[playerid]))
     {
 	   Vehicle_Destroy(SelectedVehicle[playerid]);
     }
@@ -94,6 +96,8 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
 	if(!Character_IsAlive(playerid))
 		return Y_HOOKS_CONTINUE_RETURN_0;
+	if(!Player_HasHotKeysEnabled(playerid))
+		return 0;
 	if(Character_IsBuyingVehicle(playerid))
 	{
 		if(PRESSED(KEY_WALK))
@@ -176,6 +180,7 @@ Dialog:Dialog_DealershipVehicles(playerid, response, listitem, inputtext[])
     }
 
     Character_SetBuyingVehicle(playerid, true);
+	Character_SetFreezed(playerid, true);
     
 	SelectedVehiclePrice[playerid] = vehiclePrice;
 
@@ -184,24 +189,32 @@ Dialog:Dialog_DealershipVehicles(playerid, response, listitem, inputtext[])
 
     SelectedVehicle[playerid] = Vehicle_Create(vehicleModel, vx, vy, vz, va, 0, 0, 0, 0);
     
-    SetPlayerPos(playerid, vx, vy, vz);
+	printf("%d", SelectedVehicle[playerid]);
+    //SetPlayerPos(playerid, vx, vy, vz);
     
-	Character_SetVirtualWorld(playerid, playerid + 1);
-
-    SetVehicleVirtualWorld(SelectedVehicle[playerid], playerid + 1);
     PutPlayerInVehicle(playerid, SelectedVehicle[playerid], 0);
-    
-	Character_SetFreezed(playerid, true);
+
+	Character_SetVirtualWorld(playerid, playerid + 1);
+    SetVehicleVirtualWorld(SelectedVehicle[playerid], playerid + 1);
+
 
 	SetCameraBehindPlayer(playerid);
 
     VehicleColorNum1{playerid} = 0;
     VehicleColorNum2{playerid} = 0;
 
-    SendClientMessage(playerid, COLOR_GREEN, "Scegli il colore del veicolo. Usa le freccette o i tasti del mouse per scegliere (tieni premuto).");
-    SendClientMessage(playerid, COLOR_GREEN, "Per acquistare il veicolo premi INVIO (oppure /compra).");
-    SendClientMessage(playerid, COLOR_GREEN, "Per annullare l'acquisto premi ALT (oppure /annulla).");
-
+	if(Player_HasHotKeysEnabled(playerid))
+	{
+		SendClientMessage(playerid, COLOR_GREEN, "Scegli il colore del veicolo. Usa le freccette o i tasti del mouse per scegliere (tieni premuto).");
+		SendClientMessage(playerid, COLOR_GREEN, "Per acquistare il veicolo premi INVIO (oppure /compra).");
+		SendClientMessage(playerid, COLOR_GREEN, "Per annullare l'acquisto premi ALT (oppure /annulla).");
+	}
+	else
+	{
+		SendClientMessage(playerid, COLOR_GREEN, "Scegli il colore del veicolo. Usa /colore <colore 1> <colore 2>");
+		SendClientMessage(playerid, COLOR_GREEN, "Per acquistare il veicolo digita /compra.");
+		SendClientMessage(playerid, COLOR_GREEN, "Per annullare l'acquisto digita /annulla.");
+	}
     return 1;
 }
 

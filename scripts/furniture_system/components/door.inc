@@ -8,10 +8,13 @@ CMD:porta(playerid, params[])
         houseid = Character_GetHouseID(playerid);
     if(Building_IsValid(buildingid) || House_IsValid(houseid))
     {
-        if(House_IsValid(houseid) && Character_GetNearHouseIDMenu(playerid) != houseid)
-            return 0;
-        if(Building_IsValid(buildingid) && Character_GetNearBuildingIDMenu(playerid, 10) != buildingid)
-            return 0;
+        if(!Account_IsAdminDuty(playerid))
+        {
+            if(House_IsValid(houseid) && Character_GetNearHouseIDMenu(playerid) != houseid)
+                return 0;
+            if(Building_IsValid(buildingid) && Character_GetNearBuildingIDMenu(playerid, 10) != buildingid)
+                return 0;
+        }
 
         Character_OpenNearDoor(playerid);
     }
@@ -53,7 +56,7 @@ stock Character_OpenNearDoor(playerid)
     }
 }
 
-static bool:IsOpenableDoor(modelid)
+stock bool:IsOpenableDoor(modelid)
 {
-    return modelid == 2875 || modelid == 2664 || modelid == 19302 || modelid == 14819 || modelid == 3061 || modelid == 19303 || modelid == 1532 || modelid == 19860 || modelid == 2911 || modelid == 1507 || modelid == 1505 || modelid == 1493 || modelid == 1495 || modelid == 2948 || modelid == 2947 || modelid == 2946 || modelid == 2944 || modelid == 2959 || modelid == 3109 || modelid == 3029 || modelid == 1566 || modelid == 1569 || modelid == 2877 || modelid == 19799 || modelid == 19875 || modelid == 19857 || modelid == 19858 || modelid == 19859 || modelid == 1535 || modelid == 2634 || modelid == 557 || modelid == 1536 || modelid == 1522 || modelid == 1506 || modelid == 1504 || modelid == 1501 || modelid == 1498 || modelid == 1497 || modelid == 1496 || modelid == 2924 || modelid == 2970|| modelid == 2949;
+    return modelid == 3089 || modelid == 2875 || modelid == 2664 || modelid == 19302 || modelid == 14819 || modelid == 3061 || modelid == 19303 || modelid == 1532 || modelid == 19860 || modelid == 2911 || modelid == 1507 || modelid == 1505 || modelid == 1493 || modelid == 1495 || modelid == 2948 || modelid == 2947 || modelid == 2946 || modelid == 2944 || modelid == 2959 || modelid == 3109 || modelid == 3029 || modelid == 1566 || modelid == 1569 || modelid == 2877 || modelid == 19799 || modelid == 19875 || modelid == 19857 || modelid == 19858 || modelid == 19859 || modelid == 1535 || modelid == 2634 || modelid == 557 || modelid == 1536 || modelid == 1522 || modelid == 1506 || modelid == 1504 || modelid == 1501 || modelid == 1498 || modelid == 1497 || modelid == 1496 || modelid == 2924 || modelid == 2970|| modelid == 2949;
 }

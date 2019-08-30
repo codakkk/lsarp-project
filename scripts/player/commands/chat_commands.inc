@@ -51,15 +51,22 @@ CMD:pm(playerid, params[])
     PlayerPlaySound(id, 1085, 0.0, 0.0, 0.0);
     if(Account_IsAdminDuty(playerid))
     {
-        SendTwoLinesMessage(id, COLOR_RECEIVEPM, "** PM da {FF6347}%s{ffdb18}: %s", Account_GetName(playerid), s);
-        SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a {FF6347}%s{ffdb18} (%d): %s", Character_GetOOCName(id), id, s);
+        SendTwoLinesMessage(id, COLOR_RECEIVEPM, "** PM da {FF6347}%s{ffdb18} (%d): %s", Account_GetName(playerid), playerid, s);
+        if(Account_IsAdminDuty(id))
+        {
+            SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a {FF6347}%s{ffdb18} (%d): %s", Account_GetName(id), id, s);
+        }
+        else
+        {
+            SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a {FF6347}%s{ffdb18} (%d): %s", Character_GetOOCName(id), id, s);
+        }
     }
     else
     {
         if(Account_IsSupporterDuty(playerid))
         {
             SendTwoLinesMessage(id, COLOR_RECEIVEPM, "PM da {e9de98}%s{ffdb18} (%d): %s", Character_GetOOCName(playerid), playerid, s);
-            SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM {e9de98}a %s{ffdb18} (%d): %s", Character_GetOOCName(id), id, s);
+            SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a {e9de98}%s{ffdb18} (%d): %s", Character_GetOOCName(id), id, s);
         }
         else
         {

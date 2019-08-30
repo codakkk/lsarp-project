@@ -1,11 +1,11 @@
-flags:abuildingcmds(CMD_DEVELOPER);
+flags:abuildingcmds(CMD_ADMIN);
 CMD:abuildingcmds(playerid, params[])
 {
     SendClientMessage(playerid, -1, "[BUILDINGS]: /abcreate - /abedit");
     return 1;
 }
 
-flags:gotobuilding(CMD_MODERATOR);
+flags:gotobuilding(CMD_JR_MODERATOR);
 CMD:gotobuilding(playerid, params[])
 {
 	new id;
@@ -21,7 +21,7 @@ CMD:gotobuilding(playerid, params[])
 	return 1;
 }
 
-flags:abcreate(CMD_DEVELOPER);
+flags:abcreate(CMD_ADMIN);
 CMD:abcreate(playerid, params[])
 {
     
@@ -33,7 +33,7 @@ CMD:abcreate(playerid, params[])
     return 1;
 }
 
-/*flags:abdelete(CMD_DEVELOPER);
+flags:abdelete(CMD_DEVELOPER);
 CMD:abdelete(playerid, params[])
 {
     new id;
@@ -51,13 +51,13 @@ CMD:abdelete(playerid, params[])
     else
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Non è stato possibile eseguire il comando sul building id %d.", id);
     return 1;
-}*/
+}
 
 
-flags:abedit(CMD_DEVELOPER);
+flags:abedit(CMD_ADMIN);
 CMD:abedit(playerid, p[])
 {
-    new buildingid, command[16], params[256], value;
+    new buildingid, command[16], params[256];
     if(sscanf(p, "ds[16]S()[256]", buildingid, command, params))
     {
 	    SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> <pos - interior - price - lock - rmowner - name - type - ..");
@@ -90,7 +90,7 @@ CMD:abedit(playerid, p[])
         new price;
 	    if(sscanf(params, "d", price))
             return SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> <price>");
-	    if(Building_SetPrice(buildingid, value))
+	    if(Building_SetPrice(buildingid, price))
         {
             SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il prezzo del building %d. Nuovo Prezzo: $%d", buildingid, price);
             Log(Account_GetName(playerid), "", "/abedit price", buildingid);
@@ -222,9 +222,6 @@ CMD:abedit(playerid, p[])
     }
     else if(!strcmp(command, "interior", true))
     {
-        new welcomeText[MAX_WELCOME_TEXT_LENGTH];
-        if(sscanf(params, "s[128]", welcomeText))
-            return SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> welcometext <text (max 128 characters)>");
         new Float:x, Float:y, Float:z;
         GetPlayerPos(playerid, x, y, z);
         Building_SetInterior(buildingid, x, y, z, GetPlayerInterior(playerid));

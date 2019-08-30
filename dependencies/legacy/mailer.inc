@@ -1,4 +1,4 @@
-#include <a_samp>
+/*#include <a_samp>
 #include <a_http>
 
 #if ( !defined MAILER_MAX_MAIL_SIZE )
@@ -76,3 +76,4 @@ stock StringURLEncode( szString[ ], iSize = sizeof( szString ) )
 			l = iSize - 1;
 	}
 }
+*/

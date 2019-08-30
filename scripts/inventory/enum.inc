@@ -3,7 +3,7 @@
 
 #define for_inventory(%0:%1) for_list(%0:%1)
 
-#define MAX_ITEMS_IN_SERVER		   (100)
+#define MAX_ITEMS_IN_SERVER		   (150)
 #define MAX_ITEM_NAME			    (32)
 #define MAX_ITEMS_PER_PLAYER		  (50)
 #define MAX_ITEMS_PER_VEHICLE		 (50)
@@ -151,5 +151,7 @@ new stock
 
 	gItem_Radio,
 
-	gItem_Cigarette
+	gItem_Cigarette,
+
+	gItem_Dress
 ;

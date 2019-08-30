@@ -1,533 +1,812 @@
 #include <YSI_Coding\y_hooks>
 
+#define INVALID_LOOT_ZONE 		(0)
 
-#define LootZone_IsValid(%0) (!(%0 < 0 || %0 >= MAX_LOOT_ZONES || !LootZoneInfo[%0][lzID]))
-#define LootZone_IsEditing(%0) (LootZoneInfo[%0][lzPlayerEditing] != -1 && Player_GetEditingLootZone(LootZoneInfo[%0][lzPlayerEditing]) == %0)
-#define LootZone_GetPlayerEditing(%0) LootZoneInfo[%0][lzPlayerEditing]
-#define LootZone_RemovePlayerEditing(%0) LootZoneInfo[%0][lzPlayerEditing] = -1
-
-
-// Player Checks
-#define Player_GetLootZone(%0) 					PlayerInfo[%0][pLootZone]
-#define Player_StopEditingLootZone(%0)			DeletePVar(%0, "LootZoneSelectedLootZoneID")
-#define Player_GetEditingLootZone(%0) 			GetPVarInt(%0, "LootZoneSelectedLootZoneID")			
-#define Player_IsEditingAnyLootZone(%0) 		(LootZone_GetPlayerEditing(Player_GetEditingLootZone(%0)) == %0)
-#define Player_IsLooting(%0)					(PlayerInfo[%0][pLootZone] != -1 && LootZoneInfo[PlayerInfo[%0][pLootZone]][lzPlayerID] == %0)
-
-stock Player_SetEditingLootZone(playerid, zone_id) SetPVarInt(playerid, "LootZoneSelectedLootZoneID", zone_id);
-
-#define Player_GetLastLootZoneAdminListItemID(%0) 	GetPVarInt(playerid, "Player_AdminLootZoneListLastID")
-
-stock LootZone_SetPlayerEditing(zone_id, playerid) LootZoneInfo[zone_id][lzPlayerEditing] = playerid;
-
-stock LootZone_IsPlayerLootingThis(zone_id, playerid)
+static enum e_LZ_ITEM_DATA
 {
-	return LootZone_IsValid(zone_id) && PlayerInfo[playerid][pLootZone] == zone_id && LootZoneInfo[zone_id][lzPlayerID] == playerid;
+	DropChance,
+	MinQuantity,
+	MaxQuantity
+};
+
+static enum e_LOOT_ZONE_DATA
+{
+	ID,
+	Float:X,
+	Float:Y,
+	Float:Z,
+	Interior,
+	VirtualWorld,
+	Map:Items, // <itemid, e_LZ_ITEM_DATA>
+
+	Pickup,
+	Text3D:Label,
+
+	Inventory:Inventory,
+	Map:ObjectsMap,
+	PlayerLooting // Playerid of player looting. INVALID_PLAYER_ID if none.
+};
+
+static Map:LootZones; // <lootzoneid, e_LOOT_ZONE_DATA>
+
+static
+	CurrentLootZone[MAX_PLAYERS] = {INVALID_LOOT_ZONE, ...},
+	SelectedItem[MAX_PLAYERS] = {0, ...}
+;
+
+hook OnGameModeInit()
+{
+	LootZones = map_new();
+
+	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS loot_zones \
+						(`id` INT(11) NOT NULL AUTO_INCREMENT, \
+						`x` FLOAT DEFAULT '0.0', \
+						`y` FLOAT DEFAULT '0.0', \
+						`z` FLOAT DEFAULT '0.0', \
+						`interior` INT(11) NULL, \
+						`virtual_world` INT(11) NULL, \
+						PRIMARY KEY (`id`))");
+	
+	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS loot_zone_items \
+						(`lootzone_id` INT(11), \
+						`item_id` INT(11) DEFAULT '0', \
+						`min_quantity` INT(11) DEFAULT '0', \
+						`max_quantity` INT(11) DEFAULT '0', \
+						`drop_chance` INT(11) DEFAULT '0', \
+						PRIMARY KEY (`lootzone_id`,`item_id`), \
+                        CONSTRAINT `lootzone_items` FOREIGN KEY (`lootzone_id`) REFERENCES `loot_zones` (`id`) ON DELETE CASCADE \
+                        ) ENGINE=InnoDB DEFAULT CHARSET=latin1");
+	LootZone_LoadAll();
+	return 1;
 }
 
 hook OnPlayerClearData(playerid)
 {
-	if(Player_IsEditingAnyLootZone(playerid))
+	if(LootZone_IsLootingBy(Character_GetLootZone(playerid), playerid))
 	{
-		LootZone_RemovePlayerEditing(Player_GetEditingLootZone(playerid));
-		//SendMessageToAdmins(false, COLOR_ADMIN, "[ADM-CMD] %d hook disconnected. (TESTING)", playerid);
+		LootZone_SetLootingPlayer(Character_GetLootZone(playerid), INVALID_PLAYER_ID);
 	}
-}
-
-hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
-{
-	if(PRESSED(KEY_WALK) && Character_IsAlive(playerid)GetPlayerState(playerid) == PLAYER_STATE_ONFOOT)
-	{
-		new id, E_ELEMENT_TYPE:type;
-		if(Character_GetNearestPickup(playerid, id, type) && type == ELEMENT_TYPE_LOOTZONE)
-		{
-			LootZone_ShowItemsToPlayer(playerid, id);
-		}
-	}
+	CurrentLootZone[playerid] = INVALID_LOOT_ZONE;
+	SelectedItem[playerid] = 0;
 	return 1;
 }
 
-// Called every second when a player is inspecting (listing) a loot zone.
-ptask OnPlayerLootZoneUpdateTimer[1000](playerid)
+task RefreshLootZones[3600000 * 6]() // 3600000 * 6 -> 6 hours
 {
-	if(!Character_IsLogged(playerid))
-		return 1;
-	new zone_id = Player_GetLootZone(playerid);
-	if(zone_id != -1 && !IsPlayerInRangeOfLootZone(playerid, zone_id) || Character_IsFreezed(playerid))
+	for_map(lootzone : LootZones)
 	{
-		Player_ClearLootZoneVars(playerid);
-		Dialog_Close(playerid);
-	}
-	return 1;
-}
+		new lootzoneid = iter_get_key(lootzone);
 
-stock LootZone_StartEdit(zone_id, playerid)
-{
-	if(!LootZone_IsValid(zone_id))
-		return 0;
-
-	if(LootZone_IsEditing(zone_id))
-	{
-		new playerEditing = LootZone_GetPlayerEditing(zone_id);
-		if(playerEditing != playerid)
-		{
-			if(Dialog_Opened(playerEditing)) // If editing player has dialog opened, returns 0.
-				return 0;
-			else // else, we can edit this zone.
-				Player_StopEditingLootZone(playerEditing);
-		}
+		LootZone_Refresh(lootzoneid);
 	}
 
-	if(Player_IsEditingAnyLootZone(playerid))
-	{
-		LootZone_EndEdit(Player_GetEditingLootZone(playerid), playerid);
-	}
-
-	Player_SetEditingLootZone(playerid, zone_id);
-	LootZone_SetPlayerEditing(zone_id, playerid);
-
-	new 
-		string[64];
-	format(string, sizeof(string), "Modifica Loot Zone [%d]", zone_id);
-	Dialog_Show(playerid, Dialog_LootZoneEdit, DIALOG_STYLE_LIST, string, "Aggiungi Item\nModifica Item\nSposta Qui\nGo To\nRimuovi Zona", "Seleziona", "Indietro");
-	return 1;
+	SendMessageToAdmins(1, COLOR_ORANGE, "Server: sono state refreshate tutte le Loot Zones (6 ore).");
 }
 
-stock LootZone_EndEdit(zone_id, playerid)
-{
-	if(!LootZone_IsEditing(zone_id) || Player_GetEditingLootZone(playerid) != zone_id)
-	{
-		return 0; // playerid isn't editing zone_id
-	}
-	Player_StopEditingLootZone(playerid);
-	LootZone_RemovePlayerEditing(zone_id);
-	Dialog_Close(playerid); // Safeness
-	return 1;
-}
-
-stock LootZone_AdminShowMenu(playerid, last_lz_id = 0)
-{
-	if(last_lz_id < 0)
-		return LootZone_AdminShowMenu(playerid, 0);
-
-	new
-		string[1024],
-		count = 0,
-		last_lz_tmp = 0,
-		extra[32];
-
-	for(new i = last_lz_id; i < MAX_LOOT_ZONES; ++i)
-	{
-		if(!LootZone_IsValid(i))
-			continue;
-		
-		extra = "";
-		
-		format(extra, sizeof(extra), LootZone_IsEditing(i) ? "{FF0000}Modificando{FFFFFF}" : "{00FF00}Modificabile{FFFFFF}");
-			
-		if(IsPlayerInRangeOfLootZone(playerid, i))
-			format(string, sizeof(string), "%sLoot Zone %d (Vicino) [%s]\n", string, i, extra);
-		else
-			format(string, sizeof(string), "%sLoot Zone %d [%s]\n", string, i, extra);
-		
-		LootZoneListItem[playerid][count] = i;
-		count++;
-
-		last_lz_tmp = i;
-
-		if(count == MAX_LOOT_ZONES_PER_PAGE)
-			break;		
-	}
-
-	if(count == 0)
-		return 0;
-
-	SetPVarInt(playerid, "Player_AdminLootZoneListCount", count);
-	SetPVarInt(playerid, "Player_AdminLootZoneListLastID", last_lz_tmp);
-
-	Dialog_Show(playerid, Dialog_LootZoneList, DIALOG_STYLE_LIST, "Gestisci Loot Zones", "Avanti -->\n<-- Indietro\nModifica da ID\n%s", "Seleziona", "Chiudi", string);
-	return 1;
-}
-
-stock LootZone_ShowItemsToPlayer(playerid, zone_id)
-{
-	if(!LootZone_IsValid(zone_id) || !IsPlayerInRangeOfLootZone(playerid, zone_id) ||
-		Character_GetVirtualWorld(playerid) != LootZoneInfo[zone_id][lzVirtualWorld] ||
-		GetPlayerInterior(playerid) != LootZoneInfo[zone_id][lzInterior])
-		return 0;
-	
-	if(Character_IsFreezed(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando adesso.");
-
-	if(LootZoneInfo[zone_id][lzPlayerID] != -1 && LootZoneInfo[zone_id][lzPlayerID] != playerid)
-	{
-		return SendClientMessage(playerid, COLOR_ERROR, Qualcuno sta già frugrando qui.");
-	}
-
-	new
-		string[1024],
-		item_id,
-		extra_str[8],
-		count = 0
-		;
-
-	for(new i = 0; i < MAX_ITEMS_PER_LOOT; ++i)
-	{
-		if(!LootZoneInfo[zone_id][lzCurrentLootItems][i])
-			continue;
-		item_id = LootZoneInfo[zone_id][lzCurrentLootItems][i];
-
-		extra_str = "-";
-		//if(Inventory_IsFood(item_id)) format(extra_str, sizeof(extra_str), "%d%%", LootZoneInfo[zone_id][lzCurrentLootExtra][i]);
-		format(string, sizeof(string), "%s%s\t%d\t%s\n", 
-			string, ServerItem_GetName(item_id), LootZoneInfo[zone_id][lzCurrentLootAmount][i], extra_str);
-		
-		LootZoneListItem[playerid][count] = i;
-		count++;
-	}
-	if(!count)
-	{
-		if(LootZone_IsPlayerLootingThis(zone_id, playerid))
-			SendClientMessage(playerid, COLOR_ERROR, Non c'è più nulla da frugare qui.");
-		else
-			SendClientMessage(playerid, COLOR_ERROR, Non c'è nulla da frugare qui.");
-		Player_ClearLootZoneVars(playerid);
-		return 1;
-	}
-	
-	PlayerInfo[playerid][pLootZone] = zone_id;
-	LootZoneInfo[zone_id][lzPlayerID] = playerid;
-	
-	Dialog_Show(playerid, Dialog_ShowItemsToPlayer, DIALOG_STYLE_TABLIST_HEADERS, "Loot Zone", "Oggetto\tQuantità\tValore\n%s", "Raccogli", "Chiudi", string);
-	return 1;
-}
-
-stock LootZone_CreateObjects(zone_id, Float:_x, Float:_y, Float:_z, _interior, _virtual_world)
-{
-	if(IsValidDynamic3DTextLabel(LootZoneInfo[zone_id][lz3DText]))
-		DestroyDynamic3DTextLabelEx(LootZoneInfo[zone_id][lz3DText]);
-	
-	if(IsValidDynamicObject(LootZoneInfo[zone_id][lzObject]))
-		DestroyDynamicObject(LootZoneInfo[zone_id][lzObject]);
-
-	if(IsValidDynamicPickup(LootZoneInfo[zone_id][lzPickup]))
-		DestroyDynamicPickup(LootZoneInfo[zone_id][lzPickup]);
-
-	new label[32];
-	format(label, sizeof(label), "Loot Zone [%d]", zone_id);
-	LootZoneInfo[zone_id][lz3DText] = CreateDynamic3DTextLabel(label, COLOR_GREY, _x, _y, _z + 0.55, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, _virtual_world, _interior);
-	LootZoneInfo[zone_id][lzObject] = CreateDynamicObject(3005, _x, _y, _z - 0.9, 0.0, 0.0, 0.0, _virtual_world, _interior, _, _, _);
-	LootZoneInfo[zone_id][lzPickup] = Pickup_Create(1007, zone_id, _x, _y, _z, ELEMENT_TYPE_LOOTZONE, _virtual_world, _interior);
-}
-
-stock LootZone_InitializeInventory(zoneid)
-{
-	new Inventory:inventory = Inventory_New(10);
-	list_add(LootZoneInventoryList, List:inventory);
-	return 1;
-}
-
-stock LootZone_UnloadInventory(zoneid)
-{
-	return list_remove_deep(LootZoneInventoryList, zoneid);
-}
-
-stock LootZone_Create(Float:_x, Float:_y, Float:_z, _interior, _virtual_world)
+stock LootZone_Create(Float:x, Float:y, Float:z, interior, virtualWorld)
 {
 	inline OnInsert()
 	{
 		new
-			empty_items_string[128],
-			data[E_LOOT_ZONE];
-		data[lzID] = cache_insert_id();
-		data[lzX] = _x;
-		data[lzY] = _y;
-		data[lzZ] = _z;
-		data[lzInterior] = _interior;
-		data[lzVirtualWorld] = _virtual_world;
-		data[lzPlayerID] = -1;
+			data[e_LOOT_ZONE_DATA]
+		;
 
-		for(new i = 0; i < MAX_ITEMS_PER_LOOT; ++i)
-		{
-			data[lzLootItem][i] = 0;
-			data[lzLootAmount][i] = 0;
-			format(empty_items_string, sizeof(empty_items_string), "%s%s", empty_items_string, (i == MAX_ITEMS_PER_LOOT-1) ? "0" : "0|");
-		}
-
-		new idx = list_add_arr(LootZoneList, data);
+		data[ID] = cache_insert_id();
+		data[X] = x;
+		data[Y] = y;
+		data[Z] = z;
+		data[Interior] = interior;
+		data[VirtualWorld] = virtualWorld;
 		
-		LootZone_CreateObjects(idx, _x, _y, _z, _interior, _virtual_world);
-		LootZone_RemovePlayerEditing(idx);
+
+		map_add_arr(LootZones, data[ID], data);
+		
+		LootZone_Initialize(data[ID]);
 	}
 
-	MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO `loot_zones` (lzX, lzY, lzZ, lz_interior, lz_virtual_world, lz_possible_items, lz_possible_items_amount, lz_items_rarity) VALUES('%f', '%f', '%f', '%d', '%d', '%s', '%s', '%s')", 
-															_x, _y, _z, _interior, _virtual_world, empty_items_string, empty_items_string, empty_items_string);
-	return idx;
+	MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO `loot_zones` (x, y, z, interior, virtual_world) VALUES('%f', '%f', '%f', '%d', '%d')", x, y, z, interior, virtualWorld);
 }
 
-stock LootZone_SetPosition(zone_id, Float:_x, Float:_y, Float:_z, _interior = -1, _virtual_world = -1)
+stock bool:LootZone_Initialize(lootzoneid)
 {
-	if(!LootZone_IsValid(zone_id))
-		return;
-	LootZoneInfo[zone_id][lzX] = _x;
-	LootZoneInfo[zone_id][lzY] = _y;
-	LootZoneInfo[zone_id][lzZ] = _z;
-	LootZoneInfo[zone_id][lzInterior] = _interior;
-	LootZoneInfo[zone_id][lzVirtualWorld] = _virtual_world;
-
-	new label[32];
-	format(label, sizeof(label), "Loot Zone [%d]", zone_id);
-
-	LootZone_CreateObjects(zone_id, _x, _y, _z, _interior, _virtual_world);
-
-	LootZone_Save(zone_id);
-}
-
-stock LootZone_Delete(zoneid)
-{
-	if(!LootZone_IsValid(zoneid))
-		return 0;
-	LootZoneInfo[zoneid][lzID] = 0;
-	LootZoneInfo[zoneid][lzX] = 0.0;
-	LootZoneInfo[zoneid][lzY] = 0.0;
-	LootZoneInfo[zoneid][lzZ] = 0.0;
-	LootZoneInfo[zoneid][lzInterior] = LootZoneInfo[zoneid][lzVirtualWorld] = 0;
-
-	for(new i = 0; i < MAX_ITEMS_PER_LOOT; ++i)
-	{
-		LootZoneInfo[zoneid][lzLootItem][i] = 0;
-		LootZoneInfo[zoneid][lzLootAmount][i] = 0;
-		LootZoneInfo[zoneid][lzLootRarity][i] = 0;
-	}
-
-	if(LootZone_IsEditing(zoneid))
-	{
-		LootZone_EndEdit(zoneid, LootZone_GetPlayerEditing(zoneid));
-	}
-
-	if(LootZoneInfo[zoneid][lzPlayerID] != -1)
-	{
-		Player_ClearLootZoneVars(LootZoneInfo[zoneid][lzPlayerID]);
-	}
-
-	LootZone_RemovePlayerEditing(zoneid);
+	if(!LootZone_IsValid(lootzoneid))
+		return false;
 	
-	DestroyDynamicObject(LootZoneInfo[zoneid][lzObject]);
-	DestroyDynamicPickup(LootZoneInfo[zoneid][lzPickup]);
-	DestroyDynamic3DTextLabelEx(LootZoneInfo[zoneid][lz3DText]);
+	if(!Inventory_IsValid(LootZone_GetInventory(lootzoneid)))
+		map_set_cell(LootZones, LootZone_GetID(lootzoneid), Inventory, List:Inventory_New(10));
+	
+	if(!map_valid(LootZone_GetItems(lootzoneid)))
+		map_set_cell(LootZones, LootZone_GetID(lootzoneid), Items, map_new());
+	
+	if(!map_valid(LootZone_GetObjectsMap(lootzoneid)))
+		map_set_cell(LootZones, LootZone_GetID(lootzoneid), ObjectsMap, map_new());
+	
+	new Float:x, Float:y, Float:z, interior = LootZone_GetInterior(lootzoneid), virtualWorld = LootZone_GetVirtualWorld(lootzoneid);
+	LootZone_GetPosition(lootzoneid, x, y, z);
 
-	Iter_Remove(LootZoneIterator, zoneid);
+	LootZone_SetLootingPlayer(lootzoneid, INVALID_PLAYER_ID);
+	
+	if(IsValidDynamicPickup(LootZone_GetPickup(lootzoneid)))
+		Pickup_Destroy(LootZone_GetPickup(lootzoneid));
+
+	if(IsValidDynamic3DTextLabel(LootZone_GetLabel(lootzoneid)))
+		DestroyDynamic3DTextLabel(LootZone_GetLabel(lootzoneid));
+
+	new pickupid = Pickup_Create(1007, LootZone_GetID(lootzoneid), x, y, z, ELEMENT_TYPE_LOOTZONE, virtualWorld, interior);
+	map_set_cell(LootZones, LootZone_GetID(lootzoneid), Pickup, pickupid);
+
+	new text[32];
+	format(text, sizeof(text), "Loot Zone [%d]", lootzoneid);
+	new Text3D:label = CreateDynamic3DTextLabel(text, COLOR_GREY, x, y, z + 0.55, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, virtualWorld, interior);
+	map_set_cell(LootZones, LootZone_GetID(lootzoneid), Label, label);
+
+	return true;
+}
+
+stock LootZone_Delete(lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return false;
+	
+	mysql_tquery_f(gMySQL, "DELETE FROM `loot_zones` WHERE id = '%d'", LootZone_GetID(lootzoneid));
+
+	Inventory_Delete(LootZone_GetInventory(lootzoneid));
+	map_delete_deep(LootZone_GetItems(lootzoneid));
+	
+	LootZone_DestroyObjects(lootzoneid);
+	
+	if(IsValidDynamic3DTextLabel(LootZone_GetLabel(lootzoneid)))
+		DestroyDynamic3DTextLabel(LootZone_GetLabel(lootzoneid));
+
+	map_delete_deep(LootZone_GetObjectsMap(lootzoneid));
+
+	map_remove_deep(LootZones, LootZone_GetID(lootzoneid));
+	return true;
+}
+
+stock bool:LootZone_Refresh(lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return false;
+	LootZone_SetLootingPlayer(lootzoneid, INVALID_PLAYER_ID);
+	LootZone_ClearInventory(lootzoneid);
+	LootZone_DestroyObjects(lootzoneid);
+
+	LootZone_Fill(lootzoneid);
+	return true;
+}
+
+stock bool:LootZone_IsValid(lzid)
+{
+	return map_has_key(LootZones, lzid);
+}
+
+stock LootZone_GetID(lootzoneid)
+{
+	return map_get(LootZones, lootzoneid, ID);
+}
+
+stock bool:LootZone_GetPosition(lootzoneid, &Float:x, &Float:y, &Float:z)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return false;
+	x = Float:map_get(LootZones, LootZone_GetID(lootzoneid), X);
+	y = Float:map_get(LootZones, LootZone_GetID(lootzoneid), Y);
+	z = Float:map_get(LootZones, LootZone_GetID(lootzoneid), Z);
+	return true;
+}
+
+stock bool:LootZone_SetPosition(lootzoneid, Float:x, Float:y, Float:z)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return false;
+	map_set_cell(LootZones, LootZone_GetID(lootzoneid), X, x);
+	map_set_cell(LootZones, LootZone_GetID(lootzoneid), Y, y);
+	map_set_cell(LootZones, LootZone_GetID(lootzoneid), Z, z);
+
+	mysql_tquery_f(gMySQL, "UPDATE `loot_zones` SET x = '%f', y = '%f', z = '%f' WHERE id = '%d'", x, y, z, LootZone_GetID(lootzoneid));
+	return true;
+}
+
+stock LootZone_GetInterior(lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return 0;
+	return map_get(LootZones, LootZone_GetID(lootzoneid), Interior);
+}
+
+stock bool:LootZone_SetInterior(lootzoneid, interior)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return false;
+	map_set_cell(LootZones, LootZone_GetID(lootzoneid), Interior, interior);
+
+	mysql_tquery_f(gMySQL, "UPDATE `loot_zones` SET interior = '%d' WHERE id = '%d'", interior, LootZone_GetID(lootzoneid));
+	return true;
+}
+
+stock LootZone_GetVirtualWorld(lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return 0;
+	return map_get(LootZones, LootZone_GetID(lootzoneid), VirtualWorld);
+}
+
+stock bool:LootZone_SetVirtualWorld(lootzoneid, worldid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return false;
+	map_set_cell(LootZones, LootZone_GetID(lootzoneid), VirtualWorld, worldid);
+
+	mysql_tquery_f(gMySQL, "UPDATE `loot_zones` SET virtual_world = '%d' WHERE id = '%d'", worldid, LootZone_GetID(lootzoneid));
+	return true;
+}
+
+stock bool:LootZone_CanDropItem(lootzoneid, itemid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return false;
+	new Map:items = LootZone_GetItems(lootzoneid);
+	return map_has_key(items, itemid);
+}
+
+stock bool:LootZone_AddDropItem(lootzoneid, itemid, dropChance = 0, minQuantity = 0, maxQuantity = 0)
+{
+	if(!LootZone_IsValid(lootzoneid) || LootZone_CanDropItem(lootzoneid, itemid))
+		return false;
+	new Map:items = LootZone_GetItems(lootzoneid);
+	new data[e_LZ_ITEM_DATA];
+	data[DropChance] = dropChance;
+	data[MinQuantity] = minQuantity;
+	data[MaxQuantity] = maxQuantity;
+	
+	mysql_tquery_f(gMySQL, "INSERT INTO `loot_zone_items` (lootzone_id, item_id, min_quantity, max_quantity, drop_chance) VALUES('%d', '%d', '%d', '%d', '%d')", 
+	LootZone_GetID(lootzoneid), itemid, minQuantity, maxQuantity, dropChance);
+
+	return map_add_arr(items, itemid, data);
+}
+
+stock bool:LootZone_RemoveDropItem(lootzoneid, itemid)
+{
+	if(!LootZone_IsValid(lootzoneid) || !LootZone_CanDropItem(lootzoneid, itemid))
+		return false;
+	mysql_tquery_f(gMySQL, "DELETE FROM `loot_zone_items` WHERE lootzone_id = '%d' AND item_id = '%d'", LootZone_GetID(lootzoneid), itemid);
+	return map_remove_deep(LootZone_GetItems(lootzoneid), itemid);
+}
+
+stock bool:LootZone_RemoveAllDropItems(lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return false;
+	map_clear(LootZone_GetItems(lootzoneid));
+	mysql_tquery_f(gMySQL, "DELETE FROM `loot_zone_items` WHERE lootzone_id = '%d'", LootZone_GetID(lootzoneid));
+	return true;
+}
+
+stock Map:LootZone_GetItems(lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return Map:0;
+	return Map:map_get(LootZones, LootZone_GetID(lootzoneid), Items);
+}
+
+stock Inventory:LootZone_GetInventory(lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return Inventory:0;
+	return Inventory:map_get(LootZones, LootZone_GetID(lootzoneid), Inventory);
+}
+
+stock Map:LootZone_GetObjectsMap(lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return Map:0;
+	return Map:map_get(LootZones, LootZone_GetID(lootzoneid), ObjectsMap);
+}
+
+stock LootZone_GetLootingPlayer(lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return INVALID_PLAYER_ID;
+	return map_get(LootZones, LootZone_GetID(lootzoneid), PlayerLooting);
+}
+
+stock bool:LootZone_SetLootingPlayer(lootzoneid, playerid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return false;
+	new currentLootingPlayer = LootZone_GetLootingPlayer(lootzoneid);
+	if(Character_IsLogged(currentLootingPlayer) && Character_GetLootZone(currentLootingPlayer) == lootzoneid)
+	{
+		Dialog_Close(currentLootingPlayer);
+	}
+	map_set_cell(LootZones, LootZone_GetID(lootzoneid), PlayerLooting, playerid);
+	return true;
+}
+
+stock bool:LootZone_ClearInventory(lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return false;
+	LootZone_SetLootingPlayer(lootzoneid, INVALID_PLAYER_ID);
+	Inventory_Reset(LootZone_GetInventory(lootzoneid));
+	return true;
+}
+
+stock bool:LootZone_DestroyObjects(lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return false;
+	new Map:objects = LootZone_GetObjectsMap(lootzoneid);
+	for_map(iter : objects)
+	{
+		new value = iter_get_value(iter);
+		if(IsValidDynamicObject(value))
+			DestroyDynamicObject(value);
+	}
+	map_clear(objects);
+	return true;
+}
+
+stock LootZone_GetPickup(lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return 0;
+	return map_get(LootZones, LootZone_GetID(lootzoneid), Pickup);
+}
+
+stock Text3D:LootZone_GetLabel(lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return Text3D:INVALID_3DTEXT_ID;
+	return Text3D:map_get(LootZones, LootZone_GetID(lootzoneid), Label);
+}
+
+// Player Checks
+// Current player inspecting loot zone
+stock Character_GetLootZone(playerid)
+{
+	return CurrentLootZone[playerid]; // PlayerInfo[%0][pLootZone]
+}
+
+stock Character_SetLootZone(playerid, lootzoneid)
+{
+	CurrentLootZone[playerid] = lootzoneid;
+}
+
+// Checks if loot zone is being looted by playerid
+stock bool:LootZone_IsLootingBy(lootzoneid, playerid)
+{
+	return LootZone_IsValid(lootzoneid) && LootZone_GetLootingPlayer(lootzoneid) == playerid && Character_GetLootZone(playerid) == lootzoneid; // (PlayerInfo[%0][pLootZone] != -1 && LootZoneInfo[PlayerInfo[%0][pLootZone]][lzPlayerID] == %0)
+}
+
+stock bool:Character_ShowLootZone(playerid, lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return false;
+	
+	new looter = LootZone_GetLootingPlayer(lootzoneid);
+	if(Character_IsLogged(looter) && looter != playerid)
+	{
+		if(LootZone_IsLootingBy(lootzoneid, looter) && !Character_IsNearLootZone(looter, lootzoneid))
+		{
+			LootZone_SetLootingPlayer(lootzoneid, INVALID_PLAYER_ID);
+		}
+	}
+	else LootZone_SetLootingPlayer(lootzoneid, INVALID_PLAYER_ID);
+
+	if(LootZone_GetLootingPlayer(lootzoneid) != INVALID_PLAYER_ID)
+		return SendClientMessage(playerid, COLOR_ERROR, "Qualcuno sta già frugando."), false;
+
+	if(!Character_IsNearLootZone(playerid, lootzoneid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Ti sei allontanato dalla loot zone."), false;
+	
+	new Inventory:inventory = LootZone_GetInventory(lootzoneid);
+
+	if(!Inventory_IsValid(inventory))
+		return false;
+
+	if(Inventory_GetUsedSpace(inventory) <= 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non c'è nulla da frugare qui."), false;
+
+	Character_SetLootZone(playerid, lootzoneid);
+	LootZone_SetLootingPlayer(lootzoneid, playerid);
+
+	Inventory_Show(inventory, playerid, "Loot Zone", Dialog_LootZone, "Prendi", "Chiudi", true);
+	return true;
+}
+
+Dialog:Dialog_LootZone(playerid, response, listitem, inputtext[])
+{
+	new lootzoneid = Character_GetLootZone(playerid);
+	if(!response)
+	{
+		LootZone_SetLootingPlayer(lootzoneid, INVALID_PLAYER_ID);
+		Character_SetLootZone(playerid, INVALID_LOOT_ZONE);
+		return 0;
+	}
+	
+	if(!Character_IsNearLootZone(playerid, lootzoneid))
+		return 0;
+
+	new Inventory:inventory = LootZone_GetInventory(lootzoneid);
 
 	new 
-		query[128];
+		itemid = Inventory_GetSlotItem(inventory, listitem),
+		slotAmount = Inventory_GetSlotAmount(inventory, listitem),
+		totalAmount = Inventory_GetItemAmount(inventory, itemid);
 
-	format(query, sizeof(query), "DELETE FROM `loot_zones` WHERE id = '%d'", LootZoneInfo[zoneid][lzID]);
-	mysql_tquery(gMySQL, query);
-	return 1;
-}
-
-stock LootZone_FreeItemSlot(zone_id)
-{
-	if(!LootZone_IsValid(zone_id))
-		return -1;
-	for(new i = 0; i < MAX_ITEMS_PER_LOOT; ++i)
+	if(!ServerItem_IsValid(itemid) || slotAmount <= 0)
 	{
-		if(!LootZoneInfo[zone_id][lzCurrentLootItems][i])
-			return i;
+		Character_ShowLootZone(playerid, lootzoneid);
+		SendClientMessage(playerid, COLOR_ERROR, "Slot vuoto.");
+		return 0;
 	}
-	return -1;
-}
 
-stock LootZone_AddItem(zone_id, item_id, amount = 1, extra = 0)
-{
-	if(!LootZone_IsValid(zone_id))
-		return -1;
+	SelectedItem[playerid] = itemid;
 
-	//new type = InventoryObjects[item_id][invType];
-	//new item_slot = LootZone_HasItem(zone_id, item_id);
-
-	for(new i = 0; i < amount; ++i)
+	if(ServerItem_IsUnique(itemid) || slotAmount == 1)
 	{
-		new free_slot = LootZone_FreeItemSlot(zone_id);
-
-		if(free_slot == -1)
-			break;
-
-		LootZoneInfo[zone_id][lzCurrentLootItems][free_slot] = item_id;
-		LootZoneInfo[zone_id][lzCurrentLootAmount][free_slot] = 1;
-		LootZoneInfo[zone_id][lzCurrentLootExtra][free_slot] = extra;
+		if(!Character_HasSpaceForItem(playerid, itemid, slotAmount))
+		{
+			SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario.");
+			Character_ShowLootZone(playerid, lootzoneid);
+			return 0;
+		}
+		
+		Inventory_DecreaseItemAmount(inventory, itemid, slotAmount);
+		Character_GiveItem(playerid, itemid, slotAmount);
+		LootZone_RemoveUnusedObjects(lootzoneid);
+		SendFormattedMessage(playerid, -1, "Hai preso l'oggetto (%s - Q: %d) dalla loot zone.", ServerItem_GetName(itemid), slotAmount);
+		Character_ShowLootZone(playerid, lootzoneid);
 	}
-	/*if(item_slot != -1 && type != ITEM_DRUG && !Inventory_IsUnique(item_id))
-		LootZoneInfo[zone_id][lzCurrentLootAmount][item_slot] += amount;
 	else
 	{
-		item_slot = LootZone_FreeItemSlot(zone_id);
-		if(item_slot != -1)
-		{
-			LootZoneInfo[zone_id][lzCurrentLootItems][item_slot] = item_id;
-			LootZoneInfo[zone_id][lzCurrentLootAmount][item_slot] = amount;
-			LootZoneInfo[zone_id][lzCurrentLootExtra][item_slot] = extra;			
-		}
-	}*/
-	LootZone_Save(zone_id);
+		new String:str = str_format("Inserisci la quantità dell'oggetto che vuoi prendere.\n- {00FF00}Oggetto{FFFFFF}: %s\n- {00FF00}Quantità disponibile{FFFFFF}: %d", ServerItem_GetName(itemid), totalAmount);
+		Dialog_Show_s(playerid, Dialog_LootZoneWithdraw, DIALOG_STYLE_INPUT, @("Loot Zone"), str, "Prendi", "Indietro");
+	}
 	return 1;
 }
 
-stock LootZone_HasItem(zone_id, item_id)
+Dialog:Dialog_LootZoneWithdraw(playerid, response, listitem, inputtext[])
 {
-	if(!LootZone_IsValid(zone_id))
-		return -1;
-	for(new i = 0; i < MAX_ITEMS_PER_LOOT; ++i)
+	new lootzoneid = Character_GetLootZone(playerid);
+	
+	if(!response)
 	{
-		if(LootZoneInfo[zone_id][lzCurrentLootItems][i] == item_id)
-			return i;
+		Character_ShowLootZone(playerid, lootzoneid);
+		return 1;
 	}
-	return -1;
+
+	new 
+		Inventory:inventory = LootZone_GetInventory(lootzoneid),
+		itemid = SelectedItem[playerid],
+		totalAmount = Inventory_GetItemAmount(inventory, itemid)
+	;
+
+	if(!ServerItem_IsValid(itemid) || totalAmount <= 0)
+	{
+		Character_ShowLootZone(playerid, lootzoneid);
+		SendClientMessage(playerid, COLOR_ERROR, "Slot vuoto.");
+		return 0;
+	}
+
+	new val = strval(inputtext);
+
+	if(val <= 0 || val > totalAmount)
+	{
+		new String:str = str_format("{FF0000}La quantità inserita non è valida.{FFFFFF}\nInserisci la quantità dell'oggetto che vuoi prendere.\n- {00FF00}Oggetto{FFFFFF}: %s\n- {00FF00}Quantità disponibile{FFFFFF}: %d", ServerItem_GetName(itemid), totalAmount);
+		Dialog_Show_s(playerid, Dialog_LootZoneWithdraw, DIALOG_STYLE_MSGBOX, @("Loot Zone"), str, "Prendi", "Indietro");
+		return 0;
+	}
+
+	if(!Character_HasSpaceForItem(playerid, itemid, val))
+	{
+		new String:str = str_format("{FF0000}Non hai abbastanza spazio nell'inventario.{FFFFFF}\nInserisci la quantità dell'oggetto che vuoi prendere.\n- {00FF00}Oggetto{FFFFFF}: %s\n- {00FF00}Quantità disponibile{FFFFFF}: %d", ServerItem_GetName(itemid), totalAmount);
+		Dialog_Show_s(playerid, Dialog_LootZoneWithdraw, DIALOG_STYLE_MSGBOX, @("Loot Zone"), str, "Prendi", "Indietro");
+		return 0;
+	}
+	
+	Character_GiveItem(playerid, itemid, val);
+	Inventory_DecreaseItemAmount(inventory, itemid, val);
+
+	LootZone_RemoveUnusedObjects(lootzoneid);
+
+	SendFormattedMessage(playerid, -1, "Hai preso l'oggetto (%s - Q: %d) dalla loot zone.", ServerItem_GetName(itemid), val);
+
+	Character_ShowLootZone(playerid, lootzoneid);
+	return 1;
+}
+
+
+hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
+{
+	if(!Player_HasHotKeysEnabled(playerid))
+		return 0;
+	
+	if(PRESSED(KEY_CROUCH) && Character_IsAlive(playerid) && GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && Character_CanInteract(playerid))
+	{
+		new id, E_ELEMENT_TYPE:type;
+		if(Character_GetNearestPickup(playerid, id, type) && type == ELEMENT_TYPE_LOOTZONE)
+		{
+			Character_ShowLootZone(playerid, id);
+		}
+	}
+	return 1;
+}
+
+stock bool:Character_IsNearLootZone(playerid, lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return false;
+	new Float:x, Float:y, Float:z;
+	LootZone_GetPosition(lootzoneid, x, y, z);
+	return IsPlayerInRangeOfPoint(playerid, 3.0, x, y, z) > 0;
+}
+
+stock bool:LootZone_Fill(lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return false;
+	
+	new 
+		Inventory:inventory = LootZone_GetInventory(lootzoneid),
+		itemid = 0, data[e_LZ_ITEM_DATA],
+		Float:x, Float:y, Float:z
+	;
+
+	for_map(i : LootZone_GetItems(lootzoneid))
+	{
+		itemid = iter_get_key(i);
+		iter_get_arr(i, data);
+
+		if(!ServerItem_IsValid(itemid))
+			continue;
+		
+		new rand = random(101); // 100
+
+		if(rand >= 100-data[DropChance])
+		{
+			new qnt = data[MinQuantity] + random(data[MaxQuantity]);
+
+			if(qnt > data[MaxQuantity])
+				qnt = data[MaxQuantity];
+			
+			Inventory_AddItem(inventory, itemid, qnt, 0);
+
+			LootZone_GetPosition(lootzoneid, x, y, z);
+			
+			new objectid = CreateDynamicObject(ServerItem_GetModelID(itemid), x + math_random_float(-1.0, 1.0) * 0.5, y  + math_random_float(-1.0, 1.0) * 0.5, z, 90.0, 0.0, 0.0, LootZone_GetVirtualWorld(lootzoneid), LootZone_GetInterior(lootzoneid));
+			map_add(LootZone_GetObjectsMap(lootzoneid), itemid, objectid);
+		}
+	}
+
+	return true;
+}
+
+static LootZone_RemoveUnusedObjects(lootzoneid)
+{
+	if(!LootZone_IsValid(lootzoneid))
+		return 0;
+
+	for_map(i : LootZone_GetObjectsMap(lootzoneid))
+	{
+		new itemid = iter_get_key(i);
+		if(!Inventory_HasItem(LootZone_GetInventory(lootzoneid), itemid, 1))
+		{
+			DestroyDynamicObject(iter_get_value(i));
+			iter_erase(i);
+		}
+	}
+	return 1;
+}
+
+flags:acreatelootzone(CMD_MODERATOR);
+CMD:acreatelootzone(playerid, params[])
+{
+	new Float:x, Float:y, Float:z;
+	GetPlayerPos(playerid, x, y, z);
+	LootZone_Create(x, y, z - 1.0, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
+	SendClientMessage(playerid, -1, "Loot Zone creata con successo. Usa /lzedit per modificarla.");
+	return 1;
+}
+alias:acreatelootzone("lzcreate");
+
+flags:lzedit(CMD_MODERATOR);
+CMD:lzedit(playerid, p[])
+{
+	new lootzoneid, command[16], params[128];
+	if(sscanf(p, "ds[16]S()[128]", lootzoneid, command, params))
+		return SendClientMessage(playerid, COLOR_ERROR, "/lzedit <lootzoneid> <pos - additem - rmitem - resetinv - refresh - items - delete>");	
+	
+	if(!LootZone_IsValid(lootzoneid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Loot Zone id non valido.");
+	
+	if(!strcmp(command, "pos", true))
+	{
+		new Float:x, Float:y, Float:z;
+		GetPlayerPos(playerid, x, y, z);
+		LootZone_SetPosition(lootzoneid, x, y, z - 1.0);
+		LootZone_SetInterior(lootzoneid, GetPlayerInterior(playerid));
+		LootZone_SetVirtualWorld(lootzoneid, Character_GetVirtualWorld(playerid));
+		LootZone_Initialize(lootzoneid);
+		LootZone_Refresh(lootzoneid);
+		// RECREATE OBJECTS
+	}
+	else if(!strcmp(command, "goto", true))
+	{
+		new Float:x, Float:y, Float:z;
+		Streamer_UpdateEx(playerid, x, y, z, LootZone_GetVirtualWorld(lootzoneid), LootZone_GetInterior(lootzoneid));
+		LootZone_GetPosition(lootzoneid, x, y, z);
+		SetPlayerPos(playerid, x, y, z);
+		SetPlayerInterior(playerid, LootZone_GetInterior(lootzoneid));
+		Character_SetVirtualWorld(playerid, LootZone_GetVirtualWorld(lootzoneid));
+		// RECREATE OBJECTS
+	}
+	else if(!strcmp(command, "additem", true))
+	{
+		new itemid, minQuantity, maxQuantity, drop;
+		if(sscanf(params, "k<item>ddd", itemid, minQuantity, maxQuantity, drop))
+		{
+			SendClientMessage(playerid, COLOR_ERROR, "/lzedit <lootzoneid> additem <itemid/name> <min quant.> <max. quant.> <drop chance.>");
+			SendClientMessage(playerid, COLOR_GREY, "INFO: aggiunge itemid tra gli item droppabili.");
+			return 0;
+		}
+		
+		if(drop <= 0 || drop > 100)
+			return SendClientMessage(playerid, COLOR_ERROR, "Drop chance range: 1 - 100");
+
+		if(minQuantity < 0)
+			return SendClientMessage(playerid, COLOR_ERROR, "La quantità minima non può essere minore di 0.");
+
+		if(LootZone_AddDropItem(lootzoneid, itemid, drop, minQuantity, maxQuantity))
+		{
+			SendFormattedMessage(playerid, -1, "[LOOTZONE %d] Item aggiunto: %s - Min: %d - Max: %d - Drop Chance: %d.", lootzoneid, ServerItem_GetName(itemid), minQuantity, maxQuantity, drop);
+		}
+		else
+		{
+			SendFormattedMessage(playerid, -1, "[LOOTZONE %d] Non è stato possibile aggiungere l'oggetto. Esso risulta già presente tra i droppabili.", lootzoneid);
+		}
+	}
+	else if(!strcmp(command, "rmitem", true))
+	{
+		if(!strcmp(params, "all", true))
+		{
+
+			return 1;
+		}
+		new itemid;
+		if(sscanf(params, "k<item>", itemid))
+		{
+			SendClientMessage(playerid, COLOR_ERROR, "/lzedit <lootzoneid> rmitem <itemid/name>");
+			SendClientMessage(playerid, COLOR_GREY, "INFO: rimuove itemid tra gli item droppabili. Usa 'all' come ultimo parametro per resettarli tutti.");
+			return 0;
+		}
+
+		if(LootZone_RemoveDropItem(lootzoneid, itemid))
+		{
+			SendFormattedMessage(playerid, -1, "[LOOTZONE %d] Item rimosso.", lootzoneid);
+		}
+		else
+		{
+			SendFormattedMessage(playerid, -1, "[LOOTZONE %d] Non è stato possibile rimuovere l'oggetto. Esso non risulta presente tra i droppabili.", lootzoneid);
+		}
+	}
+	else if(!strcmp(command, "resetinv", true))
+	{
+		LootZone_SetLootingPlayer(lootzoneid, INVALID_PLAYER_ID);
+		LootZone_ClearInventory(lootzoneid);
+		SendFormattedMessage(playerid, -1, "[LOOT ZONE %d] Hai resettato l'inventario.", lootzoneid);
+	}
+	else if(!strcmp(command, "refresh", true))
+	{
+		LootZone_Refresh(lootzoneid);
+		SendFormattedMessage(playerid, -1, "[LOOT ZONE %d] Hai refreshato la loot zone.", lootzoneid);
+	}
+	else if(!strcmp(command, "items", true))
+	{
+		new 
+			itemid = 0,
+			data[e_LZ_ITEM_DATA],
+			Map:items = LootZone_GetItems(lootzoneid);
+		SendFormattedMessage(playerid, -1, "==================== [LOOT ZONE %d DROPPABLES] ====================", lootzoneid);
+		if(map_size(items) <= 0)
+			return SendClientMessage(playerid, -1, "Attualmente non ci sono oggetti droppabili in questa loot zone.");
+		for_map(i : items)
+		{
+			itemid = iter_get_key(i);
+			iter_get_arr(i, data);
+
+			SendFormattedMessage(playerid, -1, "Item (id): %s (%d) - Min: %d - Max: %d - Drop Chance: %d", ServerItem_GetName(itemid), itemid, data[MinQuantity], data[MaxQuantity], data[DropChance]);
+		}
+		//SendClientMessage(playerid, -1, "====================================================================");
+	}
+	else if(!strcmp(command, "delete", true))
+	{
+		LootZone_Delete(lootzoneid);
+
+		SendFormattedMessage(playerid, COLOR_ORANGE, "[LOOT ZONE %d] Loot Zone rimossa.", lootzoneid);
+	}
+	else
+	{
+		return SendClientMessage(playerid, COLOR_ERROR, "/lzedit <lootzoneid> <pos - additem - rmitem - resetinv - refresh - items - delete>");	
+	}
+	return 1;
+}
+
+flags:alzrefreshall(CMD_MODERATOR);
+CMD:alzrefreshall(playerid, params[])
+{
+	for_map(i : LootZones)
+	{
+		LootZone_Refresh(iter_get_key(i));
+	}
+	SendMessageToAdmins(1, COLOR_ORANGE, "AdmCmd: %s ha refreshato tutte le Loot Zones.", Account_GetName(playerid));
+	return 1;
+}
+
+flags:fruga(CMD_ALIVE_USER);
+CMD:fruga(playerid, params[])
+{
+	if(GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || !Character_CanInteract(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+
+	new id, E_ELEMENT_TYPE:type;
+
+	if(!Character_GetNearestPickup(playerid, id, type) || type != ELEMENT_TYPE_LOOTZONE) 
+		return SendClientMessage(playerid, COLOR_ERROR, "Non c'è nulla da frugare qui.");
+		
+	Character_ShowLootZone(playerid, id);
+	return 1;
 }
 
 stock LootZone_LoadAll()
 {
+
 	inline OnLoad()
 	{
-		new 
-			count = 0,
-			tempString[1024],
-			sscanfFormat[32];
-
-		cache_get_row_count(count);
-
-		// Called here to avoid calling format in loop everytime.
-		format(sscanfFormat, sizeof(sscanfFormat), "p<|>a<i>[%d]", MAX_ITEMS_PER_LOOT);
-
-		for(new i = 0; i < count; ++i)
+		new rows = cache_num_rows();
+		
+		new data[e_LOOT_ZONE_DATA];
+		
+		for(new i = 0; i < rows; ++i)
 		{
-			if(i >= MAX_LOOT_ZONES)
-				break;
-			cache_get_value_index_int(i, 0, LootZoneInfo[i][lzID]);
-			cache_get_value_index_float(i, 1, LootZoneInfo[i][lzX]);
-			cache_get_value_index_float(i, 2, LootZoneInfo[i][lzY]);
-			cache_get_value_index_float(i, 3, LootZoneInfo[i][lzZ]);
+			cache_get_value_name_int(i, "id", data[ID]);
+			cache_get_value_name_float(i, "x", data[X]);
+			cache_get_value_name_float(i, "y", data[Y]);
+			cache_get_value_name_float(i, "z", data[Z]);
+			cache_get_value_name_int(i, "interior", data[Interior]);
+			cache_get_value_name_int(i, "virtual_world", data[VirtualWorld]);
 
-			cache_get_value_index_int(i, 4, LootZoneInfo[i][lzInterior]);
-			cache_get_value_index_int(i, 5, LootZoneInfo[i][lzVirtualWorld]);
+			map_add_arr(LootZones, data[ID], data);
 
-			cache_get_value_index(i, 6, tempString);
-			sscanf(tempString, sscanfFormat, LootZoneInfo[i][lzLootItem]);
+			LootZone_Initialize(data[ID]);
 
-			cache_get_value_index(i, 7, tempString);
-			sscanf(tempString, sscanfFormat, LootZoneInfo[i][lzLootAmount]);
+			inline OnLoadDroppables()
+			{
+				new r = cache_num_rows();
+				new 
+					lootzoneid, itemid, itemData[e_LZ_ITEM_DATA];
+				for(new j = 0; j < r; ++j)
+				{
+					cache_get_value_name_int(j, "lootzone_id", lootzoneid);
+					cache_get_value_name_int(j, "item_id", itemid);
+					if(!ServerItem_IsValid(itemid))
+						continue;
+					cache_get_value_name_int(j, "min_quantity", itemData[MinQuantity]);
+					cache_get_value_name_int(j, "max_quantity", itemData[MaxQuantity]);
+					cache_get_value_name_int(j, "drop_chance", itemData[DropChance]);
 
-			cache_get_value_index(i, 8, tempString);
-			sscanf(tempString, sscanfFormat, LootZoneInfo[i][lzLootRarity]);
+					new Map:items = LootZone_GetItems(lootzoneid);
+					map_add_arr(items, itemid, itemData);
+				}
 
-			LootZoneInfo[i][lzPlayerID] = -1;
+				printf("Loaded %d droppable items for lootzone id %d.", r, lootzoneid);
+			}
 
-			LootZone_RemovePlayerEditing(i);
-			
-			LootZone_CreateObjects(i, LootZoneInfo[i][lzX], LootZoneInfo[i][lzY], LootZoneInfo[i][lzZ], LootZoneInfo[i][lzInterior], LootZoneInfo[i][lzVirtualWorld]);
-
-			Iter_Add(LootZoneIterator, i);
+			MySQL_TQueryInline(gMySQL, using inline OnLoadDroppables, "SELECT * FROM `loot_zone_items` WHERE lootzone_id = '%d'", data[ID]);
 		}
-
-		//LootZone_RefreshAll();
+		printf("Loaded %d loot zones.", rows);
 	}
-	mysql_tquery_inline(gMySQL, "SELECT * FROM loot_zones ORDER BY id ASC", using inline OnLoad, ""); // DESC?
-}
-
-stock LootZone_Save(idx)
-{
-	if(!LootZone_IsValid(idx))
-		return;
-	new 
-		query[1024],
-		possible_items_s[256],
-		possible_items_amount_s[256],
-		items_rarity_s[256],
-		suffix[2] = "";
-
-	for(new i = 0; i < MAX_ITEMS_PER_LOOT; ++i)
-	{
-		suffix = (i == MAX_ITEMS_PER_LOOT-1) ? "" : "|";
-		format(possible_items_s, sizeof(possible_items_s), "%s%d%s", possible_items_s, LootZoneInfo[idx][lzLootItem][i], suffix);
-		format(possible_items_amount_s, sizeof(possible_items_amount_s), "%s%d%s", possible_items_amount_s, LootZoneInfo[idx][lzLootAmount][i], suffix);
-		format(items_rarity_s, sizeof(items_rarity_s), "%s%d%s", items_rarity_s, LootZoneInfo[idx][lzLootRarity][i], suffix);
-	}
-
-	format(query, sizeof(query), "UPDATE loot_zones SET lzX = '%f', lzY = '%f', lzZ = '%f', lz_interior = '%d', lz_virtual_world = '%d', lz_possible_items = '%s', lz_possible_items_amount = '%s', lz_items_rarity = '%s' \
-		WHERE id = '%d'",
-		LootZoneInfo[idx][lzX], LootZoneInfo[idx][lzY], LootZoneInfo[idx][lzZ],
-		LootZoneInfo[idx][lzInterior], LootZoneInfo[idx][lzVirtualWorld],
-		possible_items_s, possible_items_amount_s, items_rarity_s, 
-		LootZoneInfo[idx][lzID]);
-	mysql_tquery(gMySQL, query);
-}
-
-stock LootZone_Refresh(zone_id)
-{
-	if(!LootZone_IsValid(zone_id))
-		return 0;
-	// Maybe close players dialogs?
-	foreach(new p : Player)
-	{
-		if(Player_GetLootZone(p)  != -1)
-		{
-			Player_ClearLootZoneVars(p);
-			Dialog_Close(p);
-		}
-	}
-	// First reset current loot.
-	for(new i = 0; i < MAX_ITEMS_PER_LOOT; ++i)
-	{
-		LootZoneInfo[zone_id][lzCurrentLootItems][i] = 0;
-		LootZoneInfo[zone_id][lzCurrentLootAmount][i] = 0;
-		LootZoneInfo[zone_id][lzCurrentLootExtra][i] = 0;
-
-		if(!LootZoneInfo[zone_id][lzLootItem][i] || LootZoneInfo[zone_id][lzLootAmount][i] == 0 || LootZoneInfo[zone_id][lzLootRarity][i] == 0)
-			continue;
-
-		new rand = random(101); // 100
-
-		if(rand >= 100-LootZoneInfo[zone_id][lzLootRarity][i])
-		{
-			new qnt = 1 + random(LootZoneInfo[zone_id][lzLootAmount][i]);
-			LootZone_AddItem(zone_id, LootZoneInfo[zone_id][lzLootItem][i], qnt, 100);
-		}
-	}
-
-	// Decide which items to spawn, randomly
-	return 1;
-}
-
-stock LootZone_RefreshAll()
-{
-	//lzCurrLootItems[MAX_ITEMS_PER_LOOT],
-	//lzLootAmount[MAX_ITEMS_PER_LOOT],
-	//lzCurrLootAmount[MAX_ITEMS_PER_LOOT],
-	foreach(new zone_id : LootZoneIterator)
-	{
-		LootZone_Refresh(zone_id);
-	}
-
-	//SendAdminAlert(true, COLOR_ORANGE, "** [SERVER]: Tutte le Loot Zone sono state refreshate.");
-}
-
-stock IsPlayerInRangeOfLootZone(playerid, zone_id, Float:range = 2.5)
-{
-	return LootZone_IsValid(zone_id) && IsPlayerInRangeOfPoint(playerid, range, LootZoneInfo[zone_id][lzX], LootZoneInfo[zone_id][lzY], LootZoneInfo[zone_id][lzZ]);
-}
-
-stock Player_ClearLootZoneVars(playerid)
-{
-	for(new i = 0; i < sizeof(LootZoneListItem[]); ++i)
-	{
-		LootZoneListItem[playerid][i] = -1;
-	}
-	new
-		zone_id = Player_GetLootZone(playerid);
-	if(zone_id != -1)
-	{
-		LootZoneInfo[zone_id][lzPlayerID] = -1;
-		PlayerInfo[playerid][pLootZone] = -1;
-		Dialog_Close(playerid);
-	}
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `loot_zones`");
 }

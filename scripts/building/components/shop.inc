@@ -193,6 +193,8 @@ stock Character_EditSellableItems(playerid)
     new buildingid = Character_GetNearBuildingID(playerid);
     if(!Building_IsValid(buildingid))
         return SendClientMessage(playerid, COLOR_ERROR, "Devi essere all'interno dell'edificio per utilizzare quest'opzione.");
+    if(!Building_CanSellItems(buildingid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare quest'opzione su questo tipo di edificio.");
     Dialog_Show(playerid, Dialog_EditSellableItems, DIALOG_STYLE_LIST, "Gestione Negozio", "Lista\nAggiungi Oggetto", "Seleziona", "Chiudi");
     return 1;
 }
@@ -407,14 +409,14 @@ static Building_ShowSellingItemsEdit(buildingid, toPlayer)
         return 0;
     new 
         Map:items = Map:map_get(SellingItems, buildingid),
-        String:str = @("Oggetto\tPrezzo ({85bb65}${FFFFFF})\n")
+        String:str = @("{FFFFFF}Oggetto{FFFFFF}\t{FFFFFF}Prezzo{FFFFFF} ({85bb65}${FFFFFF})\n")
     ;
     new itemid, price;
     for_map(i : items)
     {
         itemid = iter_get_key(i);
         price = iter_get_value(i);
-        str += str_format("%s (%d)\t{85bb65}${FFFFFF}%d\n", ServerItem_GetName(itemid), itemid, price);
+        str += str_format("%s (ID: %d)\t{85bb65}${FFFFFF}%d\n", ServerItem_GetName(itemid), itemid, price);
     }
 
     Dialog_Show_s(toPlayer, Dialog_EditSellableItemList, DIALOG_STYLE_TABLIST_HEADERS, @("Lista Oggetti"), str, "Modifica", "Chiudi");

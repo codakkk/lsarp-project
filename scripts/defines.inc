@@ -26,9 +26,9 @@ enum (<<= 1)
 	CMD_RCON
 }
 
-#define IC_JAIL_X						(2638.6926)
-#define IC_JAIL_Y						(-1995.0134)
-#define IC_JAIL_Z 						(-59.7283)
+#define IC_JAIL_X						(2638.6917)
+#define IC_JAIL_Y						(-2007.298)
+#define IC_JAIL_Z 						(-58.7273)
 #define IC_JAIL_INT						(0)
 
 #define OOC_JAIL_X						(197.1209)

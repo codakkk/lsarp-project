@@ -2,14 +2,14 @@
 flags:fcmds(CMD_USER);
 CMD:fcmds(playerid, params[])
 {
-	SendClientMessage(playerid, COLOR_SLATEBLUE, "/servizio - /uniforme - /fcaccia - /finvita - /frank - /fmembri");
+	SendClientMessage(playerid, COLOR_SLATEBLUE, "/flascia - /servizio - /uniforme - /fcaccia - /finvita - /frank - /fmembri");
 	new factionid = Character_GetFaction(playerid);
 	if(Faction_IsValid(factionid))
 	{
 		if(Faction_GetType(factionid) == FACTION_TYPE_POLICE)
 		{
-			SendClientMessage(playerid, COLOR_SLATEBLUE, "[GUARDIA NAZIONALE]: /manette - /trascina - /arresta - (/m)egafono");
-			SendClientMessage(playerid, COLOR_SLATEBLUE, "[GUARDIA NAZIONALE]: /perquisisci - /cura - /servizio - (/d)ipartimento");
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "/manette - /trascina - /arresta - (/m)egafono - /vsign");
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "/perquisisci - /cura - /servizio - (/d)ipartimento");
 		}
 	}
 	return 1;
@@ -48,6 +48,8 @@ CMD:servizio(playerid, params[])
 			Faction_SendMessageStr(factionid, COLOR_SLATEBLUE, message);
 			SendClientMessage(playerid, COLOR_GREEN, "Utilizza /uniforme <id> per cambiare uniforme.");
 			
+			Faction_GiveWeapons(playerid);
+
 		} else Character_OffDuty(playerid);
 	}
 	else
@@ -79,12 +81,17 @@ CMD:uniforme(playerid, params[])
 		for(new i = 0, j = list_size(factionSkins); i < j; ++i)
 		{
 			new skinid = list_get(factionSkins, i);
+			printf("Skin id: %d", skinid);
 			if(skinid != 0)
+			{
+				SendFormattedMessage(playerid, COLOR_GREEN, "Skin: %d", skinid);
+			}
+			/*if(skinid != 0)
 			{
 				str += str_format("{00FF00}%d{FFFFFF}", skinid);
 				if(i < j)
 					str += @(", ");
-			}
+			}*/
 		}
 		SendClientMessageStr(playerid, -1, str);
 	}
@@ -324,4 +331,16 @@ Dialog:DialogFactionMembers(playerid, response, listitem, inputtext[])
 		ShowMembersPage(playerid, CurrentPage{playerid}-1);
 	}
 	return 1;
+}
+
+static Faction_GiveWeapons(playerid)
+{
+	printf("TYpe: %d", Faction_GetType(Character_GetFaction(playerid)));
+	if(Faction_GetType(Character_GetFaction(playerid)) == FACTION_TYPE_POLICE)
+	{
+		GivePlayerWeapon(playerid, 3, 1);
+		GivePlayerWeapon(playerid, 41, 1000);
+		GivePlayerWeapon(playerid, 24, 100);
+		GivePlayerWeapon(playerid, 31, 250);
+	}
 }

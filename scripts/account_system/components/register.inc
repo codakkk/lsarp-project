@@ -4,9 +4,12 @@ Dialog:Dialog_Register(playerid, response, listitem, inputtext[])
 {
 	if(!response)
 		return KickEx(playerid);
+		
 	if(strlen(inputtext) < 6 || strlen(inputtext) > 16)
-		return Dialog_Show(playerid, Dialog_Register, DIALOG_STYLE_PASSWORD, "Account non registrato", "{FF0000}La password inserita è troppo lunga o troppo corta.{FFFFFF}\nInserisci una password per registrarti.", "Registra", "Annulla");
+		return Dialog_Show(playerid, Dialog_Register, DIALOG_STYLE_PASSWORD, "Account non registrato", "{FF0000}La password inserita è troppo lunga o troppo corta.{FFFFFF}\nInserisci una password per registrarti.\n\nRicorda che la password deve contenere almeno:\n- 8 caratteri.\n- Almeno una lettera maiuscola.\n- Almeno un numero.\n- Almeno un carattere speciale.\nLa password non puo':\n- Cominciare o finire con uno spazio\n- Contenere come caratteri speciali: %%, \\, ', `, \".", "Registra", "Annulla");
 	
+	if(!IsValidPassword(inputtext))
+		return Dialog_Show(playerid, Dialog_Register, DIALOG_STYLE_PASSWORD, "Account non registrato", "{FF0000}La password inserita non rispetta i criteri di sicurezza minimi.{FFFFFF}\nInserisci una password per registrarti.\n\nRicorda che la password deve contenere almeno:\n- 8 caratteri.\n- Almeno una lettera maiuscola.\n- Almeno un numero.\n- Almeno un carattere speciale.\nLa password non puo':\n- Cominciare o finire con uno spazio\n- Contenere come caratteri speciali: %%, \\, ', `, \".", "Registra", "Annulla");
 	
 	inline OnInsert()
 	{

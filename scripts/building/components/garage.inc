@@ -174,8 +174,7 @@ stock Character_AcceptRepair(playerid)
 
     SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "%s ha riparato il tuo veicolo (%s) per $%d.", Character_GetRolePlayName(senderid), Vehicle_GetName(vehicleid), price);
 
-    RepairVehicle(vehicleid);
-    SetVehicleHealth(vehicleid, 999.0);
+    Vehicle_Repair(vehicleid);
 
     ResetPendingRequest(playerid, REQUEST_TYPE_REPAIR);
     ResetPendingRequest(senderid, REQUEST_TYPE_REPAIR);

@@ -3,6 +3,8 @@
 
 forward OnCharacterHungerChange(playerid);
 
+static bool:IsFoodEnabled = true;
+
 static 
 	PlayerHunger[MAX_PLAYERS char],
 	PlayerHungerTime[MAX_PLAYERS char],
@@ -13,6 +15,16 @@ static
 	HUNGER_DECREASE_TIME = 2, // As minutes
 	HUNGER_ALERT_TIME = 30; // As minutes
 
+flags:enablehunger(CMD_ADMIN);
+CMD:enablehunger(playerid, params[])
+{
+	IsFoodEnabled = !IsFoodEnabled;
+	if(IsFoodEnabled)
+		SendMessageToAdmins(1, COLOR_ORANGE, "AdmCmd: %s (%d) ha abilitato il sistema fame.", Account_GetName(playerid), playerid);
+	else
+		SendMessageToAdmins(1, COLOR_ORANGE, "AdmCmd: %s (%d) ha disabilitato il sistema fame.", Account_GetName(playerid), playerid);
+	return 1;
+}
 hook OnPlayerClearData(playerid)
 {
 	pLastHungerAlert[playerid] = 0;
@@ -36,6 +48,8 @@ ptask OnPlayerHungerTimer[60000](playerid)
 {
 	if(!Character_IsLogged(playerid) || !Character_IsAlive(playerid))
 		return 0;
+	if(!IsFoodEnabled)
+		return 0;
 	PlayerHungerTime{playerid}++;
 	if(PlayerHungerTime{playerid} >= HUNGER_DECREASE_TIME)
 	{
@@ -49,6 +63,10 @@ ptask OnPlayerHungerTimer[60000](playerid)
 			pLastHungerAlert[playerid] = GetTickCount();
 			SendClientMessage(playerid, -1, "La fame comincia a farsi sentire.");
 		}
+		new Float:hp;
+		GetPlayerHealth(playerid, hp);
+		if(hp >= 30.0)
+			SetPlayerHealth(playerid, hp - 1.0);
 	}
 	return 1;
 }

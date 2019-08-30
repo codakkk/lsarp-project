@@ -211,7 +211,7 @@ static Internal_UpdateDeathState(playerid)
 
 			Character_AMe(playerid, "è in gravi condizioni.");
 
-			SendClientMessage(playerid, COLOR_ERROR, "Sei in gravi condizioni, tra 60 secondi puoi accettare la morte utilizzando \"/accetta morte\".");
+			SendFormattedMessage(playerid, COLOR_ERROR, "Sei in gravi condizioni, tra %d secondi puoi accettare la morte utilizzando \"/accetta morte\".", INJURED_TIME_AS_SECONDS);
 			CallLocalFunction(#OnCharacterInjured, "d", playerid);
 		}
 		/*else if(deathState == DEATH_STATE_DEAD)

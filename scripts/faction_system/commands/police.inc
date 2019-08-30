@@ -151,7 +151,7 @@ CMD:trascina(playerid, params[])
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 3.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
 
-	if(!Character_CanInteract(id))
+	if(Character_CanInteract(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è ammanettato o stordito.");
 	
 	Character_SetDragged(id, true);
@@ -173,7 +173,7 @@ CMD:cura(playerid, params[])
 	new factionid = Character_GetFaction(playerid);
 	if(!Account_IsAdminDuty(playerid))
 	{
-		if(factionid == INVALID_FACTION_ID || (Faction_GetType(factionid) != FACTION_TYPE_POLICE && Faction_GetType(factionid) != FACTION_TYPE_MEDICAL && !Account_IsAdminDuty(playerid)))
+		if(Faction_GetType(factionid) != FACTION_TYPE_POLICE && Faction_GetType(factionid) != FACTION_TYPE_MEDICAL)
 			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando.");
 		if(!Character_IsFactionDuty(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non sei in servizio.");
@@ -188,7 +188,10 @@ CMD:cura(playerid, params[])
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 5.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
 	
-	if(!Character_IsInjured(id))
+	new Float:health;
+	GetPlayerHealth(id, health);
+
+	if(!Character_IsInjured(id) && health >= 100.0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non ha bisogno di cure.");
 	
 	if(Request_IsPending(id, REQUEST_TYPE_CARE))
@@ -334,5 +337,30 @@ stock Character_OffDuty(playerid)
 	SetPlayerColor(playerid, -1);
 
 	CallLocalFunction(#OnCharacterDutyChange, "dd", playerid, 0);
+	return 1;
+}
+
+flags:vsign(CMD_POLICE);
+CMD:vsign(playerid, params[])
+{
+	new vehicleid = GetPlayerVehicleID(playerid);
+
+	if(vehicleid <= 0)return SendClientMessage(playerid, COLOR_ERROR, "Non sei in un veicolo.");
+
+	if(Vehicle_HasSign(vehicleid))
+	{
+ 		Vehicle_RemoveSign(vehicleid);
+	}
+	else
+	{
+		new text[32];
+		new pos;
+
+		if(sscanf(params, "ds[32]", pos, text))return SendClientMessage(playerid, COLOR_GREY, "/vsign <pos. (0 - 2)> <testo>");
+
+		if(pos < 0 || pos > 2)return SendClientMessage(playerid, COLOR_ERROR, "La posizione è un valore tra 0 e 2.");
+
+		Vehicle_SetSign(vehicleid, pos, text);
+	}
 	return 1;
 }

@@ -4,6 +4,7 @@
 #include <inventory\types\medic>
 #include <inventory\types\money>
 #include <inventory\types\weapon>
+#include <inventory\types\dress>
 #include <inventory\callbacks>
 #include <YSI_Coding\y_hooks>
 
@@ -417,7 +418,7 @@ stock Inventory_GetFreeSlot(Inventory:inventory)
     return -1;
 }
 
-stock Inventory_ShowInChatStr(Inventory:inventory, playerid, String:title)
+static Inventory_ShowInChatStr(Inventory:inventory, playerid, String:title)
 {
 	if(!list_valid(inventory))
 		return 0;
@@ -511,25 +512,25 @@ static Inventory_ShowInDialog(Inventory:inventory, playerid, const title[], cons
 	return 1;
 }
 
-stock Inventory_InternalShowStr(Inventory:inventory, playerid, String:title, const dialog[] = "", const button1[] = "", const button2[] = "")
+stock Inventory_InternalShowStr(Inventory:inventory, playerid, String:title, const dialog[] = "", const button1[] = "", const button2[] = "", bool:forceDialog = false)
 {
 	/*new ptr[1][] = {{}}, size = str_len(title) + 1, Var:var = amx_alloc(size);
     amx_to_ref(var, ptr);
     str_get(title, ptr[0], .size=size);*/
 	static buffer[2048];
 	str_get(title, buffer);
-    new result = Inventory_InternalShow(inventory, playerid, /*ptr[0]*/buffer, dialog, button1, button2);
+    new result = Inventory_InternalShow(inventory, playerid, /*ptr[0]*/buffer, dialog, button1, button2, forceDialog);
 
     /*amx_free(var);
     amx_delete(var);*/
 	return result;
 }
 
-stock Inventory_InternalShow(Inventory:inventory, playerid, const title[], const dialog[] = "", const button1[] = "", const button2[] = "")
+stock Inventory_InternalShow(Inventory:inventory, playerid, const title[], const dialog[] = "", const button1[] = "", const button2[] = "", bool:forceDialog = false)
 {
 	if(!list_valid(inventory))
 		return 0;
-	if(Player_HasInvModeEnabled(playerid))
+	if(Player_HasInvModeEnabled(playerid) && !forceDialog)
 	{
 		Inventory_ShowInChat(inventory, playerid, title);
 	}
@@ -563,6 +564,7 @@ stock Inventory_LoadFromDatabase(Inventory:inventory, const databaseName[], cons
 		return false;
 	inline OnLoad()
 	{
+		Inventory_Reset(inventory);
 		new rows = cache_num_rows(), 
 			slotid, itemid, amount, extra;
 		for(new i = 0; i < rows; ++i)

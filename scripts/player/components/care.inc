@@ -69,9 +69,6 @@ stock Character_AcceptCare(playerid)
 	if(!Character_CanInteract(senderid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non puo' curarti in questo momento."), 0;
 
-	if(!Character_IsInjured(playerid))
-		return 0;
-
 	if(!IsPlayerInRangeOfPlayer(playerid, senderid, 5.0) || !Character_IsLogged(senderid))
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore che ti ha inviato la richiesta.");

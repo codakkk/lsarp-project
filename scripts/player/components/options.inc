@@ -9,9 +9,22 @@ static enum e_Bit1_OptionsData
 };
 static BitArray:OptionsBitSet[e_Bit1_OptionsData]<MAX_PLAYERS>;
 
+hook OnGameModeInit()
+{
+	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `account_options` ( \
+						`account_id` int(11) NOT NULL, \
+						`hotkeys` int(11) NOT NULL DEFAULT '0', \
+						`inv_mode` int(11) NOT NULL DEFAULT '0', \
+						`veh_mode` int(11) NOT NULL DEFAULT '0', \
+						PRIMARY KEY (`account_id`), \
+						CONSTRAINT `AccountOptions` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE \
+						) ENGINE=InnoDB DEFAULT CHARSET=latin1;");
+	return 1;
+}
+
 hook OnAccountCreated(playerid, account_db_id)
 {
-	mysql_tquery_f(gMySQL, "INSERT INTO `account_options` (account_id, hotkeys, inv_mode, veh_mode) VALUES('%d', '%d', '%d', '%d')", Account_GetID(playerid), 0, 0, 0);
+	mysql_tquery_f(gMySQL, "INSERT INTO `account_options` (account_id, hotkeys, inv_mode, veh_mode) VALUES('%d', '%d', '%d', '%d')", account_db_id, 0, 0, 0);
 	return 1;
 }
 

@@ -165,15 +165,15 @@ CMD:textureoggetto(playerid, params[])
     return 1;
 }
 
-flags:aplaceobject(CMD_MODERATOR);
-CMD:aplaceobject(playerid, params[])
+flags:aplacefurniture(CMD_MODERATOR);
+CMD:aplacefurniture(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
     
     new modelid;
     if(sscanf(params, "d", modelid))
-        return SendClientMessage(playerid, COLOR_ERROR, "/aplaceobject <modelid>");
+        return SendClientMessage(playerid, COLOR_ERROR, "/aplacefurniture <modelid>");
     
     new worldid = Character_GetVirtualWorld(playerid), Float:x, Float:y, Float:z;
 
@@ -212,7 +212,7 @@ CMD:atextureobject(playerid, params[])
     
     new objectid, index, modelid, txd[32], texture[32];
     if(sscanf(params, "ddds[32]s[32]", objectid, index, modelid, txd, texture))
-        return SendClientMessage(playerid, COLOR_ERROR, "/atextureobject <modelid> <index> <modelid> <txd name> <texture>");
+        return SendClientMessage(playerid, COLOR_ERROR, "/atextureobject <objectid> <index> <modelid> <txd name> <texture>");
     
     if(!Furniture_IsValid(objectid))
         return SendClientMessage(playerid, COLOR_ERROR, "L'id inserito non è di un mobile."), 0;
