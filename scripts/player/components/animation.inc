@@ -11,7 +11,7 @@ hook OnCharacterDeath(playerid, killerid, reason)
 	if(Character_IsAnimLoop(playerid))
 	{
 		Character_SetAnimLoop(playerid, false);
-		TextDrawHideForPlayer(playerid, txtAnimHelper);
+		HideTextAnimationHelper(playerid);
 	}
 	return 1;
 }
@@ -24,7 +24,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 		{
 			ClearAnimations(playerid);
 			ApplyAnimation(playerid, "CARRY", "crry_prtial", 2.0, 0, 0, 0, 0, 0);
-			TextDrawHideForPlayer(playerid, txtAnimHelper);
+			HideTextAnimationHelper(playerid);
 			Character_SetAnimLoop(playerid, false);
 		}
 	}

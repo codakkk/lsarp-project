@@ -49,10 +49,10 @@ CMD:pm(playerid, params[])
 	}
     
     PlayerPlaySound(id, 1085, 0.0, 0.0, 0.0);
-    if(Account_IsAdminDuty(playerid))
+    if(Player_IsAdminDuty(playerid))
     {
         SendTwoLinesMessage(id, COLOR_RECEIVEPM, "** PM da {FF6347}%s{ffdb18} (%d): %s", Account_GetName(playerid), playerid, s);
-        if(Account_IsAdminDuty(id))
+        if(Player_IsAdminDuty(id))
         {
             SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a {FF6347}%s{ffdb18} (%d): %s", Account_GetName(id), id, s);
         }
@@ -158,7 +158,7 @@ CMD:b(playerid, params[])
     if(isnull(params) || strlen(params) > 128) 
         return SendClientMessage(playerid, COLOR_ERROR, "/b <testo>");
     new String:string;
-    if(Account_IsAdminDuty(playerid))
+    if(Player_IsAdminDuty(playerid))
     {
         string = str_format("{FFFFFF}(( {FF6347}%s{FFFFFF} [%d]: %s ))", Account_GetName(playerid), playerid, params);
         //ProxDetectorStr(playerid, 15.0, string, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, 0xC7F1FFFF, true);

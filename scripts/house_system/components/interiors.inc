@@ -1,4 +1,4 @@
-
+#include <YSI_Coding\y_hooks>
 #define INVALID_HOUSE_ID	(-1)
 #define HOUSE_START_WORLD 	(1000)
 

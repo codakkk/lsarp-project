@@ -1,4 +1,6 @@
 
+#include <YSI_Coding\y_hooks>
+
 static 
 	bool:HelpRequest[MAX_PLAYERS] = {false, ...},
 	LastHelpRequestTime[MAX_PLAYERS] = {0, ...};
@@ -21,7 +23,7 @@ CMD:tcmds(playerid, params[])
 flags:tduty(CMD_SUPPORTER);
 CMD:tduty(playerid, params[])
 {
-	if(Account_IsAdminDuty(playerid))
+	if(Player_IsAdminDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio admin.");
 	Account_SetSupporterDuty(playerid, !Account_IsSupporterDuty(playerid));
     if(Account_IsSupporterDuty(playerid))
@@ -41,7 +43,7 @@ CMD:tduty(playerid, params[])
 flags:tchat(CMD_SUPPORTER);
 CMD:tchat(playerid, params[])
 {
-	if(pDisableAdminAlerts[playerid])
+	if(Player_IsDisabledAdminAlerts(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Hai disabilitato la chat supporter.");
 	if(isnull(params) || strlen(params) > 128)
 		return SendClientMessage(playerid, COLOR_ERROR, "(/t)chat <testo>");

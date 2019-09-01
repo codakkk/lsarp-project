@@ -25,6 +25,23 @@ CMD:enablehunger(playerid, params[])
 		SendMessageToAdmins(1, COLOR_ORANGE, "AdmCmd: %s (%d) ha disabilitato il sistema fame.", Account_GetName(playerid), playerid);
 	return 1;
 }
+
+flags:sethunger(CMD_JR_MODERATOR);
+CMD:sethunger(playerid, params[])
+{
+	new id, hunger;
+	if(sscanf(params, "k<u>d", id, hunger))
+		return SendClientMessage(playerid, COLOR_ERROR, "/sethunger <playerid/partofname/####> <valore 0 - 100>");
+
+	if(hunger < 0 || hunger > 100)
+		return SendClientMessage(playerid, COLOR_ERROR, "Valore minimo: 0 - Valore Massimo: 100");
+
+	Character_SetHunger(id, hunger, true);
+	
+	SendMessageToAdmins(0, COLOR_ORANGE, "%s (%d) ha settato la fame di %s (%d) a %d.", Account_GetName(playerid), playerid, Character_GetOOCName(id), id, hunger);
+	return 1;
+}
+
 hook OnPlayerClearData(playerid)
 {
 	pLastHungerAlert[playerid] = 0;
@@ -37,7 +54,9 @@ hook OnCharacterLoad(playerid)
 {
 	inline OnLoad()
 	{
-		cache_get_value_index_int(0, 0, PlayerHunger[playerid]);
+		new val;
+		cache_get_value_index_int(0, 0, val);
+		PlayerHunger{playerid} = val;
 		pLastHungerAlert[playerid] = GetTickCount();
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT hunger FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
@@ -61,7 +80,7 @@ ptask OnPlayerHungerTimer[60000](playerid)
 		if(GetTickCount() - pLastHungerAlert[playerid] >= 1000 * 60 * HUNGER_ALERT_TIME) // An alert each 30 minutes
 		{
 			pLastHungerAlert[playerid] = GetTickCount();
-			SendClientMessage(playerid, -1, "La fame comincia a farsi sentire.");
+			SendClientMessage(playerid, -1, "Il bisogno di alimentazione comincia a farsi sentire.");
 		}
 		new Float:hp;
 		GetPlayerHealth(playerid, hp);
@@ -73,7 +92,7 @@ ptask OnPlayerHungerTimer[60000](playerid)
 
 hook OnCharacterUseItem(playerid, slotid, itemid)
 {
-	if(!ServerItem_IsFood(itemid))
+	if(!ServerItem_IsFood(itemid) && !ServerItem_IsDrink(itemid))
 		return Y_HOOKS_CONTINUE_RETURN_1;
 	
 	new 
@@ -97,11 +116,11 @@ hook OnCharacterUseItem(playerid, slotid, itemid)
 			AC_SetPlayerHealth(playerid, health);
 		}
 
-		SendFormattedMessage(playerid, COLOR_GREEN, "Hai mangiato %s. Hai recuperato %d punti fame e %d punti salute.", ServerItem_GetName(itemid), foodValue, healthValue);
+		SendFormattedMessage(playerid, COLOR_GREEN, "Hai %s %s. Hai recuperato %d punti alimentazione e %d punti salute.", ServerItem_IsFood(itemid) ? ("mangiato") : ("bevuto"), ServerItem_GetName(itemid), foodValue, healthValue);
 	}
 	else
 	{
-		SendFormattedMessage(playerid, COLOR_GREEN, "Hai mangiato %s. Hai recuperato %d punti fame.", ServerItem_GetName(itemid), foodValue);
+		SendFormattedMessage(playerid, COLOR_GREEN, "Hai %s %s. Hai recuperato %d punti alimentazione.", ServerItem_IsFood(itemid) ? ("mangiato") : ("bevuto"), ServerItem_GetName(itemid), foodValue);
 	}
 
 	Character_AMe(playerid, "comincia a mangiare qualcosa.");

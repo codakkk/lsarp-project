@@ -1,15 +1,30 @@
 
+#include <pickup\core>
+
+
 #include <faction_system\national_guard\beanbag_taser>
 #include <faction_system\national_guard\mdc>
 
 #include <YSI_Coding\y_hooks>
 
+#define IC_JAIL_X						(2638.62)
+#define IC_JAIL_Y						(-1978.24)
+#define IC_JAIL_Z 						(-58.73)
+#define IC_JAIL_INT						(2)
+#define IC_JAIL_VW						(5018)
+
+#define OOC_JAIL_X						(197.1209)
+#define OOC_JAIL_Y						(176.3204)
+#define OOC_JAIL_Z 						(1003.0234)
+#define OOC_JAIL_INT					(3)
+
+
 static enum e_POLICE_ARREST
 {
-	Float:aX,
-	Float:aY,
-	Float:aZ,
-	aInterior,
+	Float:X,
+	Float:Y,
+	Float:Z,
+	Interior,
 };
 static PoliceArrestPositions[][e_POLICE_ARREST] = 
 {
@@ -21,9 +36,13 @@ hook OnGameModeInit()
 {
     for(new i = 0, j = sizeof(PoliceArrestPositions); i < j; ++i)
 	{
-		Pickup_Create(1239, i, PoliceArrestPositions[i][aX], PoliceArrestPositions[i][aY], PoliceArrestPositions[i][aZ], ELEMENT_TYPE_ARREST, -1, PoliceArrestPositions[i][aInterior]);
-		CreateDynamic3DTextLabel("Punto Arresto", COLOR_BLUE, PoliceArrestPositions[i][aX], PoliceArrestPositions[i][aY], PoliceArrestPositions[i][aZ], 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, -1, PoliceArrestPositions[i][aInterior]);
+		Pickup_Create(1239, i, PoliceArrestPositions[i][X], PoliceArrestPositions[i][Y], PoliceArrestPositions[i][Z], ELEMENT_TYPE_ARREST, -1, -1);
+		CreateDynamic3DTextLabel("Punto Arresto", COLOR_BLUE, PoliceArrestPositions[i][X], PoliceArrestPositions[i][Y], PoliceArrestPositions[i][Z], 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, -1, -1);
 	}
+	
+	// /lasciacarcere
+	Pickup_Create(1239, 0, 2649.7790, -1948.9510, -58.7273, ELEMENT_TYPE_JAIL_EXIT, .worldid = -1, .interiorid = 0);
+	CreateDynamic3DTextLabel("/lasciacarcere", COLOR_BLUE, 2649.7790, -1948.9510, -58.7273 + 0.55, 20.0, .worldid = -1, .interiorid = 0);
     return 1;
 }
 

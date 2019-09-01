@@ -6,7 +6,7 @@
 static 
     bool:BeanBag[MAX_PLAYERS char] = {false, ...},
     bool:Taser[MAX_PLAYERS char] = {false, ...},
-    TempWeapon[MAX_PLAYERS][2 char],
+    TempWeapon[MAX_PLAYERS][2],
     TempAmmo[MAX_PLAYERS][2]
 ;
 
@@ -14,8 +14,8 @@ hook OnPlayerClearData(playerid)
 {
     BeanBag{playerid} = false;
     Taser{playerid} = false;
-    TempWeapon[playerid]{0} = 0;
-    TempWeapon[playerid]{1} = 0;
+    TempWeapon[playerid][0] = 0;
+    TempWeapon[playerid][1] = 0;
     TempAmmo[playerid][0] = 0;
     TempAmmo[playerid][1] = 0;
     return 1;
@@ -23,10 +23,10 @@ hook OnPlayerClearData(playerid)
 
 hook OnCharacterDisconnected(playerid)
 {
-    if(Character_HasBeanBag(playerid))
+    /*if(Character_HasBeanBag(playerid))
         pc_cmd_beanbag(playerid, "");
     if(Character_HasTaser(playerid))
-        pc_cmd_taser(playerid, "");
+        pc_cmd_taser(playerid, "");*/
     return 1;
 }
 
@@ -69,15 +69,16 @@ hook OnCharacterDamageDone(playerid, Float:amount, issuerid, weaponid, bodypart)
                 SendFormattedMessage(playerid, COLOR_YELLOW, "Sei stato colpito dal BeanBag di %s (%d).", Character_GetRolePlayName(issuerid), issuerid);
                 SendFormattedMessage(issuerid, COLOR_YELLOW, "Hai colpito %s (%d) con la tua BeanBag.", Character_GetRolePlayName(playerid), playerid);
                 Character_SetStunned(playerid, 15);
+                ApplyAnimation(playerid, "CRACK", "crckdeth4", 4.0, 0, 0, 0, 1, 0, 1);
             }
             else if(weaponid == 23 && ProxDetectorS(15.0, issuerid, playerid))
             {
                 SendFormattedMessage(playerid, COLOR_YELLOW, "Sei stato colpito dal taser di %s (%d).", Character_GetRolePlayName(issuerid), issuerid);
                 SendFormattedMessage(issuerid, COLOR_YELLOW, "Hai colpito %s (%d) con il tuo taser.", Character_GetRolePlayName(playerid), playerid);
                 Character_SetStunned(playerid, 10);
+                ApplyAnimation(playerid, "CRACK", "crckdeth4", 4.0, 0, 0, 0, 1, 0, 1);
             }
             
-            ApplyAnimation(playerid, "CRACK", "crckdeth4", 4.0, 0, 0, 0, 1, 0, 1);
         }
     }
     return 1;
@@ -98,10 +99,10 @@ CMD:beanbag(playerid, params[])
         
         Character_GetWeaponData(playerid, 3, w, a);
         
-        TempWeapon[playerid]{0} = w;
+        TempWeapon[playerid][0] = w;
         TempAmmo[playerid][0] = a;
 
-        Character_RemoveWeapon(playerid, TempWeapon[playerid]{0});
+        Character_RemoveWeapon(playerid, TempWeapon[playerid][0]);
 
         Character_GiveWeapon(playerid, 25, 1000);
     }
@@ -109,10 +110,10 @@ CMD:beanbag(playerid, params[])
     {
         Character_AMe(playerid, "ripone il fucile beanbag.");
         Character_RemoveWeapon(playerid, 25);
-        Character_GiveWeapon(playerid, TempWeapon[playerid]{0}, TempAmmo[playerid][0]);
-        SetPlayerArmedWeapon(playerid, TempWeapon[playerid]{0});
+        Character_GiveWeapon(playerid, TempWeapon[playerid][0], TempAmmo[playerid][0]);
+        SetPlayerArmedWeapon(playerid, TempWeapon[playerid][0]);
 
-        TempWeapon[playerid]{0} = TempAmmo[playerid][0] = 0;
+        TempWeapon[playerid][0] = TempAmmo[playerid][0] = 0;
     }
     return 1;
 }
@@ -132,10 +133,10 @@ CMD:taser(playerid, params[])
         
         Character_GetWeaponData(playerid, 2, w, a);
         
-        TempWeapon[playerid]{1} = w;
+        TempWeapon[playerid][1] = w;
         TempAmmo[playerid][1] = a;
 
-        Character_RemoveWeapon(playerid, TempWeapon[playerid]{1});
+        Character_RemoveWeapon(playerid, TempWeapon[playerid][1]);
 
         Character_GiveWeapon(playerid, 23, 1000);
     }
@@ -143,10 +144,10 @@ CMD:taser(playerid, params[])
     {
         Character_AMe(playerid, "ripone la pistola taser.");
         Character_RemoveWeapon(playerid, 23);
-        Character_GiveWeapon(playerid, TempWeapon[playerid]{1}, TempAmmo[playerid][1]);
-        SetPlayerArmedWeapon(playerid, TempWeapon[playerid]{1});
+        Character_GiveWeapon(playerid, TempWeapon[playerid][1], TempAmmo[playerid][1]);
+        SetPlayerArmedWeapon(playerid, TempWeapon[playerid][1]);
 
-        TempWeapon[playerid]{1} = TempAmmo[playerid][1] = 0;
+        TempWeapon[playerid][1] = TempAmmo[playerid][1] = 0;
     }
     return 1;
 }
@@ -159,4 +160,22 @@ stock Character_HasBeanBag(playerid)
 stock Character_HasTaser(playerid)
 {
     return Taser{playerid};
+}
+
+stock Character_GetCachedWeaponBean(playerid, &weaponid, &ammo)
+{
+    if(!Character_IsLogged(playerid))
+        return 0;
+    weaponid = TempWeapon[playerid][0];
+    ammo = TempAmmo[playerid][0];
+    return 1;
+}
+
+stock Character_GetCachedWeaponTaser(playerid, &weaponid, &ammo)
+{
+    if(!Character_IsLogged(playerid))
+        return 0;
+    weaponid = TempWeapon[playerid][1];
+    ammo = TempAmmo[playerid][1];
+    return 1;
 }

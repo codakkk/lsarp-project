@@ -75,7 +75,7 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementId, E_ELEMENT_TYPE:type)
 		dealership_id = elementId,
 		String:str;
     
-	if(Account_GetAdminLevel(playerid) > 1 && Account_IsAdminDuty(playerid))
+	if(Account_GetAdminLevel(playerid) > 1 && Player_IsAdminDuty(playerid))
     {
 	   str += str_format("~r~ID: %d~w~~n~", dealership_id);
     }

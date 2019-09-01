@@ -51,26 +51,6 @@ stock Character_GetDraggedBy(playerid)
 	return DraggedBy[playerid];
 }
 
-stock Character_SetDragged(playerid, bool:dragged)
-{
-	Bit_Set(gCharacterBitState[e_pDragged], playerid, dragged);
-}
-
-stock Character_IsDragged(playerid)
-{
-	return Bit_Get(gCharacterBitState[e_pDragged], playerid);
-}
-
-stock Character_SetDragging(playerid, bool:dragging)
-{
-	Bit_Set(gCharacterBitState[e_pDragging], playerid, dragging);
-}
-
-stock Character_IsDragging(playerid)
-{
-	return Bit_Get(gCharacterBitState[e_pDragging], playerid);
-}
-
 stock Character_StartDragTimer(playerid, id)
 {
 	DragTimer[playerid] = repeat UpdateDragging(playerid, id);

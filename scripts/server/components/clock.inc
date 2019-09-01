@@ -24,7 +24,7 @@ task OnServerTimeUpdate[1000]()
 	if(hour > 24) hour -= 24;
 	if(hour < 0) hour += 24;
 	format(string,25,"%02d:%02d:%02d",hour, minute, second);
-    TextDrawSetString(Clock, string);
+    SetClockTextDrawString(string);
     SetWorldTime(hour);
     return 1;
 }

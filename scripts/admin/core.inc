@@ -1,10 +1,14 @@
 #include <admin\components\recon>
+
+#include <admin\commands>
+#include <admin\supporter_commands>
+
 #include <YSI_Coding\y_hooks>
 
 
 hook OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
 {
-    if(Account_GetAdminLevel(playerid) <= 0 || !Account_IsAdminDuty(playerid))
+    if(Account_GetAdminLevel(playerid) <= 0 || !Player_IsAdminDuty(playerid))
 	   return 0;
     Character_SetSafePosition(playerid, fX, fY, fZ);
     return 1;
@@ -77,7 +81,7 @@ stock SendMessageToAdmins(forceAlert, color, str[], {Float,_}:...)
 
 	   foreach(new i : Player)
 	   {
-		  if(!Character_IsLogged(i) || Account_GetAdminLevel(i) < 2 || (pDisableAdminAlerts[i] && !forceAlert))
+		  if(!Character_IsLogged(i) || Account_GetAdminLevel(i) < 2 || (Player_IsDisabledAdminAlerts(i) && !forceAlert))
 			 continue;
 		  SendTwoLinesMessage(i, color, string);
 	   }
@@ -86,7 +90,7 @@ stock SendMessageToAdmins(forceAlert, color, str[], {Float,_}:...)
     
     foreach(new i : Player)
     {
-	   if(!Character_IsLogged(i) || Account_GetAdminLevel(i) < 2 || (pDisableAdminAlerts[i] && !forceAlert))
+	   if(!Character_IsLogged(i) || Account_GetAdminLevel(i) < 2 || (Player_IsDisabledAdminAlerts(i) && !forceAlert))
 		  continue;
 	   SendTwoLinesMessage(i, color, str);
     }
@@ -129,7 +133,7 @@ stock SendMessageToTesters(forceAlert, color, str[], {Float,_}:...)
 
 	   foreach(new i : Player)
 	   {
-		  if(!Character_IsLogged(i) || Account_GetAdminLevel(i) < 1 || (pDisableAdminAlerts[i] && !forceAlert))
+		  if(!Character_IsLogged(i) || Account_GetAdminLevel(i) < 1 || (Player_IsDisabledAdminAlerts(i) && !forceAlert))
 			 continue;
 		  SendTwoLinesMessage(i, color, string);
 	   }
@@ -138,7 +142,7 @@ stock SendMessageToTesters(forceAlert, color, str[], {Float,_}:...)
     
     foreach(new i : Player)
     {
-	   if(!Character_IsLogged(i) || Account_GetAdminLevel(i) < 1 || (pDisableAdminAlerts[i] && !forceAlert))
+	   if(!Character_IsLogged(i) || Account_GetAdminLevel(i) < 1 || (Player_IsDisabledAdminAlerts(i) && !forceAlert))
 		  continue;
 	   SendTwoLinesMessage(i, color, str);
     }

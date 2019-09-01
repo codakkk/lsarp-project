@@ -1,13 +1,5 @@
 
-stock bool:Character_IsAnimLoop(playerid)
-{
-	return Bit_Get(gCharacterBitState[e_pAnimLoop], playerid);
-}
-
-stock Character_SetAnimLoop(playerid, bool:set)
-{
-	Bit_Set(gCharacterBitState[e_pAnimLoop], playerid, set);
-}
+#include <animation_system\commands>
 
 stock AnimationCheck(playerid)
 {
@@ -21,7 +13,7 @@ stock ClearAnimationsEx(playerid, bool:animCheck = true)
 	ClearAnimations(playerid);
 	ApplyAnimation(playerid, "CARRY", "crry_prtial", 2.0, 0, 0, 0, 0, 0);
 	SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
-	TextDrawHideForPlayer(playerid, txtAnimHelper);
+	HideTextAnimationHelper(playerid);
 	TogglePlayerControllable(playerid, 1);
 	Character_SetAnimLoop(playerid, false);
 	return 1;
@@ -30,12 +22,12 @@ stock ClearAnimationsEx(playerid, bool:animCheck = true)
 // Used for looped animations.
 stock ApplyAnimationEx(playerid, animlib[], animname[], Float:fDelta, loop, lockx, locky, freeze, time, forcesync = 0)
 {
-	if(Character_IsAnimLoop(playerid)) TextDrawHideForPlayer(playerid, txtAnimHelper);
+	if(Character_IsAnimLoop(playerid)) HideTextAnimationHelper(playerid);
 	ApplyAnimation(playerid, animlib, animname, fDelta, loop, lockx, locky, freeze, time, forcesync);
 
 	Character_SetAnimLoop(playerid, true);
 	Player_Info(playerid, "Premi ~y~N~w~ per fermare l'animazione.");
-	//TextDrawShowForPlayer(playerid,txtAnimHelper);
+	//sHOWTextAnimationHelper(playerid);
 	return 1;
 }
 

@@ -1,6 +1,5 @@
 
-#include <vehicles\inventory>
-
+#include <vehicles\core>
 #include <YSI_Coding\y_hooks>
 
 /*static enum e_PlayerVehicle
@@ -77,7 +76,7 @@ CMD:veicolo(playerid, params[])
 		{
 			if(Vehicle_GetFuel(vehicleid) < 0.5)
 				return SendClientMessage(playerid, COLOR_ERROR, "Non c'è benzina nel veicolo.");
-			if(Vehicle_GetHealth(vehicleid) <= VEHICLE_MIN_HEALTH_FOR_ENGINE && !Account_IsAdminDuty(playerid))
+			if(Vehicle_GetHealth(vehicleid) <= VEHICLE_MIN_HEALTH_FOR_ENGINE && !Player_IsAdminDuty(playerid))
 				return SendClientMessage(playerid, COLOR_ERROR, "Il motore del veicolo è danneggiato.");
 		}
 
@@ -292,8 +291,8 @@ stock Character_AcceptVehicleRequest(playerid)
 	
 	Vehicle_SetOwner(vehicleid, receiver);
 	
-	ResetPendingRequest(senderid, REQUEST_TYPE_VEHICLE);
-	ResetPendingRequest(receiver, REQUEST_TYPE_VEHICLE);
+	Request_Reset(senderid, REQUEST_TYPE_VEHICLE);
+	Request_Reset(receiver, REQUEST_TYPE_VEHICLE);
 	return 1;
 }
 
@@ -449,7 +448,7 @@ ptask OnVehicleFuelTextDrawTimer[1000](playerid)
 hook OnPlayerExitVehicle(playerid, vehicleid)
 {
 	new seat = GetPlayerVehicleSeat(playerid);
-	if(Vehicle_IsLocked(vehicleid)&& !Account_IsAdminDuty(playerid))
+	if(Vehicle_IsLocked(vehicleid)&& !Player_IsAdminDuty(playerid))
 	{
 		if(Vehicle_GetOwnerID(vehicleid) != Character_GetID(playerid))// && (!IsABike(vehicleid) && !IsAMotorBike(vehicleid)))
 		{
@@ -468,7 +467,7 @@ hook OnPlayerExitVehicle(playerid, vehicleid)
 
 hook OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
 {
-	if(Vehicle_IsLocked(vehicleid) && !Account_IsAdminDuty(playerid))
+	if(Vehicle_IsLocked(vehicleid) && !Player_IsAdminDuty(playerid))
 	{
 		/*if(Vehicle_IsOwner(vehicleid, playerid, false))
 		{
@@ -504,9 +503,13 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
 			{
 				SendFormattedMessage(playerid, COLOR_GREEN, "(( Questo veicolo (%s) appartiene a %s ))", Vehicle_GetName(vehicleid), Vehicle_GetOwnerName(vehicleid));
 			}
-			if(Vehicle_IsNextToBreakEngine(vehicleid))
+			if(Vehicle_IsEngineBroken(vehicleid))
 			{
-				SendClientMessage(playerid, COLOR_ERROR, "(( Il veicolo è stato distrutto di recente. Il motore si romperà definitivamente la prossima volta. ))");
+				new Float:hp;
+				GetVehicleHealth(vehicleid, hp);
+				if(hp >= VEHICLE_MIN_HEALTH_FOR_ENGINE)
+					SendClientMessage(playerid, COLOR_ERROR, "(( Il veicolo è stato distrutto di recente. Il motore è danneggiato ma ancora funzionante. ))");
+				
 			}
 		}
 		SetPlayerArmedWeapon(playerid, 0);

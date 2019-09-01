@@ -5,6 +5,7 @@
 
 
 static 
+	LoginAttempts[MAX_PLAYERS char],
     AccountEMailCode[MAX_PLAYERS],
 	TempMail[MAX_PLAYERS][255];
 
@@ -14,6 +15,7 @@ static Timer:LoginTimer[MAX_PLAYERS];
 hook OnPlayerDisconnect(playerid, reason)
 {
 	LoginTimer[playerid] = Timer:0;
+	LoginAttempts{playerid} = 0;
 	return 1;
 }
 
@@ -31,7 +33,7 @@ Dialog:Dialog_LoginOptions(playerid, response, listitem, inputtext[])
 {
 	if(!response)
 	{
-		Dialog_Show(playerid, Dialog_Login, DIALOG_STYLE_PASSWORD, "Login", "{FFFFFF}Inserisci la tua password per effettuare il login.\nTentativo: {FF0000}%d/%d{FFFFFF}", "Login", "Esci", gLoginAttempts{playerid}, MAX_LOGIN_ATTEMPTS);
+		Dialog_Show(playerid, Dialog_Login, DIALOG_STYLE_PASSWORD, "Login", "{FFFFFF}Inserisci la tua password per effettuare il login.\nTentativo: {FF0000}%d/%d{FFFFFF}", "Login", "Esci", LoginAttempts{playerid}, MAX_LOGIN_ATTEMPTS);
 		return 1;
 	}
 	if(listitem == 0)
@@ -95,14 +97,14 @@ Dialog:Dialog_Login(playerid, response, listitem, inputtext[])
 		}
 		else
 		{
-			gLoginAttempts{playerid}++;
+			LoginAttempts{playerid}++;
 
-			if(gLoginAttempts{playerid} > MAX_LOGIN_ATTEMPTS)
+			if(LoginAttempts{playerid} > MAX_LOGIN_ATTEMPTS)
 			{
 				return KickEx(playerid);
 			}
 			
-			Dialog_Show(playerid, Dialog_Login, DIALOG_STYLE_PASSWORD, "Login", "{FF0000}Password errata.\n{FFFFFF}Inserisci la tua password per effettuare il login.\nTentativo: {FF0000}%d/%d{FFFFFF}", "Login", "Esci", gLoginAttempts{playerid}, MAX_LOGIN_ATTEMPTS);
+			Dialog_Show(playerid, Dialog_Login, DIALOG_STYLE_PASSWORD, "Login", "{FF0000}Password errata.\n{FFFFFF}Inserisci la tua password per effettuare il login.\nTentativo: {FF0000}%d/%d{FFFFFF}", "Login", "Esci", LoginAttempts{playerid}, MAX_LOGIN_ATTEMPTS);
 		}
 	}
 	new 

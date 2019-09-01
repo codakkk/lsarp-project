@@ -1,3 +1,6 @@
+
+#include <faction_system\core>
+
 #include <YSI_Coding\y_hooks>
 
 static 
@@ -131,6 +134,9 @@ CMD:frequenza(playerid, params[])
     if(sscanf(params, "d", inputFrequency))
     	return SendClientMessage(playerid, COLOR_ERROR, "/(freq)uenza <numero> (0: SPENTA - 1/999).");
 
+	if(Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE && inputFrequency == 911)
+		return SendClientMessage(playerid, COLOR_ERROR, "Questa frequenza non puo' essere utilizzata poiché criptata.");
+		
     if(!Character_SetRadioFrequency(playerid, inputFrequency))
     	return SendClientMessage(playerid, COLOR_ERROR, "/(freq)uenza <numero> (0: SPENTA - 1/999).");
 

@@ -1,3 +1,6 @@
+
+#include <pickup\core>
+
 #include <YSI_Coding\y_hooks>
 
 #define INVALID_LOOT_ZONE 		(0)
@@ -781,32 +784,32 @@ stock LootZone_LoadAll()
 			map_add_arr(LootZones, data[ID], data);
 
 			LootZone_Initialize(data[ID]);
-
-			inline OnLoadDroppables()
-			{
-				new r = cache_num_rows();
-				new 
-					lootzoneid, itemid, itemData[e_LZ_ITEM_DATA];
-				for(new j = 0; j < r; ++j)
-				{
-					cache_get_value_name_int(j, "lootzone_id", lootzoneid);
-					cache_get_value_name_int(j, "item_id", itemid);
-					if(!ServerItem_IsValid(itemid))
-						continue;
-					cache_get_value_name_int(j, "min_quantity", itemData[MinQuantity]);
-					cache_get_value_name_int(j, "max_quantity", itemData[MaxQuantity]);
-					cache_get_value_name_int(j, "drop_chance", itemData[DropChance]);
-
-					new Map:items = LootZone_GetItems(lootzoneid);
-					map_add_arr(items, itemid, itemData);
-				}
-
-				printf("Loaded %d droppable items for lootzone id %d.", r, lootzoneid);
-			}
-
-			MySQL_TQueryInline(gMySQL, using inline OnLoadDroppables, "SELECT * FROM `loot_zone_items` WHERE lootzone_id = '%d'", data[ID]);
 		}
 		printf("Loaded %d loot zones.", rows);
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `loot_zones`");
+
+	inline OnLoadDroppables()
+	{
+		new r = cache_num_rows();
+		new 
+			lootzoneid, itemid, itemData[e_LZ_ITEM_DATA];
+		for(new j = 0; j < r; ++j)
+		{
+			cache_get_value_name_int(j, "lootzone_id", lootzoneid);
+			cache_get_value_name_int(j, "item_id", itemid);
+			if(!ServerItem_IsValid(itemid))
+				continue;
+			cache_get_value_name_int(j, "min_quantity", itemData[MinQuantity]);
+			cache_get_value_name_int(j, "max_quantity", itemData[MaxQuantity]);
+			cache_get_value_name_int(j, "drop_chance", itemData[DropChance]);
+
+			new Map:items = LootZone_GetItems(lootzoneid);
+			map_add_arr(items, itemid, itemData);
+		}
+
+		printf("Loaded %d droppable items for lootzone id %d.", r, lootzoneid);
+	}
+
+	MySQL_TQueryInline(gMySQL, using inline OnLoadDroppables, "SELECT * FROM `loot_zone_items`");
 }

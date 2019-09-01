@@ -828,3 +828,15 @@ static Internal_WearObjectUse(playerid, slotid)
     PlayerCustomObject[playerid][slotid][Index] = index;
     return 1;
 }
+
+static HexToInt(string[])
+{
+    if(!string[0]) return 0;
+    new cur = 1, res = 0;
+    for(new i = strlen(string); i > 0; i--)
+    {
+        res += cur * (string[i - 1] - ((string[i - 1] < 58) ? (48) : (55)));
+        cur = cur * 16;
+    }
+    return res;
+}

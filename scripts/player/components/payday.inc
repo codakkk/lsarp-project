@@ -1,3 +1,6 @@
+
+#include <faction_system\core>
+
 #include <YSI_Coding\y_hooks>
 
 ptask OnPlayerPayDayMinute[60000](playerid) // 

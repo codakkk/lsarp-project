@@ -30,8 +30,7 @@ static enum e_Bit1_AccountData
 	e_pAccountLogged,
     e_pTogglePMAll,
     e_pToggleOOCAll,
-	e_pAdminDuty,
-	e_pSupporterDuty
+	e_pSupporterDuty,
 };
 
 static 
@@ -281,16 +280,6 @@ stock Account_HasOOCEnabled(playerid)
 stock Account_HasOOCEnabledForPlayer(playerid, targetid)
 {
 	return !Iter_Contains(pToggleOOC[playerid], targetid);
-}
-
-stock Account_SetAdminDuty(playerid, bool:enable)
-{
-	Bit_Set(gAccountBitState[e_pAdminDuty], playerid, enable);
-}
-
-stock Account_IsAdminDuty(playerid)
-{
-	return Bit_Get(gAccountBitState[e_pAdminDuty], playerid);
 }
 
 stock Account_SetSupporterDuty(playerid, bool:enable)

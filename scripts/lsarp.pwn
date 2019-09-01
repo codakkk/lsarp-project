@@ -27,6 +27,10 @@
 		https://forum.sa-mp.com/showthread.php?t=655688 -> Loot Zones
 		https://forum.sa-mp.com/showthread.php?t=558839 -> Walk anims etc
 		https://www.burgershot.gg/showthread.php?tid=314 -> PawnPlus extension MySQL CHECK IT OUT
+
+		// https://github.com/emmet-jones/New-SA-MP-callbacks/blob/master/README.md
+		
+
 */
 #pragma warning disable 208 // actually just a good way to prevent warning: "function with tag result used before definition, forcing reparse".
 //#define ENABLE_MAPS
@@ -37,12 +41,14 @@
 	#warning LSARP_DEBUG is enabled. Care!!
 #endif
 
-#define CreateDynamicObjectWithHighDD CDD
+#define CreateDynamicObjectWithHighDD CreateDynamicObject
 
+#define FIXES_Single
+#define FIX_const 0
+#define FIX_SetPlayerName 0
+#define FIX_ServerVarMsg 0
+#define FIX_ClearAnimations_2 0 // Fixes a bug of autowalking anim
 
-
-//#define FAKE_LOGIN 1
-// CAR_DEAD_LHS
 #include <a_samp>
 //native IsValidVehicle(vehicleid);
 
@@ -51,39 +57,21 @@
 // Define this for some bugs related to MySQL_TQueryInline
 #define YSI_NO_HEAP_MALLOC
 
-#define FIXES_Single
-#define FIX_const 0
-// #define FIX_OnDialogResponse 1
-#define FIX_SetPlayerName 0
-#define FIX_ServerVarMsg 0
-#define FIX_ClearAnimations_2 0 // Fixes a bug of autowalking anim
-
-//#include <fixes>
-#include <sscanf2>
-#include <SKY>
-
-
 #define CGEN_MEMORY 30000
-
-//#define DEBUG 0
 
 #define E_MAIL_CHECK 1
 
 #undef MAX_PLAYERS
 #define MAX_PLAYERS	(200)
 
-
 #define CRASHDETECT
 #if defined CRASHDETECT
 	#include <crashdetect>
 #endif
 
-// Includes
-
+#include <sscanf2>
+#include <SKY>
 #include <a_mysql>
-
-//#include <timerfix>
-
 #include <YSI_Coding\y_timers>
 #include <YSI_Coding\y_va>
 #include <YSI_Coding\y_inline>
@@ -95,125 +83,99 @@
 #include <Pawn.CMD>
 #include <whirlpool>
 #include <streamer>
-stock CDD(modelid, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz, worldid = -1, interiorid = -1, playerid = -1, Float:streamdistance = 300.0, Float:drawdistance = 1000.0)
-{
-	new oid;
-	oid = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, worldid, interiorid, playerid, streamdistance);
-	Streamer_SetFloatData(STREAMER_TYPE_OBJECT, oid, E_STREAMER_DRAW_DISTANCE, drawdistance);
-	return oid;
-}
-//#include <strlib>
-
 #define PP_SYNTAX 1
 //#define PP_SYNTAX_GENERIC 1
 #define PP_ADDITIONAL_TAGS E_ITEM_DATA, Text3D, Pool, Inventory
 #include <PawnPlus>
 // #include <pp-mysql> // Must update pp first
 #include <OPA>
-
 #include <miscellaneous\pp_wrappers>
 #include <PreviewModelDialog>
 #include <easyDialogs>
-
 #include <sa_zones>
+
+#define WC_DEBUG_SILENT false
+#include <weapon-config>
+
+#include <utils\colors>
+
+#define INFINITY (Float:0x7F800000)
+
+#define PRESSED(%0) \
+	(((newkeys & (%0)) == (%0)) && ((oldkeys & (%0)) != (%0)))
+
 
 DEFINE_HOOK_REPLACEMENT(ShowRoom, SR);
 DEFINE_HOOK_REPLACEMENT(Element, Elm);
 DEFINE_HOOK_REPLACEMENT(Player, Ply);
 DEFINE_HOOK_REPLACEMENT(Downloading, Dwnling);
 
-#define WC_DEBUG_SILENT false
-#include <weapon-config>
+enum (<<= 1)
+{
+	CMD_USER = 1,
+	CMD_ALIVE_USER,
+	CMD_PREMIUM_BRONZE,
+	CMD_PREMIUM_SILVER,
+	CMD_PREMIUM_GOLD,
+	CMD_POLICE,
+	CMD_MEDICAL,
+	CMD_GOVERNMENT,
+	CMD_ILLEGAL,
+	CMD_SUPPORTER,
+	CMD_JR_MODERATOR,
+	CMD_MODERATOR,
+	CMD_ADMIN,
+	CMD_DEVELOPER,
+	CMD_RCON
+}
 
-#include <YSI_Coding\y_hooks> // Needed for NexAC
-
-#include <nex-ac_it.lang>
-
-#define AC_USE_VENDING_MACHINES		false
-#define AC_USE_TUNING_GARAGES		false
-#define AC_USE_PICKUP_WEAPONS		false
-#define AC_USE_AMMUNATIONS			false
-#define AC_USE_RESTAURANTS			false
-#define AC_USE_PAYNSPRAY			true
-#define AC_USE_CASINOS				false
-#define AC_USE_NPC					false
-#include <nex-ac>
-
-#define AC_GetPlayerHealth AntiCheatGetHealth
-#define AC_SetPlayerHealth SetPlayerHealth
-
-#define AC_GetPlayerArmour AntiCheatGetArmour
-#define AC_SetPlayerArmour SetPlayerArmour
-
-
-#include <defines>
-#include <utils\iterators>
-#include <forwarded_functions>
+#include <anticheat\core>
 #include <miscellaneous\timestamp_to_date>
-
-#include <miscellaneous\globals>
-// https://github.com/emmet-jones/New-SA-MP-callbacks/blob/master/README.md
-// Exception. Must be on top of all others.
-#include <pickup\enum>
-
-#include <server\core>
-
-#include <player\enum>
-#include <admin\enum>
-#include <inventory\enum>
-#include <building\enum>
-#include <weapon_system\enum>
-#include <house_system\components\interiors>
-#include <faction_system\enum>
-
 #include <database\core>
-
-// ===== [ ANTI-CHEAT SYSTEM ] =====
-//#include <anticheat\core>
-
-// ===== [ PICKUP SYSTEM ] =====
-#include <pickup\core>
-
-// ===== [ CHECKPOINT SYSTEM ] =====
-#include <checkpoint_system\core>
-
-// ===== [ INVENTORY SYSTEM ] =====
+#include <server\core>
 #include <inventory\core>
-#include <inventory\server>
-
-// ===== [ WEAPON SYSTEM ] =====
+#include <pickup\core>
+#include <checkpoint_system\core>
 #include <weapon_system\core>
-
-// ===== [ DP SYSTEM ] =====
 #include <dp_system\core>
-
-// ===== [ LOOT ZONE SYSTEM ] =====
 #include <loot_zone_system\core>
-
 #include <utils\utils>
 #include <utils\maths>
+#include <faction_system\core>
+#include <textdraws>
+#include <mailer_system\core>
+#include <log_system\core>
+#include <account_system\core>
+#include <animation_system\core>
+#include <player\core>
+#include <vehicles\core>
+#include <dealership\core>
+#include <house_system\core>
+#include <building\core>
+#include <admin\core>
+#include <drop_system\core>
+#include <faction_system\core>
+#include <chopshop_system\core>
+#include <chopshop_system\commands>
+#include <furniture_system\core>
+#include <gate_system\core>
 
-//#include <anticheat\cheats\triggerbot>
 
+
+// ========== [ DIALOGS ] ==========
+#include <player\dialogs>
 #include <YSI_Coding\y_hooks> // Place hooks after this. Everything included before this, is hooked first.
 
-#define VEHICLE_MIN_HEALTH	250.0
-#define VEHICLE_MIN_HEALTH_FOR_ENGINE	350.0
-
 forward OnCharacterDamageDone(playerid, Float:amount, issuerid, weaponid, bodypart);
-
 
 main()
 {
 	//WasteDeAMXersTime();
 	printf("LSARP - By CodaKKK. Started: 26/02/2019.");
-	// Should I initialize them in a OnGameModeInit hook?
-	PlayerInventory = map_new();
-	VehicleInventory = map_new();
 
-	new mail[256], domain[256], c[256];  
-	if(!sscanf("c@gmail.com", "{s[256]'@'s[256]'.'s[256]}", mail, domain, c))
-		printf("domain: %s", domain);
+	//new mail[256], domain[256], c[256];  
+	//if(!sscanf("c@gmail.com", "{s[256]'@'s[256]'.'s[256]}", mail, domain, c))
+		//printf("domain: %s", domain);
 }
 
 
@@ -221,6 +183,7 @@ public OnGameModeInit()
 {
 	SetGameModeText("ApocalypseV1");
 	SendRconCommand("query 1"); // Just safeness
+	
 	ShowPlayerMarkers(PLAYER_MARKERS_MODE_OFF);
 	SetNameTagDrawDistance(20.0);
 	DisableInteriorEnterExits();
@@ -232,13 +195,8 @@ public OnGameModeInit()
 
 	SetWorldTime(0);
 
-	// /lasciacarcere
-	Pickup_Create(1239, 0, 2649.7790, -1948.9510, -58.7273, ELEMENT_TYPE_JAIL_EXIT, .worldid = -1, .interiorid = 0);
-	CreateDynamic3DTextLabel("/lasciacarcere", COLOR_BLUE, 2649.7790, -1948.9510, -58.7273 + 0.55, 20.0, .worldid = -1, .interiorid = 0);
-
 	Streamer_TickRate(30);
-	//Streamer_SetVisibleItems(STREAMER_TYPE_OBJECT, 900);
-	printf("GameModeInit");
+	
 	CallLocalFunction(#OnGameModeLateInit, "");
 	return 1;
 }
@@ -259,7 +217,7 @@ hook OnPlayerSpawn(playerid)
 	SetPlayerSkillLevel(playerid, WEAPONSKILL_MICRO_UZI, 1);
 	SetPlayerSkillLevel(playerid, WEAPONSKILL_SAWNOFF_SHOTGUN, 1);
 
-	TextDrawShowForPlayer(playerid, Clock);
+	ShowClockTextDraw(playerid);
 
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
@@ -285,7 +243,7 @@ public OnPlayerPrepareDeath(playerid, animlib[32], animname[32], &anim_lock, &re
 
 public OnPlayerDamage(&playerid, &Float:amount, &issuerid, &weapon, &bodypart)
 {
-	if(Account_IsAdminDuty(playerid) && Account_GetAdminLevel(playerid) > 1)
+	if(Player_IsAdminDuty(playerid) && Account_GetAdminLevel(playerid) > 1)
 		return 0;
 	if(Character_IsDead(playerid))
 		return 0;
@@ -348,7 +306,7 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 		#endif
 		return 0;
 	}
-	if(hittype == BULLET_HIT_TYPE_PLAYER && hitid != INVALID_PLAYER_ID && Account_IsAdminDuty(hitid))
+	if(hittype == BULLET_HIT_TYPE_PLAYER && hitid != INVALID_PLAYER_ID && Player_IsAdminDuty(hitid))
 	{
 		return Y_HOOKS_BREAK_RETURN_0;
 	}
@@ -357,24 +315,6 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 
 // Not Hooking it makes the OnPlayerWeaponShot not called.
 hook OnPlayerShootDynObject(playerid, weaponid, objectid, Float:x, Float:y, Float:z)
-{
-	return Y_HOOKS_CONTINUE_RETURN_1;
-}
-
-
-/*hook OnAntiCheatDetected(playerid, code)
-{
-	SendMessageToAdmins(true, COLOR_ERROR, "[ADMIN-ALERT]: %s (%d) è sospetto di hack. (%s)", Character_GetOOCName(playerid), playerid, AC_Name[code]);
-	return 1;
-}
-*/
-hook OnVehicleMod(playerid, vehicleid, componentid)
-{
-	RemoveVehicleComponent(vehicleid, componentid);
-	return 0;
-}
-
-hook OnPlayerExitVehicle(playerid, vehicleid)
 {
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
@@ -495,7 +435,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 	}
 	else if(flags & CMD_GOVERNMENT)
 	{
-		if(factionid == INVALID_FACTION_ID || Faction_GetType(factionid) != FACTION_TYPE_GOVERNAMENT || !Character_IsAlive(playerid))
+		if(factionid == INVALID_FACTION_ID || Faction_GetType(factionid) != FACTION_TYPE_GOVERNMENT || !Character_IsAlive(playerid))
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Devi essere un membro del Governo in servizio per utilizzare questo comando.");
 			return 0;
@@ -574,7 +514,7 @@ hook OnPlayerDisconnect(playerid, reason)
 		ProxDetector(playerid, 15.0, string, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY);
 	}
 
-	TextDrawHideForPlayer(playerid, Clock);
+	HideClockTextDraw(playerid);
 	
 	if(Character_IsLogged(playerid))
 	{
@@ -597,7 +537,6 @@ hook OnPlayerConnect(playerid)
 	
 	Account_SetLogged(playerid, false);
 	Character_SetLogged(playerid, false);
-	gLoginAttempts{playerid} = 0;
 	
 	CallLocalFunction(#OnPlayerClearData, "d", playerid);
 
@@ -607,7 +546,7 @@ hook OnPlayerConnect(playerid)
 	}
 	SendClientMessage(playerid, -1, "________________________________________________________________");
 	SendClientMessage(playerid, -1, "Benvenuto su {8b0000}Los Santos Apocalypse Roleplay {FFFFFF}[{0000FF}www.lsarp.it{FFFFFF}].");
-	SendClientMessage(playerid, -1, "Apocalypse Z1 - Righe GameMode: 49985");
+	SendClientMessage(playerid, -1, "Apocalypse Z1 - Righe GameMode: 79470");
 	SendClientMessage(playerid, -1, "________________________________________________________________");
 	
 	// Anti Bot Attack
@@ -738,34 +677,6 @@ SSCANF:u(const string[])
 	return INVALID_PLAYER_ID;
 }
 
-SSCANF:item(string[])
-{
-	// probably an ID
-	if('0' <= string[0] <= '9')
-	{
-		new ret = strval(string);
-		if(0 <= ret <= MAX_ITEMS_IN_SERVER)
-		{
-			return ret;
-		}
-	}
-	else
-	{
-		new len = strlen(string);
-		for(new i = 0; i < len; ++i)
-		{
-			if(string[i] == '_')
-				string[i] = ' ';
-		}
-		foreach(new item : ServerItems)
-		{
-			if(!strcmp(ServerItem[item][sitemName], string, true) || strfind(ServerItem[item][sitemName], string, true) > -1)
-				return item;
-		}
-	}
-    return INVALID_ITEM_ID;
-}
-
 new stock shifthour;
 stock FixHour(hour)
 {
@@ -782,82 +693,12 @@ stock FixHour(hour)
 	return 1;
 }
 
-stock IsPlayerIDConnected(dbid)
-{
-	foreach(new i : Player)
-	{
-		if(Character_GetID(i) == dbid)
-			return i;
-	}
-	return INVALID_PLAYER_ID;
-}
 
-stock HexToInt(string[])
-{
-    if(!string[0]) return 0;
-    new cur = 1, res = 0;
-    for(new i = strlen(string); i > 0; i--)
-    {
-        res += cur * (string[i - 1] - ((string[i - 1] < 58) ? (48) : (55)));
-        cur = cur * 16;
-    }
-    return res;
-}
 
-#include <textdraws>
-
-// ========== [ INCLUDES THAT DOESN'T CARE ABOUT HOOKING ORDER ] ==========
-#include <mailer_system\core>
-#include <log_system\core>
-
-#include <account_system\core>
-#include <animation_system\core>
-
-// ===== [ PLAYER ] =====
-#include <player\core>
-
-// ===== [ VEHICLE SYSTEM ] =====
-#include <vehicles\core>
-
-// ===== [ DEALERSHIP SYSTEM ] =====
-#include <dealership\core>
-
-// ===== [ HOUSE SYSTEM ] =====
-#include <house_system\core>
-// ===== [ BUILDING SYSTEM ] =====
-#include <building\core>
-
-// ===== [ ADMIN SYSTEM ] =====
-#include <admin\core>
-
-// ===== [ DROP SYSTEM ] =====
-#include <drop_system\core>
-
-// ===== [ FACTION SYSTEM ] =====
-#include <faction_system\core>
-
-// ===== [ CHOPSHOP SYSTEM ] =====
-#include <chopshop_system\core>
-#include <chopshop_system\commands>
-
-// ===== [ FURNITURE SYSTEM ] =====
-#include <furniture_system\core>
-
-// ===== [ GATE SYSTEM ] =====
-#include <gate_system\core>
-
-// ========== [ COMMANDS ] ==========
-#include <commands>
-#include <player\commands>
-#include <building\commands\admin>
-#include <house_system\commands>
-#include <admin\commands>
-#include <admin\supporter_commands>
-#include <animation_system\commands>
-// ========== [ DIALOGS ] ==========
-#include <player\dialogs>
 
 // ========== [ MISCELLANEOUS ] ==========
+
+//INCLUDE<building>
 
 CMD:forzanapoli(playerid, params[])
 {

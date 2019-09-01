@@ -6,9 +6,9 @@ static PlayerText:ReconPlayerText[MAX_PLAYERS];
 static 
     SpectatingPlayer[MAX_PLAYERS] = {INVALID_PLAYER_ID, ...},
     Float:RestoreHealth[MAX_PLAYERS],
-    Float:RestoreArmour[MAX_PLAYERS],
-    RestoreWeapons[MAX_PLAYERS][13],
-    RestoreAmmos[MAX_PLAYERS][13]
+    Float:RestoreArmour[MAX_PLAYERS]
+    //RestoreWeapons[MAX_PLAYERS][13],
+    //RestoreAmmos[MAX_PLAYERS][13]
 ;
 
 hook OnPlayerConnect(playerid)
@@ -115,7 +115,6 @@ CMD:recon(playerid, params[])
 	    PlayerSpectateVehicle(playerid, INVALID_VEHICLE_ID);
 		TogglePlayerSpectating(playerid, false);
         SpectatingPlayer[playerid] = INVALID_PLAYER_ID;
-        //Character_Spawn(playerid);
         SpawnPlayer(playerid);
         return 1;
     }

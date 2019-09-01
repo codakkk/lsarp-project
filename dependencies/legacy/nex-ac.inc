@@ -1380,7 +1380,6 @@ ac_fpublic ac_ResetPlayerWeapons(playerid)
 	}
 	ACInfo[playerid][acSet][3] = -1;
 	ACInfo[playerid][acGtc][7] = GetTickCount() + 2650;
-	printf("NexAC: ResetPlayerWeapons");
 	return 1;
 }
 

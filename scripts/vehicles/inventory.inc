@@ -1,10 +1,21 @@
 #include <YSI_Coding\y_hooks>
 
-static CurrentVehicleInventory[MAX_PLAYERS]; // Current Opened Vehicle Inventory Dialog
+static 
+	Map:VehicleInventory, // <Key: vehicle_id, Value: List:Items>
+	CurrentVehicleInventory[MAX_PLAYERS], // Current Opened Vehicle Inventory Dialog
+	SelectedListItem[MAX_PLAYERS]
+;
+
+hook OnGameModeInit()
+{
+	VehicleInventory = map_new();
+	return 1;
+}
 
 hook OnPlayerClearData(playerid)
 {
     CurrentVehicleInventory[playerid] = 0;
+	SelectedListItem[playerid] = -1;
     return 1;
 }
 
@@ -163,7 +174,7 @@ Dialog:Dialog_VehicleInventory(playerid, response, listitem, inputtext[])
 	if(!response || vehicleid == 0)
 		return 0;
 	
-	pSelectedListItem[playerid] = listitem;
+	SelectedListItem[playerid] = listitem;
 
 	new itemid = Vehicle_GetSlotItem(vehicleid, listitem); 
 	if(itemid == 0)
@@ -193,7 +204,7 @@ Dialog:Dialog_VehicleInventory(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_VehicleInvAction(playerid, response, listitem, inputtext[])
 {
-	if(!response || pSelectedListItem[playerid] == -1)
+	if(!response || SelectedListItem[playerid] == -1)
 		return Vehicle_ShowInventory(CurrentVehicleInventory[playerid], playerid);
 	
 	new vehicleid = CurrentVehicleInventory[playerid];
@@ -201,7 +212,7 @@ Dialog:Dialog_VehicleInvAction(playerid, response, listitem, inputtext[])
 	if(!IsPlayerInRangeOfVehicle(playerid, vehicleid, 5.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo.");
 
-	new itemid = Vehicle_GetSlotItem(vehicleid, pSelectedListItem[playerid]);
+	new itemid = Vehicle_GetSlotItem(vehicleid, SelectedListItem[playerid]);
 
 	if(itemid == 0)
 	{
@@ -225,7 +236,7 @@ Dialog:Dialog_VehicleInvAction(playerid, response, listitem, inputtext[])
 			else
 			{
 				new title[48];
-				format(title, sizeof(title), "%s (%d)", ServerItem_GetName(itemid), Vehicle_GetSlotAmount(vehicleid, pSelectedListItem[playerid]));
+				format(title, sizeof(title), "%s (%d)", ServerItem_GetName(itemid), Vehicle_GetSlotAmount(vehicleid, SelectedListItem[playerid]));
 				Dialog_Show(playerid, D_VehInvItemAmount, DIALOG_STYLE_INPUT, title, "Inserisci la quantità da ritirare.", "Avanti", "Chiudi");
 			}
 		}
@@ -236,7 +247,7 @@ Dialog:Dialog_VehicleInvAction(playerid, response, listitem, inputtext[])
 			new characterItemAmount = Inventory_GetItemAmount(Character_GetInventory(playerid), itemid);
 			if(characterItemAmount <= 0)
 				return SendClientMessage(playerid, COLOR_ERROR, "Non hai altri oggetti di questo tipo nel tuo inventario.");
-			pSelectedListItem[playerid] = itemid;
+			SelectedListItem[playerid] = itemid;
 			Dialog_Show(playerid, Dialog_VehInvAddDep, DIALOG_STYLE_INPUT, "Deposita", "Inserisci la quantità di %s che vuoi depositare.\n{00FF00}Disponibilità: %d{FFFFFF}", "Deposita", "Annulla", ServerItem_GetName(itemid), characterItemAmount);
 		}
 		else if(listitem == 2)
@@ -246,7 +257,7 @@ Dialog:Dialog_VehicleInvAction(playerid, response, listitem, inputtext[])
 			if(Weapon_IsGrenade(itemid) && Character_GetWeaponInSlot(playerid, 8) != itemid)
 				return SendClientMessage(playerid, COLOR_ERROR, "Hai già un'arma equipaggiata.");
 			new ammoType = Weapon_GetAmmoType(itemid),
-				extra = Vehicle_GetSlotExtra(vehicleid, pSelectedListItem[playerid]),
+				extra = Vehicle_GetSlotExtra(vehicleid, SelectedListItem[playerid]),
 				ammo = 0;
 				//invAmmo = Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType);
 			#pragma unused ammoType
@@ -258,7 +269,7 @@ Dialog:Dialog_VehicleInvAction(playerid, response, listitem, inputtext[])
 			}
 			else if(Weapon_IsGrenade(itemid))
 			{
-				ammo = Vehicle_GetSlotAmount(vehicleid, pSelectedListItem[playerid]);
+				ammo = Vehicle_GetSlotAmount(vehicleid, SelectedListItem[playerid]);
 			}
 			else 
 				ammo = 1;
@@ -268,9 +279,9 @@ Dialog:Dialog_VehicleInvAction(playerid, response, listitem, inputtext[])
 				Character_AMe(playerid, "prende un'arma dal veicolo.");
 				Character_GiveWeapon(playerid, itemid, ammo);
 				if(Weapon_IsGrenade(itemid))
-					Vehicle_DecreaseSlotAmount(vehicleid, pSelectedListItem[playerid], ammo);
+					Vehicle_DecreaseSlotAmount(vehicleid, SelectedListItem[playerid], ammo);
 				else
-					Vehicle_DecreaseSlotAmount(vehicleid, pSelectedListItem[playerid], 1);
+					Vehicle_DecreaseSlotAmount(vehicleid, SelectedListItem[playerid], 1);
 			}
 		}
 	}
@@ -284,7 +295,7 @@ Dialog:Dialog_VehInvAddDep(playerid, response, listitem, inputtext[])
 	new 
 		vehicleid = CurrentVehicleInventory[playerid],
 		amount = 1,
-		itemid = pSelectedListItem[playerid],
+		itemid = SelectedListItem[playerid],
 		totalAmount = Inventory_GetItemAmount(Character_GetInventory(playerid), itemid);
 	if(!ServerItem_IsUnique(itemid) && sscanf(inputtext, "d", amount) || amount < 1 || amount > totalAmount)
 	{
@@ -316,7 +327,7 @@ Dialog:ABC(playerid, response, listitem, inputtext[])
 	new 
 		vehicleid = CurrentVehicleInventory[playerid],
 		amount = 1, 
-		slotid = pSelectedListItem[playerid],
+		slotid = SelectedListItem[playerid],
 		itemid = Character_GetSlotItem(playerid, slotid),
 		slotAmount = Character_GetSlotAmount(playerid, slotid),
 		extra = Character_GetSlotExtra(playerid, slotid);
@@ -363,7 +374,7 @@ Dialog:Dialog_CharInvDepInVeh(playerid, response, listitem, inputtext[])
 	}
 	else
 	{
-		pSelectedListItem[playerid] = listitem;
+		SelectedListItem[playerid] = listitem;
 		new 
 			slotAmount = Character_GetSlotAmount(playerid, listitem);
 		if(ServerItem_IsUnique(itemid))
@@ -386,7 +397,7 @@ Dialog:D_VehInvItemAmount(playerid, response, listitem, inputtext[])
 	new 
 		amount = 1, 
 		vehicleid = CurrentVehicleInventory[playerid],
-		slotid = pSelectedListItem[playerid],
+		slotid = SelectedListItem[playerid],
 		itemid = Vehicle_GetSlotItem(vehicleid, slotid),
 		extra = Vehicle_GetSlotExtra(vehicleid, slotid),
 		slotAmount = Vehicle_GetSlotAmount(vehicleid, slotid);

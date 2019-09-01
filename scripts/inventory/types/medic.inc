@@ -1,3 +1,4 @@
+#include <inventory\server>
 #include <YSI_Coding\y_hooks>
 
 static Timer:GainHealthTimer[MAX_PLAYERS] = {Timer:0, ...};

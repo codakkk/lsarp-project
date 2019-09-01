@@ -30,7 +30,7 @@ CMD:furnitureid(playerid, params[])
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
     
-    if(!House_IsValid(Character_CanFurnish(playerid, true)) && !Account_IsAdminDuty(playerid))
+    if(!House_IsValid(Character_CanFurnish(playerid, true)) && !Player_IsAdminDuty(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di una casa arredabile.");
 
     if(Furniture_IsShowingInfo(playerid))

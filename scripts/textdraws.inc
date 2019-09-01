@@ -1,5 +1,11 @@
 #include <YSI_Coding\y_hooks>
 
+static 
+	Text:txtAnimHelper, 
+	Text:Clock, 
+	Text:LoginScreenText
+;
+
 hook OnGameModeInit()
 {
 	LoadTextDraws();
@@ -16,14 +22,12 @@ hook OnGameModeExit()
 hook OnPlayerConnect(playerid)
 {
 	TextDrawShowForPlayer(playerid, LoginScreenText);
-	printf("Show");
 	return 1;
 }
 
 hook OnCharacterLoad(playerid)
 {
 	TextDrawHideForPlayer(playerid, LoginScreenText);
-	printf("Hide");
 	return 1;
 }
 
@@ -58,4 +62,29 @@ stock LoadTextDraws()
     TextDrawUseBox(LoginScreenText, 1);
     TextDrawBoxColor(LoginScreenText, 255);
 	TextDrawTextSize(LoginScreenText, 640.0, 448.0);
+}
+
+stock ShowTextAnimationHelper(playerid)
+{
+	return TextDrawShowForPlayer(playerid, txtAnimHelper);
+}
+
+stock HideTextAnimationHelper(playerid)
+{
+	return TextDrawHideForPlayer(playerid, txtAnimHelper);
+}
+
+stock ShowClockTextDraw(playerid)
+{
+	return TextDrawShowForPlayer(playerid, Clock);
+}
+
+stock HideClockTextDraw(playerid)
+{
+	return TextDrawHideForPlayer(playerid, Clock);
+}
+
+stock SetClockTextDrawString(string[])
+{
+	return TextDrawSetString(Clock, string);
 }

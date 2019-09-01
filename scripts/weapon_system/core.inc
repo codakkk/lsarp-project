@@ -1,5 +1,16 @@
 #include <YSI_Coding\y_hooks>
 
+static enum E_WEAPON_DATA
+{
+    wInitialized,
+    Float:wDamage,
+    wDamageRatio, // Damage ratio (for different length damages)
+    wAmmoItem,
+	wCanBeDisassembled,
+};
+static 
+    WeaponInfo[47][E_WEAPON_DATA];
+
 hook OnGameModeInit()
 {
 	Weapon_InitializeType(WEAPON_COLT45, gItem_LightAmmo, 25, true);

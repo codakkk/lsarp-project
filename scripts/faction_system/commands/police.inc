@@ -1,3 +1,6 @@
+
+#include <player\core>
+
 #include <YSI_Coding\y_hooks>
 
 // Do we need InspectingBy? This should be remove 
@@ -30,14 +33,14 @@ flags:manette(CMD_ALIVE_USER);
 CMD:manette(playerid, params[])
 {
 	// MUST CHECK IT BETTER
-	if( (!Faction_IsValid(Character_GetFaction(playerid)) || Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE) && !Account_IsAdminDuty(playerid))
+	if( (!Faction_IsValid(Character_GetFaction(playerid)) || Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE) && !Player_IsAdminDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro della Guardia Nazionale.");
 		
 	new id;
 	if(sscanf(params, "k<u>", id))
 		return SendClientMessage(playerid, COLOR_ERROR, "/manette <playerid/partofname>");
 	
-	if(!Character_IsLogged(id) || id == playerid)
+	if(!Character_IsLogged(id) || id == playerid || Player_IsAdminDuty(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 2.5))
@@ -68,7 +71,7 @@ CMD:arresta(playerid, params[])
 	if(id == playerid || !Character_IsLogged(id) || IsPlayerNPC(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 
-	if(Character_GetFaction(id) != INVALID_FACTION_ID && Faction_GetType(Character_GetFaction(id)) == Faction_GetType(Character_GetFaction(playerid)))
+	if(Faction_IsValid(Character_GetFaction(id)) && Faction_GetType(Character_GetFaction(id)) == Faction_GetType(Character_GetFaction(playerid)))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi arrestare questo giocatore.");
 
 	if(time < 0 || time > 720)
@@ -104,17 +107,10 @@ CMD:arresta(playerid, params[])
 
 	new rankName[MAX_FACTION_RANK_NAME];
 	Faction_GetRankName(Character_GetFaction(playerid), Character_GetRank(playerid), rankName);
-
-	new String:message = str_format("(( HQ: %s %s ha arrestato %s per %d minuti. ))", rankName, Character_GetOOCName(playerid), Character_GetOOCName(id), time);
-
-	foreach(new i : Player)
-	{
-		if(Character_GetFaction(i) != INVALID_FACTION_ID && Character_GetFaction(i) == Character_GetFaction(playerid) && Character_IsFactionDuty(i))
-		{
-			SendClientMessageStr(i, COLOR_BLUE, message);
-		}
-	}
 	
+	new String:message = str_format("(( HQ: %s %s ha arrestato %s per %d minuti. ))", rankName, Character_GetOOCName(playerid), Character_GetOOCName(id), time);
+	Faction_SendMessageStr(Character_GetFaction(playerid), COLOR_BLUE, message);
+
 	SendFormattedMessage(playerid, COLOR_ORANGE, "** Hai arrestato %s per %d minuti.", Character_GetOOCName(id), time);
 
 	Log(Character_GetOOCName(playerid), Character_GetOOCName(id), "/arresta", time);
@@ -171,7 +167,7 @@ CMD:cura(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Hai già una richiesta cure attiva.");
 	
 	new factionid = Character_GetFaction(playerid);
-	if(!Account_IsAdminDuty(playerid))
+	if(!Player_IsAdminDuty(playerid))
 	{
 		if(Faction_GetType(factionid) != FACTION_TYPE_POLICE && Faction_GetType(factionid) != FACTION_TYPE_MEDICAL)
 			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando.");
@@ -182,7 +178,7 @@ CMD:cura(playerid, params[])
 	if(sscanf(params, "k<u>", id))
 		return SendClientMessage(playerid, COLOR_ERROR, "/cura <playerid/partofname>");
 	
-	if( (!Account_IsAdminDuty(playerid) && id == playerid) || !IsPlayerConnected(id) || !Character_IsLogged(id))
+	if( (!Player_IsAdminDuty(playerid) && id == playerid) || !IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 	
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 5.0))
@@ -306,8 +302,8 @@ static ShowInspectingInventory(playerid, inspectingPlayer)
 	
 	Inventory_Show(inv, playerid, str, Dialog_InvSearch, Faction_GetType(Character_GetFaction(playerid)) == FACTION_TYPE_POLICE ? ("Confisca") : ("Chiudi"), "Chiudi");
 	
-	ResetPendingRequest(playerid, REQUEST_TYPE_SEARCH);
-	ResetPendingRequest(inspectingPlayer, REQUEST_TYPE_SEARCH);
+	Request_Reset(playerid, REQUEST_TYPE_SEARCH);
+	Request_Reset(inspectingPlayer, REQUEST_TYPE_SEARCH);
 	return 1;
 }
 

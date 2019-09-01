@@ -292,7 +292,7 @@ CMD:respawnme(playerid, params[])
 		return SendFormattedMessage(playerid, COLOR_ERROR, "Devi aspettare ancora %d secondi prima di poter digitare il comando.", DEATH_TIME_AS_SECONDS - death_time/1000);
 	Character_ResetWeapons(playerid);
 	//WC_PlayerDeathRespawn(playerid);
-	Character_Spawn(playerid);
+	SpawnPlayer(playerid);
 	return 1;
 }
 

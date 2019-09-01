@@ -1,3 +1,6 @@
+
+#include <pickup\core>
+
 #include <YSI_Coding\y_hooks>
 
 hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)

@@ -33,7 +33,7 @@ hook OnPlayerText(playerid, text[])
 {
 	if(isnull(text))
 		return 0;
-	if(Account_IsAdminDuty(playerid))
+	if(Player_IsAdminDuty(playerid))
 	{
 		pc_cmd_b(playerid, text);
 	}

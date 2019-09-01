@@ -1,3 +1,4 @@
+#include <inventory\server>
 #include <YSI_Coding\y_hooks>
 
 hook OnCharacterUseItem(playerid, slotid, itemid)

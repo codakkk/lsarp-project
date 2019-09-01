@@ -1,4 +1,32 @@
 
+#if defined _included_FACTIONS
+    #endinput
+#endif 
+
+#define _included_FACTIONS
+
+#define MAX_FACTION_SHORT_NAME		(8)
+#define MAX_FACTION_NAME			(64)
+#define INVALID_FACTION_ID			(0)
+#define MAX_FACTION_RANK_NAME		(16)
+
+enum // Faction Type
+{
+	FACTION_TYPE_POLICE = 0,
+	FACTION_TYPE_MEDICAL,
+	FACTION_TYPE_GOVERNMENT,
+	FACTION_TYPE_IMPORT_WEAPONS,
+	FACTION_TYPE_IMPORT_DRUGS,
+	FACTION_TYPE_IMPORT_FOODS,
+	FACTION_TYPE_OTHERS,
+	// Add types here.
+	FACTION_TYPE_LAST
+}
+
+new
+	pAdminSelectedFaction[MAX_PLAYERS char],
+	pAdminSelectedFactionSkin[MAX_PLAYERS char]
+;
 
 #include <faction_system\skins>
 #include <faction_system\ranks>
@@ -7,6 +35,7 @@
 
 #include <faction_system\commands>
 #include <faction_system\commands\police>
+#include <faction_system\commands\government>
 #include <faction_system\commands\common>
 
 
@@ -151,7 +180,7 @@ stock Faction_ShowOptions(factionid, playerid)
 		return 0;
 	pAdminSelectedFaction{playerid} = factionid;
 	printf("Selected: %d", factionid);
-	new String:content = @("Modifica Nome\nModifica Acronimo\nModifica Tipo\nAggiungi Rank\nModifica Ranks\nModifica Skins\n{FF0000}Resetta Fazione{FFFFFF}");
+	new String:content = @("Modifica Nome\nModifica Acronimo\nModifica Tipo\nAggiungi Rank\nModifica Ranks\nModifica Skins\nSpawn (Posizione Corrente)\n{FF0000}Resetta Fazione{FFFFFF}");
 	Dialog_Show_s(playerid, Dialog_FactionActions, DIALOG_STYLE_LIST, Faction_GetNameStr(pAdminSelectedFaction{playerid}), content, "Avanti", "Indietro");
 	return 1;
 }
@@ -352,6 +381,13 @@ stock Faction_GetSpawnWorld(factionid)
 	return map_get(Factions, factionid, World);
 }
 
+stock bool:Faction_IsValidSpawnPosition(factionid)
+{
+	new Float:x, Float:y, Float:z;
+	Faction_GetSpawnPos(factionid, x, y, z);
+	return (x != 0.0 && y != 0.0 && z != 0.0);
+}
+
 // CHARACTER
 stock Character_IsPolice(playerid)
 {
@@ -450,6 +486,10 @@ Dialog:Dialog_FactionActions(playerid, response, listitem, inputtext[])
 			return Faction_ShowSkinList(factionid, playerid);
 		}
 		case 6:
+		{
+			return pc_cmd_fedit(playerid, "spawn");
+		}
+		case 7:
 		{
 			new String:title = str_format("%S", Faction_GetNameStr(factionid));
 			return Dialog_Show_s(playerid, Dialog_DeleteFactionConfirm, DIALOG_STYLE_MSGBOX, title, @("{FF0000}Sei sicuro di voler rimuovere la fazione definitivamente?{FFFFFF}"), "Rimuovi", "Annulla");

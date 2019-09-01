@@ -172,7 +172,7 @@ hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float
         }
         else if(response == EDIT_RESPONSE_FINAL)
         {
-            if(!Internal_ValidateObjectPos(objectid, x, y, z) && !Account_IsAdminDuty(playerid))
+            if(!Internal_ValidateObjectPos(objectid, x, y, z) && !Player_IsAdminDuty(playerid))
             {
                 SetDynamicObjectPos(objectid, tx, ty, tz);
                 SetDynamicObjectRot(objectid, trx, try, trz);
@@ -336,7 +336,7 @@ Dialog:Dialog_FurnitureOptions(playerid, response, listitem, inputtext[])
         }
         case 4: // GOTO
         {
-            if(!Account_IsAdminDuty(playerid))
+            if(!Player_IsAdminDuty(playerid))
                 return 0;
             SetPlayerPos(playerid, x, y, z);
             SetPlayerInterior(playerid, Streamer_GetIntData(STREAMER_TYPE_OBJECT, selected, E_STREAMER_INTERIOR_ID));
@@ -660,7 +660,7 @@ stock Furniture_UpdateInfoList(playerid)
 
     if(ShowingLabelsForWorld[playerid] == -1)
     {
-        if(world == 0 && !Account_IsAdminDuty(playerid))
+        if(world == 0 && !Player_IsAdminDuty(playerid))
             ShowingLabelsForWorld[playerid] = Internal_GetNearbyFurnableWorld(playerid);
         else
             ShowingLabelsForWorld[playerid] = world;
@@ -684,7 +684,7 @@ stock Furniture_UpdateInfoList(playerid)
         
         format(text, sizeof(text), "%s\nID: %d\n(( Ultima Modifica Da: %s ))", FurnitureCustomData[FURNITURE_NAME], index, Character_GetNameFromDatabase(FurnitureCustomData[FURNITURE_LAST_EDIT_CHARACTER], true));
         
-        if(Account_GetAdminLevel(playerid) > 1 && Account_IsAdminDuty(playerid))
+        if(Account_GetAdminLevel(playerid) > 1 && Player_IsAdminDuty(playerid))
         {
             format(text, sizeof(text), "%s\n{FF6347}(( Account: %s )){FFFFFF}\n{FF6347}(( Object ID: %d )){FFFFFF}", text, Account_GetNameFromDatabase(Account_GetID(playerid)), objectid);
         }
@@ -712,7 +712,7 @@ stock Character_CanFurnish(playerid, bool:outsideCheck = false)
             if(House_GetEnterWorld(houseid) != 0)
                 continue;
             
-            if( (House_GetOwnerID(houseid) == Character_GetID(playerid) || Account_IsAdminDuty(playerid)) && Character_GetVirtualWorld(playerid) == House_GetEnterWorld(houseid) && GetPlayerInterior(playerid) == House_GetEnterInterior(houseid))
+            if( (House_GetOwnerID(houseid) == Character_GetID(playerid) || Player_IsAdminDuty(playerid)) && Character_GetVirtualWorld(playerid) == House_GetEnterWorld(houseid) && GetPlayerInterior(playerid) == House_GetEnterInterior(houseid))
             {
                 House_GetEnterPosition(houseid, x, y, z);
                 if(GetPlayerDistanceFromPoint(playerid, x, y, z) >= 15.0)
@@ -721,7 +721,7 @@ stock Character_CanFurnish(playerid, bool:outsideCheck = false)
             }
         }
     }
-    if(House_IsValid(currentHouse) && (House_GetOwnerID(currentHouse) == Character_GetID(playerid) || Account_IsAdminDuty(playerid)) && IsPlayerInRangeOfHouseExit(playerid, currentHouse, 100.0))
+    if(House_IsValid(currentHouse) && (House_GetOwnerID(currentHouse) == Character_GetID(playerid) || Player_IsAdminDuty(playerid)) && IsPlayerInRangeOfHouseExit(playerid, currentHouse, 100.0))
     {
         return currentHouse;
     }

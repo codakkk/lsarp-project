@@ -1,7 +1,7 @@
 
 #include <YSI_Coding\y_hooks>
 
-static PlayerMoney[MAX_PLAYERS];
+static PlayerMoney[MAX_PLAYERS], MoneyTimer[MAX_PLAYERS];
 
 hook OnCharacterLoad(playerid)
 {
@@ -58,12 +58,12 @@ stock Character_GiveMoney(playerid, money, reason[] = "")
 		PlayerTextDrawSetString(playerid, pMoneyTD[playerid], string);
 		PlayerTextDrawShow(playerid, pMoneyTD[playerid]);
 	}
-	MoneyTimer[playerid] = SetTimerEx(#HidepMoneyTD, 2000, false, "d", playerid);
+	MoneyTimer[playerid] = SetTimerEx(#HideMoneyTD, 2000, false, "d", playerid);
 	return 1;
 }
 
-forward HidepMoneyTD(playerid);
-public HidepMoneyTD(playerid)
+forward HideMoneyTD(playerid);
+public HideMoneyTD(playerid)
 {
 	PlayerTextDrawHide(playerid, pMoneyTD[playerid]);
 	PlayerTextDrawColor(playerid, pMoneyTD[playerid], 0xFFFFFFFF);

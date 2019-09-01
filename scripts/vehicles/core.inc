@@ -1,6 +1,16 @@
 
+#if defined _included_VEHICLES
+    #endinput
+#endif 
+
+#define _included_VEHICLES
+
+#include "inventory"
 #include <YSI_Coding\y_hooks>
 
+#define VEHICLE_MIN_HEALTH_BEFORE_RESPAWN	250.0
+#define VEHICLE_MIN_HEALTH					300.0
+#define VEHICLE_MIN_HEALTH_FOR_ENGINE		350.0
 // Remove OwnerName from enum and create an indipendent variable (VehicleOwnerName)
 
 static enum E_VEHICLE_DATA
@@ -24,7 +34,6 @@ static enum E_VEHICLE_DATA
 
 static 
 	VehicleInfo[MAX_VEHICLES][E_VEHICLE_DATA],
-	bool:NextToBreakEngine[MAX_VEHICLES char],
 	Text3D:VehicleSign[MAX_VEHICLES];
 
 static enum e_VEHICLE_DAMAGE_TYPE
@@ -46,6 +55,7 @@ static enum e_Bit1_VehicleData
 	e_vLocked,
 	e_vTemporary,
 	e_vEngine,
+	e_vIsEngineBroken,
 };
 
 static BitArray:VehicleBitState[e_Bit1_VehicleData]<MAX_VEHICLES>;
@@ -96,6 +106,12 @@ hook OnGameModeLateInit()
 	return 1;
 }
 
+hook OnVehicleMod(playerid, vehicleid, componentid)
+{
+	RemoveVehicleComponent(vehicleid, componentid);
+	return 0;
+}
+
 hook OnCharacterChangeName(playerid, newCharacterName[])
 {
 	foreach(new i : Vehicle)
@@ -124,7 +140,7 @@ task OnVehicleUpdate[500]()
 	{
 		if(!Vehicle_IsValid(v))
 			continue;
-		if(Vehicle_GetHealth(v) <= VEHICLE_MIN_HEALTH)
+		if(Vehicle_GetHealth(v) <= VEHICLE_MIN_HEALTH_BEFORE_RESPAWN)
 		{
 			new Float:x, Float:y, Float:z, Float:a;
 			
@@ -133,7 +149,7 @@ task OnVehicleUpdate[500]()
 			
 			Vehicle_SetDestroyed(v, true);
 			Vehicle_Respawn(v);
-			
+
 			SetVehicleZAngle(v, a);
 			SetVehiclePos(v, x, y, z);
 		}
@@ -173,7 +189,7 @@ ptask OnPlayerVehicleCheck[1000 + 1](playerid)
 	{
 		
 		new Float:health = Vehicle_GetHealth(vehicleid);
-		if(health < VEHICLE_MIN_HEALTH_FOR_ENGINE && !Account_IsAdminDuty(playerid))
+		if(health < VEHICLE_MIN_HEALTH_FOR_ENGINE && !Player_IsAdminDuty(playerid))
 		{
 			Vehicle_SetEngineStatus(vehicleid, false);
 			SendClientMessage(playerid, COLOR_ERROR, "Il motore del veicolo si è spento poiché è danneggiato.");
@@ -280,7 +296,6 @@ stock Vehicle_Destroy(vehicleid)
 stock Vehicle_Reset(vehicleid)
 {
 	VehicleInfo[vehicleid][ID] = 0;
-	Vehicle_SetTemporary(vehicleid, false);
     VehicleInfo[vehicleid][OwnerID] = 0;
     set(VehicleOwnerName[vehicleid], "");
     VehicleInfo[vehicleid][Model] = 0;
@@ -291,8 +306,9 @@ stock Vehicle_Reset(vehicleid)
     VehicleInfo[vehicleid][Z] = 0.0;
     VehicleInfo[vehicleid][A] = 0.0;
 	VehicleInfo[vehicleid][Faction] = INVALID_FACTION_ID;
-	NextToBreakEngine{vehicleid} = false;
 	VehicleDamages[vehicleid] = CleanVehicleDamages;
+	Vehicle_SetEngineBroken(vehicleid, false);
+	Vehicle_SetTemporary(vehicleid, false);
     Vehicle_SetLocked(vehicleid, false);
 	Vehicle_SetLastChopShopTime(vehicleid, 0);
     Vehicle_SetEngineStatus(vehicleid, false);
@@ -518,7 +534,7 @@ stock Vehicle_Despawn(vehicleid)
 
 stock Vehicle_IsOwner(vehicleid, playerid, bool:onlyEffectiveOwner)
 {
-	if(Vehicle_GetOwnerID(vehicleid) == Character_GetID(playerid) || Account_IsAdminDuty(playerid))
+	if(Vehicle_GetOwnerID(vehicleid) == Character_GetID(playerid) || Player_IsAdminDuty(playerid))
 		return 1;
 	if(!onlyEffectiveOwner)
 	{
@@ -570,11 +586,13 @@ public Vehicle_LoadAll()
 		cache_get_value_name_int(i, "color_1", color1);
 		cache_get_value_name_int(i, "color_2", color2);
 
-		new vehicleid = Vehicle_Create(modelid, x, y, z, a, 0, 0, -1);
+		new vehicleid = Vehicle_Create(modelid, x, y, z, a, color1, color2, -1);
 		
 		VehicleInfo[vehicleid][ID] = dbid;
 		VehicleInfo[vehicleid][OwnerID] = ownerid;
-		
+		VehicleInfo[vehicleid][Color1] = color1;
+		VehicleInfo[vehicleid][Color2] = color2;
+
 		cache_get_value_name_int(i, "world", VehicleInfo[vehicleid][World]);
 		
 		cache_get_value_name_int(i, "locked", locked);
@@ -596,6 +614,7 @@ public Vehicle_LoadAll()
 		SetVehicleZAngle(vehicleid, a);
 		SetVehiclePos(vehicleid, x, y, z);
 		SetVehicleVirtualWorld(vehicleid, VehicleInfo[vehicleid][World]);
+		
 		ChangeVehicleColor(vehicleid, color1, color2);
 
 		Vehicle_SetDestroyed(vehicleid, false);
@@ -880,9 +899,14 @@ stock Vehicle_SetMaxHealth(vehicleid, Float:health)
 	return 1;
 }
 
-stock bool:Vehicle_IsNextToBreakEngine(vehicleid)
+stock Vehicle_SetEngineBroken(vehicleid, bool:isBroken)
 {
-	return NextToBreakEngine{vehicleid};
+	Bit_Set(VehicleBitState[e_vIsEngineBroken], vehicleid, isBroken);
+}
+
+stock bool:Vehicle_IsEngineBroken(vehicleid)
+{
+	return Bit_Get(VehicleBitState[e_vIsEngineBroken], vehicleid);
 }
 
 stock Vehicle_Reload(vehicleid)
@@ -906,15 +930,15 @@ stock Vehicle_Reload(vehicleid)
 	if(Vehicle_IsDestroyed(vehicleid) /*&& !Faction_IsValid(Vehicle_GetFaction(vehicleid))*/)
 	{
 		Vehicle_SetDestroyed(vehicleid, false);
-		if(NextToBreakEngine{vehicleid})
+		if(Vehicle_IsEngineBroken(vehicleid))
 		{
-			SetVehicleHealth(vehicleid, VEHICLE_MIN_HEALTH_FOR_ENGINE);
+			SetVehicleHealth(vehicleid, VEHICLE_MIN_HEALTH);
 		}
 		else
 		{
 			SetVehicleHealth(vehicleid, VEHICLE_MIN_HEALTH_FOR_ENGINE + 50.0);
 		}
-		NextToBreakEngine{vehicleid} = !NextToBreakEngine{vehicleid};
+		Vehicle_SetEngineBroken(vehicleid, true);
 	}
 	else
 	{
@@ -950,7 +974,7 @@ stock Vehicle_Repair(vehicleid)
 		return 0;
 	RepairVehicle(vehicleid);
 	SetVehicleHealth(vehicleid, Vehicle_GetMaxHealth(vehicleid));
-	NextToBreakEngine{vehicleid} = false;
+	Vehicle_SetEngineBroken(vehicleid, false);
 	return 1;
 }
 

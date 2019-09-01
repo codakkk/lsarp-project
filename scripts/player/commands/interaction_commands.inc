@@ -60,7 +60,8 @@ CMD:dai(playerid, params[])
 
 		new weapon = Character_GetWeapon(playerid);
 		new ammo = Character_GetAmmo(playerid);
-		if(weapon == 0 || ammo <= 0)
+		
+		if(weapon == 0)
 			return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma in mano.");
 		
 		if(Character_IsFactionDuty(playerid))
@@ -129,8 +130,8 @@ CMD:accetta(playerid, params[])
 			GetPlayerWeaponData(requestSender, slotid, tempWeapon, ammo);
 			if(weaponid != tempWeapon || ammo == 0)
 			{
-				ResetPendingRequest(playerid, REQUEST_TYPE_WEAPON);
-				ResetPendingRequest(requestSender, REQUEST_TYPE_WEAPON);
+				Request_Reset(playerid, REQUEST_TYPE_WEAPON);
+				Request_Reset(requestSender, REQUEST_TYPE_WEAPON);
 				SendClientMessage(playerid, COLOR_ERROR, "Non possiedi più l'arma. La richiesta è stata annullata.");
 				return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non possiede più l'arma, pertanto non puoi più accettare.");	
 			}
@@ -144,8 +145,8 @@ CMD:accetta(playerid, params[])
 				SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "Hai accettato l'arma (%s) con %d proiettili da %s.", Weapon_GetName(weaponid), ammo, Character_GetRolePlayName(requestSender));
 				SendFormattedMessage(requestSender, COLOR_ACCEPT_REQUEST, "%s (%d) ha accettato la tua arma.", Character_GetRolePlayName(playerid), playerid);
 				
-				ResetPendingRequest(playerid, REQUEST_TYPE_WEAPON);
-				ResetPendingRequest(requestSender, REQUEST_TYPE_WEAPON);
+				Request_Reset(playerid, REQUEST_TYPE_WEAPON);
+				Request_Reset(requestSender, REQUEST_TYPE_WEAPON);
 			}
 			else if(Character_HasSpaceForItem(playerid, weaponid, ammo))
 			{
@@ -157,8 +158,8 @@ CMD:accetta(playerid, params[])
 
 				SendFormattedMessage(requestSender, COLOR_ACCEPT_REQUEST, "%s (%d) ha accettato la tua arma.", Character_GetRolePlayName(playerid), playerid);
 
-				ResetPendingRequest(playerid, REQUEST_TYPE_WEAPON);
-				ResetPendingRequest(requestSender, REQUEST_TYPE_WEAPON);
+				Request_Reset(playerid, REQUEST_TYPE_WEAPON);
+				Request_Reset(requestSender, REQUEST_TYPE_WEAPON);
 			}
 			else
 				SendClientMessage(playerid, COLOR_ERROR, "Hai già un'arma e non hai abbastanza spazio nell'inventario.");
@@ -271,32 +272,32 @@ CMD:rifiuta(playerid, params[])
 static DeclineRequest(playerid, type)
 {
 	if(!Request_IsPending(playerid, type))
-		return SendFormattedMessage(playerid, COLOR_ERROR, "Non hai una richiesta (%s) attiva.", GetRequestTypeName(type));
+		return SendFormattedMessage(playerid, COLOR_ERROR, "Non hai una richiesta (%s) attiva.", Request_GetTypeName(type));
 	
 	new sender = Request_GetSender(playerid, type),
 		receiver = Request_GetReceiver(playerid, type);
 	
-	ResetPendingRequest(sender, type);
-	ResetPendingRequest(receiver, type);
+	Request_Reset(sender, type);
+	Request_Reset(receiver, type);
 
-	SendFormattedMessage(sender, COLOR_REJECT_REQUEST, "%s ha rifiutato la tua richiesta (%s).", Character_GetRolePlayName(receiver), GetRequestTypeName(type));
-	SendFormattedMessage(receiver, COLOR_REJECT_REQUEST, "Hai rifiutato la proposta (%s) di %s.", GetRequestTypeName(type), Character_GetRolePlayName(sender));
+	SendFormattedMessage(sender, COLOR_REJECT_REQUEST, "%s ha rifiutato la tua richiesta (%s).", Character_GetRolePlayName(receiver), Request_GetTypeName(type));
+	SendFormattedMessage(receiver, COLOR_REJECT_REQUEST, "Hai rifiutato la proposta (%s) di %s.", Request_GetTypeName(type), Character_GetRolePlayName(sender));
 	return 1;
 }
 
 static CancelRequest(playerid, type)
 {
 	if(!Request_IsPending(playerid, type))
-		return SendFormattedMessage(playerid, COLOR_ERROR, "Non hai una richiesta (%s) attiva.", GetRequestTypeName(type));
+		return SendFormattedMessage(playerid, COLOR_ERROR, "Non hai una richiesta (%s) attiva.", Request_GetTypeName(type));
 	
 	new sender = Request_GetSender(playerid, type),
 		receiver = Request_GetReceiver(playerid, type);
 	
-	ResetPendingRequest(sender, type);
-	ResetPendingRequest(receiver, type);
+	Request_Reset(sender, type);
+	Request_Reset(receiver, type);
 
-	SendFormattedMessage(sender, COLOR_REJECT_REQUEST, "Hai annullato la richiesta (%s) inviata a %s.", GetRequestTypeName(type), Character_GetRolePlayName(receiver));
-	SendFormattedMessage(receiver, COLOR_REJECT_REQUEST, "%s ha annullato la proposta (%s).", Character_GetRolePlayName(sender), GetRequestTypeName(type));
+	SendFormattedMessage(sender, COLOR_REJECT_REQUEST, "Hai annullato la richiesta (%s) inviata a %s.", Request_GetTypeName(type), Character_GetRolePlayName(receiver));
+	SendFormattedMessage(receiver, COLOR_REJECT_REQUEST, "%s ha annullato la proposta (%s).", Character_GetRolePlayName(sender), Request_GetTypeName(type));
 	return 1;
 }
 
@@ -400,7 +401,7 @@ CMD:rimuovi(playerid, params[])
             return SendClientMessage(playerid, COLOR_ERROR, "Non stai indossando uno zaino.");
         if(Inventory_GetUsedSpace(playerInv) > PLAYER_INVENTORY_START_SIZE-1)
             return SendClientMessage(playerid, COLOR_ERROR, "Non puoi toglierti lo zaino se hai piu' di 9 oggetti.");
-        Character_GiveItem(playerid, pInventoryBag[playerid], 1);
+        Character_GiveItem(playerid, Character_GetBag(playerid), 1);
         Character_SetBag(playerid, 0);
         SendClientMessage(playerid, COLOR_GREEN, "Lo zaino è stato rimesso nel tuo inventario.");
         Character_AMe(playerid, "si toglie lo zaino.");

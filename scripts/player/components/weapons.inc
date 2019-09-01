@@ -13,6 +13,14 @@ hook OnCharacterLateLoad(playerid)
 	return 1;
 }
 
+ptask SavePlayerWeaponsTask[1000](playerid) 
+{
+	if(!Character_IsLogged(playerid))
+		return 0;
+	Character_SaveWeapons(playerid);
+	return 1;
+}
+
 stock Character_SaveWeapons(playerid)
 {
 	mysql_tquery(gMySQL, "START TRANSACTION;");
@@ -21,12 +29,28 @@ stock Character_SaveWeapons(playerid)
 	new weaponid, ammo;
 	for(new i = 0; i < 13; ++i)
 	{
+
 		Character_GetWeaponData(playerid, i, weaponid, ammo);
-		if(!weaponid)
+		
+
+		if(weaponid <= 0)
 			continue;
-		if(ammo == 0)
+		
+		if(i == 2 && Character_HasTaser(playerid))
 		{
-			// removes weaponid from database if empty.
+			Character_GetCachedWeaponTaser(playerid, weaponid, ammo);
+			//printf("Cached taser: %d - %d", weaponid, ammo);
+		}
+		else if(i == 3 && Character_HasBeanBag(playerid))
+		{
+			Character_GetCachedWeaponBean(playerid, weaponid, ammo);
+			//printf("Cached bean: %d - %d", weaponid, ammo);
+		}
+
+		//printf("Saving: %d - Ammo: %d", weaponid, ammo);
+		
+		if(i > 1 && i != 10 && ammo <= 0)
+		{
 			format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE character_id = '%d' AND weapon_id = '%d';", Character_GetID(playerid), weaponid);
 		}
 		else
@@ -52,7 +76,8 @@ stock Character_LoadWeapons(playerid)
 				printf("Character_LoadWeapons(%d) failed. invalid weapon id (id %d)", playerid, w);
 				continue;
 			}
-			Character_GiveWeapon(playerid, w, a);
+			ac_GivePlayerWeapon(playerid, w, a);
+			//Character_GiveWeapon(playerid, w, a);
 		}
 		printf("%d weapons loaded for player %d.", rows, playerid);
 	}
@@ -118,10 +143,10 @@ stock Character_ResetWeapons(playerid)
 
 stock Character_GiveWeapon(playerid, weaponid, ammo)
 {
-	if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))
+	if(!Character_IsLogged(playerid))
 		return 0;
-	GivePlayerWeapon(playerid, weaponid, ammo);
-	Character_SaveWeapons(playerid);
+	ac_GivePlayerWeapon(playerid, weaponid, ammo);
+	TriggerSaveAfterDelay(playerid);
 	return 1;
 }
 
@@ -153,18 +178,29 @@ stock Character_GetAmmo(playerid)
 
 stock Character_SetWeaponAmmo(playerid, weaponid, ammo)
 {
-	if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))
+	if(!Character_IsLogged(playerid))
 		return 0;
 	new slotid = Weapon_GetSlot(weaponid);
 	SetPlayerAmmo(playerid, weaponid, ammo);
-	Character_SaveWeapons(playerid);
+	TriggerSaveAfterDelay(playerid);
 	return 1;
 }
 
 stock Character_GetWeaponData(playerid, slotid, &weaponid, &ammo)
 {
-	if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))
+	if(!Character_IsLogged(playerid))
 		return 0;
 	new res = AntiCheatGetWeaponData(playerid, slotid, weaponid, ammo);
 	return res;
+}
+
+// Saved after delay  because nex-ac sets weapons after a delay
+static TriggerSaveAfterDelay(playerid)
+{
+	defer SaveWeaponAfterDelay(playerid);
+}
+
+timer SaveWeaponAfterDelay[500](playerid) 
+{
+	Character_SaveWeapons(playerid);
 }

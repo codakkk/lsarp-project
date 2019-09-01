@@ -1,3 +1,64 @@
+
+#if defined _included_INVENTORY_SERVER
+	#endinput
+#endif
+
+#define _included_INVENTORY_SERVER
+
+#include <inventory\items>
+
+#include <YSI_Coding\y_hooks>
+
+#define MAX_ITEM_NAME			    (32)
+#define MAX_ITEMS_IN_SERVER		   (150)
+#define MAX_ITEMS_PER_PLAYER		  (50)
+#define MAX_ITEMS_PER_VEHICLE		 (50)
+#define INVALID_ITEM_ID			  (-1)
+#define PLAYER_INVENTORY_START_SIZE	(10)
+
+#define INVENTORY_NULL			(Inventory:0)
+
+
+enum ITEM_TYPE
+{
+	ITEM_TYPE_NONE = 0,
+	ITEM_TYPE_MATERIAL,
+	ITEM_TYPE_WEAPON,
+	ITEM_TYPE_AMMO,
+	ITEM_TYPE_FOOD,
+	ITEM_TYPE_DRINK,
+	ITEM_TYPE_MEDIC,
+	ITEM_TYPE_BAG,
+	ITEM_TYPE_FUEL,
+	ITEM_TYPE_DRUG,
+	ITEM_TYPE_MECHANICAL_COMPONENTS,
+	ITEM_TYPE_MONEY,
+	ITEM_TYPE_GENERAL
+};
+
+enum EXTRA_TYPE_ID
+{
+	EXTRA_BAG_SIZE = 0
+};
+
+enum E_SERVER_ITEM_DATA
+{
+	sitemInitialized,
+	sitemID,
+	sitemName[MAX_ITEM_NAME],
+	ITEM_TYPE:sitemType,
+	sitemUnique,
+	sitemMaxStack,
+	sitemExtraData[5],
+	sitemModelID
+};
+static
+	ServerItem[MAX_ITEMS_IN_SERVER][E_SERVER_ITEM_DATA],
+	ItemName[MAX_ITEMS_IN_SERVER][MAX_ITEM_NAME]
+;
+
+static Iterator:ServerItems<MAX_ITEMS_IN_SERVER>;
+
 hook OnGameModeInit()
 {
     ServerItem_ManualInitializeItem(0, "Vuoto", ITEM_TYPE:ITEM_TYPE_NONE, 0, 1);
@@ -87,6 +148,8 @@ hook OnGameModeInit()
 
 	gItem_Dress = ServerItem_ManualInitializeItem(99, "Vestito", ITEM_TYPE_GENERAL, 2846, 1);
 
+	gItem_Dress = ServerItem_ManualInitializeItem(100, "Cellulare", ITEM_TYPE_GENERAL, 330, 1);
+
     printf("Items loaded. N: %d\n", Iter_Count(ServerItems));
     return 1;
 }
@@ -131,15 +194,15 @@ stock ServerItem_ManualInitializeItem(itemid, const name[], ITEM_TYPE:type, mode
 
     foreach(new item : ServerItems)
     {
-	   if(!strcmp(ServerItem[item][sitemName], name, true))
+	   if(!strcmp(ItemName[item], name, true))
 	   {
-		  printf("Error initializing item %s. Already exists.", ServerItem[item][sitemName]);
+		  printf("Error initializing item %s. Already exists.", ItemName[item]);
 		  return -1;
 	   }
     }
 	ServerItem[itemid][sitemInitialized] = 1;
     ServerItem[itemid][sitemID] = itemid; // Redundant?
-    format(ServerItem[itemid][sitemName], MAX_ITEM_NAME, "%s", name);
+    format(ItemName[itemid], MAX_ITEM_NAME, "%s", name);
     ServerItem[itemid][sitemType] = type;
     ServerItem[itemid][sitemModelID] = modelId;
 
@@ -164,6 +227,11 @@ stock ServerItem_ManualInitializeItem(itemid, const name[], ITEM_TYPE:type, mode
 
     Iter_Add(ServerItems, itemid);
     return itemid;
+}
+
+stock ServerItem_GetName(itemid)
+{
+	return ItemName[itemid];
 }
 
 stock ITEM_TYPE:ServerItem_GetType(itemid) return ServerItem[itemid][sitemType];
@@ -284,4 +352,32 @@ stock DrugItem_GetEffectTime(itemid)
 stock Float:FuelItem_GetAmount(itemid)
 {
 	return float(ServerItem_GetExtra(itemid, 0));
+}
+
+SSCANF:item(string[])
+{
+	// probably an ID
+	if('0' <= string[0] <= '9')
+	{
+		new ret = strval(string);
+		if(0 <= ret <= MAX_ITEMS_IN_SERVER)
+		{
+			return ret;
+		}
+	}
+	else
+	{
+		new len = strlen(string);
+		for(new i = 0; i < len; ++i)
+		{
+			if(string[i] == '_')
+				string[i] = ' ';
+		}
+		foreach(new item : ServerItems)
+		{
+			if(!strcmp(ItemName[item], string, true) || strfind(ItemName[item], string, true) > -1)
+				return item;
+		}
+	}
+    return INVALID_ITEM_ID;
 }

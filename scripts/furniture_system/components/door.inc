@@ -8,7 +8,7 @@ CMD:porta(playerid, params[])
         houseid = Character_GetHouseID(playerid);
     if(Building_IsValid(buildingid) || House_IsValid(houseid))
     {
-        if(!Account_IsAdminDuty(playerid))
+        if(!Player_IsAdminDuty(playerid))
         {
             if(House_IsValid(houseid) && Character_GetNearHouseIDMenu(playerid) != houseid)
                 return 0;

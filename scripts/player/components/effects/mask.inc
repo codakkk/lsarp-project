@@ -29,9 +29,9 @@ hook OnPlayerStreamIn(playerid, forplayerid)
 {
 	if(Character_IsMasked(playerid))
 	{
-		if(Account_IsAdminDuty(playerid))
+		if(Player_IsAdminDuty(playerid))
 		{
-			SetPlayerMarkerForPlayer(forplayerid, playerid, (Account_IsAdminDuty(playerid)) ? 0xFFFF00AA : 0xFFFFFF00);
+			SetPlayerMarkerForPlayer(forplayerid, playerid, (Player_IsAdminDuty(playerid)) ? 0xFFFF00AA : 0xFFFFFF00);
 			ShowPlayerNameTagForPlayer(forplayerid, playerid, true);
 		}
 		else ShowPlayerNameTagForPlayer(forplayerid, playerid, false);
@@ -75,7 +75,7 @@ CMD:mask(playerid, params[])
 flags:sconosciuto(CMD_ALIVE_USER);
 CMD:sconosciuto(playerid, params[])
 {
-	if(Account_IsAdminDuty(playerid))	
+	if(Player_IsAdminDuty(playerid))	
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	if(Character_IsMasked(playerid))
 	{
@@ -90,7 +90,7 @@ CMD:sconosciuto(playerid, params[])
 		{
 			if(!Character_IsLogged(i))
 				continue;
-			if(Account_IsAdminDuty(i))
+			if(Player_IsAdminDuty(i))
 			{
 				SetPlayerMarkerForPlayer(i, playerid, 0xFFFF00AA);
 				continue;

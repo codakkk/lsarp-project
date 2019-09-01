@@ -17,7 +17,7 @@ CMD:acmds(playerid, params[])
 		SendClientMessage(playerid, -1, "[MODERATORE]: /bancharacter - /unbancharacter - /apark - /avplate - /aafactionkick");
 		SendClientMessage(playerid, -1, "[MODERATORE]: /aplacefurniture - /adeletefurniture - /atextureobject - /vfuel");
 		SendClientMessage(playerid, -1, "[MODERATORE]: /lzcreate - /lzedit - /alzrefreshall - /respawnfactionvehicles");
-		SendClientMessage(playerid, -1, "[MODERATORE]: /afactioncmds - /abuildingcmds - /adealershipcmds");
+		SendClientMessage(playerid, -1, "[MODERATORE]: /sethunger - /afactioncmds - /abuildingcmds - /adealershipcmds");
 		SendClientMessage(playerid, -1, "[MODERATORE]: /banaccount - /unbanaccount - /banofflineaccount");
 		
 	}
@@ -41,7 +41,7 @@ CMD:acmds(playerid, params[])
 flags:a(CMD_JR_MODERATOR);
 CMD:a(playerid, params[])
 {
-	if(pDisableAdminAlerts[playerid])
+	if(Player_IsDisabledAdminAlerts(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Hai disabilitato la chat mod.");
 	if(isnull(params) || strlen(params) > 128)
 		return SendClientMessage(playerid, COLOR_ERROR, "/a <testo>");
@@ -52,14 +52,14 @@ CMD:a(playerid, params[])
 flags:amm(CMD_ADMIN);
 CMD:amm(playerid, params[])
 {
-	if(pDisableAdminAlerts[playerid])
+	if(Player_IsDisabledAdminAlerts(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Hai disabilitato la chat admin.");
 	if(isnull(params) || strlen(params) > 128)
 		return SendClientMessage(playerid, COLOR_ERROR, "/amm <testo>");
 	
 	foreach(new i : Player)
 	{
-		if(!Character_IsLogged(i))
+		if(!Character_IsLogged(i) || Player_IsDisabledAdminAlerts(i))
 			continue;
 		if(Account_GetAdminLevel(i) < 3)
 			continue;
@@ -72,8 +72,8 @@ CMD:amm(playerid, params[])
 flags:disablealerts(CMD_JR_MODERATOR);
 CMD:disablealerts(playerid, params[])
 {
-	pDisableAdminAlerts[playerid] = !pDisableAdminAlerts[playerid];
-	if(pDisableAdminAlerts[playerid])
+	Player_SetDisabledAdminAlerts(playerid, !Player_IsDisabledAdminAlerts(playerid));
+	if(Player_IsDisabledAdminAlerts(playerid))
 		SendClientMessage(playerid, COLOR_YELLOW, "Hai disabilitato i messaggi admin.");
 	else
 		SendClientMessage(playerid, COLOR_YELLOW, "Hai abilitato i messaggi admin.");
@@ -88,9 +88,9 @@ CMD:aduty(playerid, params[])
 	if(Account_IsSupporterDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio supporter.");
 
-	if(Account_IsAdminDuty(playerid))
+	if(Player_IsAdminDuty(playerid))
 	{
-		Account_SetAdminDuty(playerid, false);
+		Player_SetAdminDuty(playerid, false);
 		SetPlayerName(playerid, Character_GetOOCName(playerid));
 		AC_SetPlayerHealth(playerid, 100);
 		AC_SetPlayerArmour(playerid, 0);
@@ -107,7 +107,7 @@ CMD:aduty(playerid, params[])
 		
 		Character_SetMasked(playerid, false);
 		
-		Account_SetAdminDuty(playerid, true);
+		Player_SetAdminDuty(playerid, true);
 		SetPlayerName(playerid, Account_GetName(playerid));
 		AC_SetPlayerHealth(playerid, 99999.0);
 		AC_SetPlayerArmour(playerid, 99999.0);
@@ -127,7 +127,7 @@ CMD:aduty(playerid, params[])
 			continue;
 		if(Character_IsMasked(i))
 		{
-			if(Account_IsAdminDuty(playerid))
+			if(Player_IsAdminDuty(playerid))
 			{
 				SetPlayerMarkerForPlayer(playerid, i, 0xFFFF00AA);
 				ShowPlayerNameTagForPlayer(playerid, i, true);
@@ -199,7 +199,7 @@ CMD:setadmin(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Livello Admin non valido.");
 	if(lvl == 0)
 	{
-		if(Account_IsAdminDuty(id))
+		if(Player_IsAdminDuty(id))
 			pc_cmd_aduty(id, "");
 		SendFormattedMessage(id, COLOR_ERROR, "[ADMIN] %s (%d) ti ha rimosso dallo staff.", Account_GetName(playerid), playerid);
 		SendFormattedMessage(playerid, COLOR_ERROR, "Hai rimosso %s (%d) dallo staff.", Account_GetName(id), id);
@@ -715,7 +715,7 @@ CMD:giveitem(playerid, params[])
 		if(result == INVENTORY_ADD_SUCCESS)
 		{
 			SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha givato %s (Qnt: %d) a %s (%d).", 
-			Account_GetName(playerid), Character_GetOOCName(playerid), ServerItem[itemid][sitemName], quantity, Character_GetOOCName(id), id);
+			Account_GetName(playerid), Character_GetOOCName(playerid), ServerItem_GetName(itemid), quantity, Character_GetOOCName(id), id);
 		}
 		else if(result == INVENTORY_NO_SPACE)
 		{
@@ -727,7 +727,7 @@ CMD:giveitem(playerid, params[])
 		quantity = -quantity;
 		Character_DecreaseItemAmount(id, itemid, quantity);
 		SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha rimosso %s (Qnt: %d) a %s (%d).", 
-		Account_GetName(playerid), Character_GetOOCName(playerid), ServerItem[itemid][sitemName], quantity, Character_GetOOCName(id), id);
+		Account_GetName(playerid), Character_GetOOCName(playerid), ServerItem_GetName(itemid), quantity, Character_GetOOCName(id), id);
 	}
 	//Inventory_Print(Character_GetInventory(id));
 	return 1;
@@ -837,7 +837,7 @@ CMD:givevehicleitem(playerid, params[])
 	   if(result == INVENTORY_ADD_SUCCESS)
 	   {
 		  SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha givato %s (Qnt: %d) nel veicolo id %d.", 
-		  Account_GetName(playerid), Character_GetOOCName(playerid), ServerItem[itemid][sitemName], quantity, id);
+		  Account_GetName(playerid), Character_GetOOCName(playerid), ServerItem_GetName(itemid), quantity, id);
 	   }
 	   else if(result == INVENTORY_NO_SPACE)
 	   {
@@ -849,7 +849,7 @@ CMD:givevehicleitem(playerid, params[])
 	   quantity = -quantity;
 	   Vehicle_DecreaseItemAmount(id, itemid, quantity);
 	   SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha rimosso %s (Qnt: %d) al veicolo %d.", 
-	   Account_GetName(playerid), Character_GetOOCName(playerid), ServerItem[itemid][sitemName], quantity, id);
+	   Account_GetName(playerid), Character_GetOOCName(playerid), ServerItem_GetName(itemid), quantity, id);
     }
     //Inventory_Print(Character_GetInventory(id));
     return 1;
@@ -869,13 +869,10 @@ CMD:ajail(playerid, params[])
 
 	Character_ResetDeathState(id);
 	
-	PlayerTextDrawShow(id, pJailTimeText[playerid]);
-	
 	SetCameraBehindPlayer(id);
 
 	ClearAnimations(id);
 	Character_OffDuty(id);
-
 
 	Character_SetJailTime(id, time);
 	Character_SetToJailPos(id);

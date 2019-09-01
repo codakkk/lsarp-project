@@ -1,4 +1,8 @@
 #include <house_system\components\inventory>
+#include <house_system\components\interiors>
+
+#include <house_system\commands>
+
 #include <YSI_Coding\y_hooks>
 
 static enum _:E_HOUSE_DATA

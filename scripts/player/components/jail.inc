@@ -33,8 +33,8 @@ ptask OnJailTimeUpdate[1000](playerid)
 		return 0;
 	if(Character_IsJailed(playerid))
 	{
-		PlayerJailTime[playerid]--;
-		PlayerTextDrawSetStringStr(playerid, pJailTimeText[playerid], str_format("~n~~n~~g~TEMPO RIMANENTE: ~w~~n~%d secondi", Character_GetJailTime(playerid)));
+		Character_SetJailTimeAsSeconds(playerid, Character_GetJailTime(playerid) - 1);
+		PlayerTextDrawSetStringStr(playerid, JailTimePlayerText[playerid], str_format("~n~~n~~g~TEMPO RIMANENTE: ~w~~n~%d secondi", Character_GetJailTime(playerid)));
 		if(!Character_IsJailed(playerid))
 		{
 			if(Character_IsICJailed(playerid))
@@ -45,50 +45,54 @@ ptask OnJailTimeUpdate[1000](playerid)
 			else
 			{
 				SendClientMessage(playerid, COLOR_GREEN, "(( Hai scontato la tua pena. ))");
-				Character_Spawn(playerid);
+				SpawnPlayer(playerid);
 			}
-			PlayerTextDrawHide(playerid, pJailTimeText[playerid]);
-			Internal_Save(playerid);	
-		}
+			PlayerTextDrawHide(playerid, JailTimePlayerText[playerid]);
+		}	
 	}
-	return 1;
-}
-
-static Internal_Save(playerid)
-{
-	if(!Character_IsLogged(playerid))
-		return 0;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET jail_time = '%d', jail_ic = '%d' WHERE id = '%d'", Character_GetJailTime(playerid), Character_IsICJailed(playerid), Character_GetID(playerid));
 	return 1;
 }
 
 stock Character_GetJailTime(playerid)
 {
+	if(!Character_IsLogged(playerid))
+		return 0;
 	return PlayerJailTime[playerid];
 }
 
 stock Character_SetJailTime(playerid, timeInMinutes)
 {
-	Character_SetJailTimeAsSeconds(playerid, timeInMinutes * 60);
+	return Character_SetJailTimeAsSeconds(playerid, timeInMinutes * 60);
 }
 
 stock Character_SetJailTimeAsSeconds(playerid, timeAsSeconds)
 {
+	if(!Character_IsLogged(playerid))
+		return 0;
 	PlayerJailTime[playerid] = timeAsSeconds;
-	Internal_Save(playerid);
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET jail_time = '%d' WHERE id = '%d'", Character_GetJailTime(playerid), Character_GetID(playerid));
+	return 1;
 }
 
 stock Character_IsJailed(playerid)
 {
+	if(!Character_IsLogged(playerid))
+		return 0;
 	return ( PlayerJailTime[playerid] > 0 );
 }
 
 stock bool:Character_IsICJailed(playerid)
 {
+	if(!Character_IsLogged(playerid))
+		return false;
 	return IsJailIC{playerid};
 }
 
 stock Character_SetICJailed(playerid, bool:value)
 {
+	if(!Character_IsLogged(playerid))
+		return 0;
 	IsJailIC{playerid} = value;
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET jail_ic = '%d' WHERE id = '%d'", Character_IsICJailed(playerid), Character_GetID(playerid));
+	return 1;
 }

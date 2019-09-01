@@ -5,7 +5,18 @@
 #include <player\commands\interaction_commands>
 #include <YSI_Coding\y_hooks>
 
+static 
+	LastAdminQuestionTime[MAX_PLAYERS],
+	LoginAttempts[MAX_PLAYERS char];
+
+hook OnPlayerClearData(playerid)
+{
+	LastAdminQuestionTime[playerid] = 0;
+	return 1;
+}
+
 // CHANGE ME/AME COLOR
+
 
 
 flags:info(CMD_USER);
@@ -36,12 +47,12 @@ CMD:tog(playerid, params[])
 		Player_SetHUDEnabled(playerid, !Player_HasHUDEnabled(playerid));
 		if(Player_HasHUDEnabled(playerid))
 		{
-			TextDrawShowForPlayer(playerid, Clock);
+			ShowClockTextDraw(playerid);
 			SetHealthBarVisible(playerid, true);
 		}
 		else
 		{
-			TextDrawHideForPlayer(playerid, Clock);
+			HideClockTextDraw(playerid);
 			SetHealthBarVisible(playerid, false);
 
 		}
@@ -67,7 +78,7 @@ CMD:domanda(playerid, params[])
     if(isnull(params))
 	   return SendClientMessage(playerid, COLOR_ERROR, "(/dom)anda <testo>");
     new seconds = (Account_GetPremiumLevel(playerid) > 0) ? 10 : 30;
-    if(GetTickCount() - pLastAdminQuestionTime[playerid] < 1000 * seconds)
+    if(GetTickCount() - LastAdminQuestionTime[playerid] < 1000 * seconds)
 	   return SendFormattedMessage(playerid, COLOR_ERROR, "Puoi inviare una domanda ogni %d secondi.", seconds);
     if(Account_GetPremiumLevel(playerid) > 0)
     {
@@ -80,7 +91,7 @@ CMD:domanda(playerid, params[])
 	   SendMessageToAdmins(0, COLOR_ORANGE, "(( %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);
 	   SendClientMessage(playerid, -1, "La domanda è stata inviata ai moderatori online. Attendi.");
     }
-    pLastAdminQuestionTime[playerid] = GetTickCount();
+    LastAdminQuestionTime[playerid] = GetTickCount();
     return 1;
 }
 alias:domanda("dom");*/
@@ -89,7 +100,7 @@ flags:report(CMD_USER);
 CMD:report(playerid, params[])
 {
 	new seconds = (Account_GetPremiumLevel(playerid) > 0) ? 10 : 30;
-    if(GetTickCount() - pLastAdminQuestionTime[playerid] < 1000 * seconds)
+    if(GetTickCount() - LastAdminQuestionTime[playerid] < 1000 * seconds)
 	   return SendFormattedMessage(playerid, COLOR_ERROR, "Puoi inviare una domanda/report ogni %d secondi.", seconds);
 
 	new id, reason[128];
@@ -105,7 +116,7 @@ CMD:report(playerid, params[])
 	SendMessageToAdmins(0, COLOR_ORANGE, "%s (%d) ha reportato %s (%d). Motivo: %s", Character_GetOOCName(playerid), playerid, Character_GetOOCName(id), id, reason);
 	SendFormattedMessage(playerid, -1, "Hai reportato %s (%d). Motivo: %s", Character_GetOOCName(id), id, reason);
 
-	pLastAdminQuestionTime[playerid] = GetTickCount();
+	LastAdminQuestionTime[playerid] = GetTickCount();
 	return 1;
 }
 
@@ -127,21 +138,21 @@ CMD:afk(playerid, params[])
 flags:aiuto(CMD_USER);
 CMD:aiuto(playerid, params[])
 {
-    SendClientMessage(playerid, -1, "[GENERALE]: /info - (/dom)anda - /chiudiaiuto - /afk - /hotkeys - /id - /dp");
+    SendClientMessage(playerid, -1, "[GENERALE]: /info - (/dom)anda - /aiutami - /afk - /hotkeys - /id - /dp");
     SendClientMessage(playerid, -1, "[GENERALE]: /arma - /oggetto - /staff - /tester - /onduty - /report - /aiutami");
 	SendClientMessage(playerid, -1, "[GENERALE]: /casa - /biz - /zpoints - /animlist - /cancello - /rimuovimaschera");
 	SendClientMessage(playerid, -1, "[GENERALE]: /compra - /annulla - /accetta - /rifiuta - /rimuovi - /lostitems");
 	SendClientMessage(playerid, -1, "[GENERALE]: /stilechat - /stilelotta - /stilecamminata - /sconosciuto - /blindfold");
-    SendClientMessage(playerid, -1, "[ALTRO]: /chatcmds - /invcmds - /vcmds - /furniturecmds");
+    SendClientMessage(playerid, -1, "[ALTRO]: /chatcmds - /invcmds - /vcmds - /furniturecmds - /cellcmds");
 	SendClientMessage(playerid, -1, "[ALTRO]: (/cambiapass)word - /fcmds - /animlist - /tcmds - /acmds");
 	new factionid = Character_GetFaction(playerid);
-	if(factionid != -1)
+	if(Faction_IsValid(factionid))
 	{
 		if(Faction_GetType(factionid) == FACTION_TYPE_POLICE || 
 			Faction_GetType(factionid) == FACTION_TYPE_MEDICAL ||
-			Faction_GetType(factionid) == FACTION_TYPE_GOVERNAMENT)
+			Faction_GetType(factionid) == FACTION_TYPE_GOVERNMENT)
 		{
-			SendClientMessage(playerid, COLOR_SLATEBLUE, "[FAZIONE]: (/f)azione");
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "[FAZIONE]: (/f)azione - /fcmds");
 		}
 	}
 	if(Account_GetAdminLevel(playerid) > 0)
@@ -245,14 +256,15 @@ CMD:lasciacarcere(playerid, params[])
 	if(Character_GetJailTime(playerid) > 1)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai ancora scontato la tua pena.");
 	
-	if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_JAIL_EXIT))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino all'uscita della prigione.");
+	//if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_JAIL_EXIT))
+		//return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino all'uscita della prigione.");
 	
 	Character_SetJailTime(playerid, 0);
 	Character_SetICJailed(playerid, false);
 
-	//Character_Spawn(playerid);
-	SetPlayerPos(playerid, 1313.0187, -2063.6877, 57.1440);
+	SetPlayerPos(playerid, 1175.41, -2065.55, 69.00);
+	Character_SetVirtualWorld(playerid, 0);
+	SetPlayerInterior(playerid, 0);
 	SendClientMessage(playerid, -1, "Hai lasciato il carcere.");
 	return 1;
 }
@@ -314,7 +326,7 @@ CMD:onduty(playerid, params[])
 flags:cambiapassword(CMD_USER);
 CMD:cambiapassword(playerid, params[])
 {
-	gLoginAttempts{playerid} = 0;
+	LoginAttempts{playerid} = 0;
 	Dialog_Show(playerid, Dialog_ChangePassword, DIALOG_STYLE_INPUT, "Cambia Password", "Inserisci la tua password attuale.", "Continua", "Chiudi");
 	return 1;
 }
@@ -325,7 +337,7 @@ Dialog:Dialog_ChangePassword(playerid, response, listitem, inputtext[])
 	if(!response)
 		return 0;
 
-	if(gLoginAttempts{playerid} >= 3)
+	if(LoginAttempts{playerid} >= 3)
 		return KickEx(playerid);
 
 	inline OnCheck()
@@ -336,8 +348,8 @@ Dialog:Dialog_ChangePassword(playerid, response, listitem, inputtext[])
 		}
 		else
 		{
-			Dialog_Show(playerid, Dialog_ChangePassword, DIALOG_STYLE_INPUT, "Cambia Password", "{FF0000}La password inserita non è valida.\n{FFFFFF}Inserisci la tua password per continuare.\nTentativo: %d/%d", "Continua", "Annulla", gLoginAttempts{playerid}, MAX_LOGIN_ATTEMPTS);
-			gLoginAttempts{playerid}++;
+			Dialog_Show(playerid, Dialog_ChangePassword, DIALOG_STYLE_INPUT, "Cambia Password", "{FF0000}La password inserita non è valida.\n{FFFFFF}Inserisci la tua password per continuare.\nTentativo: %d/%d", "Continua", "Annulla", LoginAttempts{playerid}, 3);
+			LoginAttempts{playerid}++;
 		}
 	}
 

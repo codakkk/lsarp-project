@@ -1,5 +1,23 @@
 #include <YSI_Coding\y_hooks>
 
+enum _:e_PendingType
+{
+	REQUEST_TYPE_NONE,
+	REQUEST_TYPE_WEAPON,
+	REQUEST_TYPE_ITEM,
+	REQUEST_TYPE_REPAIR,
+	REQUEST_TYPE_VEHICLE_SPRAY,
+	REQUEST_TYPE_SEARCH,
+	REQUEST_TYPE_BUILDING,
+	REQUEST_TYPE_CARE,
+	REQUEST_TYPE_FACTION,
+	REQUEST_TYPE_VEHICLE,
+
+	// Write request types before REQUEST_TYPE_LAST
+
+	REQUEST_TYPE_LAST
+};
+
 static enum e_RequestData
 {
 	Pending,
@@ -18,7 +36,7 @@ static // Should I use PawnPlus MAp or List? mh
 	;
 
 
-stock ResetPendingRequest(playerid, type)
+stock Request_Reset(playerid, type)
 {
 	PendingRequestInfo[playerid][type][Pending] = 0;
 	PendingRequestInfo[playerid][type][ByPlayer] = -1;
@@ -41,16 +59,16 @@ hook OnPlayerClearData(playerid)
 				fromPlayer = PendingRequestInfo[playerid][i][ByPlayer];
 			if(PendingRequestInfo[toPlayer][i][Pending] && PendingRequestInfo[toPlayer][i][ByPlayer] == playerid)
 			{
-				SendFormattedMessage(toPlayer, COLOR_ERROR, "La richiesta (%s) di %s è stata annullata poiché si è disconnesso.", GetRequestTypeName(i), Character_GetRolePlayName(playerid));
-				ResetPendingRequest(toPlayer, i);
+				SendFormattedMessage(toPlayer, COLOR_ERROR, "La richiesta (%s) di %s è stata annullata poiché si è disconnesso.", Request_GetTypeName(i), Character_GetRolePlayName(playerid));
+				Request_Reset(toPlayer, i);
 			}
 			else if(PendingRequestInfo[fromPlayer][i][Pending] && PendingRequestInfo[fromPlayer][i][ToPlayer] == playerid)
 			{
-				SendFormattedMessage(fromPlayer, COLOR_ERROR, "La richiesta (%s) inviata a %s è stata annullata poiché si è disconnesso.", GetRequestTypeName(i), Character_GetRolePlayName(playerid));
-				ResetPendingRequest(fromPlayer, i);
+				SendFormattedMessage(fromPlayer, COLOR_ERROR, "La richiesta (%s) inviata a %s è stata annullata poiché si è disconnesso.", Request_GetTypeName(i), Character_GetRolePlayName(playerid));
+				Request_Reset(fromPlayer, i);
 			}
 		}
-		ResetPendingRequest(playerid, i);
+		Request_Reset(playerid, i);
 	}
     return 1;
 }
@@ -68,11 +86,11 @@ ptask OnRequestUpdateTimer[1000](playerid)
 				new toPlayer = Request_GetReceiver(playerid, i),
 					byPlayer = Request_GetSender(playerid, i);
 
-				SendFormattedMessage(toPlayer, COLOR_ERROR, "La proposta (%s) di %s è scaduta.", GetRequestTypeName(i), Character_GetRolePlayName(byPlayer));
-				ResetPendingRequest(toPlayer, i);
+				SendFormattedMessage(toPlayer, COLOR_ERROR, "La proposta (%s) di %s è scaduta.", Request_GetTypeName(i), Character_GetRolePlayName(byPlayer));
+				Request_Reset(toPlayer, i);
 		
-				SendFormattedMessage(byPlayer, COLOR_ERROR, "La proposta (%s) inviata a %s è scaduta.", GetRequestTypeName(i), Character_GetRolePlayName(toPlayer));
-				ResetPendingRequest(byPlayer, i);
+				SendFormattedMessage(byPlayer, COLOR_ERROR, "La proposta (%s) inviata a %s è scaduta.", Request_GetTypeName(i), Character_GetRolePlayName(toPlayer));
+				Request_Reset(byPlayer, i);
 			}
 		}
 	}
@@ -186,7 +204,26 @@ stock Character_AcceptItemRequest(playerid)
 	}
 	Character_AMe(senderid, "prende degli oggetti e li da a %s.", Character_GetRolePlayName(playerid));
 
-	ResetPendingRequest(senderid, REQUEST_TYPE_ITEM);
-	ResetPendingRequest(playerid, REQUEST_TYPE_ITEM);
+	Request_Reset(senderid, REQUEST_TYPE_ITEM);
+	Request_Reset(playerid, REQUEST_TYPE_ITEM);
 	return 1;
+}
+
+stock Request_GetTypeName(type)
+{
+    new l[16];
+    switch(type)
+    {
+	   case REQUEST_TYPE_WEAPON: l = "Arma";
+	   case REQUEST_TYPE_ITEM: l = "Oggetto";
+	   case REQUEST_TYPE_REPAIR: l = "Riparazione";
+	   case REQUEST_TYPE_VEHICLE_SPRAY: l = "Verniciatura";
+	   case REQUEST_TYPE_SEARCH: l = "Perquisizione";
+	   case REQUEST_TYPE_BUILDING: l = "Edificio";
+	   case REQUEST_TYPE_CARE: l = "Cura";
+	   case REQUEST_TYPE_FACTION: l = "Fazione";
+	   case REQUEST_TYPE_VEHICLE: l = "Veicolo";
+	   default: l = "Sconosciuto";
+    }
+    return l;
 }

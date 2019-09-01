@@ -17,8 +17,8 @@ hook OnCharacterSpawn(playerid)
 	{
 		new sender = Request_GetSender(playerid, REQUEST_TYPE_CARE);
 		new receiver = Request_GetReceiver(playerid, REQUEST_TYPE_CARE);
-		ResetPendingRequest(sender, REQUEST_TYPE_CARE);
-		ResetPendingRequest(receiver, REQUEST_TYPE_CARE);
+		Request_Reset(sender, REQUEST_TYPE_CARE);
+		Request_Reset(receiver, REQUEST_TYPE_CARE);
 	}
 	return 1;
 }
@@ -29,8 +29,8 @@ hook OnCharacterDeath(playerid, killerid, reason)
 	{
 		new sender = Request_GetSender(playerid, REQUEST_TYPE_CARE);
 		new receiver = Request_GetReceiver(playerid, REQUEST_TYPE_CARE);
-		ResetPendingRequest(sender, REQUEST_TYPE_CARE);
-		ResetPendingRequest(receiver, REQUEST_TYPE_CARE);
+		Request_Reset(sender, REQUEST_TYPE_CARE);
+		Request_Reset(receiver, REQUEST_TYPE_CARE);
 	}
 	return 1;
 }
@@ -77,10 +77,10 @@ stock Character_AcceptCare(playerid)
 	
 	Character_SetFreezed(playerid, false);
 	
-	ResetPendingRequest(playerid, REQUEST_TYPE_CARE);
-	ResetPendingRequest(senderid, REQUEST_TYPE_CARE);
+	Request_Reset(playerid, REQUEST_TYPE_CARE);
+	Request_Reset(senderid, REQUEST_TYPE_CARE);
 
-	if(!Account_IsAdminDuty(playerid) && !Account_IsAdminDuty(senderid))
+	if(!Player_IsAdminDuty(playerid) && !Player_IsAdminDuty(senderid))
 	{
 		ApplyAnimation(senderid, "MEDIC", "CPR", 4.1, 0, 0, 0, 0, 0, 1);
 		ApplyAnimation(playerid, "PED", "KO_shot_stom", 4.0, 0, 1, 1, 1, 0, 1);

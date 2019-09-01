@@ -1,3 +1,4 @@
+#include <building\core>
 #include <YSI_Coding\y_hooks>
 
 static PlayerPayCheck[MAX_PLAYERS];

@@ -201,7 +201,7 @@ CMD:gettaarma(playerid, params[])
 	new 
 		weaponid, 
 		ammo;
-	if(!Character_GetCurrentWeaponData(playerid, weaponid, ammo) || weaponid == 0 || ammo == 0)
+	if(!Character_GetCurrentWeaponData(playerid, weaponid, ammo) || weaponid == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai un'arma da gettare.");
 	new Float:x, Float:y, Float:z;
 	GetPlayerPos(playerid, x, y, z);

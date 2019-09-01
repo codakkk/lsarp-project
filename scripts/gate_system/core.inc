@@ -450,7 +450,20 @@ CMD:gcreate(playerid, params[])
     if(isnull(params) || val <= 0)
         return SendClientMessage(playerid, COLOR_ERROR, "/gcreate <modelid>");
     
-    if(val != 19912 && val != 985)
+    static const valids[] = {19912, 985, 2933, 2990, 986, 971, 976, 19870, 19795, 19796, 6400, 2928, 9093, 19910, 988, 2909, 3036, 975, 969, 10149};
+
+    new bool:isValid = false;
+
+    for(new i = 0, j = sizeof(valids); i < j; ++i)
+    {
+        if(valids[i] == val)
+        {
+            isValid = true;
+            break;
+        }
+    }
+    
+    if(!isValid)
         return SendClientMessage(playerid, COLOR_ERROR, "Modelli utilizzabili: 19912, 985");
 
     new Float:x, Float:y, Float:z;
@@ -468,7 +481,7 @@ CMD:gdelete(playerid, params[])
 {
     new val = strval(params);
     if(val <= 0)
-        return SendClientMessage(playerid, COLOR_ERROR, "/gdelete <garage id>");
+        return SendClientMessage(playerid, COLOR_ERROR, "/gdelete <gate id>");
     if(Gate_Delete(val))
 	{
 		SendMessageToAdmins(true, COLOR_ORANGE, "AdmCmd: %s (%d) ha rimosso il cancello id %d.", Account_GetName(playerid), playerid, val);

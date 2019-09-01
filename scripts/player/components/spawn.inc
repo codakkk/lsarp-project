@@ -1,5 +1,7 @@
 #include <YSI_Coding\y_hooks>
 
+forward OnCharacterFirstSpawn(playerid);
+
 #define DEFAULT_SPAWN_X 		1723.3232 
 #define DEFAULT_SPAWN_Y 		-1867.1775
 #define DEFAULT_SPAWN_Z 		13.5705
@@ -144,7 +146,7 @@ CMD:spawnpoint(playerid, params[])
 	if(sscanf(params, "dD(-1)", spawnType, extraid))
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "/spawnpoint <type>");
-		SendClientMessage(playerid, COLOR_ERROR, "Tipi - 0: Mall, 1: Casa, 2: Fazione, 3: Business");
+		SendClientMessage(playerid, COLOR_ERROR, "Tipi - 0: Spawn scelto, 1: Casa, 2: Fazione, 3: Business");
 		return 1;
 	}
 	if(spawnType == SPAWN_POINT_TYPE_HOUSE)
@@ -152,7 +154,7 @@ CMD:spawnpoint(playerid, params[])
 		if(extraid == -1)
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "/spawnpoint 1 <houseid>");
-			SendClientMessage(playerid, COLOR_ERROR, "Tipi - 0: Mall, 1: Casa, 2: Fazione, 3: Business");
+			SendClientMessage(playerid, COLOR_ERROR, "Tipi - 0: Spawn scelto, 1: Casa, 2: Fazione, 3: Business");
 			return 1;
 		}
 		if(!House_IsValid(extraid))
@@ -178,9 +180,16 @@ CMD:spawnpoint(playerid, params[])
 	}
 	else if(spawnType == SPAWN_POINT_TYPE_FACTION)
 	{
-		if(Character_GetFaction(playerid) == INVALID_FACTION_ID)
+		if(!Faction_IsValid(Character_GetFaction(playerid)))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non fai parte di una fazione.");
 		
+		new Float:x, Float:y, Float:z;
+		Faction_GetSpawnPos(Character_GetFaction(playerid), x, y, z);
+
+		if(x == 0.0 && y == 0.0 && z == 0.0)
+			return SendClientMessage(playerid, COLOR_ERROR, "La tua fazione non ha ancora settato una posizione di spawn.");
+
+
 		Character_SetSpawnPointType(playerid, SPAWN_POINT_TYPE_FACTION);
 
 		SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo spawn point. La prossima volta respawnerai all'HQ della tua fazione.");
@@ -190,7 +199,7 @@ CMD:spawnpoint(playerid, params[])
 		SpawnPointType{playerid} = spawnType;
 		SpawnPointID[playerid] = 0;
 		if(spawnType == SPAWN_POINT_TYPE_NONE)
-			SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo spawn point. La prossima volta respawnerai al Mall.");
+			SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo spawn point. La prossima volta respawnerai al punto scelto la prima volta.");
 	}
 	return 1;
 }
@@ -199,16 +208,10 @@ stock Character_HandleFirstSpawn(playerid)
 {
 	if(!IsFirstSpawn{playerid})
 		return 0;
-	
-	IsFirstSpawn{playerid} = false;
 
 	Character_SetSkin(playerid, Character_GetSkin(playerid));
 	
-
-	SetPlayerCameraPos(playerid, 1467.0076, -2285.8083, 84.5440);
-	SetPlayerCameraLookAt(playerid, 1471.9390,-2287.5544,13.2591);
-	
-	Dialog_Show(playerid, Dialog_SelectFirstSpawn, DIALOG_STYLE_TABLIST_HEADERS, "Primo Spawn", "Zona\tLivello Rischio\nZona Governativa\t{00FF00}Sicura{FFFFFF}\nZona a rischio\t{FF0000}Pericolosa{FFFFFF}", "Seleziona", "");
+	ForceFirstSpawnSelection(playerid);
 	/*Streamer_UpdateEx(playerid, PlayerSpawnData[playerid][StartSpawnX], PlayerSpawnData[playerid][StartSpawnY], PlayerSpawnData[playerid][StartSpawnZ]);
 	SetPlayerPos(playerid, PlayerSpawnData[playerid][StartSpawnX], PlayerSpawnData[playerid][StartSpawnY], PlayerSpawnData[playerid][StartSpawnZ]);
 	SetPlayerInterior(playerid, PlayerSpawnData[playerid][StartSpawnInterior]);
@@ -219,15 +222,18 @@ stock Character_HandleFirstSpawn(playerid)
 hook OnPlayerSpawn(playerid)
 {
 	if(Character_IsAlive(playerid))
+	{
 		Character_Spawn(playerid);
+		defer LoadCharacterDataAfterTime(playerid);
+	}
 	return 1;
 }
 
-stock Character_Spawn(playerid)
+static Character_Spawn(playerid)
 {
 	PreloadAnimations(playerid);
 	#if defined LSARP_DEBUG
-		if(!Account_IsAdminDuty(playerid) && !strcmp(Account_GetName(playerid), "Coda", false))
+		if(!Player_IsAdminDuty(playerid) && !strcmp(Account_GetName(playerid), "Coda", false))
 		{
 			pc_cmd_aduty(playerid, "");
 		}
@@ -244,8 +250,8 @@ stock Character_Spawn(playerid)
     }
 	else if(Character_IsJailed(playerid))
 	{
+		IsSpawned{playerid} = false;
 		Character_SetToJailPos(playerid);
-		PlayerTextDrawShow(playerid, pJailTimeText[playerid]);
 	}
     else if(IsSpawned{playerid} && PlayerSpawnData[playerid][LastX] != 0.0 && PlayerSpawnData[playerid][LastY] != 0.0 && PlayerSpawnData[playerid][LastZ] != 0.0)
     {
@@ -265,27 +271,18 @@ stock Character_Spawn(playerid)
 			new housekey = Character_GetSpawnPointID(playerid);
 			if(House_GetOwnerID(housekey) != Character_GetID(playerid) && Character_GetHouseKey(playerid) != housekey)
 			{
-				SendClientMessage(playerid, COLOR_ERROR, "Non possiedi più la casa. Il tuo spawn-point è stato resettato al Mall.");
+				SendClientMessage(playerid, COLOR_ERROR, "Non possiedi più la casa. Il tuo spawn-point è stato resettato alla posizione scelta all'inizio.");
 				
 				Character_SetSpawnPointType(playerid, SPAWN_POINT_TYPE_NONE);
 				Character_SetSpawnPointID(playerid, 0);
 
-				Streamer_UpdateEx(playerid, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
-
-				SetPlayerPos(playerid, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
-				SetPlayerInterior(playerid, 0);
-				Character_SetVirtualWorld(playerid, 0);
+				Character_ForceStartSpawnPos(playerid);
 			}
 			else
 			{
 				new Float:x, Float:y, Float:z;
 				House_GetExitPosition(housekey, x, y, z);
-
-				Streamer_UpdateEx(playerid, x, y, z);
-
-				SetPlayerPos(playerid, x, y, z);
-				SetPlayerInterior(playerid, House_GetExitInterior(housekey));
-				Character_SetVirtualWorld(playerid, House_GetExitWorld(housekey));
+				Character_SetSafePosition(playerid, x, y, z, House_GetExitInterior(housekey), House_GetExitWorld(housekey));
 			}
 		}
 		else if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_BUSINESS)
@@ -293,52 +290,60 @@ stock Character_Spawn(playerid)
 			new buildingkey = Character_GetBuildingKey(playerid);
 			if(!Building_IsValid(buildingkey) || Building_GetOwnerID(buildingkey) != Character_GetID(playerid))
 			{
-				SendClientMessage(playerid, COLOR_ERROR, "Non possiedi più il business. Il tuo spawn-point è stato resettato al Mall.");
+				SendClientMessage(playerid, COLOR_ERROR, "Non possiedi più il business. Il tuo spawn-point è stato resettato alla posizione scelta all'inizio.");
 				
 				Character_SetSpawnPointType(playerid, SPAWN_POINT_TYPE_NONE);
 				Character_SetSpawnPointID(playerid, 0);
 
-				Streamer_UpdateEx(playerid, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
-
-				SetPlayerPos(playerid, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
-				SetPlayerInterior(playerid, 0);
-				Character_SetVirtualWorld(playerid, 0);
+				Character_ForceStartSpawnPos(playerid);
 			}
 			else
 			{
 				new Float:x, Float:y, Float:z;
 				Building_GetEnterPos(buildingkey, x, y, z);
-				
-				Streamer_UpdateEx(playerid, x, y, z);
 
-				SetPlayerPos(playerid, x, y, z);
-				SetPlayerInterior(playerid, Building_GetEnterInterior(buildingkey));
-				Character_SetVirtualWorld(playerid, Building_GetEnterWorld(buildingkey));
+				Character_SetSafePosition(playerid, x, y, z, Building_GetEnterInterior(buildingkey), Building_GetEnterWorld(buildingkey));
 			}
 		}
-		else if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_FACTION && Character_GetFaction(playerid) != INVALID_FACTION_ID)
+		else if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_FACTION && Faction_IsValid(Character_GetFaction(playerid)))
 		{
-			new Float:x, Float:y, Float:z, factionid = Character_GetFaction(playerid);
-			Faction_GetSpawnPos(factionid, x, y, z);
+			new factionid = Character_GetFaction(playerid);
 
-			Streamer_UpdateEx(playerid, x, y, z);
-
-			SetPlayerPos(playerid, x, y, z);
-			SetPlayerInterior(playerid, Faction_GetSpawnInterior(factionid));
-			Character_SetVirtualWorld(playerid, Faction_GetSpawnWorld(factionid));
+			if(!Faction_IsValidSpawnPosition(factionid))
+			{
+				SendClientMessage(playerid, COLOR_ERROR, "La tua fazione non ha uno spawn settato. Il tuo spawn è stato resettato.");
+				Character_SetSpawnPointID(playerid, SPAWN_POINT_TYPE_NONE);
+				Character_ForceStartSpawnPos(playerid);
+			}
+			else
+			{
+				new Float:x, Float:y, Float:z;
+				Faction_GetSpawnPos(factionid, x, y, z);
+				Character_SetSafePosition(playerid, x, y, z, Faction_GetSpawnInterior(factionid), Faction_GetSpawnWorld(factionid));
+			}
 		}
 		else
 		{
-			Streamer_UpdateEx(playerid, PlayerSpawnData[playerid][StartSpawnX], PlayerSpawnData[playerid][StartSpawnY], PlayerSpawnData[playerid][StartSpawnZ]);
-			SetPlayerPos(playerid, PlayerSpawnData[playerid][StartSpawnX], PlayerSpawnData[playerid][StartSpawnY], PlayerSpawnData[playerid][StartSpawnZ]);
-			SetPlayerInterior(playerid, PlayerSpawnData[playerid][StartSpawnInterior]);
-			Character_SetVirtualWorld(playerid, PlayerSpawnData[playerid][StartSpawnWorld]);
+			Character_ForceStartSpawnPos(playerid);
 		}
 		AC_SetPlayerHealth(playerid, 100.0);
 		AC_SetPlayerArmour(playerid, 0.0);
     }
-	defer LoadCharacterDataAfterTime(playerid);
 	CallLocalFunction(#OnCharacterSpawn, "d", playerid);
+	return 1;
+}
+
+// Sets player pos to StartSpawn position.
+static Character_ForceStartSpawnPos(playerid)
+{
+	if(PlayerSpawnData[playerid][StartSpawnX] == 0.0 && PlayerSpawnData[playerid][StartSpawnY] == 0.0 && PlayerSpawnData[playerid][StartSpawnZ] == 0.0)
+	{
+		return ForceFirstSpawnSelection(playerid);
+	}
+	Streamer_UpdateEx(playerid, PlayerSpawnData[playerid][StartSpawnX], PlayerSpawnData[playerid][StartSpawnY], PlayerSpawnData[playerid][StartSpawnZ], 0, 0);
+	SetPlayerPos(playerid, PlayerSpawnData[playerid][StartSpawnX], PlayerSpawnData[playerid][StartSpawnY], PlayerSpawnData[playerid][StartSpawnZ]);
+	SetPlayerInterior(playerid, PlayerSpawnData[playerid][StartSpawnInterior]);
+	Character_SetVirtualWorld(playerid, PlayerSpawnData[playerid][StartSpawnWorld]);
 	return 1;
 }
 
@@ -468,27 +473,43 @@ Dialog:Dialog_DangerousZone(playerid, response, listitem, inputtext[])
 Dialog:Dialog_CanSpawnNow(playerid, response, listitem, inputtext[])
 {
 	SetPlayerPos(playerid, PlayerSpawnData[playerid][StartSpawnX], PlayerSpawnData[playerid][StartSpawnY], PlayerSpawnData[playerid][StartSpawnZ]);
-	SetCameraBehindPlayer(playerid);
 	Character_SetVirtualWorld(playerid, 0);
+	SetPlayerInterior(playerid, 0);
 
-	if(Account_GetCharactersCount(playerid) <= 2)
+	SetCameraBehindPlayer(playerid);
+
+	if(IsFirstSpawn{playerid})
 	{
-		new count = Account_GetCharactersCount(playerid);
-		static const characterFirstLoginMoney[] = {30000, 20000, 10000};
-		Character_GiveMoney(playerid, characterFirstLoginMoney[count], "FirstSpawn");
-		SendFormattedMessage(playerid, -1, "(( Ti sono stati dati {85bb65}$%d{FFFFFF} per cominciare. ))", characterFirstLoginMoney[count]);
+		IsFirstSpawn{playerid} = false;
+		if(Account_GetCharactersCount(playerid) <= 2)
+		{
+			new count = Account_GetCharactersCount(playerid);
+			static const characterFirstLoginMoney[] = {30000, 20000, 10000};
+			Character_GiveMoney(playerid, characterFirstLoginMoney[count], "FirstSpawn");
+			SendFormattedMessage(playerid, -1, "(( Ti sono stati dati {85bb65}$%d{FFFFFF} per cominciare. ))", characterFirstLoginMoney[count]);
+		}
+		
+		SetPlayerHealth(playerid, 100.0);
+		Character_SetHunger(playerid, 100);
+
+		new query[128];
+		mysql_format(gMySQL, query, sizeof(query), "UPDATE `character_spawn_data` SET is_first_spawn = '0' WHERE character_id = '%d'", Character_GetID(playerid));
+		mysql_tquery(gMySQL, query);
+
+		Account_AddCharactersCount(playerid, 1);
+
+		mysql_format(gMySQL, query, sizeof(query), "UPDATE `accounts` SET characters_counter = '%d' WHERE id = '%d'", Account_GetCharactersCount(playerid), Account_GetID(playerid));
+		mysql_tquery(gMySQL, query);
+
+		CallLocalFunction(#OnCharacterFirstSpawn, "d", playerid);
 	}
-	
-	SetPlayerHealth(playerid, 100.0);
-	Character_SetHunger(playerid, 100);
+	return 1;
+}
 
-	new query[128];
-	mysql_format(gMySQL, query, sizeof(query), "UPDATE `character_spawn_data` SET is_first_spawn = '0' WHERE character_id = '%d'", Character_GetID(playerid));
-	mysql_tquery(gMySQL, query);
-
-	Account_AddCharactersCount(playerid, 1);
-
-	mysql_format(gMySQL, query, sizeof(query), "UPDATE `accounts` SET characters_counter = '%d' WHERE id = '%d'", Account_GetCharactersCount(playerid), Account_GetID(playerid));
-	mysql_tquery(gMySQL, query);
+static ForceFirstSpawnSelection(playerid)
+{
+	SetPlayerCameraPos(playerid, 1467.0076, -2285.8083, 84.5440);
+	SetPlayerCameraLookAt(playerid, 1471.9390,-2287.5544,13.2591);
+	Dialog_Show(playerid, Dialog_SelectFirstSpawn, DIALOG_STYLE_TABLIST_HEADERS, "Primo Spawn", "Zona\tLivello Rischio\nZona Governativa\t{00FF00}Sicura{FFFFFF}\nZona a rischio\t{FF0000}Pericolosa{FFFFFF}", "Seleziona", "");
 	return 1;
 }

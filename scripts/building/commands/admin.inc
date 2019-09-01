@@ -1,3 +1,7 @@
+
+#include <building\core>
+#include <YSI_Coding\y_hooks>
+
 flags:abuildingcmds(CMD_ADMIN);
 CMD:abuildingcmds(playerid, params[])
 {

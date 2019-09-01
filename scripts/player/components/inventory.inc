@@ -1,7 +1,21 @@
+
+#include <player\core>
+
 #include <YSI_Coding\y_hooks>
 
+static 
+	Map:PlayerInventory, 
+	pInventoryBag[MAX_PLAYERS],
+	SelectedListItem[MAX_PLAYERS]
+;
 forward OnCharacterUseItem(playerid, slotid, itemid);
 // #define Character_%0(%1, Inventory_%0(Character_GetInventory(%1), // It is a convenient way to call Inventory_Func with player inventory
+
+hook OnGameModeInit()
+{
+	PlayerInventory = map_new();
+	return 1;
+}
 
 stock bool:Character_InitializeInventory(playerid)
 {
@@ -39,6 +53,7 @@ hook OnPlayerClearData(playerid)
 	#if defined LSARP_DEBUG
 		printf("player_inventory.pwn/OnPlayerClearData");
 	#endif
+	SelectedListItem[playerid] = -1;
 	Character_ResetInventory(playerid);
 	Character_UnloadInventory(playerid);
 	return 1;
@@ -76,8 +91,8 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 		}
 		if(Request_IsPending(playerid, REQUEST_TYPE_WEAPON) && Request_GetSlot(playerid, REQUEST_TYPE_WEAPON) == Weapon_GetSlot(weaponid) && Request_GetItem(playerid, REQUEST_TYPE_WEAPON) == weaponid)
 		{
-			ResetPendingRequest(playerid, REQUEST_TYPE_WEAPON);
-			ResetPendingRequest(Request_GetReceiver(playerid, REQUEST_TYPE_WEAPON), REQUEST_TYPE_WEAPON);
+			Request_Reset(playerid, REQUEST_TYPE_WEAPON);
+			Request_Reset(Request_GetReceiver(playerid, REQUEST_TYPE_WEAPON), REQUEST_TYPE_WEAPON);
 			SendClientMessage(playerid, COLOR_ERROR, "La richiesta è stata annullata poiché non possiedi più l'arma.");
 			SendClientMessage(Request_GetReceiver(playerid, REQUEST_TYPE_WEAPON), COLOR_ERROR, "La richiesta ricevuta dal giocatore è stata annullata poiché non possiede più l'arma.");
 		}
@@ -209,7 +224,7 @@ Dialog:Dialog_InventoryItemList(playerid, response, listitem, inputtext[])
 		title = str_format("%s (Quantità: %d)", ServerItem_GetName(itemid), Character_GetSlotAmount(playerid, listitem));
 	}
 	Dialog_Show_s(playerid, Dialog_InvItemAction, DIALOG_STYLE_LIST, title, functions, "Continua", "Annulla");
-	pSelectedListItem[playerid] = listitem;
+	SelectedListItem[playerid] = listitem;
 	return 1;
 }
 
@@ -259,7 +274,7 @@ Dialog:Dialog_InvItemAction(playerid, response, listitem, inputtext[])
 		return Character_ShowInventory(playerid, playerid);
 	}
 	new 
-		slotid = pSelectedListItem[playerid],
+		slotid = SelectedListItem[playerid],
 		itemid = Character_GetSlotItem(playerid, slotid),
 		amount = Character_GetSlotAmount(playerid, slotid),
 		extra = Character_GetSlotExtra(playerid, slotid);
@@ -328,7 +343,7 @@ Dialog:Dialog_InvItemDrop(playerid, response, listitem, inputtext[])
 	if(!response)
 		return Character_ShowInventory(playerid, playerid);
 	new amount = 0, 
-		slotid = pSelectedListItem[playerid],
+		slotid = SelectedListItem[playerid],
 		itemid = Character_GetSlotItem(playerid, slotid),
 		slotAmount = Character_GetSlotAmount(playerid, slotid);
 	sscanf(inputtext, "D(1)", amount);
@@ -364,7 +379,7 @@ Dialog:Dialog_InvItemGivePlayer(playerid, response, listitem, inputtext[])
 		return Character_ShowInventory(playerid, playerid);
 	new 
 		id, amount,
-		slotid = pSelectedListItem[playerid],
+		slotid = SelectedListItem[playerid],
 		itemid = Character_GetSlotItem(playerid, slotid),
 		extra = Character_GetSlotExtra(playerid, slotid),
 		slotAmount = Character_GetSlotAmount(playerid, slotid);
@@ -453,7 +468,7 @@ stock bool:Character_SetBag(playerid, bagid)
 
 stock Character_ResetInventory(playerid)
 {
-	pInventoryBag[playerid] = 0;
+	Character_SetBag(playerid, 0);
 	return 1;
 }
 

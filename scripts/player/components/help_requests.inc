@@ -273,12 +273,12 @@ static StaffRequest_Accept(playerid, requestid)
 
         if(Account_GetAdminLevel(playerid) == 1)
         {
-            SendFormattedMessage(playerid, COLOR_GREEN, "%s (%d) ha accettato la tua richiesta.", Character_GetOOCName(playerid), playerid);
+            SendFormattedMessage(owner, COLOR_GREEN, "%s (%d) ha accettato la tua richiesta.", Character_GetOOCName(playerid), playerid);
             SendMessageToTesters(0, 0xe9de98ff, "TesterCmd: %s (%d) ha accettato la richiesta di %s (%d).", Character_GetOOCName(playerid), playerid, Character_GetOOCName(owner), owner);
         }
         else if(Account_GetAdminLevel(playerid) > 1)
         {
-            SendFormattedMessage(playerid, COLOR_GREEN, "%s (%d) ha accettato la tua richiesta", Account_GetName(playerid), playerid);
+            SendFormattedMessage(owner, COLOR_GREEN, "%s (%d) ha accettato la tua richiesta", Account_GetName(playerid), playerid);
             SendMessageToAdmins(0, 0xFF6347FF, "AdmCmd: %s (%d) ha accettato la richiesta di %s (%d)." , Account_GetName(playerid), playerid, Character_GetOOCName(owner), owner);
         }
 
@@ -311,12 +311,12 @@ static StaffRequest_Decline(playerid, requestid, const reason[])
 
         if(Account_GetAdminLevel(playerid) == 1)
         {
-            SendFormattedMessage(playerid, COLOR_GREEN, "%s (%d) ha rifiutato la tua richiesta. Motivo: %s", Character_GetOOCName(playerid), playerid, mot);
+            SendFormattedMessage(owner, COLOR_GREEN, "%s (%d) ha rifiutato la tua richiesta. Motivo: %s", Character_GetOOCName(playerid), playerid, mot);
             SendMessageToTesters(0, COLOR_SUPPORTER, "TesterCmd: %s (%d) ha rifiutato la richiesta di %s (%d). Motivo: %s", Character_GetOOCName(playerid), playerid, Character_GetOOCName(owner), owner, mot);
         }
         else if(Account_GetAdminLevel(playerid) > 1)
         {
-            SendFormattedMessage(playerid, COLOR_GREEN, "%s (%d) ha rifiutato la tua richiesta. Motivo: %s", Account_GetName(playerid), playerid, mot);
+            SendFormattedMessage(owner, COLOR_GREEN, "%s (%d) ha rifiutato la tua richiesta. Motivo: %s", Account_GetName(playerid), playerid, mot);
             SendMessageToAdmins(0, 0xFF6347FF, "AdmCmd: %s (%d) ha rifiutato la richiesta di %s (%d). Motivo: %s" , Account_GetName(playerid), playerid, Character_GetOOCName(owner), owner, mot);
         }
 
@@ -340,7 +340,7 @@ static Character_ShowMyRequests(playerid, page)
     {
         new rows = cache_num_rows();
 
-        if(!rows)
+        if(rows <= 0)
             return SendClientMessage(playerid, COLOR_ERROR, "Non hai richieste inviate allo staff attive.");
 
         new id, type, text[255], time;
@@ -414,15 +414,6 @@ Dialog:Dialog_RequestView(playerid, response, listitem, inputtext[])
 Dialog:Dialog_RequestViewText(playerid, response, listitem, inputtext[])
 {
     Character_ShowMyRequests(playerid, CurrentRequestPage{playerid});
-    return 1;
-}
-
-
-static StaffRequest_ShowToStaff(playerid)
-{
-    if(!Character_IsLogged(playerid))
-        return 0;
-
     return 1;
 }
 

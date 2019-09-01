@@ -1,3 +1,6 @@
+
+#include <pickup\core>
+
 #include <YSI_Coding\y_hooks>
 
 forward bool:Character_CollectDrop(playerid, dropid);

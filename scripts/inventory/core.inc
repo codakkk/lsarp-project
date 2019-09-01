@@ -1,15 +1,45 @@
-#include <inventory\types\ammo>
-#include <inventory\types\bag>
-#include <inventory\types\fuel>
-#include <inventory\types\medic>
-#include <inventory\types\money>
-#include <inventory\types\weapon>
-#include <inventory\types\dress>
-#include <inventory\callbacks>
-#include <YSI_Coding\y_hooks>
+
+#if defined _included_INVENTORY_CORE
+    #endinput
+#endif 
+
+#define _included_INVENTORY_CORE 
+
+#include <inventory\server>
+
+#define Inventory List@Inventory
+
+#define for_inventory(%0:%1) for_list(%0:%1)
 
 #define Inventory_Show(%0,%1,%2,%3, Inventory_InternalShow(%0, %1, %2, #%3,
 #define Inventory_ShowStr(%0,%1,%2,%3, Inventory_InternalShowStr(%0, %1, %2, #%3,
+
+#define MAX_SLOT_EXTRA			(5)
+
+enum // Error Type
+{
+	//INVENTORY_RESULT_ENUM = 0, // NOT TRUE: -50 because we need positive numbers for diff.
+	INVENTORY_INVALID,
+	INVENTORY_ADD_SUCCESS,
+	INVENTORY_NO_SPACE,
+	INVENTORY_INVALID_SLOTID,
+	INVENTORY_FAILED_INVALID_ITEM,
+	INVENTORY_FAILED_INVALID_AMOUNT,
+	INVENTORY_ADD_INVALID_ITEM,
+	INVENTORY_DECREASE_SUCCESS,
+	INVENTORY_DECREASE_FAILED,
+};
+
+static enum _:E_ITEM_DATA
+{
+	InvItem,
+	InvAmount,
+	InvExtra[MAX_SLOT_EXTRA] // I should use a Map:<string, data>
+};
+
+#include <inventory\types\types>
+#include <inventory\callbacks>
+#include <YSI_Coding\y_hooks>
 
 // Remember that we're using set instead of add for inventory size
 
@@ -60,9 +90,9 @@ stock bool:Inventory_SetItem(Inventory:inventory, slotid, itemid, amount, extra)
     else
     {
 	   new item[E_ITEM_DATA];
-	   item[gInvItem] = itemid;
-	   item[gInvAmount] = amount;
-	   item[gInvExtra] = extra;
+	   item[InvItem] = itemid;
+	   item[InvAmount] = amount;
+	   item[InvExtra][0] = extra;
 	   list_set_arr(inventory, slotid, item);
     }
     return true;
@@ -124,8 +154,8 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra)
 
 			tempAmount -= (itemAmount - preAdd);
 
-			list_set_cell(inventory, slotid, gInvAmount, itemAmount);
-			list_set_cell(inventory, slotid, gInvExtra, extra);
+			list_set_cell(inventory, slotid, InvAmount, itemAmount);
+			list_set_cell(inventory, slotid, InvExtra + 0, extra);
 		}
 		if(tempAmount > 0)// If no items with same id and enough amount, add item in new slot
 		{
@@ -154,8 +184,8 @@ stock bool:Inventory_DecreaseSlotAmount(Inventory:inventory, slotid, amount = 1)
     new item[E_ITEM_DATA];
     if(list_get_arr_safe(inventory, slotid, item))
     {
-	   item[gInvAmount] -= amount;
-	   if(item[gInvAmount] <= 0)
+	   item[InvAmount] -= amount;
+	   if(item[InvAmount] <= 0)
 		  list_set_var(inventory, slotid, VAR_NULL);
 	   else
 		  list_set_arr(inventory, slotid, item);
@@ -177,10 +207,10 @@ stock Inventory_DecreaseItemAmount(Inventory:inventory, itemid, amount = 1)
 	   
 	   iter_get_arr(i, item);
 	   
-	   if(itemid != item[gInvItem]) 
+	   if(itemid != item[InvItem]) 
 		  continue; // Safeness
 	   
-	   new diff = tempDecreaseAmount - item[gInvAmount];
+	   new diff = tempDecreaseAmount - item[InvAmount];
 	   if(diff >= 0)
 	   {
 		  //iter_set_value_arr(i, VAR_NULL);
@@ -189,7 +219,7 @@ stock Inventory_DecreaseItemAmount(Inventory:inventory, itemid, amount = 1)
 	   }
 	   else 
 	   {
-		  item[gInvAmount] -= tempDecreaseAmount;
+		  item[InvAmount] -= tempDecreaseAmount;
 		  iter_set_arr(i, item);
 		  tempDecreaseAmount = 0;
 	   }
@@ -217,8 +247,8 @@ stock Inventory_HasSpaceForItem(Inventory:inventory, itemid, amount)
 		for_list(i : inventory)
 		{
 			iter_get_arr_safe(i, item);
-			tempCurrentQuantity = item[gInvAmount];
-			while(item[gInvItem] == itemid && tempCurrentQuantity < ServerItem_GetMaxStack(itemid) && tempAmount > 0) // tempAmount > 0 added after money bug.
+			tempCurrentQuantity = item[InvAmount];
+			while(item[InvItem] == itemid && tempCurrentQuantity < ServerItem_GetMaxStack(itemid) && tempAmount > 0) // tempAmount > 0 added after money bug.
 			{
 				tempCurrentQuantity++;
 				tempAmount--;
@@ -236,7 +266,7 @@ stock Inventory_HasSpaceForItem(Inventory:inventory, itemid, amount)
 			occupiedSlots = 0;
 		while(tempAmount > 0 && occupiedSlots < currentFreeSlotCount)
 		{
-			tempAmount -= ServerItem[itemid][sitemMaxStack];
+			tempAmount -= ServerItem_GetMaxStack(itemid);// ServerItem[itemid][sitemMaxStack];
 			occupiedSlots++;
 		}
 	}
@@ -267,8 +297,8 @@ stock Inventory_HasSpaceForItems(Inventory:inventory, items[10], amounts[10])
 			for_list(i : inventory)
 			{
 				iter_get_arr_safe(i, item);
-				tempCurrentQuantity = item[gInvAmount];
-				while(item[gInvItem] == itemid && tempCurrentQuantity < ServerItem_GetMaxStack(itemid))
+				tempCurrentQuantity = item[InvAmount];
+				while(item[InvItem] == itemid && tempCurrentQuantity < ServerItem_GetMaxStack(itemid))
 				{
 					tempCurrentQuantity++;
 					tempAmount--;
@@ -290,7 +320,7 @@ stock Inventory_HasSpaceForItems(Inventory:inventory, items[10], amounts[10])
 				occupiedSlots = 0;
 			while(tempAmount > 0 && occupiedSlots < currentFreeSlotCount)
 			{
-				tempAmount -= ServerItem[itemid][sitemMaxStack];
+				tempAmount -= ServerItem_GetMaxStack(itemid);
 				occupiedSlots++;
 			}
 			usedSpace += occupiedSlots;
@@ -307,7 +337,7 @@ stock Inventory_HasItem(Inventory:inventory, itemid, min = 1)
 	for(new i = 0, j = list_size(inventory); i < j; ++i)
 	{
 		Inventory_GetItemData(inventory, i, item);
-		if(item[gInvItem] == itemid && item[gInvAmount] >= min)
+		if(item[InvItem] == itemid && item[InvAmount] >= min)
 			return 1;
 	}
 	return 0;
@@ -322,7 +352,7 @@ stock List:Inventory_HasItemBySlots(Inventory:inventory, itemid)
 		if(list_sizeof(inventory, i) == 0)
 			continue;
 		Inventory_GetItemData(inventory, i, item);
-		if(item[gInvItem] == itemid && item[gInvAmount] > 0)
+		if(item[InvItem] == itemid && item[InvAmount] > 0)
 			list_add(list, i);
 	}
 	return list;
@@ -348,21 +378,14 @@ stock Inventory_GetSlotItem(Inventory:inventory, slotid)
 {
 	if(!Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
 		return 0;
-    return list_get(inventory, slotid, gInvItem);
+    return list_get(inventory, slotid, InvItem);
 }
 
 stock Inventory_GetSlotAmount(Inventory:inventory, slotid)
 {
 	if(!Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
 		return 0;
-    return list_get(inventory, slotid, gInvAmount);
-}
-
-stock Inventory_GetSlotExtra(Inventory:inventory, slotid)
-{
-    if(!Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
-		return 0;
-    return list_get(inventory, slotid, gInvExtra);
+    return list_get(inventory, slotid, InvAmount);
 }
 
 stock Inventory_GetItemAmount(Inventory:inventory, itemid)
@@ -370,9 +393,9 @@ stock Inventory_GetItemAmount(Inventory:inventory, itemid)
     new item[E_ITEM_DATA], count = 0;
     for_inventory(i : inventory)
     {
-	   if(iter_sizeof(i) == 0 || !iter_get_arr_safe(i, item) || item[gInvItem] != itemid)
+	   if(iter_sizeof(i) == 0 || !iter_get_arr_safe(i, item) || item[InvItem] != itemid)
 		  continue;
-	   count += item[gInvAmount];
+	   count += item[InvAmount];
     }
     return count;
 }
@@ -411,7 +434,7 @@ stock Inventory_GetFreeSlot(Inventory:inventory)
 	for_inventory(i : inventory)
 	{
 		iter_get_arr_safe(i, tempItem);
-		if(iter_sizeof(i) == 0 || tempItem[gInvItem] == 0 || tempItem[gInvAmount] == 0)
+		if(iter_sizeof(i) == 0 || tempItem[InvItem] == 0 || tempItem[InvAmount] == 0)
 			return index;
 		index++;
 	}
@@ -435,15 +458,15 @@ static Inventory_ShowInChatStr(Inventory:inventory, playerid, String:title)
 		new String:s;
 		slotid++;
 		iter_get_arr(i, tempItem);
-		if(iter_sizeof(i) == 0 || tempItem[gInvItem] == 0) // If no item
+		if(iter_sizeof(i) == 0 || tempItem[InvItem] == 0) // If no item
 		{
 			s = str_format("Slot {0080FF}%d{FFFFFF} - Slot Libero", slotid);
 		}
 		else
 		{
-			new itemid = tempItem[gInvItem],
-				itemAmount = tempItem[gInvAmount],
-				extra = tempItem[gInvExtra];
+			new itemid = tempItem[InvItem],
+				itemAmount = tempItem[InvAmount],
+				extra = tempItem[InvExtra][0];
 			
 			s = str_format("Slot {0080FF}%d{FFFFFF} - {FFFFFF}%s{FFFFFF} ({FFFFFF}%d{FFFFFF})", slotid, ServerItem_GetName(itemid), itemAmount);
 			
@@ -482,16 +505,16 @@ static Inventory_ShowInDialog(Inventory:inventory, playerid, const title[], cons
 	for_inventory(i : inventory)
 	{
 		iter_get_arr(i, tempItem);
-		if(iter_sizeof(i) == 0 || tempItem[gInvItem] == 0) // If no item
+		if(iter_sizeof(i) == 0 || tempItem[InvItem] == 0) // If no item
 		{
-			tempItem[gInvItem] = tempItem[gInvAmount] = tempItem[gInvExtra] = 0;
+			tempItem[InvItem] = tempItem[InvAmount] = tempItem[InvExtra] = 0;
 			string += @("{808080}Slot Libero\t{808080}--\t{808080}--\t--\n");
 		}
 		else
 		{
-			new itemid = tempItem[gInvItem],
-				itemAmount = tempItem[gInvAmount],
-				extra = tempItem[gInvExtra];
+			new itemid = tempItem[InvItem],
+				itemAmount = tempItem[InvAmount],
+				extra = tempItem[InvExtra][0];
 			
 			new String:s = str_format("{FFFFFF}%s\t{FFFFFF}%d\t{FFFFFF}%s\t", ServerItem_GetName(itemid), itemAmount, ServerItem_GetTypeName(itemid));
 			if(ServerItem_GetType(itemid) == ITEM_TYPE:ITEM_TYPE_WEAPON && (Weapon_RequireAmmo(itemid) || Weapon_CanBeDisassembled(itemid)))
@@ -551,7 +574,7 @@ stock Inventory_Print(Inventory:inventory)
 	   if(iter_sizeof(i) == 0)
 		  continue;
 	   iter_get_arr(i, item);
-	   printf("Item Name: %s - Amount: %d", ServerItem[item[gInvItem]][sitemName], item[gInvAmount]);
+	   printf("Item Name: %s - Amount: %d", ServerItem_GetMaxStack(item[InvItem]), item[InvAmount]);
     }
     printf("Space: %d - Space Used: %d", Inventory_GetSpace(inventory), Inventory_GetUsedSpace(inventory));
     printf("Total free space: %d", Inventory_GetSpace(inventory) - Inventory_GetUsedSpace(inventory));
@@ -613,4 +636,20 @@ stock Inventory_SaveInDatabase(Inventory:inventory, const databaseName[], const 
 	
 	mysql_tquery(gMySQL, "COMMIT;");
 	return 1;
+}
+
+stock bool:Inventory_SetSlotExtra(Inventory:inventory, slotid, index, value)
+{
+	if(!Inventory_IsValid(inventory) || !(0 <= index < MAX_SLOT_EXTRA) || !Inventory_IsValidSlot(inventory, slotid))
+		return false;
+	if(list_sizeof(inventory, slotid) == 0)
+		return false;
+	return list_set_cell(inventory, slotid, InvExtra + index, value);
+}
+
+stock Inventory_GetSlotExtra(Inventory:inventory, slotid, index = 0)
+{
+    if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0 || !(0 <= index < MAX_SLOT_EXTRA))
+		return 0;
+    return list_get(inventory, slotid, InvExtra + index);
 }

@@ -3,26 +3,26 @@
 
 new
 	PlayerText:pMoneyTD[MAX_PLAYERS],
-	PlayerText:pInfoText[MAX_PLAYERS],
+	PlayerText:PlayerInfoText[MAX_PLAYERS],
 	PlayerText:pVehicleFuelText[MAX_PLAYERS],
-	PlayerText:pJailTimeText[MAX_PLAYERS],
+	PlayerText:JailTimePlayerText[MAX_PLAYERS],
 	PlayerText:pDeathTextDraw[MAX_PLAYERS]
 ;
 
 hook OnPlayerConnect(playerid)
 {
-	pInfoText[playerid] = CreatePlayerTextDraw(playerid, 23.000000, 180.000000, "Testo");
-	PlayerTextDrawUseBox(playerid, pInfoText[playerid],1);
-	PlayerTextDrawBoxColor(playerid, pInfoText[playerid],0x00000033);
-	PlayerTextDrawTextSize(playerid, pInfoText[playerid],180.000000, 5.000000);
-	PlayerTextDrawAlignment(playerid, pInfoText[playerid],0);
-	PlayerTextDrawBackgroundColor(playerid, pInfoText[playerid],0x000000ff);
-	PlayerTextDrawFont(playerid, pInfoText[playerid],2);
-	PlayerTextDrawLetterSize(playerid, pInfoText[playerid],0.250000, 1.099999);
-	PlayerTextDrawColor(playerid, pInfoText[playerid],0xffffffff);
-	PlayerTextDrawSetOutline(playerid, pInfoText[playerid],1);
-	PlayerTextDrawSetProportional(playerid, pInfoText[playerid],1);
-	PlayerTextDrawSetShadow(playerid, pInfoText[playerid],1);
+	PlayerInfoText[playerid] = CreatePlayerTextDraw(playerid, 23.000000, 180.000000, "Testo");
+	PlayerTextDrawUseBox(playerid, PlayerInfoText[playerid],1);
+	PlayerTextDrawBoxColor(playerid, PlayerInfoText[playerid],0x00000033);
+	PlayerTextDrawTextSize(playerid, PlayerInfoText[playerid],180.000000, 5.000000);
+	PlayerTextDrawAlignment(playerid, PlayerInfoText[playerid],0);
+	PlayerTextDrawBackgroundColor(playerid, PlayerInfoText[playerid],0x000000ff);
+	PlayerTextDrawFont(playerid, PlayerInfoText[playerid],2);
+	PlayerTextDrawLetterSize(playerid, PlayerInfoText[playerid],0.250000, 1.099999);
+	PlayerTextDrawColor(playerid, PlayerInfoText[playerid],0xffffffff);
+	PlayerTextDrawSetOutline(playerid, PlayerInfoText[playerid],1);
+	PlayerTextDrawSetProportional(playerid, PlayerInfoText[playerid],1);
+	PlayerTextDrawSetShadow(playerid, PlayerInfoText[playerid],1);
 
 	pMoneyTD[playerid] = CreatePlayerTextDraw(playerid, 608.000000, 101.000000, " "); // Money Changes Textdraw
 	PlayerTextDrawAlignment(playerid, pMoneyTD[playerid], 3);
@@ -40,14 +40,14 @@ hook OnPlayerConnect(playerid)
 	PlayerTextDrawSetProportional(playerid, pVehicleFuelText[playerid], 1);
 	PlayerTextDrawSetSelectable(playerid, pVehicleFuelText[playerid], 0);
 
- 	pJailTimeText[playerid] = CreatePlayerTextDraw(playerid, 499.000000, 101.000000, "~n~~n~~g~TEMPO RIMANENTE:~w~~n~ 0 secondi");
-	PlayerTextDrawBackgroundColor(playerid, pJailTimeText[playerid], 255);
-	PlayerTextDrawFont(playerid, pJailTimeText[playerid], 1);
-	PlayerTextDrawLetterSize(playerid, pJailTimeText[playerid], 0.270000, 1.000000);
-	PlayerTextDrawColor(playerid, pJailTimeText[playerid], -1);
-	PlayerTextDrawSetOutline(playerid, pJailTimeText[playerid], 1);
-	PlayerTextDrawSetProportional(playerid, pJailTimeText[playerid], 1);
-	PlayerTextDrawSetSelectable(playerid, pJailTimeText[playerid], 0);
+ 	JailTimePlayerText[playerid] = CreatePlayerTextDraw(playerid, 499.000000, 101.000000, "~n~~n~~g~TEMPO RIMANENTE:~w~~n~ 0 secondi");
+	PlayerTextDrawBackgroundColor(playerid, JailTimePlayerText[playerid], 255);
+	PlayerTextDrawFont(playerid, JailTimePlayerText[playerid], 1);
+	PlayerTextDrawLetterSize(playerid, JailTimePlayerText[playerid], 0.270000, 1.000000);
+	PlayerTextDrawColor(playerid, JailTimePlayerText[playerid], -1);
+	PlayerTextDrawSetOutline(playerid, JailTimePlayerText[playerid], 1);
+	PlayerTextDrawSetProportional(playerid, JailTimePlayerText[playerid], 1);
+	PlayerTextDrawSetSelectable(playerid, JailTimePlayerText[playerid], 0);
 
 	pDeathTextDraw[playerid] = CreatePlayerTextDraw(playerid, 320.000000, 380.000000, "~n~~n~~g~TEMPO RIMANENTE:~w~~n~ 0 secondi");
 	PlayerTextDrawBackgroundColor(playerid, pDeathTextDraw[playerid], 255);

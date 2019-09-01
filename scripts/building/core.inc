@@ -1,7 +1,39 @@
+
+#if defined _included_BUILDING
+    #endinput
+#endif 
+
+#define _included_BUILDING
+
+#include <pickup\core>
+#include <faction_system\core>
+#include <player\core>
+
+
+enum //E_BUILDING_TYPE
+{
+	BUILDING_TYPE_STORE = 0,
+	BUILDING_TYPE_PAYCHECK,
+    BUILDING_TYPE_GARAGE,
+	BUILDING_TYPE_COMPLEX,
+
+	// Insert here other types
+	BUILDING_TYPE_LAST
+}
+
 #include <building\components\inventory>
 #include <building\components\garage>
 #include <building\components\shop>
+
+#define MAX_BUILDINGS		 (100)
+#define MAX_BUILDING_NAME	  (64)
+#define MAX_WELCOME_TEXT_LENGTH (120)
+#define BUILDING_START_WORLD	(5000)
+
+#include <building\commands\admin>
+
 #include <YSI_Coding\y_hooks>
+
 
 forward OnBuildingLoaded(buildingid);
 forward OnBuildingDeleted(buildingid);
@@ -147,7 +179,7 @@ stock Building_LoadAll()
 	{
 		new count = 0;
 		cache_get_row_count(count);
-		new data[E_BUILDING_INFO], did;
+		new data[E_BUILDING_INFO];
 		for(new i = 0; i < count; ++i)
 		{
 			cache_get_value_name_int(i, "id", data[ID]);
@@ -611,16 +643,16 @@ stock Character_AcceptBuilding(playerid)
 
 	if(buildingid == -1)
 	{
-		ResetPendingRequest(playerid, REQUEST_TYPE_BUILDING);
-		ResetPendingRequest(senderid, REQUEST_TYPE_BUILDING);
+		Request_Reset(playerid, REQUEST_TYPE_BUILDING);
+		Request_Reset(senderid, REQUEST_TYPE_BUILDING);
 		return 0;
 	}
 
 	if(Building_GetOwnerID(buildingid) != Character_GetID(senderid))
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Il giocatore che ti ha inviato la richiesta non è più proprietario dell'edificio.");
-		ResetPendingRequest(playerid, REQUEST_TYPE_BUILDING);
-		ResetPendingRequest(senderid, REQUEST_TYPE_BUILDING);
+		Request_Reset(playerid, REQUEST_TYPE_BUILDING);
+		Request_Reset(senderid, REQUEST_TYPE_BUILDING);
 		return 0;
 	}
 
@@ -632,8 +664,8 @@ stock Character_AcceptBuilding(playerid)
     SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s ha accettato la tua richiesta di vendita del tuo edificio. Hai guadagnato $%d.", Character_GetRolePlayName(playerid), price);
     SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "%s ti ha venduto il suo edificio per $%d.", Character_GetRolePlayName(senderid), price);
 
-    ResetPendingRequest(playerid, REQUEST_TYPE_BUILDING);
-    ResetPendingRequest(senderid, REQUEST_TYPE_BUILDING);
+    Request_Reset(playerid, REQUEST_TYPE_BUILDING);
+    Request_Reset(senderid, REQUEST_TYPE_BUILDING);
 	return 1;
 }
 
@@ -671,7 +703,7 @@ stock Character_GetNearBuildingIDMenu(playerid, minRank = 3)
 		buildingid = Character_GetNearBuilding(playerid, false);
 	if(Building_IsValid(buildingid))
 	{
-		if(Account_IsAdminDuty(playerid) || Building_GetOwnerID(buildingid) == Character_GetID(playerid) || Building_GetID(buildingid) == Character_GetBuildingKey(playerid))
+		if(Player_IsAdminDuty(playerid) || Building_GetOwnerID(buildingid) == Character_GetID(playerid) || Building_GetID(buildingid) == Character_GetBuildingKey(playerid))
 			return buildingid;
 		if(Faction_IsValid(Character_GetFaction(playerid)) && Character_GetFaction(playerid) == Building_GetFaction(buildingid) && Character_GetRank(playerid) <= minRank)
 			return buildingid;

@@ -11,6 +11,10 @@ CMD:fcmds(playerid, params[])
 			SendClientMessage(playerid, COLOR_SLATEBLUE, "/manette - /trascina - /arresta - (/m)egafono - /vsign");
 			SendClientMessage(playerid, COLOR_SLATEBLUE, "/perquisisci - /cura - /servizio - (/d)ipartimento");
 		}
+		else if(Faction_GetType(factionid) == FACTION_TYPE_GOVERNMENT)
+		{
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "/gov");
+		}
 	}
 	return 1;
 }
@@ -18,7 +22,7 @@ CMD:fcmds(playerid, params[])
 flags:servizio(CMD_ALIVE_USER);
 CMD:servizio(playerid, params[])
 {
-	if(Account_IsAdminDuty(playerid))
+	if(Player_IsAdminDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando in admin duty.");
 		
 	new factionid = Character_GetFaction(playerid);
@@ -338,9 +342,9 @@ static Faction_GiveWeapons(playerid)
 	printf("TYpe: %d", Faction_GetType(Character_GetFaction(playerid)));
 	if(Faction_GetType(Character_GetFaction(playerid)) == FACTION_TYPE_POLICE)
 	{
-		GivePlayerWeapon(playerid, 3, 1);
-		GivePlayerWeapon(playerid, 41, 1000);
-		GivePlayerWeapon(playerid, 24, 100);
-		GivePlayerWeapon(playerid, 31, 250);
+		Character_GiveWeapon(playerid, 3, 1);
+		Character_GiveWeapon(playerid, 41, 1000);
+		Character_GiveWeapon(playerid, 24, 100);
+		Character_GiveWeapon(playerid, 31, 250);
 	}
 }

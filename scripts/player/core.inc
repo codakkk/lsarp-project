@@ -1,5 +1,18 @@
+
+#if defined _included_PLAYER
+    #endinput
+#endif 
+
+#define _included_PLAYER 
+
+#include <player\enum>
+
+
 #include <player\functions>
 #include <player\textdraws>
+#include <player\state>
+
+#include <player\components\request>
 
 #include <player\components\money>
 #include <player\components\fightstyle>
@@ -22,7 +35,6 @@
 #include <player\components\pickup>
 #include <player\components\jail>
 #include <player\components\animation>
-#include <player\components\request>
 #include <player\components\property>
 #include <player\components\care>
 #include <player\components\options>
@@ -48,6 +60,7 @@
 
 #include <player\components\spawn>
 
+#include <player\commands>
 // OTHERS
 #include <YSI_Coding\y_hooks>
 
@@ -223,29 +236,6 @@ stock Character_GetID(playerid)
     return PlayerInfo[playerid][ID];
 }
 
-stock Character_IsFreezed(playerid)
-{
-    return Bit_Get(gCharacterBitState[e_pFreezed], playerid);
-}
-
-stock Character_SetFreezed(playerid, bool:freeze)
-{
-    Bit_Set(gCharacterBitState[e_pFreezed], playerid, freeze);
-    TogglePlayerControllable(playerid, !freeze);
-}
-
-stock Character_SetLogged(playerid, bool:logged)
-{
-	Bit_Set(gCharacterBitState[e_pCharacterLogged], playerid, logged);
-}
-
-stock Character_IsLogged(playerid)
-{
-	if(!IsPlayerConnected(playerid))
-		return 0;
-	return Bit_Get(gCharacterBitState[e_pCharacterLogged], playerid);
-}
-
 stock Character_GetFaction(playerid)
 {
 	return PlayerInfo[playerid][Faction];
@@ -266,106 +256,6 @@ stock Character_SetRank(playerid, rank)
 {
 	PlayerInfo[playerid][Rank] = rank;
 	mysql_tquery_f(gMySQL, "UPDATE `characters` SET faction_rank = '%d' WHERE id = '%d'", rank, Character_GetID(playerid));
-}
-
-stock Character_SetFactionOOCEnabled(playerid, bool:value)
-{
-	Bit_Set(gCharacterBitState[e_pToggleFactionOOC], playerid, !value);
-}
-
-stock Character_IsFactionOOCEnabled(playerid)
-{
-	return !Bit_Get(gCharacterBitState[e_pToggleFactionOOC], playerid);
-}
-
-stock Character_SetFactionDuty(playerid, bool:value)
-{
-	Bit_Set(gCharacterBitState[e_pFactionDuty], playerid, value);
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET faction_duty = '%d' WHERE id = '%d'", value?1:0, Character_GetID(playerid));
-}
-
-stock Character_IsFactionDuty(playerid)
-{
-	return Bit_Get(gCharacterBitState[e_pFactionDuty], playerid);
-}
-
-stock Character_SetSelectingUniform(playerid, bool:value)
-{
-	Bit_Set(gCharacterBitState[e_pSelectingUniform], playerid, value);
-}
-
-stock Character_IsSelectingUniform(playerid)
-{
-	return Bit_Get(gCharacterBitState[e_pSelectingUniform], playerid);
-}
-
-stock Character_SetBuyingVehicle(playerid, bool:value)
-{
-	Bit_Set(gCharacterBitState[e_pBuyingVehicle], playerid, value);
-}
-
-stock Character_IsBuyingVehicle(playerid)
-{
-	return Bit_Get(gCharacterBitState[e_pBuyingVehicle], playerid);
-}
-
-stock Character_SetCuffed(playerid, bool:value)
-{
-	new cuffed = Character_IsCuffed(playerid);
-	if(value && !cuffed)
-	{
-		SetPlayerSpecialAction(playerid, SPECIAL_ACTION_CUFFED);
-		SetPlayerAttachedObject(playerid, 4, 19418, 6, -0.011000, 0.028000, -0.022000, -15.600012, -33.699977, -81.700035, 0.891999, 1.000000, 1.168000);
-	}
-	else if(!value && cuffed)
-	{
-		SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
-		RemovePlayerAttachedObject(playerid, 4);
-	}
-	Bit_Set(gCharacterBitState[e_pCuffed], playerid, value);
-}
-
-stock Character_IsCuffed(playerid)
-{
-	return Bit_Get(gCharacterBitState[e_pCuffed], playerid);
-}
-
-stock Character_SetMasked(playerid, bool:masked)
-{
-	Bit_Set(gCharacterBitState[e_pMasked], playerid, masked);
-}
-
-stock Character_IsMasked(playerid)
-{
-	return Bit_Get(gCharacterBitState[e_pMasked], playerid);
-}
-
-stock Character_SetLegHit(playerid, bool:legHitted)
-{
-	Bit_Set(gCharacterBitState[e_pLegHit], playerid, legHitted);
-}
-
-stock Character_IsLegHitted(playerid)
-{
-	return Bit_Get(gCharacterBitState[e_pLegHit], playerid);
-}
-
-stock Character_ResetBitState(playerid)
-{
-	for(new i; e_Bit1_Data:i < e_Bit1_Data; i++)
-	{
-		Bit_Set(gCharacterBitState[e_Bit1_Data:i], playerid, false);
-	}
-}
-
-stock Character_HasChopShopPrivileges(playerid)
-{
-	return Bit_Get(gCharacterBitState[e_pCanChopShop], playerid);
-}
-
-stock Character_SetChopShopPrivileges(playerid, bool:can)
-{
-	Bit_Set(gCharacterBitState[e_pCanChopShop], playerid, can);
 }
 
 // Returns a PP List with all house ids owned (not affittate) by playerid.
@@ -404,7 +294,7 @@ stock Character_GetNearHouseIDMenu(playerid)
 		houseid = Character_GetNearHouseID(playerid, false);
 	if(House_IsValid(houseid))
 	{
-		if(Account_IsAdminDuty(playerid))
+		if(Player_IsAdminDuty(playerid))
 			return houseid;
 		if(House_GetOwnerID(houseid) == Character_GetID(playerid))
 			return houseid;
@@ -425,11 +315,13 @@ stock Character_SetToJailPos(playerid)
 {
 	if(!Character_IsJailed(playerid))
 		return 0;
-	//AC_ResetPlayerWeapons(playerid);
+	
+	PlayerTextDrawShow(playerid, JailTimePlayerText[playerid]);
+	
 	if(Character_IsICJailed(playerid))
 	{
-		SetPlayerInterior(playerid, 2);
-		Character_SetVirtualWorld(playerid, 5258);
+		SetPlayerInterior(playerid, IC_JAIL_INT);
+		Character_SetVirtualWorld(playerid, IC_JAIL_VW);
 		SetPlayerPos(playerid, IC_JAIL_X, IC_JAIL_Y, IC_JAIL_Z);
 		return 1;
 	}
@@ -450,11 +342,11 @@ stock LoadCharacterResult(playerid)
 
 		cache_get_value_name_int(0, "faction", PlayerInfo[playerid][Faction]);
 		cache_get_value_name_int(0, "faction_rank", PlayerInfo[playerid][Rank]);
-
+		
 		cache_get_value_name_int(0, "faction_duty", tmp);
 		Character_SetFactionDuty(playerid, tmp ? true : false);
 
-		new id, isBanned, banTime;
+		new isBanned, banTime;
 		cache_get_value_name_int(0, "banned", isBanned);
 		cache_get_value_name_int(0, "ban_expiry", banTime);
 

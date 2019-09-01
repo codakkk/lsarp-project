@@ -1,3 +1,6 @@
+
+static bool:InfoBoxShown[MAX_PLAYERS char];
+
 stock Character_CharacterAMe(playerid, otherid, text[], GLOBAL_TAG_TYPES:...)
 {
 	new s[148];
@@ -66,15 +69,15 @@ stock Character_DoLow(playerid, text[], GLOBAL_TAG_TYPES:...)
 
 stock Player_Info(playerid, text[], bool:forced = false, time = 2500)
 {
-	if(pInfoBoxShown{playerid} == true && !forced)
+	if(InfoBoxShown{playerid} == true && !forced)
 		return 1;
 
-	PlayerTextDrawHide(playerid, pInfoText[playerid]);
-	PlayerTextDrawSetString(playerid, pInfoText[playerid], text);
-	PlayerTextDrawShow(playerid, pInfoText[playerid]);
+	PlayerTextDrawHide(playerid, PlayerInfoText[playerid]);
+	PlayerTextDrawSetString(playerid, PlayerInfoText[playerid], text);
+	PlayerTextDrawShow(playerid, PlayerInfoText[playerid]);
 
 	SetTimerEx("DeleteInfoBox", time, false, "d", playerid);
-	pInfoBoxShown{playerid} = true;
+	InfoBoxShown{playerid} = true;
 
 	return 1;
 }
@@ -97,9 +100,9 @@ stock Player_InfoStr(playerid, String:string, bool:forced = false, time = 2500)
 forward DeleteInfoBox(playerid); 
 public DeleteInfoBox(playerid)
 {
-	PlayerTextDrawHide(playerid, pInfoText[playerid]);
+	PlayerTextDrawHide(playerid, PlayerInfoText[playerid]);
 
-	pInfoBoxShown{playerid} = false;
+	InfoBoxShown{playerid} = false;
 
 	return 1;
 }
