@@ -133,8 +133,8 @@ enum (<<= 1)
 #include <miscellaneous\timestamp_to_date>
 #include <database\core>
 #include <server\core>
-#include <inventory\core>
-#include <pickup\core>
+#include <inventory_system\core>
+#include <pickup_system\core>
 #include <checkpoint_system\core>
 #include <weapon_system\core>
 #include <dp_system\core>
@@ -147,12 +147,12 @@ enum (<<= 1)
 #include <log_system\core>
 #include <account_system\core>
 #include <animation_system\core>
-#include <player\core>
-#include <vehicles\core>
-#include <dealership\core>
+#include <player_system\core>
+#include <vehicles_system\core>
+#include <dealership_system\core>
 #include <house_system\core>
-#include <building\core>
-#include <admin\core>
+#include <building_system\core>
+#include <admin_system\core>
 #include <drop_system\core>
 #include <faction_system\core>
 #include <chopshop_system\core>
@@ -163,7 +163,7 @@ enum (<<= 1)
 
 
 // ========== [ DIALOGS ] ==========
-#include <player\dialogs>
+#include <player_system\dialogs>
 #include <YSI_Coding\y_hooks> // Place hooks after this. Everything included before this, is hooked first.
 
 forward OnCharacterDamageDone(playerid, Float:amount, issuerid, weaponid, bodypart);
@@ -510,7 +510,7 @@ hook OnPlayerDisconnect(playerid, reason)
 	if(Player_GetSpectatingPlayer(playerid) == INVALID_PLAYER_ID)
 	{
 		new string[128];
-		format(string,sizeof(string), "* %s ï¿½ uscito dal server. [%s]", name, reasonName[reason]);
+		format(string,sizeof(string), "* %s è uscito dal server. [%s]", name, reasonName[reason]);
 		ProxDetector(playerid, 15.0, string, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY);
 	}
 
@@ -620,7 +620,7 @@ hook OnRconLoginAttempt(ip[], password[], success )
 		{
 			if(success)
 			{
-				SendMessageToAdmins(true, COLOR_ADMIN, "%s (%d) ï¿½ entrato in RCON.", Character_GetOOCName(i), i);
+				SendMessageToAdmins(true, COLOR_ADMIN, "%s (%d) è entrato in RCON.", Character_GetOOCName(i), i);
 			}
 			else
 			{

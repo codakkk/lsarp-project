@@ -1,5 +1,5 @@
 
-#include <player\core>
+#include <player_system\core>
 
 #include <YSI_Coding\y_hooks>
 

@@ -1,5 +1,5 @@
 
-#include <pickup\core>
+#include <pickup_system\core>
 
 
 #include <faction_system\national_guard\beanbag_taser>
