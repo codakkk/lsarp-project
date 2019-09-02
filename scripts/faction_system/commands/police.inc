@@ -287,7 +287,7 @@ Dialog:Dialog_InvSearch(playerid, response, listitem, inputtext[])
 		SendFormattedMessage(inspecting, COLOR_BLUE, "%s %s ti ha confiscato un oggetto (%s. Quantità: %d).", rankName, Character_GetRolePlayName(playerid), ServerItem_GetName(itemid), amount);
 		SendFormattedMessage(playerid, COLOR_BLUE, "Hai confiscato un oggetto (%s. Quantità: %d) a %s.", ServerItem_GetName(itemid), amount, Character_GetRolePlayName(inspecting));
 	}
-
+	ShowInspectingInventory(playerid, inspecting);
 	return 1;
 }
 
@@ -298,7 +298,7 @@ static ShowInspectingInventory(playerid, inspectingPlayer)
 	InspectingPlayer[playerid] = inspectingPlayer;
 	new Inventory:inv = Character_GetInventory(inspectingPlayer);
 	new str[128];
-	format(str, sizeof(str), "Inventario di %s (%d/%d) - Denaro: $%d",  Character_GetRolePlayName(playerid), Inventory_GetUsedSpace(inv), Inventory_GetSpace(inv), Character_GetMoney(playerid));
+	format(str, sizeof(str), "Inventario di %s (%d/%d) - Denaro: $%d",  Character_GetRolePlayName(inspectingPlayer), Inventory_GetUsedSpace(inv), Inventory_GetSpace(inv), Character_GetMoney(inspectingPlayer));
 	
 	Inventory_Show(inv, playerid, str, Dialog_InvSearch, Faction_GetType(Character_GetFaction(playerid)) == FACTION_TYPE_POLICE ? ("Confisca") : ("Chiudi"), "Chiudi");
 	

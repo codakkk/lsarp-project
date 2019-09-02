@@ -1,3 +1,11 @@
+
+
+#if defined _included_HOUSE
+    #endinput
+#endif 
+
+#define _included_HOUSE 
+
 #include <house_system\components\inventory>
 #include <house_system\components\interiors>
 

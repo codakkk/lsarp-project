@@ -20,6 +20,7 @@ static enum E_ACCOUNT_DATA
 	CharactersSlot,
 	CharactersCount,
 	Level,
+	Experience,
 	PayDay
 };
 
@@ -201,6 +202,7 @@ stock LoadAccountData(playerid)
 		cache_get_value_name(0, "email", AccountEMail[playerid]);
 		cache_get_value_name_int(0, "characters_slot", AccountInfo[playerid][CharactersSlot]);
 		cache_get_value_name_int(0, "level", AccountInfo[playerid][Level]);
+		cache_get_value_name_int(0, "experience", AccountInfo[playerid][Experience]);
 		cache_get_value_name_int(0, "payday", AccountInfo[playerid][PayDay]);
 
 		SetPlayerScore(playerid, AccountInfo[playerid][Level]);
@@ -378,6 +380,22 @@ stock Account_IncreaseLevel(playerid, amount)
 stock Account_GetLevel(playerid)
 {
 	return AccountInfo[playerid][Level];
+}
+
+stock Account_SetExperience(playerid, exp)
+{
+	AccountInfo[playerid][Experience] = exp;
+	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET level = '%d' WHERE id = '%d'", exp, Account_GetID(playerid));
+}
+
+stock Account_AddExperience(playerid, amount)
+{
+	Account_SetExperience(playerid, Account_GetExperience(playerid) + amount);
+}
+
+stock Account_GetExperience(playerid)
+{
+	return AccountInfo[playerid][Experience];
 }
 
 stock Account_GetOwnableVehicleCount(playerid)

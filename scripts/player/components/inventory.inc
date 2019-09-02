@@ -172,9 +172,9 @@ stock Character_IsValidSlot(playerid, slotid)
 	return Inventory_IsValidSlot(Character_GetInventory(playerid), slotid);
 }
 
-stock Character_GetSlotExtra(playerid, slotid)
+stock Character_GetSlotExtra(playerid, slotid, index = 0)
 {
-	return Inventory_GetSlotExtra(Character_GetInventory(playerid), slotid);
+	return Inventory_GetSlotExtra(Character_GetInventory(playerid), slotid, index);
 }
 
 stock Character_ShowInventory(playerid, targetid)

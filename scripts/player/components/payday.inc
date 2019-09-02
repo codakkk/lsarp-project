@@ -24,6 +24,8 @@ stock Character_PayDay(playerid)
     
 	new 
 		paycheck = 0,
+		bool:isLevelUp = false,
+		experiencePerLevel = (Account_GetLevel(playerid)+1) * 2,
 		currentPremiumLevel = Account_GetPremiumLevel(playerid)
 	;
 
@@ -59,16 +61,13 @@ stock Character_PayDay(playerid)
 		}
 	}
 
-	if(Account_GetLevel(playerid) <= 18)
+	Account_AddExperience(playerid, 1);
+
+	if(Account_GetLevel(playerid) <= 3)
 	{
 		static const payCheck[] = {2000, 1000, 500};
-		new level = Account_GetLevel(playerid);
-		if(level <= 4)
-			paycheck += payCheck[0];
-		else if(level <= 10)
-			paycheck += payCheck[1];
-		else if(level <= 18)
-			paycheck += payCheck[2];
+		new level = Account_GetLevel(playerid) - 1;
+		paycheck += payCheck[level];
 	}
 
 	Character_AddPayCheck(playerid, paycheck);
@@ -86,18 +85,17 @@ stock Character_PayDay(playerid)
 	else
 		SendClientMessage(playerid, COLOR_YELLOW, "Livello incrementato di 1 punto.");
 
-	/*if(Character_GetExp(playerid) < expForNewLevel)
+	if(Account_GetExperience(playerid) < experiencePerLevel)
     {
-	   SendFormattedMessage(playerid, COLOR_YELLOW, "Livello attuale: %d. Attualmente hai %d/%d punti esperienza.", Character_GetLevel(playerid), Character_GetExp(playerid), expForNewLevel);
+	   SendFormattedMessage(playerid, COLOR_YELLOW, "Livello attuale: %d. Attualmente hai %d/%d punti esperienza.", Account_GetLevel(playerid), Account_GetExperience(playerid), experiencePerLevel);
     }
     else
     {
-	   Character_IncreaseLevel(playerid, 1);
-	   Character_SetExp(playerid, 0);
-	   SetPlayerScore(playerid, Character_GetLevel(playerid));
-	   expForNewLevel = (Character_GetLevel(playerid)+1) * 2;
-	   SendFormattedMessage(playerid, COLOR_YELLOW, "Congratulazioni! Hai raggiunto il livello %d. Per il prossimo livello hai bisogno di %d punti esperienza.", Character_GetLevel(playerid), expForNewLevel);
-    }*/
+	   Account_IncreaseLevel(playerid, 1);
+	   Account_SetExperience(playerid, 0);
+	   experiencePerLevel = (Account_GetLevel(playerid)+1) * 2;
+	   SendFormattedMessage(playerid, COLOR_YELLOW, "Congratulazioni! Hai raggiunto il livello %d. Per il prossimo livello hai bisogno di %d punti esperienza.", Account_GetLevel(playerid), experiencePerLevel);
+    }
 
 	if(Character_HasBuildingKey(playerid))
 	{

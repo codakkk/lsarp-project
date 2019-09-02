@@ -62,6 +62,9 @@
 
 #include <player\commands>
 // OTHERS
+
+#include <house_system\core>
+
 #include <YSI_Coding\y_hooks>
 
 forward OnCharacterLoad(playerid); // Called when a Player select a character.
@@ -177,7 +180,7 @@ stock Character_ShowStats(playerid, targetid)
     else if(Character_HasHouseKey(playerid))
 	   SendFormattedMessage(targetid, -1, "[Proprietà] Casa: %d", Character_GetHouseKey(playerid));
 	
-	SendFormattedMessage(targetid, -1, "[Altro] Soldi: $%d - Stipendio: $%d - Interior: %d - VW: %d", Character_GetMoney(playerid), Character_GetPayCheck(playerid), GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
+	SendFormattedMessage(targetid, -1, "[Altro] Soldi: $%d - Banca: %d - Stipendio: $%d - Interior: %d - VW: %d", Character_GetMoney(playerid), Character_GetBank(playerid), Character_GetPayCheck(playerid), GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
 	
 	if(Account_GetPremiumLevel(playerid) > 0 && Account_GetPremiumExpiry(playerid) > gettime())
 	{

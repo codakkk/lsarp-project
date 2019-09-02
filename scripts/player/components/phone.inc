@@ -1,7 +1,10 @@
 
 #include <YSI_Coding\y_hooks>
 
-static Call[MAX_PLAYERS] = {INVALID_PLAYER_ID, ...};
+static 
+    Call[MAX_PLAYERS] = {INVALID_PLAYER_ID, ...},
+    UsingNumber[MAX_PLAYERS] = {0, ...}
+;
 
 hook OnGameModeInit()
 {
@@ -29,6 +32,7 @@ hook OnPlayerClearData(playerid)
         }
     }
     Call[playerid] = INVALID_PLAYER_ID;
+    UsingNumber[playerid] = 0;
     return 1;
 }
 
@@ -56,11 +60,43 @@ CMD:chiama(playerid, params[])
     if(!Character_HasItem(playerid, gItem_Phone, 1))
         return SendClientMessage(playerid, COLOR_ERROR, "Devi possedere un cellulare per poter utilizzarlo.");
     
+    if(Character_GetCallPlayer(playerid) != INVALID_PLAYER_ID)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei già in una chiamata.");
+
     new slot, number[32];
     if(sscanf(params, "ds[32]", slot, number))
         return SendClientMessage(playerid, COLOR_ERROR, "/chiama <slot> <numero>");
     
+    if(Character_GetSlotItem(playerid, slot) != gItem_Phone)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai un telefono in questo slot.");
     
+    new isValid = INVALID_PLAYER_ID;
+    foreach(new p : Player)
+    {
+        for(new i = 0, j = Character_GetInventorySize(p); i < j; ++i)
+        {
+            if(Character_GetSlotExtra(p, i, 0) == number)
+            {
+                isValid = p;
+                break;
+            }
+        }
+        if(isValid != INVALID_PLAYER_ID)
+            break;
+    }
+
+    if(isValid == INVALID_PLAYER_ID)
+        return SendClientMessage(playerid, COLOR_ERROR, "Il numero inserito non è al momento raggiungibile. Riprova piu' tardi.");
+    
+    if(Character_GetCallPlayer(isValid) != INVALID_PLAYER_ID)
+        return SendClientMessage(playerid, COLOR_ERROR, "Il numero chiamato è al momento occupato.");
+    
+    Call[playerid] = isValid;
+    Call[isValid] = playerid;
+
+    Character_AMe(playerid, "prende il cellulare e digita un numero");
+
+    //new number = Character_GetSlotExtra(playerid, slotid, 0);
     return 1;
 }
 
@@ -78,4 +114,9 @@ stock Character_IsInCall(playerid)
 stock Character_GetCallPlayer(playerid)
 {
     return Call[playerid];
+}
+
+stock Character_GetUsingPhoneNumber(playerid)
+{
+    return UsingNumber[playerid];
 }

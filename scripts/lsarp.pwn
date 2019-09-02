@@ -510,7 +510,7 @@ hook OnPlayerDisconnect(playerid, reason)
 	if(Player_GetSpectatingPlayer(playerid) == INVALID_PLAYER_ID)
 	{
 		new string[128];
-		format(string,sizeof(string), "* %s è uscito dal server. [%s]", name, reasonName[reason]);
+		format(string,sizeof(string), "* %s ï¿½ uscito dal server. [%s]", name, reasonName[reason]);
 		ProxDetector(playerid, 15.0, string, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY);
 	}
 
@@ -620,7 +620,7 @@ hook OnRconLoginAttempt(ip[], password[], success )
 		{
 			if(success)
 			{
-				SendMessageToAdmins(true, COLOR_ADMIN, "%s (%d) è entrato in RCON.", Character_GetOOCName(i), i);
+				SendMessageToAdmins(true, COLOR_ADMIN, "%s (%d) ï¿½ entrato in RCON.", Character_GetOOCName(i), i);
 			}
 			else
 			{

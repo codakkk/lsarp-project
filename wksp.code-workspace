@@ -16,7 +16,7 @@
 				{
 					"match": ".inc",
 					"isAsync": true,
-					"cmd": "python ${workspaceRoot}/parse_snippets.py"
+					"cmd": "py ${workspaceRoot}/parse_snippets.py"
 				}
 			]
 		},
