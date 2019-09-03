@@ -4,12 +4,13 @@
 static 
     CallWith[MAX_PLAYERS] = {INVALID_PLAYER_ID, ...},
     CallNumber[MAX_PLAYERS] = {0, ...},
-    IncomingCall[MAX_PLAYERS] = {INVALID_PLAYER_ID, ...}
+    IncomingCall[MAX_PLAYERS] = {INVALID_PLAYER_ID, ...},
+    SelectedPhone[MAX_PLAYERS char] = {-1, ...}
 ;
 
 hook OnGameModeInit()
 {
-    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS `phone_data` ( \
+    mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `phone_data` ( \
 						`id` int(11) NOT NULL AUTO_INCREMENT, \
 						`character_id` int(11) NOT NULL DEFAULT '0', \
                         `created_at` int(11) NOT NULL DEFAULT '0', \
@@ -17,15 +18,27 @@ hook OnGameModeInit()
                         `building` int(11) NOT NULL DEFAULT '0', \
 						PRIMARY KEY (`id`), \
 						CONSTRAINT `phone_characters` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE \
-						) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1", false);
+						) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1");
     
-    mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS `phonebook` ( \
+    mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `phonebook` ( \
 						`number_owner` int(11) NOT NULL, \
 						`name` VARCHAR(32) NOT NULL, \
                         `number` int(11) NOT NULL, \
+                        `created_at` int(11) NOT NULL, \
 						PRIMARY KEY (`number_owner`), \
 						CONSTRAINT `phonebook` FOREIGN KEY (`number_owner`) REFERENCES `phone_data` (`number`) ON DELETE CASCADE \
-						) ENGINE=InnoDB DEFAULT CHARSET=latin1", false);
+						) ENGINE=InnoDB DEFAULT CHARSET=latin1");
+    
+    mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `phone_sms` ( \
+						`id` int(11) NOT NULL AUTO_INCREMENT, \
+                        `number_owner` int(11) NOT NULL, \
+                        `sender_number` int(11) NOT NULL, \
+						`addressee_number` INT(11) NOT NULL, \
+                        `message` VARCHAR(255) NOT NULL, \
+                        `created_at` int(11) NOT NULL, \
+						PRIMARY KEY (`id`), \
+						CONSTRAINT `phone_sms` FOREIGN KEY (`number_owner`) REFERENCES `phone_data` (`number`) ON DELETE CASCADE \
+						) ENGINE=InnoDB DEFAULT CHARSET=latin1");
     return 1;
 }
 
@@ -46,6 +59,7 @@ hook OnPlayerClearData(playerid)
     CallWith[playerid] = INVALID_PLAYER_ID;
     CallNumber[playerid] = 0;
     IncomingCall[playerid] = INVALID_PLAYER_ID;
+    SelectedPhone{playerid} = -1;
     return 1;
 }
 
@@ -64,6 +78,69 @@ hook OnCharacterDeath(playerid, killerid, reason)
 {
     if(Character_IsInCall(playerid))
         Character_StopCall(playerid);
+    return 1;
+}
+
+hook OnCharacterUseItem(playerid, slotid, itemid)
+{
+    if(itemid != gItem_Phone)
+        return 0;
+    SelectedPhone{playerid} = slotid;
+    new number = Character_GetSlotExtra(playerid, slotid, 0);
+    Dialog_Show_s(playerid, Dialog_UseCellPhone, DIALOG_STYLE_LIST, str_format("Cellulare - %d", number), @("Info\nChiama\nSMS\nRubrica"), "Seleziona", "Chiudi");
+    return 1;
+}
+
+Dialog:Dialog_UseCellPhone(playerid, response, listitem, inputtext[])
+{
+    if(!response)
+        return 0;
+    
+    new slotid = SelectedPhone{playerid};
+
+    if(Character_GetSlotItem(playerid, slotid) != gItem_Phone)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai un cellulare in questo slot.");
+    
+    if(listitem == 0)
+    {
+        new val[16];
+        valstr(val, SelectedPhone{playerid});
+        pc_cmd_cellinfo(playerid, val);
+    }
+    else if(listitem == 1)
+    {
+        new number = Character_GetSlotExtra(playerid, slotid, 0);
+        Dialog_Show_s(playerid, Dialog_PhoneCall, DIALOG_STYLE_INPUT, str_format("Cellulare - %d", number), @("Inserisci il numero di telefono che vuoi chiamare."), "Chiama", "Chiudi");
+    }
+    else if(listitem == 2)
+    {
+        new number = Character_GetSlotExtra(playerid, slotid, 0);
+        Dialog_Show_s(playerid, Dialog_PhoneSMS, DIALOG_STYLE_INPUT, str_format("Cellulare - %d", number), @("Inserisci il numero di telefono seguito dal messaggio che vuoi inviare.\n == Esempio ==\n- 444123456 Ciao sono io!\n\n"), "Invia", "Chiudi");
+    }
+    else if(listitem == 3)
+    {
+        Character_ShowPhoneBook(playerid, slotid);
+    }
+    return 1;
+}
+
+Dialog:Dialog_PhoneCall(playerid, response, listitem, inputtext[])
+{
+    if(!response)
+        return 0;
+    new number = strval(inputtext);
+    Character_StartCall(playerid, SelectedPhone{playerid}, number);
+    return 1;
+}
+
+Dialog:Dialog_PhoneSMS(playerid, response, listitem, inputtext[])
+{
+    if(!response)
+        return 0;
+    if(sscanf(params, "ds[128]", number, msg))
+        return 1;
+    new number = strval(inputtext);
+    Character_SendSMS(playerid, SelectedPhone{playerid}, number, const msg[]);
     return 1;
 }
 
@@ -89,7 +166,7 @@ CMD:cellinfo(playerid, params[])
     inline OnLoad()
     {
         if(cache_num_rows() <= 0)
-            return SendClientMessage(playerid, COLOR_ERROR, "Il cellulare non possiede un numero.");
+            return SendClientMessage(playerid, COLOR_ERROR, "Il cellulare non ha un numero valido.");
 
         new time, year, month, day, hour, minute, second;
         cache_get_value_name_int(0, "created_at", time);
@@ -165,11 +242,24 @@ CMD:chiudi(playerid, params[])
 }
 alias:chiudi("ch");
 
+flags:rubrica(CMD_ALIVE_USER);
+CMD:rubrica(playerid, params[])
+{
+    new slotid;
+    if(sscanf(params, "d", slotid))
+        return SendClientMessage(playerid, COLOR_ERROR, "/rubrica <slotid>");
+    Character_ShowPhoneBook(playerid, slotid);
+    return 1;
+}
+
 static Character_StartCall(playerid, slotid, number)
 {
     if(Character_GetSlotItem(playerid, slotid) != gItem_Phone)
-        return SendClientMessage(playerid, COLOR_ERROR, "Non hai un telefono in questo slot.");
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai un telefono in questo slot."), 0;
     
+    if(number <= 0)
+        return SendClientMessage(playerid, COLOR_ERROR, "Il numero inserito non esiste o non è al momento raggiungibile. Riprova più tardi."), 0;
+
     new isValid = INVALID_PLAYER_ID;
     foreach(new p : Player)
     {
@@ -186,10 +276,10 @@ static Character_StartCall(playerid, slotid, number)
     }
 
     if(isValid == INVALID_PLAYER_ID)
-        return SendClientMessage(playerid, COLOR_ERROR, "Il numero inserito non esiste o non è al momento raggiungibile. Riprova più tardi.");
+        return SendClientMessage(playerid, COLOR_ERROR, "Il numero inserito non esiste o non è al momento raggiungibile. Riprova più tardi."), 0;
     
     if(Character_GetCallPlayer(isValid) != INVALID_PLAYER_ID)
-        return SendClientMessage(playerid, COLOR_ERROR, "Il numero chiamato è al momento occupato.");
+        return SendClientMessage(playerid, COLOR_ERROR, "Il numero chiamato è al momento occupato."), 0;
     
     new playerNumber = Character_GetSlotExtra(playerid, slotid, 0);
 
@@ -212,7 +302,6 @@ static Character_StartCall(playerid, slotid, number)
     CallNumber[playerid] = number;
 
     IncomingCall[isValid] = playerid;
-
 
     Character_AMe(playerid, "prende il cellulare e digita un numero.");
     Character_Do(isValid, "Il cellulare comincia a squillare...");
@@ -247,6 +336,48 @@ stock Character_StopCall(playerid)
     SetPlayerSpecialAction(playerid, SPECIAL_ACTION_STOPUSECELLPHONE);
     
     SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso la chiamata.");
+    return 1;
+}
+
+stock Character_ShowPhoneBook(playerid, slotid)
+{
+    if(Character_GetSlotItem(playerid, slotid) != gItem_Phone)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai un cellulare in questo slot.");
+    
+    new playerNumber = Character_GetSlotExtra(playerid, slotid, 0);
+    
+    inline OnLoad()
+    {
+        new rows = cache_num_rows();
+        if(rows <= 0)
+            return SendClientMessage(playerid, COLOR_ERROR, "La rubrica è vuota.");
+
+        new String:str = @("Nome\tNumero\tData Creazione\n");
+
+        new otherNumber, createdAt, name[32],
+            year, month, day, hour, minutes, seconds;
+        for(new i = 0; i < rows; ++i)
+        {
+            cache_get_value_name_int(i, "number", otherNumber);
+            cache_get_value_name_int(i, "created_at", createdAt);
+            cache_get_value_name(i, "name", name);
+            
+            TimestampToDate(createdAt, year, month, day, hour, minutes, seconds, 1, 0);
+
+            str += str_format("%s\t%d\t%d/%d/%d\n", name, otherNumber, day, month, year);
+            
+            Dialog_Show_s(playerid, Dialog_PhoneBook, DIALOG_STYLE_LIST, str_format("Cellulare - %d", playerNumber), str, "Invia", "Chiudi");
+        }
+    }
+    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM phonebook WHERE number_owner = '%d'", playerNumber);
+
+}
+
+stock Character_SendSMS(playerid, slot, number, const msg[])
+{
+    if(strlen(msg) <= 0)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi inviare un messaggio vuoto.");
+    
     return 1;
 }
 
