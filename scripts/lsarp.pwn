@@ -159,6 +159,7 @@ enum (<<= 1)
 #include <chopshop_system\commands>
 #include <furniture_system\core>
 #include <gate_system\core>
+#include <atm_system\core>
 
 
 
@@ -181,7 +182,7 @@ main()
 
 public OnGameModeInit() 
 {
-	SetGameModeText("ApocalypseV1");
+	SetGameModeText("Foxx V1");
 	SendRconCommand("query 1"); // Just safeness
 	
 	ShowPlayerMarkers(PLAYER_MARKERS_MODE_OFF);

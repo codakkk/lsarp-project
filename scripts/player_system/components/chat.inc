@@ -84,12 +84,6 @@ hook OnPlayerText(playerid, text[])
 
 			if(Character_IsInCall(playerid))
 			{
-				new call = Character_GetCallPlayer(playerid);
-				if(Character_IsLogged(call))
-				{
-					SendFormattedMessage(call, -1, "[Telefono] %s dice: %s", Character_GetRolePlayName(playerid), text);
-				}
-
 				prefix = @("Telefono");
 			}
 
@@ -100,6 +94,8 @@ hook OnPlayerText(playerid, text[])
 				string = str_format("%s dice: %s", Character_GetRolePlayName(playerid), text);
 			
 			ProxDetectorStr(playerid, range, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
+			
+			CallLocalFunction(#OnCharacterTalk, "ds", playerid, text);
 		}
 	}
 	return Y_HOOKS_CONTINUE_RETURN_0;

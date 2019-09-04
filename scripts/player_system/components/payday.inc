@@ -36,7 +36,7 @@ stock Character_PayDay(playerid)
 	}
 
 	new factionid = Character_GetFaction(playerid);
-	if(factionid != INVALID_FACTION_ID)
+	if(Faction_IsValid(factionid))
 	{
 		new salary = Faction_GetRankSalary(factionid, Character_GetRank(playerid));
 		if(salary > 0)
@@ -75,7 +75,7 @@ stock Character_PayDay(playerid)
 	if(paycheck > 0)
 		SendClientMessage(playerid, COLOR_YELLOW, "Dirigiti verso la zona Governativa per ritirare il tuo stipendio.");
     
-	static const levels[] = {1, 1, 2, 3};
+	/*static const levels[] = {1, 1, 2, 3};
 	new level = levels[Account_GetPremiumLevel(playerid)];
 	Account_IncreaseLevel(playerid, level);
 	
@@ -83,7 +83,7 @@ stock Character_PayDay(playerid)
 		SendFormattedMessage(playerid, COLOR_YELLOW, "Livello incrementato di %d punti. (Bonus Premium)", level);
 	else
 		SendClientMessage(playerid, COLOR_YELLOW, "Livello incrementato di 1 punto.");
-
+	*/
 	if(Account_GetExperience(playerid) < experiencePerLevel)
     {
 	   SendFormattedMessage(playerid, COLOR_YELLOW, "Livello attuale: %d. Attualmente hai %d/%d punti esperienza.", Account_GetLevel(playerid), Account_GetExperience(playerid), experiencePerLevel);

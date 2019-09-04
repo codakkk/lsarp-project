@@ -5,30 +5,30 @@
 
 #define _included_BUILDING
 
-#include <pickup_system\core>
-#include <faction_system\core>
-#include <player_system\core>
-
-
 enum //E_BUILDING_TYPE
 {
 	BUILDING_TYPE_STORE = 0,
 	BUILDING_TYPE_PAYCHECK,
     BUILDING_TYPE_GARAGE,
 	BUILDING_TYPE_COMPLEX,
+	BUILDING_TYPE_BANK,
 
 	// Insert here other types
 	BUILDING_TYPE_LAST
 }
 
-#include <building_system\components\inventory>
-#include <building_system\components\garage>
-#include <building_system\components\shop>
-
 #define MAX_BUILDINGS		 		(100)
 #define MAX_BUILDING_NAME	  		(64)
 #define MAX_WELCOME_TEXT_LENGTH 	(120)
 #define BUILDING_START_WORLD		(5000)
+
+#include <pickup_system\core>
+#include <faction_system\core>
+#include <player_system\core>
+
+#include <building_system\components\inventory>
+#include <building_system\components\garage>
+#include <building_system\components\shop>
 
 #include <building_system\commands\admin>
 

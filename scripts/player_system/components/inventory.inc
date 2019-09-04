@@ -279,7 +279,7 @@ Dialog:Dialog_InvItemAction(playerid, response, listitem, inputtext[])
 		amount = Character_GetSlotAmount(playerid, slotid),
 		extra = Character_GetSlotExtra(playerid, slotid);
 	if(itemid == 0) // Safeness
-		return printf("itemid == 0");
+		return printf("itemid == 0"); // pls give me assert
 	switch(listitem)
 	{
 		case 0:

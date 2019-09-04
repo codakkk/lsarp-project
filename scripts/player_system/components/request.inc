@@ -176,8 +176,8 @@ stock Character_AcceptItemRequest(playerid)
 
 	new
 		itemid = Character_GetSlotItem(senderid, slotid),
-		slotAmount = Inventory_GetItemAmount(Character_GetInventory(senderid), itemid),
-		extra = Character_GetSlotExtra(senderid, slotid)
+		slotAmount = Character_GetItemAmount(playerid, itemid),
+		extra = Character_GetSlotExtra(senderid, slotid, 0)
 	;
 
 	if(!Character_HasItem(senderid, itemid, amount))

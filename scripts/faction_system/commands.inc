@@ -43,7 +43,7 @@ CMD:fazione(playerid, params[])
 	Faction_GetRankName(factionid, Character_GetRank(playerid), rankName);
 	new String:string = str_format("(( [FAZIONE]: %s %s (%d): %s ))", 
 		rankName, Character_GetOOCName(playerid), playerid, params);
-	Faction_SendMessageStr(factionid, COLOR_SLATEBLUE, string);
+	Faction_SendMessageStr(factionid, string);
 	return 1;
 }
 alias:fazione("f");
@@ -102,7 +102,6 @@ CMD:fedit(playerid, params[])
 		GetPlayerPos(playerid, x, y, z);
 
 		Faction_SetSpawnPos(factionid, x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
-		Faction_Save(factionid);
 	}
 	else SendClientMessage(playerid, COLOR_ERROR, "/fedit <spawn>");
 	return 1;

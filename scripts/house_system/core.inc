@@ -13,6 +13,9 @@
 
 #include <YSI_Coding\y_hooks>
 
+#define INVALID_HOUSE_ID	(-1)
+#define HOUSE_START_WORLD 	(1000)
+
 static enum _:E_HOUSE_DATA
 {
     ID,
@@ -125,7 +128,7 @@ stock House_Create(Float:x, Float:y, Float:z, int, world, interiorType)
     map_add_arr(Houses, id, data);
 
     House_SetInterior(id, interiorType, 0);
-    // House_CreateObjects(id); // Already called by House_SetInterior
+    House_CreateObjects(id); // Already called by House_SetInterior
     CallLocalFunction(#OnHouseLoaded, "d", data[ID]);
     cache_delete(result);
     return id;

@@ -87,8 +87,8 @@ CMD:depositadenaro(playerid, params[])
 }
 alias:depositadenaro("depden", "depositaden", "depdenaro");
 
-flags:deposita(CMD_ALIVE_USER);
-CMD:deposita(playerid, params[])
+flags:depositaarma(CMD_ALIVE_USER);
+CMD:depositaarma(playerid, params[])
 {
 	if(!Character_CanInteract(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
@@ -123,7 +123,7 @@ CMD:deposita(playerid, params[])
 	Character_RemoveWeapon(playerid, itemid);
 	return 1;
 }
-alias:deposita("dep");
+alias:depositaarma("dep");
 
 flags:disassembla(CMD_ALIVE_USER);
 CMD:disassembla(playerid, params[])

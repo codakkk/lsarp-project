@@ -1,6 +1,5 @@
 #include <YSI_Coding\y_hooks>
-#define INVALID_HOUSE_ID	(-1)
-#define HOUSE_START_WORLD 	(1000)
+
 
 // Should I load allHouseInteriors in PawnPlus's maps at startup with <HOUSE_SIZE_TYPE, List:E_INTRERIORS_HOUSE> ?
 

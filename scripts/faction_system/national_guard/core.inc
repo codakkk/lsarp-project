@@ -1,12 +1,6 @@
 
 #include <pickup_system\core>
 
-
-#include <faction_system\national_guard\beanbag_taser>
-#include <faction_system\national_guard\mdc>
-
-#include <YSI_Coding\y_hooks>
-
 #define IC_JAIL_X						(2638.62)
 #define IC_JAIL_Y						(-1978.24)
 #define IC_JAIL_Z 						(-58.73)
@@ -17,6 +11,13 @@
 #define OOC_JAIL_Y						(176.3204)
 #define OOC_JAIL_Z 						(1003.0234)
 #define OOC_JAIL_INT					(3)
+
+#include <faction_system\national_guard\beanbag_taser>
+#include <faction_system\national_guard\trace>
+#include <faction_system\national_guard\mdc>
+
+#include <YSI_Coding\y_hooks>
+
 
 
 static enum e_POLICE_ARREST

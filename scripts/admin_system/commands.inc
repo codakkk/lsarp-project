@@ -24,7 +24,7 @@ CMD:acmds(playerid, params[])
 	if(Account_GetAdminLevel(playerid) >= 4)
 	{
 		SendClientMessage(playerid, -1, "[ADMIN]: /amm - /giveitem - /givevehicleitem  - /vowner - /vsave - /vdespawn");
-		SendClientMessage(playerid, -1, "[ADMIN]: /vfaction - /avmaxhp");
+		SendClientMessage(playerid, -1, "[ADMIN]: /vfaction - /avmaxhp - /atmcmds");
 		SendClientMessage(playerid, -1, "[ADMIN]: /banip - /unbanip - /gcreate - /gedit - /setchopshop - /ahousecmds");
 	}
 	if(Account_GetAdminLevel(playerid) >= 5)
@@ -234,6 +234,25 @@ CMD:givemoney(playerid, params[])
     Log(Account_GetName(playerid), Character_GetOOCName(id), "/givemoney", hp);
     return 1;
 }
+
+flags:givebankmoney(CMD_RCON);
+CMD:givebankmoney(playerid, params[])
+{
+    new id, hp;
+    if(sscanf(params, "k<u>d", id, hp))
+	   return SendClientMessage(playerid, COLOR_ERROR, "/givebankmoney <playerid/nome> <ammontare>");
+    
+    if(id < 0 || id >= MAX_PLAYERS || !Character_IsLogged(id))
+	   return SendClientMessage(playerid, COLOR_ERROR, "L'utente non è collegato.");
+    
+    Character_GiveBank(id, hp);
+    // Send admin alert (?)
+    SendMessageToAdmins(1, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha dato $%d in banca a %s (%d).", Account_GetName(playerid), Character_GetOOCName(playerid), hp, Character_GetOOCName(id), id);
+    SendFormattedMessage(id, COLOR_GREEN, "[ADMIN] %s (%s) ti ha givato $%d in banca.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
+    Log(Account_GetName(playerid), Character_GetOOCName(id), "/givemoney", hp);
+    return 1;
+}
+
 
 flags:sethp(CMD_MODERATOR);
 CMD:sethp(playerid, params[])
@@ -711,12 +730,12 @@ CMD:giveitem(playerid, params[])
 
 	if(quantity > 0)
 	{
-		new extra = 0;
+		new result, extra = 0;
 		
 		if(itemid == gItem_Phone)
-			extra = Server_GeneratePhoneNumber();
-		
-		new result = Character_GiveItem(id, itemid, quantity, extra);
+			result = Character_GivePhone(id);
+		else
+			result = Character_GiveItem(id, itemid, quantity, extra);
 		if(result == INVENTORY_ADD_SUCCESS)
 		{
 			SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha givato %s (Qnt: %d) a %s (%d).", 
@@ -889,7 +908,7 @@ CMD:ajail(playerid, params[])
 
 	SendFormattedMessage(id, COLOR_ERROR, "Sei stato jailato da %s (%d) per %d minuti. Motivo: %s", Account_GetName(playerid), playerid, time, reason);
 
-	SendMessageToAdmins(false, COLOR_ADMIN, "[ADM-CMD] %s (%d) ha jailato %s (%d) per %d minuti. Motivo: %s", Account_GetName(playerid), playerid, Character_GetOOCName(id), id, time, reason);
+	SendMessageToAdmins(false, COLOR_ADMIN, "AdmCmd: %s (%d) ha jailato %s (%d) per %d minuti. Motivo: %s", Account_GetName(playerid), playerid, Character_GetOOCName(id), id, time, reason);
 	Log(Character_GetOOCName(playerid), Character_GetOOCName(id), "/ajail", time);
 	return 1;
 }
@@ -908,7 +927,7 @@ CMD:unjail(playerid, params[])
 	Character_SetJailTimeAsSeconds(id, 2);
 	SendFormattedMessage(id, COLOR_ERROR, "Sei stato unjailato da %s", Account_GetName(playerid));
 
-	SendMessageToAdmins(false, COLOR_ADMIN, "[ADM-CMD] %s (%d) ha unjailato %s (%d).", Account_GetName(playerid), playerid, Character_GetOOCName(id), id);
+	SendMessageToAdmins(false, COLOR_ADMIN, "AdmCmd: %s (%d) ha unjailato %s (%d).", Account_GetName(playerid), playerid, Character_GetOOCName(id), id);
 	Log(Character_GetOOCName(playerid), Character_GetOOCName(id), "/unjail");
 	return 1;
 }
@@ -1369,6 +1388,6 @@ CMD:respawnfactionvehicles(playerid, params[])
 	new name[MAX_FACTION_NAME];
 	Faction_GetName(factionid, name);
 	SendMessageToAdmins(0, COLOR_ORANGE, "AdmCmd: %s ha respawnato i veicoli della fazione id %d (%s).", Account_GetName(playerid), factionid, name);
-	Faction_SendMessage(factionid, COLOR_SLATEBLUE, "(( %s (%d) ha respawnato tutti i veicoli non occupati ))", Account_GetName(playerid), playerid);
+	Faction_SendMessage(factionid, "(( %s (%d) ha respawnato tutti i veicoli non occupati ))", Account_GetName(playerid), playerid);
 	return 1;
 }

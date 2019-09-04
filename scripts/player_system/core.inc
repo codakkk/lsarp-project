@@ -37,7 +37,7 @@
 #include <player_system\components\damage_system>
 #include <player_system\components\customanims>
 #include <player_system\components\drugs>
-#include <player_system\components\hunger>
+//#include <player_system\components\hunger>
 #include <player_system\components\desync_checker>
 #include <player_system\components\wear_objects>
 #include <player_system\components\privileges>
@@ -160,7 +160,7 @@ stock Character_ShowStats(playerid, targetid)
     SendFormattedMessage(targetid, COLOR_GREEN, "_____________________[STATISTICHE - %d/%d/%d @ %d:%d]_____________________", day, month, year, hours, minutes);
 	SendFormattedMessage(targetid, -1, "[Account] Nome: %s - Livello: %d - E-Mail: %s", Account_GetName(playerid), Account_GetLevel(playerid), Account_GetEMail(playerid));
     
-	if(Character_GetFaction(playerid) != INVALID_FACTION_ID)
+	if(Faction_IsValid(Character_GetFaction(playerid)))
 	{
 		new factionName[MAX_FACTION_NAME], rankName[MAX_FACTION_RANK_NAME];
 		Faction_GetName(Character_GetFaction(playerid), factionName);
@@ -171,7 +171,7 @@ stock Character_ShowStats(playerid, targetid)
 	{
 		SendFormattedMessage(targetid, -1, "[Personaggio] Nome: %s - Skin: %d", Character_GetOOCName(playerid), Character_GetSkin(playerid));
 	}
-    SendFormattedMessage(targetid, -1, "[Salute] HP: %.2f - Armatura: %.2f - Alimentazione: %d", hp, armour, Character_GetHunger(playerid));
+    SendFormattedMessage(targetid, -1, "[Salute] HP: %.2f - Armatura: %.2f", hp, armour);
     
 	if(Character_HasBuildingKey(playerid) && Character_HasHouseKey(playerid))
 	   SendFormattedMessage(targetid, -1, "[Proprietà] Edificio: %d - Casa: %d", Character_GetBuildingKey(playerid), Character_GetHouseKey(playerid));
@@ -180,7 +180,7 @@ stock Character_ShowStats(playerid, targetid)
     else if(Character_HasHouseKey(playerid))
 	   SendFormattedMessage(targetid, -1, "[Proprietà] Casa: %d", Character_GetHouseKey(playerid));
 	
-	SendFormattedMessage(targetid, -1, "[Altro] Soldi: $%d - Banca: %d - Stipendio: $%d - Interior: %d - VW: %d", Character_GetMoney(playerid), Character_GetBank(playerid), Character_GetPayCheck(playerid), GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
+	SendFormattedMessage(targetid, -1, "[Altro] Soldi: $%d - Banca: $%d - Stipendio: $%d - Interior: %d - VW: %d", Character_GetMoney(playerid), Character_GetBank(playerid), Character_GetPayCheck(playerid), GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
 	
 	if(Account_GetPremiumLevel(playerid) > 0 && Account_GetPremiumExpiry(playerid) > gettime())
 	{
@@ -493,4 +493,18 @@ stock Character_EnableSomeAntiCheats(playerid, enabled)
 	static const cheatCodes[] = {0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 19, 20};
 	for(new i = 0, j = sizeof(cheatCodes); i < j; ++i)
 		EnableAntiCheatForPlayer(playerid, cheatCodes[i], enabled);
+}
+
+stock Character_IsIDConnected(dbid)
+{
+	new playerid = INVALID_PLAYER_ID;
+	foreach(new i : Player)
+	{
+		if(Character_GetID(i) == dbid)
+		{
+			playerid = i;
+			break;
+		}
+	}
+	return playerid;
 }

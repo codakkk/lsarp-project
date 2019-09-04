@@ -15,7 +15,8 @@ enum
     EDIT_TYPE_FURNITURE,
     EDIT_TYPE_PLAYER_OBJECT,
     EDIT_TYPE_GATE_START,
-    EDIT_TYPE_GATE_END
+    EDIT_TYPE_GATE_END,
+    EDIT_TYPE_ATM
 }
 
 hook OnPlayerClearData(playerid)

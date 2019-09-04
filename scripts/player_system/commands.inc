@@ -143,6 +143,7 @@ CMD:aiuto(playerid, params[])
 	SendClientMessage(playerid, -1, "[GENERALE]: /casa - /biz - /zpoints - /animlist - /cancello - /rimuovimaschera");
 	SendClientMessage(playerid, -1, "[GENERALE]: /compra - /annulla - /accetta - /rifiuta - /rimuovi - /lostitems");
 	SendClientMessage(playerid, -1, "[GENERALE]: /stilechat - /stilelotta - /stilecamminata - /sconosciuto - /blindfold");
+	SendClientMessage(playerid, -1, "[GENERALE]: /deposita - /ritira - /bonifico - /bilancio");
     SendClientMessage(playerid, -1, "[ALTRO]: /chatcmds - /invcmds - /vcmds - /furniturecmds - /cellcmds");
 	SendClientMessage(playerid, -1, "[ALTRO]: (/cambiapass)word - /fcmds - /animlist - /tcmds - /acmds");
 	new factionid = Character_GetFaction(playerid);
@@ -183,7 +184,7 @@ CMD:vcmds(playerid, params[])
 flags:invcmds(CMD_ALIVE_USER);
 CMD:invcmds(playerid, params[])
 {
-	SendClientMessage(playerid, -1, "[INVENTARIO]: (/inv)entario - (/dep)osita - (/dis)assembla - /gettaarma");
+	SendClientMessage(playerid, -1, "[INVENTARIO]: (/inv)entario - (/dep)ositaarma - (/dis)assembla - /gettaarma");
 	SendClientMessage(playerid, -1, "[INVENTARIO]: /invmode - /usa - /passa - /getta - /depositadenaro");
 	return 1;
 }

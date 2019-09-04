@@ -109,7 +109,7 @@ CMD:arresta(playerid, params[])
 	Faction_GetRankName(Character_GetFaction(playerid), Character_GetRank(playerid), rankName);
 	
 	new String:message = str_format("(( HQ: %s %s ha arrestato %s per %d minuti. ))", rankName, Character_GetOOCName(playerid), Character_GetOOCName(id), time);
-	Faction_SendMessageStr(Character_GetFaction(playerid), COLOR_BLUE, message);
+	Faction_SendMessageStr(Character_GetFaction(playerid), message);
 
 	SendFormattedMessage(playerid, COLOR_ORANGE, "** Hai arrestato %s per %d minuti.", Character_GetOOCName(id), time);
 
@@ -328,7 +328,7 @@ stock Character_OffDuty(playerid)
 
 	new String:message = str_format("(( ** HQ: %s %s non è più in servizio. ))", rankName, Character_GetOOCName(playerid));
 
-	Faction_SendMessageStr(Character_GetFaction(playerid), COLOR_SLATEBLUE, message);
+	Faction_SendMessageStr(Character_GetFaction(playerid), message);
 
 	SetPlayerColor(playerid, -1);
 

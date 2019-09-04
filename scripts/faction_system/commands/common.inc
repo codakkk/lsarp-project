@@ -9,7 +9,7 @@ CMD:fcmds(playerid, params[])
 		if(Faction_GetType(factionid) == FACTION_TYPE_POLICE)
 		{
 			SendClientMessage(playerid, COLOR_SLATEBLUE, "/manette - /trascina - /arresta - (/m)egafono - /vsign");
-			SendClientMessage(playerid, COLOR_SLATEBLUE, "/perquisisci - /cura - /servizio - (/d)ipartimento");
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "/perquisisci - /cura - /servizio - (/d)ipartimento - /traccia");
 		}
 		else if(Faction_GetType(factionid) == FACTION_TYPE_GOVERNMENT)
 		{
@@ -49,7 +49,7 @@ CMD:servizio(playerid, params[])
 			new rankName[16];
 			Faction_GetRankName(factionid, Character_GetRank(playerid), rankName);
 			new String:message = str_format("(( ** HQ: %s %s è entrato in servizio. ))", rankName, Character_GetOOCName(playerid));
-			Faction_SendMessageStr(factionid, COLOR_SLATEBLUE, message);
+			Faction_SendMessageStr(factionid, message);
 			SendClientMessage(playerid, COLOR_GREEN, "Utilizza /uniforme <id> per cambiare uniforme.");
 			
 			Faction_GiveWeapons(playerid);

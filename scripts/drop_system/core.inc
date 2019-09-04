@@ -23,9 +23,13 @@ static enum _:E_DROP_INFO // _: for tag mismatch thing
     Pickup
 };
 static
-	DropInfo[MAX_DROPS][E_DROP_INFO],
 	Pool:Drops
 ;
+
+stock Pool:GetDropsPool()
+{
+	return Drops;
+}
 
 hook OnGameModeInit()
 {

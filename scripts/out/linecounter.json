@@ -5808,6 +5808,1954 @@
                     "filename": "weapon_system\\core.inc"
                 }
             ]
+        },
+        {
+            "version": "0.2.2",
+            "counttime": "2019-09-03 23:03:37",
+            "filesum": 156,
+            "codesum": 80257,
+            "commentsum": 1946,
+            "blanksum": 6112,
+            "statistics": {
+                ".inc": {
+                    "code": 76892,
+                    "comment": 1890,
+                    "blank": 6023
+                },
+                ".txt": {
+                    "code": 133,
+                    "comment": 0,
+                    "blank": 1
+                },
+                ".pwn": {
+                    "code": 567,
+                    "comment": 56,
+                    "blank": 88
+                },
+                ".json": {
+                    "code": 2665,
+                    "comment": 0,
+                    "blank": 0
+                }
+            },
+            "filelist": [
+                {
+                    "blank": 34,
+                    "code": 209,
+                    "comment": 1,
+                    "filename": "account_system\\components\\char_select.inc"
+                },
+                {
+                    "blank": 29,
+                    "code": 147,
+                    "comment": 10,
+                    "filename": "account_system\\components\\login.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 22,
+                    "comment": 0,
+                    "filename": "account_system\\components\\register.inc"
+                },
+                {
+                    "blank": 61,
+                    "code": 343,
+                    "comment": 3,
+                    "filename": "account_system\\core.inc"
+                },
+                {
+                    "blank": 200,
+                    "code": 1165,
+                    "comment": 9,
+                    "filename": "admin_system\\commands.inc"
+                },
+                {
+                    "blank": 28,
+                    "code": 165,
+                    "comment": 15,
+                    "filename": "admin_system\\components\\recon.inc"
+                },
+                {
+                    "blank": 30,
+                    "code": 125,
+                    "comment": 12,
+                    "filename": "admin_system\\core.inc"
+                },
+                {
+                    "blank": 8,
+                    "code": 46,
+                    "comment": 0,
+                    "filename": "admin_system\\supporter_commands.inc"
+                },
+                {
+                    "blank": 233,
+                    "code": 807,
+                    "comment": 6,
+                    "filename": "animation_system\\commands.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 65,
+                    "comment": 5,
+                    "filename": "animation_system\\core.inc"
+                },
+                {
+                    "blank": 5,
+                    "code": 16,
+                    "comment": 1,
+                    "filename": "anticheat\\core.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 39,
+                    "comment": 0,
+                    "filename": "anticheat_old\\cheats\\no_reload.inc"
+                },
+                {
+                    "blank": 5,
+                    "code": 33,
+                    "comment": 0,
+                    "filename": "anticheat_old\\cheats\\triggerbot.inc"
+                },
+                {
+                    "blank": 8,
+                    "code": 96,
+                    "comment": 6,
+                    "filename": "anticheat_old\\cheats\\weapons.inc"
+                },
+                {
+                    "blank": 14,
+                    "code": 101,
+                    "comment": 5,
+                    "filename": "anticheat_old\\core.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 48,
+                    "comment": 8,
+                    "filename": "anticheat_old\\enum.inc"
+                },
+                {
+                    "blank": 29,
+                    "code": 212,
+                    "comment": 0,
+                    "filename": "building_system\\commands\\admin.inc"
+                },
+                {
+                    "blank": 65,
+                    "code": 208,
+                    "comment": 0,
+                    "filename": "building_system\\components\\garage.inc"
+                },
+                {
+                    "blank": 50,
+                    "code": 240,
+                    "comment": 1,
+                    "filename": "building_system\\components\\inventory.inc"
+                },
+                {
+                    "blank": 87,
+                    "code": 314,
+                    "comment": 21,
+                    "filename": "building_system\\components\\shop.inc"
+                },
+                {
+                    "blank": 151,
+                    "code": 691,
+                    "comment": 13,
+                    "filename": "building_system\\core.inc"
+                },
+                {
+                    "blank": 8,
+                    "code": 46,
+                    "comment": 1,
+                    "filename": "checkpoint_system\\core.inc"
+                },
+                {
+                    "blank": 14,
+                    "code": 46,
+                    "comment": 2,
+                    "filename": "chopshop_system\\commands.inc"
+                },
+                {
+                    "blank": 22,
+                    "code": 87,
+                    "comment": 7,
+                    "filename": "chopshop_system\\core.inc"
+                },
+                {
+                    "blank": 24,
+                    "code": 84,
+                    "comment": 0,
+                    "filename": "database\\core.inc"
+                },
+                {
+                    "blank": 130,
+                    "code": 578,
+                    "comment": 23,
+                    "filename": "dealership_system\\core.inc"
+                },
+                {
+                    "blank": 44,
+                    "code": 234,
+                    "comment": 6,
+                    "filename": "dealership_system\\player.inc"
+                },
+                {
+                    "blank": 2,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": "defines.inc"
+                },
+                {
+                    "blank": 15,
+                    "code": 160,
+                    "comment": 0,
+                    "filename": "dp_system\\core.inc"
+                },
+                {
+                    "blank": 41,
+                    "code": 262,
+                    "comment": 6,
+                    "filename": "drop_system\\core.inc"
+                },
+                {
+                    "blank": 24,
+                    "code": 67,
+                    "comment": 4,
+                    "filename": "easyDialogs.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 8,
+                    "filename": "event_system\\event_enum.inc"
+                },
+                {
+                    "blank": 29,
+                    "code": 149,
+                    "comment": 0,
+                    "filename": "faction_system\\commands.inc"
+                },
+                {
+                    "blank": 71,
+                    "code": 272,
+                    "comment": 7,
+                    "filename": "faction_system\\commands\\common.inc"
+                },
+                {
+                    "blank": 4,
+                    "code": 14,
+                    "comment": 0,
+                    "filename": "faction_system\\commands\\government.inc"
+                },
+                {
+                    "blank": 86,
+                    "code": 273,
+                    "comment": 4,
+                    "filename": "faction_system\\commands\\police.inc"
+                },
+                {
+                    "blank": 70,
+                    "code": 411,
+                    "comment": 10,
+                    "filename": "faction_system\\core.inc"
+                },
+                {
+                    "blank": 30,
+                    "code": 146,
+                    "comment": 5,
+                    "filename": "faction_system\\national_guard\\beanbag_taser.inc"
+                },
+                {
+                    "blank": 12,
+                    "code": 44,
+                    "comment": 12,
+                    "filename": "faction_system\\national_guard\\core.inc"
+                },
+                {
+                    "blank": 33,
+                    "code": 128,
+                    "comment": 12,
+                    "filename": "faction_system\\national_guard\\mdc.inc"
+                },
+                {
+                    "blank": 44,
+                    "code": 363,
+                    "comment": 9,
+                    "filename": "faction_system\\ranks.inc"
+                },
+                {
+                    "blank": 29,
+                    "code": 185,
+                    "comment": 2,
+                    "filename": "faction_system\\skins.inc"
+                },
+                {
+                    "blank": 51,
+                    "code": 173,
+                    "comment": 0,
+                    "filename": "furniture_system\\commands.inc"
+                },
+                {
+                    "blank": 13,
+                    "code": 49,
+                    "comment": 0,
+                    "filename": "furniture_system\\components\\door.inc"
+                },
+                {
+                    "blank": 196,
+                    "code": 946,
+                    "comment": 41,
+                    "filename": "furniture_system\\core.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 999,
+                    "comment": 26,
+                    "filename": "furniture_system\\furnitures_list.inc"
+                },
+                {
+                    "blank": 80,
+                    "code": 465,
+                    "comment": 3,
+                    "filename": "gate_system\\core.inc"
+                },
+                {
+                    "blank": 28,
+                    "code": 180,
+                    "comment": 0,
+                    "filename": "house_system\\commands.inc"
+                },
+                {
+                    "blank": 16,
+                    "code": 94,
+                    "comment": 80,
+                    "filename": "house_system\\components\\interiors.inc"
+                },
+                {
+                    "blank": 50,
+                    "code": 240,
+                    "comment": 2,
+                    "filename": "house_system\\components\\inventory.inc"
+                },
+                {
+                    "blank": 105,
+                    "code": 492,
+                    "comment": 3,
+                    "filename": "house_system\\core.inc"
+                },
+                {
+                    "blank": 5,
+                    "code": 20,
+                    "comment": 1,
+                    "filename": "inventory_system\\callbacks.inc"
+                },
+                {
+                    "blank": 70,
+                    "code": 565,
+                    "comment": 27,
+                    "filename": "inventory_system\\core.inc"
+                },
+                {
+                    "blank": 12,
+                    "code": 57,
+                    "comment": 4,
+                    "filename": "inventory_system\\items.inc"
+                },
+                {
+                    "blank": 64,
+                    "code": 310,
+                    "comment": 15,
+                    "filename": "inventory_system\\server.inc"
+                },
+                {
+                    "blank": 6,
+                    "code": 47,
+                    "comment": 0,
+                    "filename": "inventory_system\\types\\ammo.inc"
+                },
+                {
+                    "blank": 3,
+                    "code": 17,
+                    "comment": 1,
+                    "filename": "inventory_system\\types\\bag.inc"
+                },
+                {
+                    "blank": 9,
+                    "code": 28,
+                    "comment": 0,
+                    "filename": "inventory_system\\types\\dress.inc"
+                },
+                {
+                    "blank": 6,
+                    "code": 30,
+                    "comment": 4,
+                    "filename": "inventory_system\\types\\fuel.inc"
+                },
+                {
+                    "blank": 17,
+                    "code": 56,
+                    "comment": 0,
+                    "filename": "inventory_system\\types\\medic.inc"
+                },
+                {
+                    "blank": 2,
+                    "code": 24,
+                    "comment": 0,
+                    "filename": "inventory_system\\types\\money.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 7,
+                    "comment": 0,
+                    "filename": "inventory_system\\types\\types.inc"
+                },
+                {
+                    "blank": 5,
+                    "code": 65,
+                    "comment": 4,
+                    "filename": "inventory_system\\types\\weapon.inc"
+                },
+                {
+                    "blank": 3,
+                    "code": 14,
+                    "comment": 0,
+                    "filename": "log_system\\core.inc"
+                },
+                {
+                    "blank": 13,
+                    "code": 76,
+                    "comment": 4,
+                    "filename": "loot_zone_system\\commands.inc"
+                },
+                {
+                    "blank": 142,
+                    "code": 652,
+                    "comment": 13,
+                    "filename": "loot_zone_system\\core.inc"
+                },
+                {
+                    "blank": 28,
+                    "code": 197,
+                    "comment": 11,
+                    "filename": "loot_zone_system\\dialogs.inc"
+                },
+                {
+                    "blank": 4,
+                    "code": 26,
+                    "comment": 4,
+                    "filename": "loot_zone_system\\enum.inc"
+                },
+                {
+                    "blank": 88,
+                    "code": 567,
+                    "comment": 56,
+                    "filename": "lsarp.pwn"
+                },
+                {
+                    "blank": 16,
+                    "code": 60,
+                    "comment": 1,
+                    "filename": "mailer_system\\core.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 15,
+                    "comment": 0,
+                    "filename": "miscellaneous\\pp_wrappers.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 102,
+                    "comment": 10,
+                    "filename": "miscellaneous\\timestamp_to_date.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 2665,
+                    "comment": 0,
+                    "filename": "out\\linecount.json"
+                },
+                {
+                    "blank": 1,
+                    "code": 133,
+                    "comment": 0,
+                    "filename": "out\\linecount.txt"
+                },
+                {
+                    "blank": 23,
+                    "code": 107,
+                    "comment": 4,
+                    "filename": "pickup_system\\core.inc"
+                },
+                {
+                    "blank": 39,
+                    "code": 341,
+                    "comment": 29,
+                    "filename": "player_system\\commands.inc"
+                },
+                {
+                    "blank": 19,
+                    "code": 188,
+                    "comment": 12,
+                    "filename": "player_system\\commands\\chat_commands.inc"
+                },
+                {
+                    "blank": 44,
+                    "code": 396,
+                    "comment": 5,
+                    "filename": "player_system\\commands\\interaction_commands.inc"
+                },
+                {
+                    "blank": 23,
+                    "code": 191,
+                    "comment": 2,
+                    "filename": "player_system\\commands\\inventory_commands.inc"
+                },
+                {
+                    "blank": 12,
+                    "code": 113,
+                    "comment": 0,
+                    "filename": "player_system\\commands\\premium_commands.inc"
+                },
+                {
+                    "blank": 27,
+                    "code": 227,
+                    "comment": 80,
+                    "filename": "player_system\\commands\\vehicle_commands.inc"
+                },
+                {
+                    "blank": 5,
+                    "code": 22,
+                    "comment": 0,
+                    "filename": "player_system\\components\\afk.inc"
+                },
+                {
+                    "blank": 3,
+                    "code": 28,
+                    "comment": 1,
+                    "filename": "player_system\\components\\animation.inc"
+                },
+                {
+                    "blank": 14,
+                    "code": 83,
+                    "comment": 7,
+                    "filename": "player_system\\components\\care.inc"
+                },
+                {
+                    "blank": 15,
+                    "code": 113,
+                    "comment": 0,
+                    "filename": "player_system\\components\\chat.inc"
+                },
+                {
+                    "blank": 23,
+                    "code": 179,
+                    "comment": 0,
+                    "filename": "player_system\\components\\customanims.inc"
+                },
+                {
+                    "blank": 14,
+                    "code": 87,
+                    "comment": 18,
+                    "filename": "player_system\\components\\damage_system.inc"
+                },
+                {
+                    "blank": 15,
+                    "code": 65,
+                    "comment": 0,
+                    "filename": "player_system\\components\\death_history.inc"
+                },
+                {
+                    "blank": 58,
+                    "code": 272,
+                    "comment": 56,
+                    "filename": "player_system\\components\\death_system.inc"
+                },
+                {
+                    "blank": 17,
+                    "code": 64,
+                    "comment": 3,
+                    "filename": "player_system\\components\\desync_checker.inc"
+                },
+                {
+                    "blank": 10,
+                    "code": 119,
+                    "comment": 2,
+                    "filename": "player_system\\components\\drop.inc"
+                },
+                {
+                    "blank": 43,
+                    "code": 305,
+                    "comment": 20,
+                    "filename": "player_system\\components\\drugs.inc"
+                },
+                {
+                    "blank": 12,
+                    "code": 80,
+                    "comment": 2,
+                    "filename": "player_system\\components\\editobject.inc"
+                },
+                {
+                    "blank": 12,
+                    "code": 64,
+                    "comment": 1,
+                    "filename": "player_system\\components\\effects\\ame.inc"
+                },
+                {
+                    "blank": 5,
+                    "code": 30,
+                    "comment": 0,
+                    "filename": "player_system\\components\\effects\\blindfold.inc"
+                },
+                {
+                    "blank": 10,
+                    "code": 53,
+                    "comment": 0,
+                    "filename": "player_system\\components\\effects\\drag.inc"
+                },
+                {
+                    "blank": 3,
+                    "code": 11,
+                    "comment": 2,
+                    "filename": "player_system\\components\\effects\\freeze.inc"
+                },
+                {
+                    "blank": 6,
+                    "code": 25,
+                    "comment": 0,
+                    "filename": "player_system\\components\\effects\\invincible.inc"
+                },
+                {
+                    "blank": 18,
+                    "code": 120,
+                    "comment": 7,
+                    "filename": "player_system\\components\\effects\\mask.inc"
+                },
+                {
+                    "blank": 28,
+                    "code": 136,
+                    "comment": 1,
+                    "filename": "player_system\\components\\effects\\smoking.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 32,
+                    "comment": 0,
+                    "filename": "player_system\\components\\effects\\stun.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 35,
+                    "comment": 0,
+                    "filename": "player_system\\components\\fightstyle.inc"
+                },
+                {
+                    "blank": 84,
+                    "code": 354,
+                    "comment": 0,
+                    "filename": "player_system\\components\\help_requests.inc"
+                },
+                {
+                    "blank": 26,
+                    "code": 135,
+                    "comment": 4,
+                    "filename": "player_system\\components\\hunger.inc"
+                },
+                {
+                    "blank": 22,
+                    "code": 81,
+                    "comment": 8,
+                    "filename": "player_system\\components\\interaction.inc"
+                },
+                {
+                    "blank": 65,
+                    "code": 505,
+                    "comment": 22,
+                    "filename": "player_system\\components\\inventory.inc"
+                },
+                {
+                    "blank": 12,
+                    "code": 86,
+                    "comment": 0,
+                    "filename": "player_system\\components\\jail.inc"
+                },
+                {
+                    "blank": 17,
+                    "code": 90,
+                    "comment": 0,
+                    "filename": "player_system\\components\\money.inc"
+                },
+                {
+                    "blank": 16,
+                    "code": 87,
+                    "comment": 2,
+                    "filename": "player_system\\components\\options.inc"
+                },
+                {
+                    "blank": 9,
+                    "code": 49,
+                    "comment": 0,
+                    "filename": "player_system\\components\\paycheck.inc"
+                },
+                {
+                    "blank": 21,
+                    "code": 92,
+                    "comment": 2,
+                    "filename": "player_system\\components\\payday.inc"
+                },
+                {
+                    "blank": 152,
+                    "code": 587,
+                    "comment": 17,
+                    "filename": "player_system\\components\\phone.inc"
+                },
+                {
+                    "blank": 4,
+                    "code": 69,
+                    "comment": 2,
+                    "filename": "player_system\\components\\pickup.inc"
+                },
+                {
+                    "blank": 4,
+                    "code": 31,
+                    "comment": 2,
+                    "filename": "player_system\\components\\privileges.inc"
+                },
+                {
+                    "blank": 66,
+                    "code": 311,
+                    "comment": 5,
+                    "filename": "player_system\\components\\property.inc"
+                },
+                {
+                    "blank": 47,
+                    "code": 185,
+                    "comment": 1,
+                    "filename": "player_system\\components\\radio.inc"
+                },
+                {
+                    "blank": 39,
+                    "code": 188,
+                    "comment": 4,
+                    "filename": "player_system\\components\\request.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 35,
+                    "comment": 0,
+                    "filename": "player_system\\components\\skin.inc"
+                },
+                {
+                    "blank": 71,
+                    "code": 407,
+                    "comment": 12,
+                    "filename": "player_system\\components\\spawn.inc"
+                },
+                {
+                    "blank": 110,
+                    "code": 511,
+                    "comment": 31,
+                    "filename": "player_system\\components\\vehicle.inc"
+                },
+                {
+                    "blank": 10,
+                    "code": 219,
+                    "comment": 0,
+                    "filename": "player_system\\components\\walk.inc"
+                },
+                {
+                    "blank": 28,
+                    "code": 171,
+                    "comment": 8,
+                    "filename": "player_system\\components\\weapons.inc"
+                },
+                {
+                    "blank": 81,
+                    "code": 694,
+                    "comment": 29,
+                    "filename": "player_system\\components\\wear_objects.inc"
+                },
+                {
+                    "blank": 77,
+                    "code": 402,
+                    "comment": 22,
+                    "filename": "player_system\\core.inc"
+                },
+                {
+                    "blank": 16,
+                    "code": 127,
+                    "comment": 7,
+                    "filename": "player_system\\dialogs.inc"
+                },
+                {
+                    "blank": 2,
+                    "code": 8,
+                    "comment": 1,
+                    "filename": "player_system\\enum.inc"
+                },
+                {
+                    "blank": 1,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "player_system\\functions.inc"
+                },
+                {
+                    "blank": 37,
+                    "code": 173,
+                    "comment": 1,
+                    "filename": "player_system\\state.inc"
+                },
+                {
+                    "blank": 8,
+                    "code": 55,
+                    "comment": 2,
+                    "filename": "player_system\\textdraws.inc"
+                },
+                {
+                    "blank": 43,
+                    "code": 310,
+                    "comment": 12,
+                    "filename": "reward_system\\core.inc"
+                },
+                {
+                    "blank": 11,
+                    "code": 40,
+                    "comment": 4,
+                    "filename": "sampmailjs.inc"
+                },
+                {
+                    "blank": 15,
+                    "code": 44,
+                    "comment": 2,
+                    "filename": "server\\components\\clock.inc"
+                },
+                {
+                    "blank": 13,
+                    "code": 151,
+                    "comment": 2,
+                    "filename": "server\\components\\weather.inc"
+                },
+                {
+                    "blank": 4,
+                    "code": 17,
+                    "comment": 0,
+                    "filename": "server\\core.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 8300,
+                    "comment": 0,
+                    "filename": "server\\maps\\backup\\lsa_pwncitta_28agosto.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 737,
+                    "comment": 0,
+                    "filename": "server\\maps\\backup\\lsa_pwncitta_28agosto_removes.inc"
+                },
+                {
+                    "blank": 22,
+                    "code": 3236,
+                    "comment": 11,
+                    "filename": "server\\maps\\backup\\lsa_pwnexteriorstxstudio_28agosto.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 137,
+                    "comment": 7,
+                    "filename": "server\\maps\\backup\\lsa_pwnexteriorstxstudio_28agosto_removes.inc"
+                },
+                {
+                    "blank": 72,
+                    "code": 9830,
+                    "comment": 50,
+                    "filename": "server\\maps\\backup\\lsa_pwninteriors_28agosto.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 65,
+                    "comment": 3,
+                    "filename": "server\\maps\\backup\\lsa_pwninteriors_28agosto_removes.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 8672,
+                    "comment": 0,
+                    "filename": "server\\maps\\lsa_pwncitta_28agosto.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 738,
+                    "comment": 0,
+                    "filename": "server\\maps\\lsa_pwncitta_28agosto_removes.inc"
+                },
+                {
+                    "blank": 13,
+                    "code": 3871,
+                    "comment": 11,
+                    "filename": "server\\maps\\lsa_pwnexteriorstxstudio_28agosto.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 83,
+                    "comment": 61,
+                    "filename": "server\\maps\\lsa_pwnexteriorstxstudio_28agosto_removes.inc"
+                },
+                {
+                    "blank": 65,
+                    "code": 9885,
+                    "comment": 53,
+                    "filename": "server\\maps\\lsa_pwninteriors_28agosto.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 65,
+                    "comment": 3,
+                    "filename": "server\\maps\\lsa_pwninteriors_28agosto_removes.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 5,
+                    "comment": 8,
+                    "filename": "server\\maps\\maps.inc"
+                },
+                {
+                    "blank": 13,
+                    "code": 77,
+                    "comment": 0,
+                    "filename": "textdraws.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 32,
+                    "comment": 2,
+                    "filename": "utils\\colors.inc"
+                },
+                {
+                    "blank": 11,
+                    "code": 68,
+                    "comment": 2,
+                    "filename": "utils\\maths.inc"
+                },
+                {
+                    "blank": 51,
+                    "code": 366,
+                    "comment": 145,
+                    "filename": "utils\\utils.inc"
+                },
+                {
+                    "blank": 3,
+                    "code": 3,
+                    "comment": 3,
+                    "filename": "vehicles_system\\callbacks.inc"
+                },
+                {
+                    "blank": 148,
+                    "code": 800,
+                    "comment": 44,
+                    "filename": "vehicles_system\\core.inc"
+                },
+                {
+                    "blank": 40,
+                    "code": 398,
+                    "comment": 12,
+                    "filename": "vehicles_system\\inventory.inc"
+                },
+                {
+                    "blank": 1165,
+                    "code": 5008,
+                    "comment": 510,
+                    "filename": "weapon-config.inc"
+                },
+                {
+                    "blank": 21,
+                    "code": 168,
+                    "comment": 23,
+                    "filename": "weapon_system\\core.inc"
+                }
+            ]
+        },
+        {
+            "version": "0.2.2",
+            "counttime": "2019-09-04 04:04:21",
+            "filesum": 158,
+            "codesum": 80885,
+            "commentsum": 1951,
+            "blanksum": 6228,
+            "statistics": {
+                ".inc": {
+                    "code": 77519,
+                    "comment": 1895,
+                    "blank": 6139
+                },
+                ".txt": {
+                    "code": 133,
+                    "comment": 0,
+                    "blank": 1
+                },
+                ".pwn": {
+                    "code": 568,
+                    "comment": 56,
+                    "blank": 88
+                },
+                ".json": {
+                    "code": 2665,
+                    "comment": 0,
+                    "blank": 0
+                }
+            },
+            "filelist": [
+                {
+                    "blank": 34,
+                    "code": 209,
+                    "comment": 1,
+                    "filename": "account_system\\components\\char_select.inc"
+                },
+                {
+                    "blank": 29,
+                    "code": 147,
+                    "comment": 10,
+                    "filename": "account_system\\components\\login.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 22,
+                    "comment": 0,
+                    "filename": "account_system\\components\\register.inc"
+                },
+                {
+                    "blank": 61,
+                    "code": 343,
+                    "comment": 3,
+                    "filename": "account_system\\core.inc"
+                },
+                {
+                    "blank": 204,
+                    "code": 1179,
+                    "comment": 10,
+                    "filename": "admin_system\\commands.inc"
+                },
+                {
+                    "blank": 28,
+                    "code": 165,
+                    "comment": 15,
+                    "filename": "admin_system\\components\\recon.inc"
+                },
+                {
+                    "blank": 30,
+                    "code": 125,
+                    "comment": 12,
+                    "filename": "admin_system\\core.inc"
+                },
+                {
+                    "blank": 8,
+                    "code": 46,
+                    "comment": 0,
+                    "filename": "admin_system\\supporter_commands.inc"
+                },
+                {
+                    "blank": 233,
+                    "code": 807,
+                    "comment": 6,
+                    "filename": "animation_system\\commands.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 65,
+                    "comment": 5,
+                    "filename": "animation_system\\core.inc"
+                },
+                {
+                    "blank": 5,
+                    "code": 16,
+                    "comment": 1,
+                    "filename": "anticheat\\core.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 39,
+                    "comment": 0,
+                    "filename": "anticheat_old\\cheats\\no_reload.inc"
+                },
+                {
+                    "blank": 5,
+                    "code": 33,
+                    "comment": 0,
+                    "filename": "anticheat_old\\cheats\\triggerbot.inc"
+                },
+                {
+                    "blank": 8,
+                    "code": 96,
+                    "comment": 6,
+                    "filename": "anticheat_old\\cheats\\weapons.inc"
+                },
+                {
+                    "blank": 14,
+                    "code": 101,
+                    "comment": 5,
+                    "filename": "anticheat_old\\core.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 48,
+                    "comment": 8,
+                    "filename": "anticheat_old\\enum.inc"
+                },
+                {
+                    "blank": 67,
+                    "code": 352,
+                    "comment": 3,
+                    "filename": "atm_system\\core.inc"
+                },
+                {
+                    "blank": 29,
+                    "code": 212,
+                    "comment": 0,
+                    "filename": "building_system\\commands\\admin.inc"
+                },
+                {
+                    "blank": 65,
+                    "code": 208,
+                    "comment": 0,
+                    "filename": "building_system\\components\\garage.inc"
+                },
+                {
+                    "blank": 50,
+                    "code": 240,
+                    "comment": 1,
+                    "filename": "building_system\\components\\inventory.inc"
+                },
+                {
+                    "blank": 87,
+                    "code": 314,
+                    "comment": 21,
+                    "filename": "building_system\\components\\shop.inc"
+                },
+                {
+                    "blank": 150,
+                    "code": 692,
+                    "comment": 13,
+                    "filename": "building_system\\core.inc"
+                },
+                {
+                    "blank": 8,
+                    "code": 46,
+                    "comment": 1,
+                    "filename": "checkpoint_system\\core.inc"
+                },
+                {
+                    "blank": 14,
+                    "code": 46,
+                    "comment": 2,
+                    "filename": "chopshop_system\\commands.inc"
+                },
+                {
+                    "blank": 22,
+                    "code": 87,
+                    "comment": 7,
+                    "filename": "chopshop_system\\core.inc"
+                },
+                {
+                    "blank": 24,
+                    "code": 84,
+                    "comment": 0,
+                    "filename": "database\\core.inc"
+                },
+                {
+                    "blank": 130,
+                    "code": 578,
+                    "comment": 23,
+                    "filename": "dealership_system\\core.inc"
+                },
+                {
+                    "blank": 44,
+                    "code": 234,
+                    "comment": 6,
+                    "filename": "dealership_system\\player.inc"
+                },
+                {
+                    "blank": 2,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": "defines.inc"
+                },
+                {
+                    "blank": 15,
+                    "code": 160,
+                    "comment": 0,
+                    "filename": "dp_system\\core.inc"
+                },
+                {
+                    "blank": 42,
+                    "code": 265,
+                    "comment": 6,
+                    "filename": "drop_system\\core.inc"
+                },
+                {
+                    "blank": 24,
+                    "code": 67,
+                    "comment": 4,
+                    "filename": "easyDialogs.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 8,
+                    "filename": "event_system\\event_enum.inc"
+                },
+                {
+                    "blank": 29,
+                    "code": 148,
+                    "comment": 0,
+                    "filename": "faction_system\\commands.inc"
+                },
+                {
+                    "blank": 71,
+                    "code": 272,
+                    "comment": 7,
+                    "filename": "faction_system\\commands\\common.inc"
+                },
+                {
+                    "blank": 4,
+                    "code": 14,
+                    "comment": 0,
+                    "filename": "faction_system\\commands\\government.inc"
+                },
+                {
+                    "blank": 86,
+                    "code": 273,
+                    "comment": 4,
+                    "filename": "faction_system\\commands\\police.inc"
+                },
+                {
+                    "blank": 76,
+                    "code": 447,
+                    "comment": 11,
+                    "filename": "faction_system\\core.inc"
+                },
+                {
+                    "blank": 30,
+                    "code": 146,
+                    "comment": 5,
+                    "filename": "faction_system\\national_guard\\beanbag_taser.inc"
+                },
+                {
+                    "blank": 12,
+                    "code": 45,
+                    "comment": 12,
+                    "filename": "faction_system\\national_guard\\core.inc"
+                },
+                {
+                    "blank": 33,
+                    "code": 128,
+                    "comment": 12,
+                    "filename": "faction_system\\national_guard\\mdc.inc"
+                },
+                {
+                    "blank": 23,
+                    "code": 134,
+                    "comment": 4,
+                    "filename": "faction_system\\national_guard\\trace.inc"
+                },
+                {
+                    "blank": 44,
+                    "code": 363,
+                    "comment": 9,
+                    "filename": "faction_system\\ranks.inc"
+                },
+                {
+                    "blank": 29,
+                    "code": 185,
+                    "comment": 2,
+                    "filename": "faction_system\\skins.inc"
+                },
+                {
+                    "blank": 51,
+                    "code": 173,
+                    "comment": 0,
+                    "filename": "furniture_system\\commands.inc"
+                },
+                {
+                    "blank": 13,
+                    "code": 49,
+                    "comment": 0,
+                    "filename": "furniture_system\\components\\door.inc"
+                },
+                {
+                    "blank": 196,
+                    "code": 946,
+                    "comment": 41,
+                    "filename": "furniture_system\\core.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 999,
+                    "comment": 26,
+                    "filename": "furniture_system\\furnitures_list.inc"
+                },
+                {
+                    "blank": 80,
+                    "code": 465,
+                    "comment": 3,
+                    "filename": "gate_system\\core.inc"
+                },
+                {
+                    "blank": 28,
+                    "code": 180,
+                    "comment": 0,
+                    "filename": "house_system\\commands.inc"
+                },
+                {
+                    "blank": 17,
+                    "code": 92,
+                    "comment": 80,
+                    "filename": "house_system\\components\\interiors.inc"
+                },
+                {
+                    "blank": 50,
+                    "code": 240,
+                    "comment": 2,
+                    "filename": "house_system\\components\\inventory.inc"
+                },
+                {
+                    "blank": 106,
+                    "code": 494,
+                    "comment": 3,
+                    "filename": "house_system\\core.inc"
+                },
+                {
+                    "blank": 5,
+                    "code": 20,
+                    "comment": 1,
+                    "filename": "inventory_system\\callbacks.inc"
+                },
+                {
+                    "blank": 70,
+                    "code": 565,
+                    "comment": 27,
+                    "filename": "inventory_system\\core.inc"
+                },
+                {
+                    "blank": 12,
+                    "code": 57,
+                    "comment": 4,
+                    "filename": "inventory_system\\items.inc"
+                },
+                {
+                    "blank": 64,
+                    "code": 310,
+                    "comment": 15,
+                    "filename": "inventory_system\\server.inc"
+                },
+                {
+                    "blank": 6,
+                    "code": 47,
+                    "comment": 0,
+                    "filename": "inventory_system\\types\\ammo.inc"
+                },
+                {
+                    "blank": 3,
+                    "code": 17,
+                    "comment": 1,
+                    "filename": "inventory_system\\types\\bag.inc"
+                },
+                {
+                    "blank": 9,
+                    "code": 28,
+                    "comment": 0,
+                    "filename": "inventory_system\\types\\dress.inc"
+                },
+                {
+                    "blank": 6,
+                    "code": 30,
+                    "comment": 4,
+                    "filename": "inventory_system\\types\\fuel.inc"
+                },
+                {
+                    "blank": 17,
+                    "code": 56,
+                    "comment": 0,
+                    "filename": "inventory_system\\types\\medic.inc"
+                },
+                {
+                    "blank": 2,
+                    "code": 24,
+                    "comment": 0,
+                    "filename": "inventory_system\\types\\money.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 7,
+                    "comment": 0,
+                    "filename": "inventory_system\\types\\types.inc"
+                },
+                {
+                    "blank": 5,
+                    "code": 65,
+                    "comment": 4,
+                    "filename": "inventory_system\\types\\weapon.inc"
+                },
+                {
+                    "blank": 3,
+                    "code": 14,
+                    "comment": 0,
+                    "filename": "log_system\\core.inc"
+                },
+                {
+                    "blank": 13,
+                    "code": 76,
+                    "comment": 4,
+                    "filename": "loot_zone_system\\commands.inc"
+                },
+                {
+                    "blank": 142,
+                    "code": 652,
+                    "comment": 13,
+                    "filename": "loot_zone_system\\core.inc"
+                },
+                {
+                    "blank": 28,
+                    "code": 197,
+                    "comment": 11,
+                    "filename": "loot_zone_system\\dialogs.inc"
+                },
+                {
+                    "blank": 4,
+                    "code": 26,
+                    "comment": 4,
+                    "filename": "loot_zone_system\\enum.inc"
+                },
+                {
+                    "blank": 88,
+                    "code": 568,
+                    "comment": 56,
+                    "filename": "lsarp.pwn"
+                },
+                {
+                    "blank": 16,
+                    "code": 60,
+                    "comment": 1,
+                    "filename": "mailer_system\\core.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 15,
+                    "comment": 0,
+                    "filename": "miscellaneous\\pp_wrappers.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 102,
+                    "comment": 10,
+                    "filename": "miscellaneous\\timestamp_to_date.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 2665,
+                    "comment": 0,
+                    "filename": "out\\linecount.json"
+                },
+                {
+                    "blank": 1,
+                    "code": 133,
+                    "comment": 0,
+                    "filename": "out\\linecount.txt"
+                },
+                {
+                    "blank": 23,
+                    "code": 108,
+                    "comment": 4,
+                    "filename": "pickup_system\\core.inc"
+                },
+                {
+                    "blank": 39,
+                    "code": 342,
+                    "comment": 29,
+                    "filename": "player_system\\commands.inc"
+                },
+                {
+                    "blank": 19,
+                    "code": 188,
+                    "comment": 12,
+                    "filename": "player_system\\commands\\chat_commands.inc"
+                },
+                {
+                    "blank": 44,
+                    "code": 396,
+                    "comment": 5,
+                    "filename": "player_system\\commands\\interaction_commands.inc"
+                },
+                {
+                    "blank": 23,
+                    "code": 191,
+                    "comment": 2,
+                    "filename": "player_system\\commands\\inventory_commands.inc"
+                },
+                {
+                    "blank": 12,
+                    "code": 113,
+                    "comment": 0,
+                    "filename": "player_system\\commands\\premium_commands.inc"
+                },
+                {
+                    "blank": 27,
+                    "code": 227,
+                    "comment": 80,
+                    "filename": "player_system\\commands\\vehicle_commands.inc"
+                },
+                {
+                    "blank": 5,
+                    "code": 22,
+                    "comment": 0,
+                    "filename": "player_system\\components\\afk.inc"
+                },
+                {
+                    "blank": 3,
+                    "code": 28,
+                    "comment": 1,
+                    "filename": "player_system\\components\\animation.inc"
+                },
+                {
+                    "blank": 14,
+                    "code": 83,
+                    "comment": 7,
+                    "filename": "player_system\\components\\care.inc"
+                },
+                {
+                    "blank": 15,
+                    "code": 109,
+                    "comment": 0,
+                    "filename": "player_system\\components\\chat.inc"
+                },
+                {
+                    "blank": 23,
+                    "code": 179,
+                    "comment": 0,
+                    "filename": "player_system\\components\\customanims.inc"
+                },
+                {
+                    "blank": 14,
+                    "code": 87,
+                    "comment": 18,
+                    "filename": "player_system\\components\\damage_system.inc"
+                },
+                {
+                    "blank": 15,
+                    "code": 65,
+                    "comment": 0,
+                    "filename": "player_system\\components\\death_history.inc"
+                },
+                {
+                    "blank": 58,
+                    "code": 272,
+                    "comment": 56,
+                    "filename": "player_system\\components\\death_system.inc"
+                },
+                {
+                    "blank": 17,
+                    "code": 64,
+                    "comment": 3,
+                    "filename": "player_system\\components\\desync_checker.inc"
+                },
+                {
+                    "blank": 10,
+                    "code": 119,
+                    "comment": 2,
+                    "filename": "player_system\\components\\drop.inc"
+                },
+                {
+                    "blank": 43,
+                    "code": 305,
+                    "comment": 20,
+                    "filename": "player_system\\components\\drugs.inc"
+                },
+                {
+                    "blank": 12,
+                    "code": 81,
+                    "comment": 2,
+                    "filename": "player_system\\components\\editobject.inc"
+                },
+                {
+                    "blank": 12,
+                    "code": 64,
+                    "comment": 1,
+                    "filename": "player_system\\components\\effects\\ame.inc"
+                },
+                {
+                    "blank": 5,
+                    "code": 30,
+                    "comment": 0,
+                    "filename": "player_system\\components\\effects\\blindfold.inc"
+                },
+                {
+                    "blank": 10,
+                    "code": 53,
+                    "comment": 0,
+                    "filename": "player_system\\components\\effects\\drag.inc"
+                },
+                {
+                    "blank": 3,
+                    "code": 11,
+                    "comment": 2,
+                    "filename": "player_system\\components\\effects\\freeze.inc"
+                },
+                {
+                    "blank": 6,
+                    "code": 25,
+                    "comment": 0,
+                    "filename": "player_system\\components\\effects\\invincible.inc"
+                },
+                {
+                    "blank": 18,
+                    "code": 120,
+                    "comment": 7,
+                    "filename": "player_system\\components\\effects\\mask.inc"
+                },
+                {
+                    "blank": 28,
+                    "code": 136,
+                    "comment": 1,
+                    "filename": "player_system\\components\\effects\\smoking.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 32,
+                    "comment": 0,
+                    "filename": "player_system\\components\\effects\\stun.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 35,
+                    "comment": 0,
+                    "filename": "player_system\\components\\fightstyle.inc"
+                },
+                {
+                    "blank": 84,
+                    "code": 354,
+                    "comment": 0,
+                    "filename": "player_system\\components\\help_requests.inc"
+                },
+                {
+                    "blank": 26,
+                    "code": 135,
+                    "comment": 4,
+                    "filename": "player_system\\components\\hunger.inc"
+                },
+                {
+                    "blank": 22,
+                    "code": 81,
+                    "comment": 8,
+                    "filename": "player_system\\components\\interaction.inc"
+                },
+                {
+                    "blank": 65,
+                    "code": 505,
+                    "comment": 22,
+                    "filename": "player_system\\components\\inventory.inc"
+                },
+                {
+                    "blank": 12,
+                    "code": 86,
+                    "comment": 0,
+                    "filename": "player_system\\components\\jail.inc"
+                },
+                {
+                    "blank": 17,
+                    "code": 90,
+                    "comment": 0,
+                    "filename": "player_system\\components\\money.inc"
+                },
+                {
+                    "blank": 16,
+                    "code": 87,
+                    "comment": 2,
+                    "filename": "player_system\\components\\options.inc"
+                },
+                {
+                    "blank": 9,
+                    "code": 49,
+                    "comment": 0,
+                    "filename": "player_system\\components\\paycheck.inc"
+                },
+                {
+                    "blank": 19,
+                    "code": 85,
+                    "comment": 11,
+                    "filename": "player_system\\components\\payday.inc"
+                },
+                {
+                    "blank": 167,
+                    "code": 670,
+                    "comment": 2,
+                    "filename": "player_system\\components\\phone.inc"
+                },
+                {
+                    "blank": 4,
+                    "code": 70,
+                    "comment": 2,
+                    "filename": "player_system\\components\\pickup.inc"
+                },
+                {
+                    "blank": 4,
+                    "code": 31,
+                    "comment": 2,
+                    "filename": "player_system\\components\\privileges.inc"
+                },
+                {
+                    "blank": 66,
+                    "code": 311,
+                    "comment": 5,
+                    "filename": "player_system\\components\\property.inc"
+                },
+                {
+                    "blank": 47,
+                    "code": 185,
+                    "comment": 1,
+                    "filename": "player_system\\components\\radio.inc"
+                },
+                {
+                    "blank": 39,
+                    "code": 188,
+                    "comment": 4,
+                    "filename": "player_system\\components\\request.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 35,
+                    "comment": 0,
+                    "filename": "player_system\\components\\skin.inc"
+                },
+                {
+                    "blank": 71,
+                    "code": 406,
+                    "comment": 13,
+                    "filename": "player_system\\components\\spawn.inc"
+                },
+                {
+                    "blank": 110,
+                    "code": 511,
+                    "comment": 31,
+                    "filename": "player_system\\components\\vehicle.inc"
+                },
+                {
+                    "blank": 10,
+                    "code": 219,
+                    "comment": 0,
+                    "filename": "player_system\\components\\walk.inc"
+                },
+                {
+                    "blank": 28,
+                    "code": 171,
+                    "comment": 8,
+                    "filename": "player_system\\components\\weapons.inc"
+                },
+                {
+                    "blank": 81,
+                    "code": 694,
+                    "comment": 29,
+                    "filename": "player_system\\components\\wear_objects.inc"
+                },
+                {
+                    "blank": 78,
+                    "code": 414,
+                    "comment": 23,
+                    "filename": "player_system\\core.inc"
+                },
+                {
+                    "blank": 16,
+                    "code": 127,
+                    "comment": 7,
+                    "filename": "player_system\\dialogs.inc"
+                },
+                {
+                    "blank": 2,
+                    "code": 8,
+                    "comment": 1,
+                    "filename": "player_system\\enum.inc"
+                },
+                {
+                    "blank": 1,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "player_system\\functions.inc"
+                },
+                {
+                    "blank": 37,
+                    "code": 173,
+                    "comment": 1,
+                    "filename": "player_system\\state.inc"
+                },
+                {
+                    "blank": 8,
+                    "code": 55,
+                    "comment": 2,
+                    "filename": "player_system\\textdraws.inc"
+                },
+                {
+                    "blank": 43,
+                    "code": 310,
+                    "comment": 12,
+                    "filename": "reward_system\\core.inc"
+                },
+                {
+                    "blank": 11,
+                    "code": 40,
+                    "comment": 4,
+                    "filename": "sampmailjs.inc"
+                },
+                {
+                    "blank": 15,
+                    "code": 44,
+                    "comment": 2,
+                    "filename": "server\\components\\clock.inc"
+                },
+                {
+                    "blank": 13,
+                    "code": 151,
+                    "comment": 2,
+                    "filename": "server\\components\\weather.inc"
+                },
+                {
+                    "blank": 4,
+                    "code": 17,
+                    "comment": 0,
+                    "filename": "server\\core.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 8300,
+                    "comment": 0,
+                    "filename": "server\\maps\\backup\\lsa_pwncitta_28agosto.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 737,
+                    "comment": 0,
+                    "filename": "server\\maps\\backup\\lsa_pwncitta_28agosto_removes.inc"
+                },
+                {
+                    "blank": 22,
+                    "code": 3236,
+                    "comment": 11,
+                    "filename": "server\\maps\\backup\\lsa_pwnexteriorstxstudio_28agosto.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 137,
+                    "comment": 7,
+                    "filename": "server\\maps\\backup\\lsa_pwnexteriorstxstudio_28agosto_removes.inc"
+                },
+                {
+                    "blank": 72,
+                    "code": 9830,
+                    "comment": 50,
+                    "filename": "server\\maps\\backup\\lsa_pwninteriors_28agosto.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 65,
+                    "comment": 3,
+                    "filename": "server\\maps\\backup\\lsa_pwninteriors_28agosto_removes.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 8672,
+                    "comment": 0,
+                    "filename": "server\\maps\\lsa_pwncitta_28agosto.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 738,
+                    "comment": 0,
+                    "filename": "server\\maps\\lsa_pwncitta_28agosto_removes.inc"
+                },
+                {
+                    "blank": 13,
+                    "code": 3871,
+                    "comment": 11,
+                    "filename": "server\\maps\\lsa_pwnexteriorstxstudio_28agosto.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 83,
+                    "comment": 61,
+                    "filename": "server\\maps\\lsa_pwnexteriorstxstudio_28agosto_removes.inc"
+                },
+                {
+                    "blank": 65,
+                    "code": 9885,
+                    "comment": 53,
+                    "filename": "server\\maps\\lsa_pwninteriors_28agosto.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 65,
+                    "comment": 3,
+                    "filename": "server\\maps\\lsa_pwninteriors_28agosto_removes.inc"
+                },
+                {
+                    "blank": 7,
+                    "code": 5,
+                    "comment": 8,
+                    "filename": "server\\maps\\maps.inc"
+                },
+                {
+                    "blank": 13,
+                    "code": 77,
+                    "comment": 0,
+                    "filename": "textdraws.inc"
+                },
+                {
+                    "blank": 0,
+                    "code": 32,
+                    "comment": 2,
+                    "filename": "utils\\colors.inc"
+                },
+                {
+                    "blank": 11,
+                    "code": 68,
+                    "comment": 2,
+                    "filename": "utils\\maths.inc"
+                },
+                {
+                    "blank": 51,
+                    "code": 366,
+                    "comment": 145,
+                    "filename": "utils\\utils.inc"
+                },
+                {
+                    "blank": 3,
+                    "code": 3,
+                    "comment": 3,
+                    "filename": "vehicles_system\\callbacks.inc"
+                },
+                {
+                    "blank": 148,
+                    "code": 800,
+                    "comment": 44,
+                    "filename": "vehicles_system\\core.inc"
+                },
+                {
+                    "blank": 40,
+                    "code": 398,
+                    "comment": 12,
+                    "filename": "vehicles_system\\inventory.inc"
+                },
+                {
+                    "blank": 1165,
+                    "code": 5008,
+                    "comment": 510,
+                    "filename": "weapon-config.inc"
+                },
+                {
+                    "blank": 21,
+                    "code": 168,
+                    "comment": 23,
+                    "filename": "weapon_system\\core.inc"
+                }
+            ]
         }
     ]
 }

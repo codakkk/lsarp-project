@@ -490,7 +490,7 @@ Dialog:Dialog_CanSpawnNow(playerid, response, listitem, inputtext[])
 		}
 		
 		SetPlayerHealth(playerid, 100.0);
-		Character_SetHunger(playerid, 100);
+		//Character_SetHunger(playerid, 100);
 
 		new query[128];
 		mysql_format(gMySQL, query, sizeof(query), "UPDATE `character_spawn_data` SET is_first_spawn = '0' WHERE character_id = '%d'", Character_GetID(playerid));

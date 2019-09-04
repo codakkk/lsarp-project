@@ -59,10 +59,16 @@ static enum _:E_FACTION_DATA
 	Float:SpawnZ,
 	Interior,
 	World,
+	Color
 };
 
 static
 	Map:Factions;
+
+stock Map:GetFactionsMap()
+{
+	return Factions;
+}
 
 static FactionListItem[MAX_PLAYERS][20];
 
@@ -79,6 +85,7 @@ hook OnGameModeInit()
 						`spawn_z` FLOAT DEFAULT '0.0', \
 						`spawn_interior` INT(11) DEFAULT '0', \
 						`spawn_world` INT(11) DEFAULT '0', \
+						`color` INT(11) DEFAULT '0', \
 						PRIMARY KEY (`id`)) ENGINE=InnoDB DEFAULT CHARSET=latin1;", false);
 	Faction_LoadAll();
 	return 1;
@@ -93,7 +100,7 @@ hook OnPlayerClearData(playerid)
 stock Faction_Create(name[MAX_FACTION_NAME], shortName[MAX_FACTION_SHORT_NAME], type)
 {
 	new 
-		Cache:result = mysql_query_f(gMySQL, true, "INSERT INTO `factions` (name, short_name, type) VALUES('%e', '%e', '%d')", name, shortName, type),
+		Cache:result = mysql_query_f(gMySQL, true, "INSERT INTO `factions` (name, short_name, type, color) VALUES('%e', '%e', '%d', '-1')", name, shortName, type),
 		id = cache_insert_id(), 
 		data[E_FACTION_DATA]
 	;
@@ -105,7 +112,8 @@ stock Faction_Create(name[MAX_FACTION_NAME], shortName[MAX_FACTION_SHORT_NAME], 
 	data[SpawnX] = data[SpawnY] = data[SpawnZ] = 0.0;
 	data[Interior] = 0;
 	data[World] = 0;
-	
+	data[Color] = -1;
+
 	if(!map_add_arr(Factions, id, data))
 		return 0;
 	
@@ -180,7 +188,7 @@ stock Faction_ShowOptions(factionid, playerid)
 		return 0;
 	pAdminSelectedFaction{playerid} = factionid;
 	printf("Selected: %d", factionid);
-	new String:content = @("Modifica Nome\nModifica Acronimo\nModifica Tipo\nAggiungi Rank\nModifica Ranks\nModifica Skins\nSpawn (Posizione Corrente)\n{FF0000}Resetta Fazione{FFFFFF}");
+	new String:content = @("Modifica Nome\nModifica Acronimo\nModifica Tipo\nAggiungi Rank\nModifica Ranks\nModifica Skins\nSpawn (Posizione Corrente)\nColore\n{FF0000}Resetta Fazione{FFFFFF}");
 	Dialog_Show_s(playerid, Dialog_FactionActions, DIALOG_STYLE_LIST, Faction_GetNameStr(pAdminSelectedFaction{playerid}), content, "Avanti", "Indietro");
 	return 1;
 }
@@ -204,6 +212,7 @@ stock Faction_LoadAll()
 			cache_get_value_name_float(i, "spawn_z", data[SpawnZ]);
 			cache_get_value_name_int(i, "spawn_interior", data[Interior]);
 			cache_get_value_name_int(i, "spawn_world", data[World]);
+			cache_get_value_name_int(i, "color", data[Color]);
 
 			map_add_arr(Factions, data[ID], data);
 
@@ -214,45 +223,19 @@ stock Faction_LoadAll()
 	MySQL_PQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `factions` ORDER BY id");
 }
 
-stock Faction_Save(factionid)
+stock Faction_SendMessage(factionid, const str[], GLOBAL_TAG_TYPES:...)
 {
-	if(!Faction_IsValid(factionid))
-		return 0;
-
-	new Float:x, Float:y, Float:z, name[MAX_FACTION_NAME], shortName[MAX_FACTION_SHORT_NAME];
-	Faction_GetSpawnPos(factionid, x, y, z);
-	Faction_GetName(factionid, name);
-	Faction_GetShortName(factionid, shortName);
-	
-	mysql_tquery_f(gMySQL, "UPDATE `factions` SET \
-	name = '%e', short_name = '%e', \
-	type = '%d', \
-	spawn_x = '%f', spawn_y = '%f', spawn_z = '%f', \
-	spawn_interior = '%d', spawn_world = '%d' \
-	WHERE id = '%d'",
-	name, shortName,
-	Faction_GetType(factionid),
-	x, y, z,
-	Faction_GetSpawnInterior(factionid), Faction_GetSpawnWorld(factionid),
-	Faction_GetID(factionid));
-
-	CallLocalFunction(#OnFactionSaved, "d", factionid);
-	return 1;
+	new String:string = str_format(str, ___(2));
+	return Faction_SendMessageStr(factionid, string);
 }
 
-stock Faction_SendMessage(factionid, color, const str[], GLOBAL_TAG_TYPES:...)
-{
-	new String:string = str_format(str, ___(3));
-	return Faction_SendMessageStr(factionid, color, string);
-}
-
-stock Faction_SendMessageStr(factionid, color, String:string)
+stock Faction_SendMessageStr(factionid, String:string)
 {
 	foreach(new i : Player)
 	{
 		if(Character_GetFaction(i) != factionid || !Character_IsFactionOOCEnabled(i))
 			continue;
-		SendTwoLinesMessageStr(i, color, string);
+		SendTwoLinesMessageStr(i, Faction_GetColor(factionid), string);
 	}
 	return 1;
 }
@@ -283,6 +266,10 @@ stock Faction_SetName(factionid, name[])
 		return 0;
 	new Iter:it = map_iter_at(Factions, factionid);
 	iter_set_cells(it, Name, name, MAX_FACTION_NAME);
+	if(Faction_GetID(factionid) > 0)
+	{
+		mysql_tquery_f(gMySQL, "UPDATE `factions` SET name = '%e' WHERE id = '%d'", name, Faction_GetID(factionid));
+	}
 	return 1;
 }
 
@@ -310,6 +297,10 @@ stock Faction_SetShortName(factionid, name[])
 		return 0;
 	new Iter:it = map_iter_at(Factions, factionid);
 	iter_set_cells(it, ShortName, name, MAX_FACTION_SHORT_NAME);
+	if(Faction_GetID(factionid) > 0)
+	{
+		mysql_tquery_f(gMySQL, "UPDATE `factions` SET short_name = '%e' WHERE id = '%d'", name, Faction_GetID(factionid));
+	}
 	return 1;
 }
 
@@ -335,6 +326,10 @@ stock Faction_SetType(factionid, type)
 	if(!Faction_IsValid(factionid))
 		return 0;
 	map_set_cell(Factions, factionid, Type, type);
+	if(Faction_GetID(factionid) > 0)
+	{
+		mysql_tquery_f(gMySQL, "UPDATE `factions` SET type = '%d' WHERE id = '%d'", type, Faction_GetID(factionid));
+	}
 	return 1;
 }
 
@@ -364,6 +359,12 @@ stock Faction_SetSpawnPos(factionid, Float:x, Float:y, Float:z, interior, world)
 	map_set_cell(Factions, factionid, SpawnZ, z);
 	map_set_cell(Factions, factionid, Interior, interior);
 	map_set_cell(Factions, factionid, World, world);
+
+	if(Faction_GetID(factionid) > 0)
+	{
+		mysql_tquery_f(gMySQL, "UPDATE `factions` SET spawn_x = '%f', spawn_y = '%f', spawn_z = '%f', spawn_interior = '%d', spawn_world = '%d' WHERE id = '%d'", 
+		x, y, z, interior, world, Faction_GetID(factionid));
+	}
 	return 1;
 }
 
@@ -379,6 +380,24 @@ stock Faction_GetSpawnWorld(factionid)
 	if(!Faction_IsValid(factionid))
 		return 0;
 	return map_get(Factions, factionid, World);
+}
+
+stock Faction_GetColor(factionid)
+{
+	if(!Faction_IsValid(factionid))
+		return -1;
+	return map_get(Factions, factionid, Color);
+}
+
+stock Faction_SetColor(factionid, color)
+{
+	if(!Faction_IsValid(factionid))
+		return 0;
+	map_set_cell(Factions, factionid, Color, color);
+
+	if(Faction_GetID(factionid) > 0)
+		mysql_tquery_f(gMySQL, "UPDATE `factions` SET color = '%d' WHERE id = '%d'", color, Faction_GetID(factionid));
+	return 1;
 }
 
 stock bool:Faction_IsValidSpawnPosition(factionid)
@@ -409,7 +428,6 @@ Dialog:Dialog_ChangeFactionName(playerid, response, listitem, inputtext[])
 		return Dialog_Show(playerid, Dialog_ChangeFactionName, DIALOG_STYLE_INPUT, "Modifica Nome", "{FF0000}Il nome inserito è troppo lungo o troppo corto!\n{FFFFFF}Inserisci il nuovo nome della fazione!\n{00FF00}Lunghezza Minima: 4.\n{00FF00}Lunghezza Massima: 32.", "Cambia", "Annulla");
 	new fid = pAdminSelectedFaction{playerid};
 	Faction_SetName(fid, inputtext);
-	Faction_Save(fid);
 	Faction_ShowOptions(fid, playerid);
 	return 1;
 }
@@ -422,7 +440,6 @@ Dialog:ChangeFactionShortName(playerid, response, listitem, inputtext[])
 		return Dialog_Show(playerid, ChangeFactionShortName, DIALOG_STYLE_INPUT, "Modifica Acronimo", "{FF0000}Il nome inserito è troppo lungo o troppo corto!\n{FFFFFF}Inserisci il nuovo nome della fazione!\n{00FF00}Lunghezza Minima: 3.\n{00FF00}Lunghezza Massima: 8.", "Cambia", "Annulla");
 	new fid = pAdminSelectedFaction{playerid};
 	Faction_SetShortName(fid, inputtext);
-	Faction_Save(fid);
 	Faction_ShowOptions(fid, playerid);
 	return 1;
 }
@@ -436,11 +453,9 @@ Dialog:ChangeFactionType(playerid, response, listitem, inputtext[])
 	if(!IsNumeric(inputtext) || val < 0 || val >= FACTION_TYPE_LAST)
 		return Dialog_Show(playerid, ChangeFactionType, DIALOG_STYLE_INPUT, "Tipo Fazione", "{FF0000}Il tipo inserito non è valido!\n{FFFFFF}Inserisci il nuovo tipo per la fazione\nTipo Attuale: %d.\nTipi: 0 - %d", "Modifica", "Annulla", Faction_GetType(factionid), FACTION_TYPE_LAST-1);
 	Faction_SetType(factionid, val);
-	Faction_Save(factionid);
-	SendMessageToAdmins(true, COLOR_ADMIN, "[ADM-CMD] %s (%d) ha modificato il tipo della fazione %d. Nuovo tipo: %d", Account_GetName(playerid), playerid, factionid, val);
+	SendMessageToAdmins(true, COLOR_ADMIN, "AdmCmd: %s (%d) ha modificato il tipo della fazione %d. Nuovo tipo: %d", Account_GetName(playerid), playerid, factionid, val);
 	return 1;
 }
-
 
 Dialog:Dialog_DeleteFactionConfirm(playerid, response, listitem, inputtext[])
 {
@@ -448,7 +463,7 @@ Dialog:Dialog_DeleteFactionConfirm(playerid, response, listitem, inputtext[])
 	if(!response)
 		return Faction_ShowList(playerid);
 	new factionid = pAdminSelectedFaction{playerid};
-	SendMessageToAdmins(true, COLOR_YELLOW, "[ADMIN-ALERT]: %s (%d) ha rimosso la fazione %d (Tipo: %d).", 
+	SendMessageToAdmins(true, COLOR_YELLOW, "AdmCmd: %s (%d) ha rimosso la fazione %d (Tipo: %d).", 
 	Account_GetName(playerid), playerid, factionid, Faction_GetType(factionid));
 	Faction_Delete(factionid);
 	return Faction_ShowList(playerid);
@@ -491,9 +506,33 @@ Dialog:Dialog_FactionActions(playerid, response, listitem, inputtext[])
 		}
 		case 7:
 		{
-			new String:title = str_format("%S", Faction_GetNameStr(factionid));
-			return Dialog_Show_s(playerid, Dialog_DeleteFactionConfirm, DIALOG_STYLE_MSGBOX, title, @("{FF0000}Sei sicuro di voler rimuovere la fazione definitivamente?{FFFFFF}"), "Rimuovi", "Annulla");
+			return Dialog_Show(playerid, Dialog_ChangeFactionColor, DIALOG_STYLE_INPUT, "Colore Fazione", "Inserisci il colore da assegnare alla fazione.\nFormato: HEX (0xRRGGBBAA)\nEsempio: 0xFF0000FF per il rosso.", "Seleziona", "Indietro");
+		}
+		case 8:
+		{
+			//new String:title = str_format("%S", Faction_GetNameStr(factionid));
+			return Dialog_Show_s(playerid, Dialog_DeleteFactionConfirm, DIALOG_STYLE_MSGBOX, Faction_GetNameStr(factionid), @("{FF0000}Sei sicuro di voler rimuovere la fazione definitivamente?{FFFFFF}"), "Rimuovi", "Annulla");
 		}
 	}
 	return 1;
+}
+
+Dialog:Dialog_ChangeFactionColor(playerid, response, listitem, inputtext[])
+{
+	if(Account_GetAdminLevel(playerid) < 5) 
+		return 0;
+	
+	if(!response)
+		return Faction_ShowList(playerid);
+	new color;
+
+	if(sscanf(inputtext, "h", color))
+		return Dialog_Show(playerid, Dialog_ChangeFactionColor, DIALOG_STYLE_INPUT, "Colore Fazione", "{FF0000}Il formato inserito non è valido.{FFFFFF}\nInserisci il colore da assegnare alla fazione.\nFormato: HEX (0xRRGGBBAA)\nEsempio: 0xFF0000FF per il rosso.", "Seleziona", "Indietro");
+
+	new factionid = pAdminSelectedFaction{playerid};
+	
+	Faction_SetColor(factionid, color);
+
+	SendMessageToAdmins(true, COLOR_YELLOW, "AdmCmd: %s (%d) ha modificato il colore della fazione %d. Colore: %d.", Account_GetName(playerid), playerid, factionid, color);
+	return Faction_ShowList(playerid);
 }
