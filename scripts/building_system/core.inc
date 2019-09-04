@@ -12,6 +12,8 @@ enum //E_BUILDING_TYPE
     BUILDING_TYPE_GARAGE,
 	BUILDING_TYPE_COMPLEX,
 	BUILDING_TYPE_BANK,
+	BUILDING_TYPE_ADS,
+	BUILDING_TYPE_GAS_STATION,
 
 	// Insert here other types
 	BUILDING_TYPE_LAST
@@ -21,6 +23,7 @@ enum //E_BUILDING_TYPE
 #define MAX_BUILDING_NAME	  		(64)
 #define MAX_WELCOME_TEXT_LENGTH 	(120)
 #define BUILDING_START_WORLD		(5000)
+#define INVALID_BUILDING_ID			(0)
 
 #include <pickup_system\core>
 #include <faction_system\core>
@@ -29,6 +32,8 @@ enum //E_BUILDING_TYPE
 #include <building_system\components\inventory>
 #include <building_system\components\garage>
 #include <building_system\components\shop>
+#include <building_system\components\ads>
+#include <building_system\components\gas_station>
 
 #include <building_system\commands\admin>
 
@@ -739,6 +744,11 @@ Dialog:Dialog_Building(playerid, response, listitem, inputtext[])
 	{
 		case 0:
 		{
+			if(Building_GetType(buildingid) == BUILDING_TYPE_GAS_STATION)
+			{
+				Building_SetLocked(buildingid, 1);
+				return SendClientMessage(playerid, COLOR_ERROR, "Non puoi aprire questo tipo di edificio.");
+			}
 			Building_SetLocked(buildingid, !Building_IsLocked(buildingid));
 			if(Building_IsLocked(buildingid))
 				SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso il tuo edificio.");
@@ -752,11 +762,11 @@ Dialog:Dialog_Building(playerid, response, listitem, inputtext[])
 		}
 		case 2:
 		{
-			return Dialog_Show(playerid, Dialog_BuildingDepositMoney, DIALOG_STYLE_INPUT, "Deposita Denaro", "Inserisci l'ammontare di denaro che vuoi depositare all'interno del tuo edificio.", "Deposita", "Indietro");
+			return Dialog_Show(playerid, Dialog_BuildingDepositMoney, DIALOG_STYLE_INPUT, "Deposita Denaro", "Inserisci l'ammontare di denaro che vuoi depositare all'interno del tuo edificio.\nAttualmente ci sono $%d nella cassa dell'edificio.", "Deposita", "Indietro", Building_GetMoney(buildingid));
 		}
 		case 3:
 		{
-			return Dialog_Show(playerid, DialogBuildingWithdrawMoney, DIALOG_STYLE_INPUT, "Ritira Denaro", "Inserisci l'ammontare di denaro che vuoi ritirare dall'interno del tuo edificio.", "Ritira", "Indietro");
+			return Dialog_Show(playerid, DialogBuildingWithdrawMoney, DIALOG_STYLE_INPUT, "Ritira Denaro", "Inserisci l'ammontare di denaro che vuoi ritirare dall'interno del tuo edificio.\nAttualmente ci sono $%d nella cassa dell'edificio.", "Ritira", "Indietro", Building_GetMoney(buildingid));
 		}
 		case 4:
 		{
@@ -788,12 +798,12 @@ Dialog:Dialog_BuildingDepositMoney(playerid, response, listitem, inputtext[])
 	
 	new money =  strval(inputtext);
 	if(money <= 0 || money > Character_GetMoney(playerid))
-		return Dialog_Show(playerid, Dialog_BuildingDepositMoney, DIALOG_STYLE_INPUT, "Deposita Denaro", "{FF0000}Non disponi della quantità di denaro inserita.\n{FFFFFF}Inserisci l'ammontare di denaro che vuoi depositare all'interno del tuo edificio.", "Deposita", "Indietro");
+		return Dialog_Show(playerid, Dialog_BuildingDepositMoney, DIALOG_STYLE_INPUT, "Deposita Denaro", "{FF0000}Non disponi della quantità di denaro inserita.\n{FFFFFF}Inserisci l'ammontare di denaro che vuoi depositare all'interno del tuo edificio.\nAttualmente ci sono $%d nella cassa dell'edificio.", "Deposita", "Indietro", Building_GetMoney(buildingid));
 	
 	Building_GiveMoney(buildingid, money);
 	Character_GiveMoney(playerid, -money, "building_deposit");
 
-	SendFormattedMessage(playerid, -1, "Hai depositato $%d all'interno dell'edificio.", money);
+	SendFormattedMessage(playerid, -1, "Hai depositato $%d all'interno dell'edificio. Nella cassa dell'edificio ci sono $%d.", money, Building_GetMoney(buildingid));
 
 	return 1;
 }
@@ -809,12 +819,12 @@ Dialog:DialogBuildingWithdrawMoney(playerid, response, listitem, inputtext[])
 	
 	new money = strval(inputtext);
 	if(money <= 0 || money > Building_GetMoney(buildingid))
-		return Dialog_Show(playerid, DialogBuildingWithdrawMoney, DIALOG_STYLE_INPUT, "Ritira Denaro", "{FF0000}La cassa non dispone della quantità di denaro inserita.\n{FFFFFF}Inserisci l'ammontare di denaro che vuoi ritirare dalla cassa del tuo edificio.", "Ritira", "Indietro");
+		return Dialog_Show(playerid, DialogBuildingWithdrawMoney, DIALOG_STYLE_INPUT, "Ritira Denaro", "{FF0000}La cassa non dispone della quantità di denaro inserita.\n{FFFFFF}Inserisci l'ammontare di denaro che vuoi ritirare dalla cassa del tuo edificio.\nAttualmente ci sono $%d nella cassa dell'edificio.", "Ritira", "Indietro", Building_GetMoney(buildingid));
 	
 	Building_GiveMoney(buildingid, -money);
 	Character_GiveMoney(playerid, money, "building_withdraw");
 
-	SendFormattedMessage(playerid, -1, "Hai ritirato $%d dall'interno dell'edificio.", money);
+	SendFormattedMessage(playerid, -1, "Hai ritirato $%d dall'interno dell'edificio. Nella cassa dell'edificio ci sono $%d.", money, Building_GetMoney(buildingid));
 
 	return 1;
 }

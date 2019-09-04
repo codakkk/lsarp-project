@@ -138,12 +138,13 @@ CMD:afk(playerid, params[])
 flags:aiuto(CMD_USER);
 CMD:aiuto(playerid, params[])
 {
-    SendClientMessage(playerid, -1, "[GENERALE]: /info - (/dom)anda - /aiutami - /afk - /hotkeys - /id - /dp");
-    SendClientMessage(playerid, -1, "[GENERALE]: /arma - /oggetto - /staff - /tester - /onduty - /report - /aiutami");
+    SendClientMessage(playerid, -1, "[GENERALE]: /info - (/dom)anda - /aiutami - /afk - /hotkeys - /id - /dp - (/pub)blicita");
+    SendClientMessage(playerid, -1, "[GENERALE]: /arma - /oggetto - /staff - /tester - /onduty - /report - /aiutami - /noads");
 	SendClientMessage(playerid, -1, "[GENERALE]: /casa - /biz - /zpoints - /animlist - /cancello - /rimuovimaschera");
 	SendClientMessage(playerid, -1, "[GENERALE]: /compra - /annulla - /accetta - /rifiuta - /rimuovi - /lostitems");
 	SendClientMessage(playerid, -1, "[GENERALE]: /stilechat - /stilelotta - /stilecamminata - /sconosciuto - /blindfold");
-	SendClientMessage(playerid, -1, "[GENERALE]: /deposita - /ritira - /bonifico - /bilancio");
+	SendClientMessage(playerid, -1, "[GENERALE]: /deposita - /ritira - /bonifico - /bilancio - /documenti - /mostradocumenti");
+	SendClientMessage(playerid, -1, "[GENERALE]: /rifornisci - /stoprifornimento");
     SendClientMessage(playerid, -1, "[ALTRO]: /chatcmds - /invcmds - /vcmds - /furniturecmds - /cellcmds");
 	SendClientMessage(playerid, -1, "[ALTRO]: (/cambiapass)word - /fcmds - /animlist - /tcmds - /acmds");
 	new factionid = Character_GetFaction(playerid);

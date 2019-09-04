@@ -135,7 +135,7 @@ CMD:abedit(playerid, p[])
         if(sscanf(params, "d", type))
         {
             SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> type <typeid>");
-            SendClientMessage(playerid, COLOR_ERROR, "0: Store, 1: Paycheck, 2: Garage, 3: Complex");
+            SendClientMessage(playerid, COLOR_ERROR, "0: Store, 1: Paycheck, 2: Garage, 3: Complex, 4: Banca, 5: Pubblicità, 6: Benzina");
             return 0;
         }
 

@@ -208,8 +208,8 @@ CMD:bilancio(playerid, params[])
 {
     if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_ATM) && Building_GetType(Character_GetNearBuilding(playerid, true)) != BUILDING_TYPE_BANK)
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un atm o in banca.");
-    SendFormattedMessage(playerid, -1, "In banca hai $%d.", Character_GetBank(playerid));
     Character_AMe(playerid, "verifica il suo bilancio bancario.");
+    SendFormattedMessage(playerid, -1, "In banca hai $%d.", Character_GetBank(playerid));
     return 1;
 }
 

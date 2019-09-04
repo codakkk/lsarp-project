@@ -2,9 +2,9 @@
 
 forward OnCharacterFirstSpawn(playerid);
 
-#define DEFAULT_SPAWN_X 		1723.3232 
-#define DEFAULT_SPAWN_Y 		-1867.1775
-#define DEFAULT_SPAWN_Z 		13.5705
+#define DEFAULT_SPAWN_X 		1678.2424
+#define DEFAULT_SPAWN_Y 		1446.8389
+#define DEFAULT_SPAWN_Z 		10.7752
 
 enum
 {
@@ -389,7 +389,12 @@ static Character_LoadSpawnData(playerid)
 
 		if(rows <= 0)
 		{
-			mysql_tquery_f(gMySQL, "INSERT INTO `character_spawn_data` (character_id, is_first_spawn) VALUES('%d', 0)", Character_GetID(playerid));
+			mysql_tquery_f(gMySQL, "INSERT INTO `character_spawn_data` (character_id, is_first_spawn, spawn_type, spawn_id, spawn_x, spawn_y, spawn_z, spawn_a, spawn_interior, spawn_world) VALUES('%d', 1, '0', '0', '%f', '%f', '%f', '0.0', '0', '0')", Character_GetID(playerid), DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
+			PlayerSpawnData[playerid][StartSpawnX] = DEFAULT_SPAWN_X;
+			PlayerSpawnData[playerid][StartSpawnY] = DEFAULT_SPAWN_Y;
+			PlayerSpawnData[playerid][StartSpawnZ] = DEFAULT_SPAWN_Z;
+			PlayerSpawnData[playerid][StartSpawnInterior] = 0;
+			PlayerSpawnData[playerid][StartSpawnWorld] = 0;
 			return 1;
 		}
 
@@ -438,7 +443,7 @@ timer LoadCharacterDataAfterTime[2000](playerid)
 	CallLocalFunction("OnCharacterLateLoad", "d", playerid);
 }
 
-Dialog:Dialog_SelectFirstSpawn(playerid, response, listitem, inputtext[])
+/*Dialog:Dialog_SelectFirstSpawn(playerid, response, listitem, inputtext[])
 {
 	if(listitem == 0)
 	{
@@ -472,6 +477,18 @@ Dialog:Dialog_DangerousZone(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_CanSpawnNow(playerid, response, listitem, inputtext[])
 {
+	
+	return 1;
+}*/
+
+static ForceFirstSpawnSelection(playerid)
+{
+	//SetPlayerCameraPos(playerid, 1467.0076, -2285.8083, 84.5440);
+	//SetPlayerCameraLookAt(playerid, 1471.9390,-2287.5544,13.2591);
+	//Dialog_Show(playerid, Dialog_SelectFirstSpawn, DIALOG_STYLE_TABLIST_HEADERS, "Primo Spawn", "Zona\tLivello Rischio\nZona Governativa\t{00FF00}Sicura{FFFFFF}\nZona a rischio\t{FF0000}Pericolosa{FFFFFF}", "Seleziona", "");
+	PlayerSpawnData[playerid][StartSpawnX] = DEFAULT_SPAWN_X;
+	PlayerSpawnData[playerid][StartSpawnY] = DEFAULT_SPAWN_Y;
+	PlayerSpawnData[playerid][StartSpawnZ] = DEFAULT_SPAWN_Z;
 	SetPlayerPos(playerid, PlayerSpawnData[playerid][StartSpawnX], PlayerSpawnData[playerid][StartSpawnY], PlayerSpawnData[playerid][StartSpawnZ]);
 	Character_SetVirtualWorld(playerid, 0);
 	SetPlayerInterior(playerid, 0);
@@ -503,13 +520,5 @@ Dialog:Dialog_CanSpawnNow(playerid, response, listitem, inputtext[])
 
 		CallLocalFunction(#OnCharacterFirstSpawn, "d", playerid);
 	}
-	return 1;
-}
-
-static ForceFirstSpawnSelection(playerid)
-{
-	SetPlayerCameraPos(playerid, 1467.0076, -2285.8083, 84.5440);
-	SetPlayerCameraLookAt(playerid, 1471.9390,-2287.5544,13.2591);
-	Dialog_Show(playerid, Dialog_SelectFirstSpawn, DIALOG_STYLE_TABLIST_HEADERS, "Primo Spawn", "Zona\tLivello Rischio\nZona Governativa\t{00FF00}Sicura{FFFFFF}\nZona a rischio\t{FF0000}Pericolosa{FFFFFF}", "Seleziona", "");
 	return 1;
 }

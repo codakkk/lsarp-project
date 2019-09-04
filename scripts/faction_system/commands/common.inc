@@ -10,6 +10,7 @@ CMD:fcmds(playerid, params[])
 		{
 			SendClientMessage(playerid, COLOR_SLATEBLUE, "/manette - /trascina - /arresta - (/m)egafono - /vsign");
 			SendClientMessage(playerid, COLOR_SLATEBLUE, "/perquisisci - /cura - /servizio - (/d)ipartimento - /traccia");
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "/ritiralicenza - /daiportodarmi");
 		}
 		else if(Faction_GetType(factionid) == FACTION_TYPE_GOVERNMENT)
 		{

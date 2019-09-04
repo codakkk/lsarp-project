@@ -5,10 +5,23 @@
 
 static enum E_SERVER_INFO
 {
-	TimeAdd
+	TimeAdd,
+	GovernamentBank,
+	ExcisesOnFuel,
+	TaxOnAds,
+	TaxOnVehicles
 }
 
 static ServerInfo[E_SERVER_INFO];
+
+hook OnGameModeInit()
+{
+	Server_SetExcisesOnFuel(1);
+	Server_SetTaxOnAds(1);
+	Server_SetTaxOnVehicles(1);
+	Server_SetGovernamentBank(0);
+	return 1;
+}
 
 stock Server_SetTimeAdd(timeToAdd)
 {
@@ -18,4 +31,49 @@ stock Server_SetTimeAdd(timeToAdd)
 stock Server_GetTimeAdd()
 {
 	return ServerInfo[TimeAdd];
+}
+
+stock Server_GiveGovernamentBank(money)
+{
+	ServerInfo[GovernamentBank] += money;
+}
+
+stock Server_SetGovernamentBank(money)
+{
+	ServerInfo[GovernamentBank] = money;
+}
+
+stock Server_GetGovernamentBank(money)
+{
+	return ServerInfo[GovernamentBank];
+}
+
+stock Server_GetExcisesOnFuel()
+{
+	return ServerInfo[ExcisesOnFuel];
+}
+
+stock Server_SetExcisesOnFuel(value)
+{
+	ServerInfo[ExcisesOnFuel] = value;
+}
+
+stock Server_GetTaxOnAds()
+{
+	return ServerInfo[ExcisesOnAds];
+}
+
+stock Server_SetTaxOnAds(value)
+{
+	ServerInfo[TaxOnAds] = value;
+}
+
+stock Server_GetTaxOnVehicles()
+{
+	return ServerInfo[TaxOnVehicles];
+}
+
+stock Server_SetTaxOnVehicles(value)
+{
+	ServerInfo[TaxOnVehicles] = value;
 }

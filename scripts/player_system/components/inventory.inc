@@ -234,7 +234,7 @@ Dialog:Dialog_InvEmptyItemAction(playerid, response, listitem, inputtext[])
 		return Character_ShowInventory(playerid, playerid);
 	if(listitem == 0) // /dep
 	{
-		pc_cmd_deposita(playerid, "");
+		pc_cmd_depositaarma(playerid, "");
 	}
 	else if(listitem == 1) // Dis
 	{

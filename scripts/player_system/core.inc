@@ -44,6 +44,8 @@
 #include <player_system\components\radio>
 #include <player_system\components\help_requests>
 #include <player_system\components\phone>
+#include <player_system\components\licenses>
+
 // EFFECTS 
 #include <player_system\components\effects\mask>
 #include <player_system\components\effects\drag>

@@ -78,6 +78,8 @@ CMD:veicolo(playerid, params[])
 				return SendClientMessage(playerid, COLOR_ERROR, "Non c'è benzina nel veicolo.");
 			if(Vehicle_GetHealth(vehicleid) <= VEHICLE_MIN_HEALTH_FOR_ENGINE && !Player_IsAdminDuty(playerid))
 				return SendClientMessage(playerid, COLOR_ERROR, "Il motore del veicolo è danneggiato.");
+			if(Character_IsDoingGas(playerid))
+				return SendClientMessage(playerid, COLOR_ERROR, "Non puoi accendere il motore mentre stai rifornendo il veicolo.");
 		}
 
 		Vehicle_SetEngineStatus(vehicleid, !Vehicle_GetEngineStatus(vehicleid));

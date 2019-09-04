@@ -301,7 +301,7 @@ static Internal_ExitBuilding(playerid, buildingid)
 	if(IsPlayerInAnyVehicle(playerid))
 		return 0;
 	if(Building_IsLocked(buildingid))
-		return GameTextForPlayer(playerid, "~r~Chiuso", 8000, 1), 0;
+		return GameTextForPlayer(playerid, "~r~Chiuso", 4000, 1), 0;
 	new 
 	   Float:x = 0.0, 
 	   Float:y = 0.0, 
