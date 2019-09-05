@@ -43,7 +43,7 @@
 #include <player_system\components\privileges>
 #include <player_system\components\radio>
 #include <player_system\components\help_requests>
-#include <player_system\components\phone>
+#include <player_system\components\phone_system\core>
 #include <player_system\components\licenses>
 
 // EFFECTS 

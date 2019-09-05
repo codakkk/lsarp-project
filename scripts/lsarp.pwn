@@ -72,6 +72,7 @@
 #include <sscanf2>
 #include <SKY>
 #include <a_mysql>
+//#include <mysql_yinline_include>
 #include <YSI_Coding\y_timers>
 #include <YSI_Coding\y_va>
 #include <YSI_Coding\y_inline>
