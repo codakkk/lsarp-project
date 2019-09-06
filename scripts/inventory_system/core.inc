@@ -478,6 +478,14 @@ static Inventory_ShowInChatStr(Inventory:inventory, playerid, String:title)
 				else
 					s += str_val(extra);
 			}
+			else if(itemid == gItem_Phone)
+			{
+				s += @(" - ")
+				if(extra <= 0)
+					s += @("Nessun Numero");
+				else
+					s += str_val(extra);
+			}
 		}
 		SendClientMessageStr(playerid, -1, s);
 	}
@@ -521,6 +529,13 @@ static Inventory_ShowInDialog(Inventory:inventory, playerid, const title[], cons
 			{
 				if(extra == 0)
 					s += @("Vuota");
+				else
+					s += str_val(extra);
+			}
+			else if(itemid == gItem_Phone)
+			{
+				if(extr <= 0)
+					s += @("Nessun Numero");
 				else
 					s += str_val(extra);
 			}

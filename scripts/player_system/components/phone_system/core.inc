@@ -12,6 +12,12 @@ static enum
     STATE_READ
 }
 
+static enum 
+{
+    PHONE_STATE_ON = 0,
+    PHONE_STATE_OFF = 1,
+}
+
 static
     CallWith[MAX_PLAYERS] = {INVALID_PLAYER_ID, ...},
     CallingNumber[MAX_PLAYERS] = {0, ...},
@@ -21,7 +27,8 @@ static
     SelectedPhoneNumber[MAX_PLAYERS] = {0, ...},
     SelectedContactNumber[MAX_PLAYERS] = {0, ...},
     CallFromNumber[MAX_PLAYERS] = {0, ...},
-    CallToNumber[MAX_PLAYERS] = {0, ...}
+    CallToNumber[MAX_PLAYERS] = {0, ...},
+    bool:SpeakerPhone[MAX_PLAYERS char]
 ;
 
 static PlayerEmergencyStatus[MAX_PLAYERS char] = {0, ...};
@@ -100,6 +107,7 @@ hook OnPlayerClearData(playerid)
     SelectedContactNumber[playerid] = 0;
     PlayerEmergencyStatus{playerid} = 0;
     SelectedMessage[playerid] = 0;
+    SpeakerPhone{playerid} = false;
     if(list_valid(MessagesList[playerid]))
         list_delete(MessagesList[playerid]);
     
@@ -167,7 +175,10 @@ hook OnCharacterTalk(playerid, text[])
     new call = Character_GetCallPlayer(playerid);
     if(Character_IsLogged(call))
     {
-        SendFormattedMessage(call, -1, "[Telefono] %s dice: %s", Character_GetRolePlayName(playerid), text);
+        if(SpeakerPhone{call})
+            ProxDetectorStr(call, 10.0, str_format("[Vivavoce] %s dice: %s", Character_GetRolePlayName(playerid), text), COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false, true);
+        else
+            SendFormattedMessage(call, -1, "[Telefono] %s dice: %s", Character_GetRolePlayName(playerid), text);
     }
     else if(Character_GetEmergencyStatus(playerid) == 1)
     {
@@ -219,6 +230,8 @@ CMD:cellcmds(playerid, params[])
 flags:cellulare(CMD_ALIVE_USER);
 CMD:cellulare(playerid, params[])
 {
+    if(isnull(params))
+        return SendClientMessage(playerid, COLOR_ERROR, "(/cell)ulare <slotid>");
     new slotid = strval(params);
     
     if(!Character_ShowPhone(playerid, slotid))
@@ -339,6 +352,19 @@ CMD:sms(playerid, params[])
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai un cellulare in questo slot.");
     
     Character_SendSMS(playerid, slot, number, message);    
+    return 1;
+}
+
+flags:vivavoce(CMD_ALIVE_USER);
+CMD:vivavoce(playerid, params[])
+{
+    if(!Character_IsInCall(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei in una chiamata.");
+    SpeakerPhone{playerid} = !SpeakerPhone{playerid};
+    if(SpeakerPhone{playerid})
+        SendClientMessage(playerid, COLOR_GREEN, "Hai abilitato il vivavoce.");
+    else
+        SendClientMessage(playerid, COLOR_GREEN, "Hai disabilitato il vivavoce.");
     return 1;
 }
 
@@ -473,11 +499,12 @@ stock Character_StopCall(playerid)
             CallWith[other] = IncomingCall[other] = INVALID_PLAYER_ID;
             CallingNumber[other] = 0;
             CallFromNumber[other] = CallToNumber[other] = 0;
+            SpeakerPhone{other} = false;
             RemovePlayerAttachedObject(other, 6);
         }
     }
 
-
+    SpeakerPhone{playerid} = false;
     CallingNumber[playerid] = 0;
     CallWith[playerid] = IncomingCall[playerid] = INVALID_PLAYER_ID;
     
@@ -609,7 +636,7 @@ stock Character_ShowPhone(playerid, slotid)
         return 0;
     SelectedPhone{playerid} = slotid;
     SelectedPhoneNumber[playerid] = Character_GetSlotExtra(playerid, slotid, 0);
-    Dialog_Show_s(playerid, Dialog_UseCellPhone, DIALOG_STYLE_LIST, str_format("Cellulare - %d", SelectedPhoneNumber[playerid]), @("Info\nChiama\nSMS\nMessaggi non letti\nMessaggi in entrata\nMessaggi in uscita\nRegistro chiamate perse\nRegistro chiamate in entrata\nRegistro chiamate in uscita\nRubrica\nAggiungi numero in rubrica"), "Seleziona", "Chiudi");
+    Dialog_Show_s(playerid, Dialog_UseCellPhone, DIALOG_STYLE_LIST, str_format("Cellulare - %d", SelectedPhoneNumber[playerid]), @("Info\nChiama\nSMS\nMessaggi non letti\nMessaggi in entrata\nMessaggi in uscita\nRegistro chiamate perse\nRegistro chiamate in entrata\nRegistro chiamate in uscita\nRubrica\nAggiungi numero in rubrica\nAccendi/Spegni"), "Seleziona", "Chiudi");
     return 1;
 }
 
@@ -1341,4 +1368,28 @@ Dialog:Dialog_PhoneBookAddNumber(playerid, response, listitem, inputtext[])
     
     Character_AddToPhoneBook(playerid, SelectedPhone{playerid}, number, name);
     return 1;
+}
+
+stock Character_GetPhoneStatus(playerid, slotid)
+{
+    if(Character_GetSlotItem(playerid, slotid) != gItem_Phone)
+        return 0;
+    return Character_GetSlotExtra(playerid, slotid, 1);
+}
+
+stock Character_SetPhoneStatus(playerid, slotid, status)
+{
+    if(Character_GetSlotItem(playerid, slotid) != gItem_Phone)
+        return 0;
+    return Character_SetSlotExtra(playerid, slotid, 1, status);
+}
+
+static GetPhoneStatusName(status)
+{
+    new name[16];
+    if(status == PHONE_STATE_ON)
+        name = "Acceso";
+    else
+        name = "Spento";
+    return name;
 }

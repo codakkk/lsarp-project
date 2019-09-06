@@ -177,6 +177,12 @@ stock Character_GetSlotExtra(playerid, slotid, index = 0)
 	return Inventory_GetSlotExtra(Character_GetInventory(playerid), slotid, index);
 }
 
+stock Character_SetSlotExtra(playerid, slotid, index, value)
+{
+	Inventory_SetSlotExtra(Character_GetInventory(playerid), slotid, index, value);
+	return 1;
+}
+
 stock Character_ShowInventory(playerid, targetid)
 {
 	if(!Character_IsLogged(playerid))
