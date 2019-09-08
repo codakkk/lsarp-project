@@ -27,7 +27,7 @@ CMD:servizio(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando in admin duty.");
 		
 	new factionid = Character_GetFaction(playerid);
-	if(factionid == INVALID_FACTION_ID || Faction_GetType(factionid) != FACTION_TYPE_POLICE)
+	if(!Faction_IsValid(factionid) || Faction_GetType(factionid) != FACTION_TYPE_POLICE)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando.");
 	
 	if(!Character_IsAlive(playerid))
@@ -43,7 +43,6 @@ CMD:servizio(playerid, params[])
 			Character_ResetWeapons(playerid);
 
 			AC_SetPlayerHealth(playerid, 100.0);
-			AC_SetPlayerArmour(playerid, Faction_GetType(factionid) == FACTION_TYPE_POLICE ? 100.0 : 0.0);
 
 			SetPlayerColor(playerid, COLOR_SLATEBLUE);
 			//Character_SetSelectingUniform(playerid, true);
@@ -340,12 +339,12 @@ Dialog:DialogFactionMembers(playerid, response, listitem, inputtext[])
 
 static Faction_GiveWeapons(playerid)
 {
-	printf("TYpe: %d", Faction_GetType(Character_GetFaction(playerid)));
+	printf("Type: %d", Faction_GetType(Character_GetFaction(playerid)));
 	if(Faction_GetType(Character_GetFaction(playerid)) == FACTION_TYPE_POLICE)
 	{
-		Character_GiveWeapon(playerid, 3, 1);
-		Character_GiveWeapon(playerid, 41, 1000);
-		Character_GiveWeapon(playerid, 24, 100);
-		Character_GiveWeapon(playerid, 31, 250);
+		Character_GiveWeapon(playerid, WEAPON_NITESTICK, 1);
+		Character_GiveWeapon(playerid, WEAPON_SPRAYCAN, 1000);
+		Character_GiveWeapon(playerid, WEAPON_DEAGLE, 100);
+		AC_SetPlayerArmour(playerid, 100.0);
 	}
 }

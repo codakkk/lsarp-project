@@ -189,8 +189,11 @@ stock Character_AcceptItemRequest(playerid)
 	if(!Character_HasSpaceForItem(playerid, itemid, amount))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario.");
 
+	if(itemid == gItem_Phone && Character_IsInCall(playerid) && Phone_IsBusy(Character_GetInventory(senderid), slotid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi accettare questo telefono se sei in chiamata.");
+
+	Character_GiveItem(playerid, itemid, amount, extra, false, Map:Inventory_GetSlotTempExtraMap(Character_GetInventory(senderid), slotid));
 	Character_DecreaseItemAmount(senderid, itemid, amount);
-	Character_GiveItem(playerid, itemid, amount, extra);
 
 	if(ServerItem_GetType(itemid) == ITEM_TYPE_WEAPON)
 	{

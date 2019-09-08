@@ -421,7 +421,7 @@ stock Gate_GetObjectID(gateid)
 flags:cancello(CMD_ALIVE_USER);
 CMD:cancello(playerid, params[])
 {
-    new Float:x, Float:y, Float:z, gateid;
+    new Float:x, Float:y, Float:z, gateid, bool:didOpen = false;
     for_map(i : Gates)
     {
         gateid = iter_get_key(i);
@@ -434,8 +434,11 @@ CMD:cancello(playerid, params[])
         {
             Gate_Open(gateid);
             Player_Info(playerid, "Cancello aperto.~n~Chiusura in ~r~10~w~ secondi.", true, 3500);
+            didOpen = true;
         }
-    }    
+    }
+    if(!didOpen)
+        SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un cancello che puoi aprire.");
     return 1;
 }
 

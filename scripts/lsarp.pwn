@@ -240,6 +240,7 @@ public OnPlayerDamageDone(playerid, Float:amount, issuerid, weapon, bodypart)
 
 public OnPlayerPrepareDeath(playerid, animlib[32], animname[32], &anim_lock, &respawn_time)
 {
+	SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE); // probably it prevents kick for #018
 	return 1;
 }
 

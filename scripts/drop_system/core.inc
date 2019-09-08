@@ -12,9 +12,10 @@ static enum _:E_DROP_INFO // _: for tag mismatch thing
 	Float:RotX,
 	Float:RotY,
 	Float:RotZ,
-    Item,
+	Inventory:Inventory,
+    /*Item,
     ItemAmount,
-    ItemExtra,
+    ItemExtra[5],*/
     String:CreatedBy,
     CreatedTime,
     World,
@@ -97,7 +98,7 @@ hook OnPlayerEditDynObject(playerid, objectid, response, Float:x, Float:y, Float
 	return 1;
 }
 
-stock Drop_Create(Float:x, Float:y, Float:z, world, interior, itemid, amount, extra, String:createdBy)
+stock Drop_Create(String:createdBy, Float:x, Float:y, Float:z, world, interior, itemid, amount, extra, Map:extraData = Map:0)
 {
     if(itemid == 0 || amount == 0)
 	   return -1;
@@ -112,9 +113,10 @@ stock Drop_Create(Float:x, Float:y, Float:z, world, interior, itemid, amount, ex
 	data[RotZ] = 0.0;
     data[World] = world;
     data[Interior] = interior;
-    data[Item] = itemid;
-    data[ItemAmount] = amount;
-    data[ItemExtra] = extra;
+	data[Inventory] = Inventory_New(1);
+	
+	Inventory_SetItem(data[Inventory], 0, itemid, amount, extra, extraData);
+
     data[CreatedBy] = createdBy;
     data[CreatedTime] = GetTickCount();
 
@@ -224,13 +226,20 @@ stock Drop_GetRotation(dropid, &Float:rx, &Float:ry, &Float:rz)
 	return 0;
 }
 
+stock Inventory:Drop_GetInventory(dropid)
+{
+	if(!Drop_IsValid(dropid))
+		return INVENTORY_NULL;
+	return Inventory:pool_get(Drops, dropid, Inventory);
+}
+
 stock Drop_GetItemData(dropid, &itemid, &amount, &extra)
 {
 	if(Drop_IsValid(dropid))
 	{
-		itemid = pool_get(Drops, dropid, Item);
-		amount = pool_get(Drops, dropid, ItemAmount);
-		extra = pool_get(Drops, dropid, ItemExtra);
+		itemid = Inventory_GetSlotItem(Drop_GetInventory(dropid), 0);
+		amount = Inventory_GetSlotAmount(Drop_GetInventory(dropid), 0);
+		extra = Inventory_GetSlotExtra(Drop_GetInventory(dropid), 0, 0);
 		return 1;
 	}
 	return 0;
@@ -240,34 +249,21 @@ stock Drop_GetItem(dropid)
 {
 	if(!Drop_IsValid(dropid))
 		return 0;
-	return pool_get(Drops, dropid, Item);
+	return Inventory_GetSlotItem(Drop_GetInventory(dropid), 0);
 }
 
 stock Drop_GetItemAmount(dropid)
 {
 	if(!Drop_IsValid(dropid))
 		return 0;
-	return pool_get(Drops, dropid, ItemAmount);
+	return Inventory_GetSlotAmount(Drop_GetInventory(dropid), 0);
 }
 
-stock Drop_GetItemExtra(dropid)
+stock Drop_GetItemExtra(dropid, index = 0)
 {
 	if(!Drop_IsValid(dropid))
 		return 0;
-	return pool_get(Drops, dropid, ItemExtra);
-}
-
-stock String:Drop_GetCreatedByStr(dropid)
-{
-    return DropInfo[dropid][CreatedBy];
-}
-
-stock Drop_GetCreatedBy(dropid, name[])
-{
-    /*str_get(DropInfo[dropid][CreatedBy], name); 
-	if(!Drop_IsValid(dropid))
-		return 0;
-	return pool_get(Drops, dropid, World);*/
+	return Inventory_GetSlotExtra(Drop_GetInventory(dropid), 0, index);
 }
 
 stock Drop_GetCreatedTime(dropid)

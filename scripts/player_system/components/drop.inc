@@ -3,7 +3,6 @@
 
 #include <YSI_Coding\y_hooks>
 
-forward bool:Character_CollectDrop(playerid, dropid);
 
 static SelectedDrop[MAX_PLAYERS] = {-1, ...};
 
@@ -69,7 +68,11 @@ Dialog:Dialog_ItemDropAction(playerid, response, listitem, inputtext[])
 		{
 			if(!Character_HasSpaceForItem(playerid, itemid, amount))
 				return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario.");
-			Character_GiveItem(playerid, itemid, amount, extra);
+			
+			if(itemid == gItem_Phone && Character_IsInCall(playerid) && Phone_IsBusy(Drop_GetInventory(dropid), 0))
+				return SendClientMessage(playerid, COLOR_ERROR, "Non puoi raccogliere questo cellulare se sei già al telefono.");
+			
+			Character_GiveItem(playerid, itemid, amount, extra, false, Inventory_GetSlotTempExtraMap(Drop_GetInventory(dropid), 0));
 			SendFormattedMessage(playerid, COLOR_GREEN, "Hai raccolto %s (%d).", ServerItem_GetName(itemid), ServerItem_IsWeapon(itemid) ? extra : amount);
 			Character_AMe(playerid, "raccoglie qualcosa.");
 			Drop_Destroy(dropid);

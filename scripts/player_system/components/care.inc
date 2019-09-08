@@ -56,6 +56,7 @@ ptask OnCharacterCareUpdateTimer[1000](playerid)
 				Character_SetCuffed(playerid, false); // FIrst reset state
 				Character_SetCuffed(playerid, true); // Then reapply
 			}
+			SetPlayerHealth(playerid, 100.0);
 			SetPlayerDrunkLevel(playerid, 0);
 		}
 	}

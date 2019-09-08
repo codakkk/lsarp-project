@@ -394,6 +394,39 @@ stock ProxDetectorStr(playerid, Float:radius, String:string, col1, col2, col3, c
     return result;
 }
 
+stock SendRangedMessageStr(Float:radius, Float:x, Float:y, Float:z, vw, int, String:string, col1, col2, col3, col4, col5, bool:ooc = false)
+{
+    /*new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
+    amx_to_ref(var, ptr);
+    str_get(string, ptr[0], .size=size);*/
+
+	new buffer[256];
+	str_get(string, buffer);
+    new result = SendRangedMessage(radius, x, y, z, vw, int, /*ptr[0]*/buffer, col1, col2, col3, col4, col5, ooc);
+
+    /*amx_free(var);
+    amx_delete(var);*/
+    return result;
+}
+
+stock SendRangedMessage(Float:radius, Float:x, Float:y, Float:z, vw, int, const string[], col1, col2, col3, col4, col5, bool:ooc = false)
+{
+	foreach(new i : Player)
+	{
+		if(GetPlayerInterior(i) != int || Character_GetVirtualWorld(i) != vw)
+			continue;
+		if( (!Account_HasOOCEnabled(i)) && ooc)
+			continue;
+		new Float:distance = GetPlayerDistanceFromPoint(i, x, y, z);
+		if(distance < radius/16) SendTwoLinesMessage(i, col1, string);
+		else if(distance < radius/8) SendTwoLinesMessage(i, col2, string);
+		else if(distance < radius/4) SendTwoLinesMessage(i, col3, string);
+		else if(distance < radius/2) SendTwoLinesMessage(i, col4, string);
+		else if(distance < radius) SendTwoLinesMessage(i, col5, string);
+	}
+	return 1;
+}
+
 stock ProxDetector(playerid, Float:radius, const string[], col1, col2, col3, col4, col5, bool:ooc = false, bool:receiveSelf = true)
 {
     if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))

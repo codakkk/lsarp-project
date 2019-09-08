@@ -160,11 +160,23 @@ CMD:bonifico(playerid, params[])
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'interno di una banca.");
     new n[24], money;
     if(sscanf(params, "s[24]d", n, money))
-        return SendClientMessage(playerid, COLOR_ERROR, "/bonifico <nome> <ammontare>");
+    {
+        SendClientMessage(playerid, COLOR_ERROR, "/bonifico <nome> <ammontare>");
+        SendClientMessage(playerid, COLOR_ERROR, "Ricorda che puoi utilizzare /bonifico gov <ammontare> per inviare un bonifico allo stato.");
+        return 1;
+    }
 
     if(money < 1 || money > Character_GetBank(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai tutti questi soldi in banca.");
-    
+
+    if(!strcmp(n, "gov", true) || !strcmp(n, "governo", true) || !strcmp(n, "government", true))
+    {
+        SendFormattedMessage(playerid, COLOR_GREEN, "Hai inviato un bonifico di $%d al Governo.", money, name);
+        Character_GiveBank(playerid, -money, "bank_bonifico");
+        Server_GiveGovernamentBank(money);
+        return 1;
+    }   
+
     inline OnLoad()
     {
         if(cache_num_rows() > 0)

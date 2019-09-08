@@ -9,6 +9,9 @@ static
 	SelectedListItem[MAX_PLAYERS]
 ;
 forward OnCharacterUseItem(playerid, slotid, itemid);
+forward OnCharacterDropItem(playerid, slotid);
+forward OnCharacterGiveItem(playerid, itemid, amount, extra, Map:tempExtra);
+
 // #define Character_%0(%1, Inventory_%0(Character_GetInventory(%1), // It is a convenient way to call Inventory_Func with player inventory
 
 hook OnGameModeInit()
@@ -83,7 +86,7 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 				GetVehiclePos(GetPlayerVehicleID(playerid), x, y, z);
 			else 
 			 	GetPlayerPos(playerid, x, y, z);
-			new result = Drop_Create(x, y, z - 0.9, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, 0, Character_GetOOCNameStr(playerid));
+			new result = Drop_Create(Character_GetOOCNameStr(playerid), x, y, z - 0.9, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, 0);
 			if(result != -1)
 			{
 				Character_RemoveWeapon(playerid, weaponid);
@@ -113,13 +116,17 @@ stock Inventory:Character_GetInventory(playerid)
 
 // Returns success or not.
 // if greater than 0, returns the difference.
-stock Character_GiveItem(playerid, item_id, amount = 1, extra = 0, bool:callback = false)
+stock Character_GiveItem(playerid, item_id, amount = 1, extra = 0, bool:callback = false, Map:tempExtra = Map:0)
 {
 	#pragma unused callback
 	
 	new Inventory:playerInventory = Character_GetInventory(playerid);
 	
-	new result = Inventory_AddItem(playerInventory, item_id, amount, extra);
+	new result = Inventory_AddItem(playerInventory, item_id, amount, extra, tempExtra);
+
+	CallLocalFunction(#OnCharacterGiveItem, "ddddd", playerid, item_id, amount, extra, _:tempExtra);
+
+
 	Character_SaveInventory(playerid);
 	return result;
 }
@@ -540,14 +547,17 @@ stock Character_DropItem(playerid, slotid, amount)
 	new Float:x, Float:y, Float:z;
 	GetPlayerPos(playerid, x, y, z);
 	GetXYInFrontOfPlayer(playerid, x, y, 1.5);
-	new result = Drop_Create(x, y, z - 0.9, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), itemid, amount, extra, Character_GetOOCNameStr(playerid));
+	new result = Drop_Create(Character_GetOOCNameStr(playerid), x, y, z - 0.9, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), itemid, amount, extra, Inventory_GetSlotTempExtraMap(Character_GetInventory(playerid), slotid));
 	if(result != -1)
 	{
 		ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 3.0, 0, 0, 0, 0, 0);
 
-		Character_DecreaseSlotAmount(playerid, slotid, amount);
+		CallLocalFunction(#OnCharacterDropItem, "dd", playerid, slotid);
+
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai gettato: %s (%d)", ServerItem_GetName(itemid), amount);
 		Character_AMe(playerid, "getta degli oggetti a terra.");
+
+		Character_DecreaseSlotAmount(playerid, slotid, amount);
 	}
 	
 	return 1;
@@ -583,6 +593,9 @@ stock Character_SendItemRequest(playerid, toPlayerId, slotid, amount)
 	if(!Character_IsAlive(toPlayerId))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
 	
+	if(itemid == gItem_Phone && Character_IsInCall(toPlayerId) && Phone_IsBusy(Character_GetInventory(playerid), slotid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi inviare la richiesta se il giocatore è già al telefono.");
+
 	Character_SetRequest(playerid, toPlayerId, REQUEST_TYPE_ITEM, itemid, amount, slotid);
 	
 	SendFormattedMessage(playerid, COLOR_SEND_REQUEST, "Hai proposto di dare l'oggetto (%s, Quantità: %d) a %s.", ServerItem_GetName(itemid), amount, Character_GetRolePlayName(toPlayerId));

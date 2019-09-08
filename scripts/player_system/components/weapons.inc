@@ -79,7 +79,7 @@ stock Character_LoadWeapons(playerid)
 			ac_GivePlayerWeapon(playerid, w, a);
 			//Character_GiveWeapon(playerid, w, a);
 		}
-		printf("%d weapons loaded for player %d.", rows, playerid);
+		printf("%d weapons loaded for player %d (DBID: %d).", rows, playerid, Character_GetID(playerid));
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT weapon_id, ammo FROM `character_weapons` WHERE character_id = '%d'", Character_GetID(playerid));
 }

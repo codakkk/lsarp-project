@@ -1,6 +1,6 @@
 #include <house_system\core>
 #include <building_system\core>
-
+#include <inventory_system\core>
 #include <YSI_Coding\y_hooks>
 
 static 
@@ -14,8 +14,61 @@ hook OnPlayerClearData(playerid)
     Tracing{playerid} = false;
     return 1;
 }
-
 flags:traccia(CMD_POLICE);
+CMD:traccia(playerid, params[])
+{
+    new number;
+    if(sscanf(params, "d", number))
+        return SendClientMessage(playerid, COLOR_ERROR, "/traccia <numero>");
+
+    new Float:x, Float:y, Float:z;
+
+    new Inventory:entityInv, entityId, E_ENTITY_TYPE:entityType, phoneSlotId;
+    if(World_FindPhoneByNumber(number, entityInv, entityId, entityType, phoneSlotId))
+    {
+        if(Phone_IsOff(entityInv, phoneSlotId))
+            return SendClientMessage(playerid, COLOR_ERROR, "[Trace] Il cellulare chiamato risulta spento.");
+        
+        if(entityType == ENTITY_TYPE_PLAYER)
+        {
+            Character_GetWorldPosition(entityId, x, y, z);
+        }
+        else if(entityType == ENTITY_TYPE_DROP)
+        {
+            Drop_GetWorldPosition(entityId, x, y, z);
+        }
+        
+        GangZoneDestroy(GangZone[playerid]);
+        
+        new zone[32];
+        Get2DZoneName(x, y, z, zone, sizeof(zone));
+
+        if(entityType == ENTITY_TYPE_PLAYER && Character_IsInCall(entityId))
+        {
+            SetPlayerCheckpoint(playerid, x, y, z, 5.0);
+            SendFormattedMessage(playerid, COLOR_YELLOW, "Il segnale è stato rilevato presso %s. E' stato creato un Checkpoint nella posizione precisa.", zone);
+            SendClientMessage(playerid, COLOR_YELLOW, "Il checkpoint scomparirà tra 30 secondi.");
+        }
+        else
+        {
+            GangZone[playerid] = GangZoneCreate(x - 50.0, y - 50.0, x + 50.0, y + 50.0);
+            GangZoneShowForPlayer(playerid, GangZone[playerid], COLOR_YELLOW);
+            GangZoneFlashForPlayer(playerid, GangZone[playerid], COLOR_YELLOW);
+            
+            SendFormattedMessage(playerid, COLOR_YELLOW, "Il segnale è stato rilevato presso %s. E' stata creata una zona intorno al segnale.", zone);
+            SendClientMessage(playerid, COLOR_YELLOW, "La zona scomparirà tra 30 secondi.");     
+        }
+
+        Tracing{playerid} = true;
+        defer OnPlayerStopTracing(playerid);
+    }
+    else 
+    {
+        SendClientMessage(playerid, COLOR_ERROR, "Questo numero non esiste o non puo' essere tracciato al momento.");
+    }
+    return 1;
+}
+/*flags:traccia(CMD_POLICE);
 CMD:traccia(playerid, params[])
 {
     new number;
@@ -88,7 +141,7 @@ CMD:traccia(playerid, params[])
     }
     else return SendClientMessage(playerid, COLOR_ERROR, "Questo numero non esiste o non puo' essere tracciato al momento.");
     return 1;
-}
+}*/
 
 timer OnPlayerStopTracing[30000](playerid) 
 {

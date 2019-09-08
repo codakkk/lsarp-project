@@ -16,6 +16,16 @@
 
 #define MAX_SLOT_EXTRA			(5)
 
+enum E_ENTITY_TYPE
+{
+    ENTITY_TYPE_NONE = 0,
+    ENTITY_TYPE_PLAYER = 1,
+    ENTITY_TYPE_HOUSE = 2,
+    ENTITY_TYPE_BUILDING = 3,
+	ENTITY_TYPE_VEHICLE = 4,
+    ENTITY_TYPE_DROP = 5,
+}
+
 enum // Error Type
 {
 	//INVENTORY_RESULT_ENUM = 0, // NOT TRUE: -50 because we need positive numbers for diff.
@@ -34,7 +44,8 @@ static enum _:E_ITEM_DATA
 {
 	InvItem,
 	InvAmount,
-	InvExtra[MAX_SLOT_EXTRA] // I should use a Map:<string, data>
+	InvExtra[MAX_SLOT_EXTRA], // I should use a Map:<string, data>
+	Map:TempExtra
 };
 
 #include <inventory_system\types\types>
@@ -72,7 +83,7 @@ stock Inventory_Delete(Inventory:inventory)
     list_delete(inventory);
 }
 
-stock bool:Inventory_SetItem(Inventory:inventory, slotid, itemid, amount, extra)
+stock bool:Inventory_SetItem(Inventory:inventory, slotid, itemid, amount, extra, Map:tempExtra = Map:0)
 {
     if(!list_valid(inventory) || (itemid != 0 && amount <= 0) || !ServerItem_IsValid(itemid) || slotid < 0 || slotid >= list_size(inventory))
 	   return false;
@@ -85,15 +96,21 @@ stock bool:Inventory_SetItem(Inventory:inventory, slotid, itemid, amount, extra)
 
     if(itemid == 0)
     {
-	   list_set_var(inventory, slotid, VAR_NULL);
+		if(map_valid(Inventory_GetSlotTempExtraMap(inventory, slotid)))
+			map_delete(Inventory_GetSlotTempExtraMap(inventory, slotid));
+		list_set_var(inventory, slotid, VAR_NULL);
     }
     else
     {
-	   new item[E_ITEM_DATA];
-	   item[InvItem] = itemid;
-	   item[InvAmount] = amount;
-	   item[InvExtra][0] = extra;
-	   list_set_arr(inventory, slotid, item);
+		new item[E_ITEM_DATA];
+		item[InvItem] = itemid;
+		item[InvAmount] = amount;
+		item[InvExtra][0] = extra;
+		if(map_valid(tempExtra))
+			item[TempExtra] = tempExtra;
+		else
+	   		item[TempExtra] = map_new();
+	   	list_set_arr(inventory, slotid, item);
     }
     return true;
 }
@@ -106,7 +123,7 @@ stock Inventory_Reset(Inventory:inventory)
 	}
 }
 
-stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra)
+stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra, Map:tempExtra = Map:0)
 {
 	if(!list_valid(inventory))
 	{
@@ -126,7 +143,7 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra)
 	{
 		while(tempAmount > 0)
 		{
-			Inventory_SetItem(inventory, Inventory_GetFreeSlot(inventory), itemid, amount, extra);
+			Inventory_SetItem(inventory, Inventory_GetFreeSlot(inventory), itemid, amount, extra, tempExtra);
 			tempAmount--;
 		}
 	}
@@ -480,7 +497,7 @@ static Inventory_ShowInChatStr(Inventory:inventory, playerid, String:title)
 			}
 			else if(itemid == gItem_Phone)
 			{
-				s += @(" - ")
+				s += @(" - ");
 				if(extra <= 0)
 					s += @("Nessun Numero");
 				else
@@ -534,7 +551,7 @@ static Inventory_ShowInDialog(Inventory:inventory, playerid, const title[], cons
 			}
 			else if(itemid == gItem_Phone)
 			{
-				if(extr <= 0)
+				if(extra <= 0)
 					s += @("Nessun Numero");
 				else
 					s += str_val(extra);
@@ -659,7 +676,8 @@ stock bool:Inventory_SetSlotExtra(Inventory:inventory, slotid, index, value)
 		return false;
 	if(list_sizeof(inventory, slotid) == 0)
 		return false;
-	return list_set_cell(inventory, slotid, InvExtra + index, value);
+	list_set_cell(inventory, slotid, InvExtra + index, value);
+	return true;
 }
 
 stock Inventory_GetSlotExtra(Inventory:inventory, slotid, index = 0)
@@ -667,4 +685,76 @@ stock Inventory_GetSlotExtra(Inventory:inventory, slotid, index = 0)
     if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0 || !(0 <= index < MAX_SLOT_EXTRA))
 		return 0;
     return list_get(inventory, slotid, InvExtra + index);
+}
+
+stock Map:Inventory_GetSlotTempExtraMap(Inventory:inventory, slotid)
+{
+	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
+		return Map:0;
+	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	return map;
+}
+
+stock bool:Inventory_RemoveSlotTempExtra(Inventory:inventory, slotid, key[])
+{
+	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
+		return false;
+	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	if(!map_has_key(map, key))
+		return false;
+	map_str_remove_deep(map, key);
+	return true;
+}
+
+stock bool:Inventory_SetSlotTempExtra(Inventory:inventory, slotid, key[], data)
+{
+	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
+		return false;
+	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	if(map_has_str_key(map, key))
+		map_str_set(map, key, data);
+	else
+		map_str_add(map, key, data);
+	return true;
+}
+
+stock bool:Inventory_SetSlotTempExtraArr(Inventory:inventory, slotid, key[], data[])
+{
+	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
+		return 0;
+	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	if(map_has_str_key(map, key))
+		map_set_arr(map, key, data);
+	else
+		map_str_add(map, key, data);
+	return true;
+}
+
+stock Inventory_GetSlotTempExtra(Inventory:inventory, slotid, key[])
+{
+	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
+		return 0;
+	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	if(!map_has_str_key(map, key))
+		return 0;
+	return map_str_get(map, key);
+}
+
+stock bool:Inventory_GetSlotTempExtraArr(Inventory:inventory, slotid, key[], data[])
+{
+	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
+		return false;
+	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	if(!map_has_str_key(map, key))
+		return false;
+	map_get_arr(map, key, data)
+	return true;
+}
+
+stock bool:Inventory_HasSlotTempExtra(Inventory:inventory, slotid, key[])
+{
+	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
+		return false;
+	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	return map_has_str_key(map, key);
 }
