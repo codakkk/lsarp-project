@@ -51,7 +51,7 @@
 
 #include <a_samp>
 //native IsValidVehicle(vehicleid);
-
+#include <discord-connector>
 #include <sampmailjs>
 
 // Define this for some bugs related to MySQL_TQueryInline
@@ -161,7 +161,7 @@ enum (<<= 1)
 #include <furniture_system\core>
 #include <gate_system\core>
 #include <atm_system\core>
-
+#include <discord_system\core>
 
 
 // ========== [ DIALOGS ] ==========
@@ -708,3 +708,4 @@ CMD:forzanapoli(playerid, params[])
 	SendClientMessage(playerid, COLOR_LIGHTBLUE, "FORZA NAPOLI!!!!");
 	return 1;
 }
+

@@ -60,7 +60,7 @@ stock Server_SetExcisesOnFuel(value)
 
 stock Server_GetTaxOnAds()
 {
-	return ServerInfo[ExcisesOnAds];
+	return ServerInfo[TaxOnAds];
 }
 
 stock Server_SetTaxOnAds(value)

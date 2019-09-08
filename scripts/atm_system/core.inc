@@ -171,7 +171,7 @@ CMD:bonifico(playerid, params[])
 
     if(!strcmp(n, "gov", true) || !strcmp(n, "governo", true) || !strcmp(n, "government", true))
     {
-        SendFormattedMessage(playerid, COLOR_GREEN, "Hai inviato un bonifico di $%d al Governo.", money, name);
+        SendFormattedMessage(playerid, COLOR_GREEN, "Hai inviato un bonifico di $%d al Governo.", money);
         Character_GiveBank(playerid, -money, "bank_bonifico");
         Server_GiveGovernamentBank(money);
         return 1;
