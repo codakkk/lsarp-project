@@ -51,7 +51,6 @@
 
 #include <a_samp>
 //native IsValidVehicle(vehicleid);
-#include <discord-connector>
 #include <sampmailjs>
 
 // Define this for some bugs related to MySQL_TQueryInline
