@@ -1012,6 +1012,7 @@ Dialog:Dialog_AdminAnnounce(playerid, response, listitem, inputtext[])
 	if(!response)
 		return 0;
 	SendTwoLinesMessageToAllStr(0x6A5ACDFF, str_format("Admin %s: %s", Account_GetName(playerid), pAdminAnnounceMessage[playerid]));
+	
 	return 1;
 }
 
@@ -1052,6 +1053,7 @@ CMD:kickall(playerid, params[])
 		wait_ticks(1);
 		KickEx(i);
 	}
+	Discord_SendBanMessage("L'admin **%s** ha _kickato_ tutti. Motivo: __**%s**.", Account_GetName(playerid), reason);
 	return 1;
 }
 
@@ -1070,6 +1072,8 @@ CMD:kick(playerid, params[])
 	SendFormattedMessage(id, COLOR_ADMIN, "L'admin %s ti ha kickato. Motivo: %s", Account_GetName(playerid), reason);
 	SendMessageToAdmins(false, COLOR_ADMIN, "[ADMIN-CMD]: %s ha kickato %s. Motivo: %s", Account_GetName(playerid), Character_GetOOCName(id), reason);
 	KickEx(id);
+
+	Discord_SendKickMessage("L'admin **%s** ha _kickato_ **%s** (**%s**). Motivo: __**%s**.", Account_GetName(playerid), Character_GetOOCName(id), Account_GetName(id), reason);
 	return 1;
 }
 
@@ -1117,6 +1121,8 @@ CMD:banip(playerid, params[])
 	mysql_tquery_f(gMySQL, "INSERT INTO `bans` (ip, serial) VALUES('%e', '%e')", ip, serial);
 
 	KickEx(id);
+
+	Discord_SendBanMessage("L'admin **%s** ha _bannato_ **%s** (**%s**) per **IP**. Motivo: __**%s**.", Account_GetName(playerid), Character_GetOOCName(id), Account_GetName(id), reason);
 	return 1;
 }
 
@@ -1132,6 +1138,7 @@ CMD:unbanip(playerid, params[])
 		if(cache_affected_rows() > 0)
 		{
 			SendMessageToAdmins(true, COLOR_ADMIN, "AdmCmd: %s ha sbannato l'IP %s. Motivo: %s", Account_GetName(playerid), ip, reason);
+			Discord_SendBanMessage("L'admin **%s** ha _sbannato_ l'**IP**. Motivo: __**%s**.", Account_GetName(playerid), ip, reason);
 		}
 		else
 		{
@@ -1173,6 +1180,7 @@ CMD:banofflineaccount(playerid, params[])
 			SendFormattedMessage(playerid, COLOR_ORANGE, "L'account \"%s\" è stato bannato.", e_name);
 			SendMessageToAdmins(true, COLOR_ORANGE, "[ADMIN-ALERT]: %s ha bannato l'account \"%s\".", Account_GetName(playerid), e_name);
 			Log(Account_GetName(playerid), e_name, "/banofflineaccount");
+			Discord_SendBanMessage("L'admin **%s** ha _bannato_ l'account **%s** permanentemente. Motivo: __**%s**.", Account_GetName(playerid), e_name, reason);
 		}
 		else
 		{
@@ -1200,6 +1208,7 @@ CMD:unbanaccount(playerid, params[])
 			SendFormattedMessage(playerid, COLOR_ORANGE, "L'account \"%s\" è stato sbannato.", e_name);
 			SendMessageToAdmins(true, COLOR_ORANGE, "[ADMIN-ALERT]: %s ha sbannato l'account \"%s\".", Account_GetName(playerid), e_name);
 			Log(Account_GetName(playerid), e_name, "/unbanaccount");
+			Discord_SendBanMessage("L'admin **%s** ha _sbannato_ l'account **%s**.", Account_GetName(playerid), e_name);
 		}
 		else
 		{
@@ -1259,11 +1268,13 @@ stock BanCharacter(playerid, adminid, days, reason[])
 	{
 		SendFormattedMessage(playerid, COLOR_ORANGE, "Sei stato bannato da %s per %d giorni. Motivo: %s", Account_GetName(adminid), days, reason);
 		SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha bannato %s per %d giorni. Motivo: %s", Account_GetName(adminid), Character_GetOOCName(playerid), days, reason);
+		Discord_SendBanMessage("L'admin **%s** ha _bannato_ il personaggio **%s** appartenente all'account **%s** per **%d* giorni. Motivo: __**%s**.", Account_GetName(playerid), Character_GetOOCName(id), Account_GetName(id), days, reason);
 	}
 	else
 	{
 		SendFormattedMessage(playerid, COLOR_ORANGE, "Sei stato bannato da %s permanentemente. Motivo: %s", Account_GetName(adminid), reason);
 		SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha bannato %s permanentemente. Motivo: %s", Account_GetName(adminid), Character_GetOOCName(playerid), reason);
+		Discord_SendBanMessage("L'admin **%s** ha _bannato_ il personaggio **%s** appartenente all'account **%s** permanentemente. Motivo: __**%s**.", Account_GetName(playerid), Character_GetOOCName(id), Account_GetName(id), reason);
 	}
 
 	Log(Account_GetName(adminid), Account_GetName(playerid), "BanCharacter", days);
@@ -1286,6 +1297,8 @@ stock BanAccount(playerid, adminid, reason[])
 	Log(Account_GetName(adminid), Account_GetName(playerid), "BanAccount");
 
 	KickEx(playerid);
+
+	Discord_SendBanMessage("L'admin **%s** ha _bannato_ l'account **%s**. Motivo: __**%s**.", Account_GetName(playerid), Account_GetName(id), reason);
 	return 1;
 }
 
