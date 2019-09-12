@@ -85,7 +85,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 				// Should I write an "OnInteract" callback?
 				if(type == ELEMENT_TYPE_BUILDING_ENTRANCE || type == ELEMENT_TYPE_HOUSE_ENTRANCE)
 				{
-					Character_Enter(playerid, elementId, type);
+					Character_Enter(playerid);
 				}
 				else if(type == ELEMENT_TYPE_BUILDING_EXIT || type == ELEMENT_TYPE_HOUSE_EXIT)
 				{
@@ -108,11 +108,10 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-stock Character_Enter(playerid, elementId, E_ELEMENT_TYPE:type)
-{
-    if((type != ELEMENT_TYPE_BUILDING_ENTRANCE && type != ELEMENT_TYPE_HOUSE_ENTRANCE))
-	   return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata di un edificio.");
-    
+stock Character_Enter(playerid)
+{   
+	new elementId, E_ELEMENT_TYPE:type;
+	Character_GetNearestPickup(playerid, elementId, type);
     if(type == ELEMENT_TYPE_BUILDING_ENTRANCE)
     {
 		if(Building_GetType(elementId) == BUILDING_TYPE_GARAGE)

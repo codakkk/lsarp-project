@@ -17,7 +17,7 @@ static enum E_TELEPORT
     Faction,
     Character,
 
-    Pickup,
+    EnterPickup,
     ExitPickup
 };
 
@@ -43,7 +43,7 @@ stock Teleport_Create(Float:x, Float:y, Float:z, interior, world)
         data[Faction] = INVALID_FACTION_ID;
         data[Character] = 0;
 
-        data[Pickup] = Pickup_Create(1007, data[ID], x, y, z, ELEMENT_TYPE_TELEPORT, world, interior);
+        data[EnterPickup] = Pickup_Create(1007, data[ID], x, y, z, ELEMENT_TYPE_TELEPORT, world, interior);
         data[ExitPickup] = Pickup_Create(1007, data[ID], data[ExitX], data[ExitY], data[ExitZ], ELEMENT_TYPE_TELEPORT, data[ExitWorld], data[ExitInterior]);
 
         map_add_arr(TeleportsMap, data[ID], data);
@@ -68,7 +68,7 @@ stock bool:Teleport_SetEnterPosition(teleportid, Float:x, Float:y, Float:z, inte
 {
     if(!Teleport_IsValid(teleportid))
         return false;
-    if(!IsValidDynamicPickup(map_get(TeleportsMap, teleportid, Pickup)))
+    if(!IsValidDynamicPickup(map_get(TeleportsMap, teleportid, EnterPickup)))
         return false;
     
     mysql_tquery_f(gMySQL, "UPDATE teleports SET enter_x = '%f', enter_y = '%f', enter_z = '%f', enter_world = '%d', enter_interior = '%d' WHERE id = '%d'", x, y, z, world, interior, Teleport_GetID(teleportid));
@@ -78,8 +78,104 @@ stock bool:Teleport_SetEnterPosition(teleportid, Float:x, Float:y, Float:z, inte
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterZ, z);
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterInterior, interior);
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterWorld, world);
-    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), Pickup, pickupid);
+    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterPickup, pickupid);
     return true;
+}
+
+stock bool:Teleport_GetEnterPosition(teleportid, &Float:x, &Float:y, &Float:z)
+{
+    if(!Teleport_IsValid(Teleport_GetID(teleportid)))
+        return false;
+    x = Float:map_get(TeleportsMap, Teleport_GetID(teleportid), EnterX);
+    y = Float:map_get(TeleportsMap, Teleport_GetID(teleportid), EnterY);
+    z = Float:map_get(TeleportsMap, Teleport_GetID(teleportid), EnterZ);
+    return true;
+}
+
+stock Teleport_GetEnterInterior(teleportid)
+{
+    return map_get(TeleportsMap, Teleport_GetID(teleportid), EnterInterior);
+}
+
+stock Teleport_GetEnterWorld(teleportid)
+{
+    return map_get(TeleportsMap, Teleport_GetID(teleportid), EnterWorld);
+}
+
+stock bool:Teleport_SetExitPosition(teleportid, Float:x, Float:y, Float:z, interior, world)
+{
+    if(!Teleport_IsValid(teleportid))
+        return false;
+    
+    if(!IsValidDynamicPickup(map_get(TeleportsMap, teleportid, ExitPickup)))
+        return false;
+    
+    mysql_tquery_f(gMySQL, "UPDATE teleports SET exit_x = '%f', exit_y = '%f', exit_z = '%f', exit_world = '%d', exit_interior = '%d' WHERE id = '%d'", x, y, z, world, interior, Teleport_GetID(teleportid));
+    
+    new pickupid = Pickup_Create(1007, Teleport_GetID(teleportid), x, y, z, ELEMENT_TYPE_TELEPORT, world, interior);
+    
+    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitX, x);
+    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitY, z);
+    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitZ, z);
+    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitInterior, interior);
+    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitWorld, world);
+    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitPickup, pickupid);
+    return true;
+}
+
+stock bool:Teleport_GetExitPosition(teleportid, &Float:x, &Float:y, &Float:z)
+{
+    if(!Teleport_IsValid(Teleport_GetID(teleportid)))
+        return false;
+    x = Float:map_get(TeleportsMap, Teleport_GetID(teleportid), ExitX);
+    y = Float:map_get(TeleportsMap, Teleport_GetID(teleportid), ExitY);
+    z = Float:map_get(TeleportsMap, Teleport_GetID(teleportid), ExitZ);
+    return true;
+}
+
+stock Teleport_GetExitInterior(teleportid)
+{
+    return map_get(TeleportsMap, Teleport_GetID(teleportid), ExitInterior);
+}
+
+stock Teleport_GetExitWorld(teleportid)
+{
+    return map_get(TeleportsMap, Teleport_GetID(teleportid), ExitWorld);
+}
+
+stock bool:Teleport_SetFaction(teleportid, factionid)
+{
+    if(!Teleport_IsValid(Teleport_GetID(teleportid)) || !Faction_IsValid(factionid))
+        return false;
+    mysql_tquery_f(gMySQL, "UPDATE teleports SET faction = '%d' WHERE id = '%d'", factionid, Teleport_GetID(teleportid));
+    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), Faction, factionid);
+    return true;
+}
+
+stock Teleport_GetFaction(teleportid)
+{
+    if(!Teleport_IsValid(Teleport_GetID(teleportid)))
+        return INVALID_FACTION_ID;
+    new factionid = map_get(TeleportsMap, Teleport_GetID(teleportid), Faction);
+    if(!Faction_IsValid(factionid))
+        return INVALID_FACTION_ID;
+    return factionid;
+}
+
+stock bool:Teleport_SetCharacter(teleportid, playerid)
+{
+    if(!Teleport_IsValid(Teleport_GetID(teleportid)) || !Character_IsLogged(playerid))
+        return false;
+    mysql_tquery_f(gMySQL, "UPDATE teleports SET character = '%d' WHERE id = '%d'", Character_GetID(playerid), Teleport_GetID(teleportid));
+    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), Character, Character_GetID(playerid));
+    return true;
+}
+
+stock Teleport_GetCharacter(teleportid)
+{
+    if(!Teleport_IsValid(Teleport_GetID(teleportid)))
+        return 0;
+    return map_get(TeleportsMap, Teleport_GetID(teleportid), Character);
 }
 
 stock Teleport_LoadAll()
@@ -101,6 +197,9 @@ stock Teleport_LoadAll()
             cache_get_value_name_float(i, "exit_z", data[ExitZ]);
             cache_get_value_name_int(i, "exit_interior", data[ExitInterior]);
             cache_get_value_name_int(i, "exit_world", data[ExitWorld]);
+
+            data[EnterPickup] = Pickup_Create(1007, data[ID], data[EnterX], data[EnterY], data[EnterZ], ELEMENT_TYPE_TELEPORT, data[EnterWorld], data[EnterInterior]);
+            data[ExitPickup] = Pickup_Create(1007, data[ID], data[ExitX], data[ExitY], data[ExitZ], ELEMENT_TYPE_TELEPORT, data[ExitWorld], data[ExitInterior]);
 
             map_add_arr(TeleportsMap, data[ID], data);
         }

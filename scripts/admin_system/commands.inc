@@ -1053,7 +1053,7 @@ CMD:kickall(playerid, params[])
 		wait_ticks(1);
 		KickEx(i);
 	}
-	Discord_SendBanMessage("L'admin **%s** ha _kickato_ tutti. Motivo: __**%s**.", Account_GetName(playerid), reason);
+	Discord_SendBanMessage("L'admin **%s** ha _kickato_ tutti. Motivo: __**%s**.", Account_GetName(playerid), params);
 	return 1;
 }
 
@@ -1180,7 +1180,7 @@ CMD:banofflineaccount(playerid, params[])
 			SendFormattedMessage(playerid, COLOR_ORANGE, "L'account \"%s\" è stato bannato.", e_name);
 			SendMessageToAdmins(true, COLOR_ORANGE, "[ADMIN-ALERT]: %s ha bannato l'account \"%s\".", Account_GetName(playerid), e_name);
 			Log(Account_GetName(playerid), e_name, "/banofflineaccount");
-			Discord_SendBanMessage("L'admin **%s** ha _bannato_ l'account **%s** permanentemente. Motivo: __**%s**.", Account_GetName(playerid), e_name, reason);
+			Discord_SendBanMessage("L'admin **%s** ha _bannato_ l'account **%s** permanentemente.", Account_GetName(playerid), e_name);
 		}
 		else
 		{
@@ -1268,13 +1268,13 @@ stock BanCharacter(playerid, adminid, days, reason[])
 	{
 		SendFormattedMessage(playerid, COLOR_ORANGE, "Sei stato bannato da %s per %d giorni. Motivo: %s", Account_GetName(adminid), days, reason);
 		SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha bannato %s per %d giorni. Motivo: %s", Account_GetName(adminid), Character_GetOOCName(playerid), days, reason);
-		Discord_SendBanMessage("L'admin **%s** ha _bannato_ il personaggio **%s** appartenente all'account **%s** per **%d* giorni. Motivo: __**%s**.", Account_GetName(playerid), Character_GetOOCName(id), Account_GetName(id), days, reason);
+		Discord_SendBanMessage("L'admin **%s** ha _bannato_ il personaggio **%s** appartenente all'account **%s** per **%d* giorni. Motivo: __**%s**.", Account_GetName(adminid), Character_GetOOCName(playerid), Account_GetName(playerid), days, reason);
 	}
 	else
 	{
 		SendFormattedMessage(playerid, COLOR_ORANGE, "Sei stato bannato da %s permanentemente. Motivo: %s", Account_GetName(adminid), reason);
 		SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha bannato %s permanentemente. Motivo: %s", Account_GetName(adminid), Character_GetOOCName(playerid), reason);
-		Discord_SendBanMessage("L'admin **%s** ha _bannato_ il personaggio **%s** appartenente all'account **%s** permanentemente. Motivo: __**%s**.", Account_GetName(playerid), Character_GetOOCName(id), Account_GetName(id), reason);
+		Discord_SendBanMessage("L'admin **%s** ha _bannato_ il personaggio **%s** appartenente all'account **%s** permanentemente. Motivo: __**%s**.", Account_GetName(adminid), Character_GetOOCName(playerid), Account_GetName(playerid), reason);
 	}
 
 	Log(Account_GetName(adminid), Account_GetName(playerid), "BanCharacter", days);
@@ -1298,7 +1298,7 @@ stock BanAccount(playerid, adminid, reason[])
 
 	KickEx(playerid);
 
-	Discord_SendBanMessage("L'admin **%s** ha _bannato_ l'account **%s**. Motivo: __**%s**.", Account_GetName(playerid), Account_GetName(id), reason);
+	Discord_SendBanMessage("L'admin **%s** ha _bannato_ l'account **%s**. Motivo: __**%s**.", Account_GetName(adminid), Account_GetName(playerid), reason);
 	return 1;
 }
 

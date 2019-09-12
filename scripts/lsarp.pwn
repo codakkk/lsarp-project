@@ -163,9 +163,30 @@ enum (<<= 1)
 #include <discord_system\core>
 
 
+
+stock Peppe(a)
+{
+	return printf("Last Peppe");
+}
 // ========== [ DIALOGS ] ==========
 #include <player_system\dialogs>
 #include <YSI_Coding\y_hooks> // Place hooks after this. Everything included before this, is hooked first.
+
+hook function Peppe(a)
+{
+	printf("Peppe");
+	return continue(a);
+}
+
+#include <YSI_Coding\y_hooks>
+
+hook function Peppe(a)
+{
+	if(a == 0)
+		return Peppe(a)<;
+	printf("Peppe2");
+	return continue(a);
+}
 
 forward OnCharacterDamageDone(playerid, Float:amount, issuerid, weaponid, bodypart);
 
@@ -177,6 +198,8 @@ main()
 	//new mail[256], domain[256], c[256];  
 	//if(!sscanf("c@gmail.com", "{s[256]'@'s[256]'.'s[256]}", mail, domain, c))
 		//printf("domain: %s", domain);
+	Peppe(0);
+	//Peppe(1);
 }
 
 
