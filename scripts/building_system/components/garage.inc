@@ -271,3 +271,73 @@ stock Character_CanUseGarage(playerid)
         return 1;
     return 0;
 }
+
+hook function Character_Enter(playerid)
+{
+    new elementid, E_ELEMENT_TYPE:type;
+    Character_GetNearestPickup(playerid, elementid, type);
+    if(type != ELEMENT_TYPE_BUILDING_ENTRANCE)
+        return continue(playerid);
+    
+    if(Building_GetType(elementid) != BUILDING_TYPE_GARAGE)
+        return continue(playerid);
+    
+    
+    new vehicleid = GetPlayerVehicleID(playerid);
+    new Float:range = Vehicle_IsValid(vehicleid) ? 7.0 : 1.5;
+    
+    if(!Building_IsValid(elementid))
+    {
+        new 
+            buildingid = 0,
+            Float:x, Float:y, Float:z;
+        for_map(i : GetBuildingsMap())
+        {
+            buildingid = iter_get_key(i);
+            Building_GetEnterPos(buildingid, x, y, z);
+            if(IsPlayerInRangeOfPoint(playerid, range, x, y, z))
+            {
+                elementid = buildingid;
+                break;
+            }
+        }
+    }
+
+    if(Building_IsValid(elementid))
+    {
+        if(vehicleid > 0 && GetPlayerVehicleSeat(playerid) != 0)
+            return SendClientMessage(playerid, COLOR_ERROR, "Devi essere il guidatore per poter entrare all'interno dell'edificio.");
+        
+        if(Building_IsLocked(elementid))
+		    return GameTextForPlayer(playerid, "~r~Chiuso", 5000, 1);
+        
+        new interiorid = Building_GetExitInterior(elementid);
+        new worldid = Building_GetExitWorld(elementid);
+        new Float:x, Float:y, Float:z;
+        Building_GetExitPos(elementid, x, y, z);
+        if(vehicleid > 0)
+        {
+            LinkVehicleToInterior(vehicleid, interiorid);
+            SetVehicleVirtualWorld(vehicleid, worldid);
+            SetVehiclePos(vehicleid, x, y, z);
+            foreach(new p : Player)
+            {
+                if(p == playerid || GetPlayerVehicleID(p) != vehicleid) 
+                    continue;
+                
+                Character_SetVirtualWorld(p, worldid);
+                SetPlayerInterior(p, interiorid);
+            }
+        }
+        else
+        {
+            Character_SetSafePosition(playerid, x, y, z, interiorid, worldid);
+        }
+        SetPlayerInterior(playerid, interiorid);
+        Character_SetVirtualWorld(playerid, worldid);
+
+        CallLocalFunction(#OnPlayerEnterBuilding, "dd", playerid, elementid);
+        return 1;
+    }
+    return continue(playerid);
+}

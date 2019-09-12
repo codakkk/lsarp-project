@@ -133,3 +133,12 @@ stock Character_IsDoingGas(playerid)
 {
     return IsPlayerInAnyVehicle(playerid) && IsDoingGas[playerid] != INVALID_BUILDING_ID;
 }
+
+hook function Character_Enter(playerid)
+{
+    new elementid, E_ELEMENT_TYPE:type;
+    Character_GetNearestPickup(playerid, elementid, type);
+    if(type == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_GetType(elementid) == BUILDING_TYPE_GAS_STATION)
+        return 0;
+    return continue(playerid);
+}

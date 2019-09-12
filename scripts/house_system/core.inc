@@ -63,6 +63,43 @@ hook OnGameModeInit()
     return 1;
 }
 
+hook function Character_Enter(playerid)
+{
+    if(IsPlayerInAnyVehicle(playerid))
+        return continue(playerid);
+    
+    printf("House Enter");
+    new id, E_ELEMENT_TYPE:type;
+    if(Character_GetNearestPickup(playerid, id, type))
+    {
+        if(type == ELEMENT_TYPE_HOUSE_ENTRANCE)
+        {
+            if(House_IsLocked(id))
+               return GameTextForPlayer(playerid, "~r~Porta Chiusa", 5000, 1);
+            
+            new 
+                Float:x = 0.0, 
+                Float:y = 0.0, 
+                Float:z = 0.0,
+                interiorId = House_GetExitInterior(id),
+                world = House_GetExitWorld(id);
+            
+            House_GetExitPosition(id, x, y, z);
+
+            Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
+
+            SetPlayerInterior(playerid, interiorId);
+            Character_SetVirtualWorld(playerid, world);
+            
+            // Should I use Fading?
+            Character_SetSafePosition(playerid, x, y, z, interiorId, world);
+            
+            Character_AMe(playerid, "apre la porta ed entra.");
+            return 1;
+        }
+    }
+    return continue(playerid);
+}
 
 hook OnCharacterLoad(playerid)
 {

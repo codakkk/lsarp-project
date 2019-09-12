@@ -3,8 +3,6 @@
 
 #include <YSI_Coding\y_hooks>
 
-forward OnPlayerEnterBuilding(playerid, buildingid);
-
 static 
 	PlayerBuildingKey[MAX_PLAYERS],
 	PlayerHouseKey[MAX_PLAYERS]
@@ -110,113 +108,40 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 
 stock Character_Enter(playerid)
 {   
-	new elementId, E_ELEMENT_TYPE:type;
-	Character_GetNearestPickup(playerid, elementId, type);
-    if(type == ELEMENT_TYPE_BUILDING_ENTRANCE)
+	new buildingid, E_ELEMENT_TYPE:type;
+	printf("Last Enter");
+    if(Character_GetNearestPickup(playerid, buildingid, type) && type == ELEMENT_TYPE_BUILDING_ENTRANCE)
     {
-		if(Building_GetType(elementId) == BUILDING_TYPE_GARAGE)
-			return Internal_EnterGarage(playerid, elementId);
-		return Internal_EnterBuilding(playerid, elementId);
-    }
-    else if(type == ELEMENT_TYPE_HOUSE_ENTRANCE)
-    {
-	   return Internal_EnterHouse(playerid, elementId);
-    }
-    return 1;
-}
+		if(IsPlayerInAnyVehicle(playerid))
+			return 0;
+		
+		if(Building_IsLocked(buildingid))
+			return GameTextForPlayer(playerid, "~r~Porta Chiusa", 5000, 1);
+		new 
+			Float:x = 0.0, 
+			Float:y = 0.0, 
+			Float:z = 0.0,
+			interiorId = Building_GetExitInterior(buildingid),
+			world = Building_GetExitWorld(buildingid)
+		;
 
-static Internal_EnterGarage(playerid, buildingid)
-{
-	if(Building_IsLocked(buildingid))
-		return GameTextForPlayer(playerid, "~r~Chiuso", 8000, 1);
-	
-	new 
-	   Float:x = 0.0, 
-	   Float:y = 0.0, 
-	   Float:z = 0.0,
-	   interiorId = Building_GetExitInterior(buildingid),
-	   world = Building_GetExitWorld(buildingid)
-	;
-	new String:str = Building_GetWelcomeTextStr(buildingid);
-	if(str_len(str) > 0)
-		SendClientMessageStr(playerid, COLOR_GREEN, str);
-	Building_GetExitPos(buildingid, x, y, z);
+		new String:str = Building_GetWelcomeTextStr(buildingid);
+		if(str_len(str) > 0)
+			SendClientMessageStr(playerid, COLOR_GREEN, str);
+		
+		Building_GetExitPos(buildingid, x, y, z);
 
-	Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
+		Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
 
-	new vehicleid = GetPlayerVehicleID(playerid);
-	
-	SetPlayerInterior(playerid, interiorId);
-	Character_SetVirtualWorld(playerid, world);
-	
-	if(vehicleid > 0)
-	{
-		LinkVehicleToInterior(vehicleid, interiorId);
-		SetVehicleVirtualWorld(vehicleid, world);
-		SetVehiclePos(vehicleid, x, y, z);
-	}
-	else
-	{
+		SetPlayerInterior(playerid, interiorId);
+		Character_SetVirtualWorld(playerid, world);
+		// Should I use Fading?
 		Character_SetSafePosition(playerid, x, y, z, interiorId, world);
-	}
-	return 1;
-}
 
-static Internal_EnterBuilding(playerid, buildingid)
-{
-	if(IsPlayerInAnyVehicle(playerid))
-		return 0;
-	if(Building_IsLocked(buildingid))
-		return GameTextForPlayer(playerid, "~r~Chiuso", 8000, 1);
-	new 
-	   Float:x = 0.0, 
-	   Float:y = 0.0, 
-	   Float:z = 0.0,
-	   interiorId = Building_GetExitInterior(buildingid),
-	   world = Building_GetExitWorld(buildingid)
-	;
-	new String:str = Building_GetWelcomeTextStr(buildingid);
-	if(str_len(str) > 0)
-		SendClientMessageStr(playerid, COLOR_GREEN, str);
-	
-	Building_GetExitPos(buildingid, x, y, z);
-
-	Character_AMe(playerid, "apre la porta ed entra.");
-
-    Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
-
-    SetPlayerInterior(playerid, interiorId);
-    Character_SetVirtualWorld(playerid, world);
-    // Should I use Fading?
-	Character_SetSafePosition(playerid, x, y, z, interiorId, world);
-
-	CallLocalFunction(#OnPlayerEnterBuilding, "dd", playerid, buildingid);
-	return 1;
-}
-
-static Internal_EnterHouse(playerid, houseid)
-{
-	if(IsPlayerInAnyVehicle(playerid))
-		return 0;
-	if(House_IsLocked(houseid))
-	   return GameTextForPlayer(playerid, "~r~Chiuso", 8000, 1);
-	new 
-	   Float:x = 0.0, 
-	   Float:y = 0.0, 
-	   Float:z = 0.0,
-	   interiorId = House_GetExitInterior(houseid),
-	   world = House_GetExitWorld(houseid);
-	House_GetExitPosition(houseid, x, y, z);
-
-	Character_AMe(playerid, "apre la porta ed entra.");
-
-    Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
-
-    SetPlayerInterior(playerid, interiorId);
-    Character_SetVirtualWorld(playerid, world);
-    // Should I use Fading?
-	Character_SetSafePosition(playerid, x, y, z, interiorId, world);
-	return 1;
+		CallLocalFunction(#OnPlayerEnterBuilding, "dd", playerid, buildingid);
+		return 1;
+    }
+    return 0;
 }
 
 stock Character_Exit(playerid, elementId, E_ELEMENT_TYPE:type)

@@ -491,7 +491,7 @@ stock Building_IsLocked(a)
 {
 	if(!Building_IsValid(a))
 		return 0;
-    return map_get(Buildings, a, Locked) || Building_GetType(a) == BUILDING_TYPE_GAS_STATION;
+    return map_get(Buildings, a, Locked);// || Building_GetType(a) == BUILDING_TYPE_GAS_STATION;
 }
 
 stock Building_GetPrice(a)

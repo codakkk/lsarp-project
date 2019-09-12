@@ -13,9 +13,10 @@ CMD:acmds(playerid, params[])
 	if(Account_GetAdminLevel(playerid) >= 3)
 	{
 		SendClientMessage(playerid, -1, "[MODERATORE]: /setskin - /sethp - /setvhp - /setarmour - /ajail - /unjail - /setfaction");
-		SendClientMessage(playerid, -1, "[MODERATORE]: /vcreate - /vdelete - (/fix)veh - /gotov - /getvhere - /avcolor");
+		SendClientMessage(playerid, -1, "[MODERATORE]: /vcreate - /vdelete - (/fix)veh - /gotov - /getvhere - /avcolor - /vfuel");
 		SendClientMessage(playerid, -1, "[MODERATORE]: /bancharacter - /unbancharacter - /apark - /avplate - /aafactionkick");
-		SendClientMessage(playerid, -1, "[MODERATORE]: /aplacefurniture - /adeletefurniture - /atextureobject - /vfuel");
+		SendClientMessage(playerid, -1, "[MODERATORE]: /aplacefurniture - /adeletefurniture - /atextureobject");
+		SendClientMessage(playerid, -1, "[MODERATORE]: /teleportcreate - /teleportedit - /gototeleport");
 		SendClientMessage(playerid, -1, "[MODERATORE]: /lzcreate - /lzedit - /alzrefreshall - /respawnfactionvehicles");
 		SendClientMessage(playerid, -1, "[MODERATORE]: /sethunger - /afactioncmds - /abuildingcmds - /adealershipcmds");
 		SendClientMessage(playerid, -1, "[MODERATORE]: /banaccount - /unbanaccount - /banofflineaccount");
