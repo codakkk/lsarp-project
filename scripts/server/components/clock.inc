@@ -23,8 +23,8 @@ task OnServerTimeUpdate[1000]()
 	// hour += TIME_ZONE; // TIME_ZONE = 0
 	if(hour > 24) hour -= 24;
 	if(hour < 0) hour += 24;
-	format(string,25,"%02d:%02d:%02d",hour, minute, second);
-    SetClockTextDrawString(string);
+	//format(string,25,"%02d:%02d:%02d",hour, minute, second);
+    //SetClockTextDrawString(string);
     SetWorldTime(hour);
     return 1;
 }

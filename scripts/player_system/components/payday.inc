@@ -19,19 +19,25 @@ ptask OnPlayerPayDayMinute[60000](playerid) //
 
 stock Character_PayDay(playerid)
 {
-
-    SendClientMessage(playerid, COLOR_YELLOW, "_______________________[PAYDAY]_____________________");
-    
 	new 
+		startBankMoney = Character_GetBank(playerid),
+		factionMoney = 0,
+		premiumMoney = 0,
+		businessMoney = 0,
+		newPlayerMoney = 0, 
+		interests = 0,
 		paycheck = 0,
 		experiencePerLevel = (Account_GetLevel(playerid)+1) * 2,
 		currentPremiumLevel = Account_GetPremiumLevel(playerid)
 	;
 
+	// interests = ...
+
 	if(currentPremiumLevel > 0)
 	{
 		static const premiumPaycheck[] = {1000, 2000, 3000};
-		paycheck += premiumPaycheck[currentPremiumLevel-1];
+		premiumMoney = premiumPaycheck[currentPremiumLevel-1];
+		paycheck += premiumMoney;
 		SendFormattedMessage(playerid, COLOR_YELLOW, "Hai ricevuto $%d aggiuntivi come bonus Premium.", paycheck);
 	}
 
@@ -39,62 +45,45 @@ stock Character_PayDay(playerid)
 	if(Faction_IsValid(factionid))
 	{
 		new salary = Faction_GetRankSalary(factionid, Character_GetRank(playerid));
-		if(salary > 0)
+		if(currentPremiumLevel > 1)
 		{
-			
-			if(currentPremiumLevel > 1)
-			{
-				new percentage = currentPremiumLevel == 2 ? 25 : 50;
-				new value = (salary * percentage) / 100;
-				salary += value;
-
-				SendFormattedMessage(playerid, COLOR_YELLOW, "Hai ricevuto $%d aggiuntivi perché fai parte di una fazione.", salary);
-				SendFormattedMessage(playerid, COLOR_YELLOW, "Inoltre, hai ricevuto un bonus del %d percento poiché Premium.", percentage);
-			}
-			else
-			{
-				SendFormattedMessage(playerid, COLOR_YELLOW, "Hai ricevuto $%d aggiuntivi perché fai parte di una fazione.", salary);
-			}
-
-			paycheck += salary;
+			new percentage = currentPremiumLevel == 2 ? 25 : 50;
+			new value = (salary * percentage) / 100;
+			factionMoney += value;
 		}
+
+		factionMoney += salary;
+
+		paycheck += factionMoney;
 	}
 
-	Account_AddExperience(playerid, 1);
 
 	if(Account_GetLevel(playerid) <= 3)
 	{
 		static const payCheck[] = {2000, 1000, 500};
 		new level = Account_GetLevel(playerid) - 1;
-		paycheck += payCheck[level];
+		newPlayerMoney = payCheck[level];
+		paycheck += newPlayerMoney;
 	}
 
-	Character_AddPayCheck(playerid, paycheck);
-	SendFormattedMessage(playerid, COLOR_YELLOW, "Stipendio: $%d.", Character_GetPayCheck(playerid));
+	Account_AddExperience(playerid, 1);
+	if(Account_GetExperience(playerid) > experiencePerLevel)
+	{
+		Account_IncreaseLevel(playerid, 1);
+	   	Account_SetExperience(playerid, 0);
+	}
 
-	if(paycheck > 0)
-		SendClientMessage(playerid, COLOR_YELLOW, "Dirigiti in una banca per ritirare il tuo stipendio.");
-    
-	/*static const levels[] = {1, 1, 2, 3};
-	new level = levels[Account_GetPremiumLevel(playerid)];
-	Account_IncreaseLevel(playerid, level);
-	
-	if(level > 1)
-		SendFormattedMessage(playerid, COLOR_YELLOW, "Livello incrementato di %d punti. (Bonus Premium)", level);
-	else
-		SendClientMessage(playerid, COLOR_YELLOW, "Livello incrementato di 1 punto.");
-	*/
-	if(Account_GetExperience(playerid) < experiencePerLevel)
+	/*if(Account_GetExperience(playerid) < experiencePerLevel)
     {
-	   SendFormattedMessage(playerid, COLOR_YELLOW, "Livello attuale: %d. Attualmente hai %d/%d punti esperienza.", Account_GetLevel(playerid), Account_GetExperience(playerid), experiencePerLevel);
+	   //SendFormattedMessage(playerid, COLOR_YELLOW, "Livello attuale: %d. Attualmente hai %d/%d punti esperienza.", Account_GetLevel(playerid), Account_GetExperience(playerid), experiencePerLevel);
     }
     else
     {
 	   Account_IncreaseLevel(playerid, 1);
 	   Account_SetExperience(playerid, 0);
 	   experiencePerLevel = (Account_GetLevel(playerid)+1) * 2;
-	   SendFormattedMessage(playerid, COLOR_YELLOW, "Congratulazioni! Hai raggiunto il livello %d. Per il prossimo livello hai bisogno di %d punti esperienza.", Account_GetLevel(playerid), experiencePerLevel);
-    }
+	   //SendFormattedMessage(playerid, COLOR_YELLOW, "Congratulazioni! Hai raggiunto il livello %d. Per il prossimo livello hai bisogno di %d punti esperienza.", Account_GetLevel(playerid), experiencePerLevel);
+    }*/
 
 	if(Character_HasBuildingKey(playerid))
 	{
@@ -102,12 +91,38 @@ stock Character_PayDay(playerid)
 		if(Building_IsValid(id))
 		{
 			new price = Building_GetPrice(id)/100;
-			Building_GiveMoney(id, price);
-			SendFormattedMessage(playerid, COLOR_YELLOW, "Il tuo business ti ha fruttato $%d. Puoi trovarli all'interno della cassa.", price);
+			businessMoney = price;
+			paycheck += price;
 		}
 	}
-    SendClientMessage(playerid, COLOR_YELLOW, "____________________________________________________");
 
+	Character_AddPayCheck(playerid, paycheck);
+
+	new h, m, s;
+	gettime(h, m, s);
+
+	SendFormattedMessage(playerid, -1, "SERVER TIME: %d:%d:%d", h, m, s);
+    SendClientMessage(playerid, -1, "|__CONTO BANCARIO__|");
+	SendFormattedMessage(playerid, 0xB4B5B7FF, "Bilancio: $%s", FormatNumber(startBankMoney));
+	SendFormattedMessage(playerid, 0xB4B5B7FF, "Tasso di interesse: %f", 0.1);
+	SendFormattedMessage(playerid, 0xB4B5B7FF, "Interessi guadagnati: $%d", interests);
+	SendFormattedMessage(playerid, 0xB4B5B7FF, "Tasse pagate: -$%d", 0);
+	SendFormattedMessage(playerid, 0xB4B5B7FF, "Affitto: -$%d", 0);
+	SendFormattedMessage(playerid, 0xB4B5B7FF, "Stipendio:  $%d", paycheck);
+	SendClientMessage(playerid, -1, "|__________________|");
+	SendFormattedMessage(playerid, -1, "Nuovo Bilancio: $%s", FormatNumber(Character_GetBank(playerid)));
+	if(factionMoney > 0)
+	{
+		new shortName[MAX_FACTION_SHORT_NAME];
+		Faction_GetShortName(factionid, shortName);
+		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s per il tuo lavoro %s nel conto stipendio.", FormatNumber(factionMoney), shortName);
+	}
+	if(businessMoney > 0)
+		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s per il tuo business.", FormatNumber(businessMoney));
+	if(premiumMoney > 0)
+		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s per il tuo premium.", FormatNumber(premiumMoney));
+	if(newPlayerMoney > 0)
+		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s perché sei un nuovo arrivato.", FormatNumber(newPlayerMoney));
     GameTextForPlayer(playerid, "~y~PayDay", 5000, 1);
 	return 1;
 }

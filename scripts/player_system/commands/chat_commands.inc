@@ -16,7 +16,7 @@ CMD:low(playerid, params[])
     if(isnull(params) || strlen(params) > 128) 
         return SendClientMessage(playerid, COLOR_ERROR, "/low <testo>");
     new String:string = str_format("%s dice a bassa voce: %s", Character_GetRolePlayName(playerid), params);
-    ProxDetectorStr(playerid, 5.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
+    ProxDetectorStr(playerid, 5.0, string, 0x9d9d9dFF, 0x9d9d9dFF, 0x9d9d9dFF, 0x9d9d9dFF, 0x9d9d9dFF);
     return 1;
 }
 
@@ -51,22 +51,22 @@ CMD:pm(playerid, params[])
     PlayerPlaySound(id, 1085, 0.0, 0.0, 0.0);
     if(Player_IsAdminDuty(playerid))
     {
-        SendTwoLinesMessage(id, COLOR_RECEIVEPM, "** PM da {FF6347}%s{ffdb18} (%d): %s", Account_GetName(playerid), playerid, s);
+        SendTwoLinesMessage(id, COLOR_RECEIVEPM, "** PM da {FF6347}%s{eccd2d} (%d): %s", Account_GetName(playerid), playerid, s);
         if(Player_IsAdminDuty(id))
         {
-            SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a {FF6347}%s{ffdb18} (%d): %s", Account_GetName(id), id, s);
+            SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a {FF6347}%s{eee854} (%d): %s", Account_GetName(id), id, s);
         }
         else
         {
-            SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a {FF6347}%s{ffdb18} (%d): %s", Character_GetOOCName(id), id, s);
+            SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a {FF6347}%s{eee854} (%d): %s", Character_GetOOCName(id), id, s);
         }
     }
     else
     {
         if(Account_IsSupporterDuty(playerid))
         {
-            SendTwoLinesMessage(id, COLOR_RECEIVEPM, "PM da {e9de98}%s{ffdb18} (%d): %s", Character_GetOOCName(playerid), playerid, s);
-            SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a {e9de98}%s{ffdb18} (%d): %s", Character_GetOOCName(id), id, s);
+            SendTwoLinesMessage(id, COLOR_RECEIVEPM, "PM da {e9de98}%s{eccd2d} (%d): %s", Character_GetOOCName(playerid), playerid, s);
+            SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a {e9de98}%s{eee854} (%d): %s", Character_GetOOCName(id), id, s);
         }
         else
         {
@@ -167,7 +167,7 @@ CMD:b(playerid, params[])
     else
     {
         string = str_format("(( %s [%d]: %s ))", Character_GetOOCName(playerid), playerid, params);
-        ProxDetectorStr(playerid, 15.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, true);
+        ProxDetectorStr(playerid, 15.0, string, 0xB8BAC6FF, 0xB8BAC6FF, 0xB8BAC6FF, 0xB8BAC6FF, 0xB8BAC6FF, true);
     }
     return 1;
 }

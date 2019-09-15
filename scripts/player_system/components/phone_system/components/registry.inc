@@ -239,7 +239,8 @@ Dialog:Dialog_LostPhoneCallRegister(playerid, response, listitem, inputtext[])
     
     SendClientMessage(playerid, COLOR_GREEN, "Hai eliminato l'elemento del registro.");
 
-    mysql_tquery_f(gMySQL, "DELETE FROM `phone_call_registry` WHERE id = '%d'", SelectedRow[playerid]);
+    mysql_tquery_f(gMySQL, "UPDATE `phone_call_registry` SET state = '%d' WHERE id = '%d'", CALL_STATE_READ, SelectedRow[playerid]);
+    //mysql_tquery_f(gMySQL, "DELETE FROM `phone_call_registry` WHERE id = '%d'", SelectedRow[playerid]);
     Character_ShowLostCalls(playerid, Character_GetSelectedPhone(playerid));
     return 1;
 }

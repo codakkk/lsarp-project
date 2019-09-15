@@ -204,14 +204,14 @@ CMD:setadmin(playerid, params[])
 			pc_cmd_aduty(id, "");
 		SendFormattedMessage(id, COLOR_ERROR, "[ADMIN] %s (%d) ti ha rimosso dallo staff.", Account_GetName(playerid), playerid);
 		SendFormattedMessage(playerid, COLOR_ERROR, "Hai rimosso %s (%d) dallo staff.", Account_GetName(id), id);
-		SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-ALERT]: %s (%d) ha rimosso %s (%d) dallo staff.", Account_GetName(playerid), playerid, Account_GetName(id), id);
+		SendMessageToAdmins(true, COLOR_ADMINCMD, "[ADMIN-ALERT]: %s (%d) ha rimosso %s (%d) dallo staff.", Account_GetName(playerid), playerid, Account_GetName(id), id);
 	}
 	else
 	{
 		//new ln[] = ;
 		SendFormattedMessage(id, COLOR_GREEN, "[ADMIN] %s (%d) ti ha settato %s.", Account_GetName(playerid), playerid, GetAdminLevelName(lvl));
 		SendFormattedMessage(playerid, COLOR_GREEN, "%s (%d) è stato settato %s.", Account_GetName(id), id, GetAdminLevelName(lvl));
-		SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-ALERT]: %s (%d) ha settato %s (%d) %s.", Account_GetName(playerid), playerid, Account_GetName(id), id, GetAdminLevelName(lvl));
+		SendMessageToAdmins(true, COLOR_ADMINCMD, "[ADMIN-ALERT]: %s (%d) ha settato %s (%d) %s.", Account_GetName(playerid), playerid, Account_GetName(id), id, GetAdminLevelName(lvl));
 	}
 	Log(Account_GetName(playerid), Account_GetName(id), "/setadmin", lvl);
 	Account_SetAdminLevel(id, lvl);
@@ -272,7 +272,7 @@ CMD:sethp(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su un giocatore in sistema morte.");
 
     AC_SetPlayerHealth(id, hp);
-    SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha settato gli HP di %s (%d) a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), Character_GetOOCName(id), id, hp);
+    SendMessageToAdmins(0, COLOR_ADMINCMD, "[ADMIN-ALERT] %s (%s) ha settato gli HP di %s (%d) a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), Character_GetOOCName(id), id, hp);
     SendFormattedMessage(playerid, COLOR_GREEN, "[ADMIN] %s (%s) ti ha settato gli HP a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
     Log(Account_GetName(playerid), Character_GetOOCName(id), "/sethp", hp);
     return 1;
@@ -293,7 +293,7 @@ CMD:setarmour(playerid, params[])
 	   return SendClientMessage(playerid, COLOR_ERROR, "Valore Armatura non valido.");
 
     AC_SetPlayerArmour(id, hp);
-    SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha settato l'armatura di %s (%d) a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), Character_GetOOCName(id), id, hp);
+    SendMessageToAdmins(0, COLOR_ADMINCMD, "[ADMIN-ALERT] %s (%s) ha settato l'armatura di %s (%d) a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), Character_GetOOCName(id), id, hp);
     SendFormattedMessage(playerid, COLOR_GREEN, "[ADMIN] %s (%s) ti ha settato l'armatura a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
     Log(Account_GetName(playerid), Character_GetOOCName(id), "/setarmour", hp);
     return 1;
@@ -342,7 +342,7 @@ CMD:vsave(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Questo veicolo è già inserito nel database.");
 	if(Vehicle_InsertInDatabase(vehicleid))
 	{
-		SendMessageToAdmins(false, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha aggiunto il veicolo id %d nel database.", Account_GetName(playerid), vehicleid);
+		SendMessageToAdmins(false, COLOR_ADMINCMD, "[ADMIN-ALERT]: %s ha aggiunto il veicolo id %d nel database.", Account_GetName(playerid), vehicleid);
 	}
 	else
 	{
@@ -365,7 +365,7 @@ CMD:vfaction(playerid, params[])
 
 	Vehicle_SetFaction(vehicleid, factionid);
 
-	SendMessageToAdmins(false, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha settato il veicolo id %d nella fazione id %d.", Account_GetName(playerid), vehicleid, factionid);
+	SendMessageToAdmins(false, COLOR_ADMINCMD, "[ADMIN-ALERT]: %s ha settato il veicolo id %d nella fazione id %d.", Account_GetName(playerid), vehicleid, factionid);
 	Log(Account_GetName(playerid), "", "/vfaction", factionid);
 	return 1;
 }
@@ -382,7 +382,7 @@ CMD:avmaxhp(playerid, params[])
 
 	Vehicle_SetMaxHealth(id, float(health));
 
-	SendMessageToAdmins(false, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha settato gli HP massimi del veicolo id %d a %f.", Account_GetName(playerid), id, float(health));
+	SendMessageToAdmins(false, COLOR_ADMINCMD, "[ADMIN-ALERT]: %s ha settato gli HP massimi del veicolo id %d a %f.", Account_GetName(playerid), id, float(health));
 	Log(Account_GetName(playerid), "", "/avmaxhp", id);
 	return 1;
 }
@@ -399,7 +399,7 @@ CMD:vdespawn(playerid, params[])
 	Vehicle_Despawn(vehicleid);
 	printf("After Count: %d", Iter_Count(Vehicle));
 
-	SendMessageToAdmins(false, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha despawnato il veicolo id %d.", Account_GetName(playerid), vehicleid);
+	SendMessageToAdmins(false, COLOR_ADMINCMD, "[ADMIN-ALERT]: %s ha despawnato il veicolo id %d.", Account_GetName(playerid), vehicleid);
 	return 1;
 }
 
@@ -478,7 +478,7 @@ CMD:avcolor(playerid, params[])
 	
 	Vehicle_SetColors(id, color1, color2);
 
-	SendMessageToAdmins(false, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha modificato il colore del veicolo id %d.", Account_GetName(playerid), id);
+	SendMessageToAdmins(false, COLOR_ADMINCMD, "[ADMIN-ALERT]: %s ha modificato il colore del veicolo id %d.", Account_GetName(playerid), id);
 	return 1;
 }
 
@@ -767,7 +767,7 @@ CMD:resetinv(playerid, params[])
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
 	Inventory_Reset(Character_GetInventory(id));
-	SendMessageToAdmins(false, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha resettato l'inventario di %s.", Account_GetName(playerid), Character_GetOOCName(id));
+	SendMessageToAdmins(false, COLOR_ADMINCMD, "[ADMIN-ALERT]: %s ha resettato l'inventario di %s.", Account_GetName(playerid), Character_GetOOCName(id));
 	SendFormattedMessage(id, COLOR_ERROR, "[ADMIN]: %s ti ha resettato l'inventario.", Account_GetName(playerid));
 	return 1;
 }
@@ -785,7 +785,7 @@ CMD:giveweapon(playerid, params[])
 	if(wid < 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "ID arma errato.");
 	Character_GiveWeapon(id, wid, ammo);
-	SendMessageToAdmins(false, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha dato l'arma id %d con %d munizioni a %s.", Account_GetName(playerid), wid, ammo, Character_GetOOCName(id));
+	SendMessageToAdmins(false, COLOR_ADMINCMD, "[ADMIN-ALERT]: %s ha dato l'arma id %d con %d munizioni a %s.", Account_GetName(playerid), wid, ammo, Character_GetOOCName(id));
 	SendFormattedMessage(id, COLOR_GREEN, "[ADMIN]: %s ti ha dato l'arma id %d con %d munizioni.", Account_GetName(playerid), wid, ammo);
 	Log(Account_GetName(playerid), Character_GetOOCName(id), "/giveweapon", wid);
 	return 1;
@@ -909,7 +909,7 @@ CMD:ajail(playerid, params[])
 
 	SendFormattedMessage(id, COLOR_ERROR, "Sei stato jailato da %s (%d) per %d minuti. Motivo: %s", Account_GetName(playerid), playerid, time, reason);
 
-	SendMessageToAdmins(false, COLOR_ADMIN, "AdmCmd: %s (%d) ha jailato %s (%d) per %d minuti. Motivo: %s", Account_GetName(playerid), playerid, Character_GetOOCName(id), id, time, reason);
+	SendMessageToAdmins(false, COLOR_ADMINCMD, "AdmCmd: %s (%d) ha jailato %s (%d) per %d minuti. Motivo: %s", Account_GetName(playerid), playerid, Character_GetOOCName(id), id, time, reason);
 	Log(Character_GetOOCName(playerid), Character_GetOOCName(id), "/ajail", time);
 	return 1;
 }
@@ -928,7 +928,7 @@ CMD:unjail(playerid, params[])
 	Character_SetJailTimeAsSeconds(id, 2);
 	SendFormattedMessage(id, COLOR_ERROR, "Sei stato unjailato da %s", Account_GetName(playerid));
 
-	SendMessageToAdmins(false, COLOR_ADMIN, "AdmCmd: %s (%d) ha unjailato %s (%d).", Account_GetName(playerid), playerid, Character_GetOOCName(id), id);
+	SendMessageToAdmins(false, COLOR_ADMINCMD, "AdmCmd: %s (%d) ha unjailato %s (%d).", Account_GetName(playerid), playerid, Character_GetOOCName(id), id);
 	Log(Character_GetOOCName(playerid), Character_GetOOCName(id), "/unjail");
 	return 1;
 }
@@ -975,7 +975,7 @@ CMD:settimeadd(playerid, params[])
 	new w = strval(params);
 	if(isnull(params) || w < 0 || w > 24)
 		return SendClientMessage(playerid, COLOR_ERROR, "/settimeadd <hour (0-24)>");
-	SendMessageToAdmins(true, COLOR_ADMIN, "%s ha utilizzato il comando /settimeadd. Ore aggiunte: %d", Account_GetName(playerid), w);
+	SendMessageToAdmins(true, COLOR_ADMINCMD, "%s ha utilizzato il comando /settimeadd. Ore aggiunte: %d", Account_GetName(playerid), w);
 	Server_SetTimeAdd(w);
 	return 1;
 }
@@ -990,7 +990,7 @@ CMD:setweather(playerid, params[])
 	{
 		Server_SetNextWeather(w);
 		Server_UpdateWeather();
-		SendMessageToAdmins(false, COLOR_ADMIN, "%s (%d) ha cambiato il tempo metereologico. ID: %d.", Account_GetName(playerid), playerid, w);
+		SendMessageToAdmins(false, COLOR_ADMINCMD, "%s (%d) ha cambiato il tempo metereologico. ID: %d.", Account_GetName(playerid), playerid, w);
 	}
 	else 
 		SendClientMessage(playerid, COLOR_ERROR, "ID Errato.");
@@ -1031,7 +1031,7 @@ CMD:aslap(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su un admin di livello superiore.");
 	
 	SendFormattedMessage(id, COLOR_ADMIN, "L'admin %s ti ha slappato.", Account_GetName(playerid));
-	SendMessageToAdmins(false, COLOR_ADMIN, "[ADMIN-CMD]: %s ha slappato %s.", Account_GetName(playerid), Character_GetOOCName(id));
+	SendMessageToAdmins(false, COLOR_ADMINCMD, "[ADMIN-CMD]: %s ha slappato %s.", Account_GetName(playerid), Character_GetOOCName(id));
 
 	new Float:x, Float:y, Float:z;
 	GetPlayerPos(id, x, y, z);
@@ -1045,7 +1045,7 @@ CMD:kickall(playerid, params[])
 	if(strlen(params) <= 0 || strlen(params) > 90)
 		return SendClientMessage(playerid, COLOR_ERROR, "/kickall <motivo>");
 	
-	SendMessageToAdmins(true, COLOR_ADMIN, "L'admin %s ha kickato tutti. Motivo: %s", Account_GetName(playerid), params);
+	SendMessageToAdmins(true, COLOR_ADMINCMD, "L'admin %s ha kickato tutti. Motivo: %s", Account_GetName(playerid), params);
 
 	foreach(new i : Player)
 	{
@@ -1071,7 +1071,7 @@ CMD:kick(playerid, params[])
 	if(Account_GetAdminLevel(id) > Account_GetAdminLevel(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su un admin di livello superiore.");
 	SendFormattedMessage(id, COLOR_ADMIN, "L'admin %s ti ha kickato. Motivo: %s", Account_GetName(playerid), reason);
-	SendMessageToAdmins(false, COLOR_ADMIN, "[ADMIN-CMD]: %s ha kickato %s. Motivo: %s", Account_GetName(playerid), Character_GetOOCName(id), reason);
+	SendMessageToAdmins(false, COLOR_ADMINCMD, "[ADMIN-CMD]: %s ha kickato %s. Motivo: %s", Account_GetName(playerid), Character_GetOOCName(id), reason);
 	KickEx(id);
 
 	Discord_SendKickMessage("L'admin **%s** ha _kickato_ **%s** (**%s**). Motivo: __**%s**.", Account_GetName(playerid), Character_GetOOCName(id), Account_GetName(id), reason);
@@ -1088,7 +1088,7 @@ CMD:serialban(playerid, params[])
 	if(!IsPlayerConnected(id) || IsPlayerNPC(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 
-	SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-ALERTS]: %s ha serial-bannato %s (%s). Motivo: %s", Account_GetName(playerid), Character_GetOOCName(id), Account_GetName(id), reason);
+	SendMessageToAdmins(true, COLOR_ADMINCMD, "[ADMIN-ALERTS]: %s ha serial-bannato %s (%s). Motivo: %s", Account_GetName(playerid), Character_GetOOCName(id), Account_GetName(id), reason);
 	SendFormattedMessage(id, COLOR_ORANGE, "Sei stato bannato permanentemente da %s. Motivo: %s", Account_GetName(playerid), reason);
 
 	new ip[16], serial[41];
@@ -1111,7 +1111,7 @@ CMD:banip(playerid, params[])
 	if(!IsPlayerConnected(id) || IsPlayerNPC(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 	
-	SendMessageToAdmins(true, COLOR_ADMIN, "AdmCmd: %s ha bannato %s (%s) per IP. Motivo: %s", Account_GetName(playerid), Character_GetOOCName(id), Account_GetName(id), reason);
+	SendMessageToAdmins(true, COLOR_ADMINCMD, "AdmCmd: %s ha bannato %s (%s) per IP. Motivo: %s", Account_GetName(playerid), Character_GetOOCName(id), Account_GetName(id), reason);
 	SendFormattedMessage(id, COLOR_ORANGE, "Sei stato bannato permanentemente (IP) da %s. Motivo: %s", Account_GetName(playerid), reason);
 
 	new ip[16], serial[41];
@@ -1138,7 +1138,7 @@ CMD:unbanip(playerid, params[])
 	{
 		if(cache_affected_rows() > 0)
 		{
-			SendMessageToAdmins(true, COLOR_ADMIN, "AdmCmd: %s ha sbannato l'IP %s. Motivo: %s", Account_GetName(playerid), ip, reason);
+			SendMessageToAdmins(true, COLOR_ADMINCMD, "AdmCmd: %s ha sbannato l'IP %s. Motivo: %s", Account_GetName(playerid), ip, reason);
 			Discord_SendBanMessage("L'admin **%s** ha _sbannato_ l'**IP**. Motivo: __**%s**.", Account_GetName(playerid), ip, reason);
 		}
 		else
@@ -1268,13 +1268,13 @@ stock BanCharacter(playerid, adminid, days, reason[])
 	if(days > 0)
 	{
 		SendFormattedMessage(playerid, COLOR_ORANGE, "Sei stato bannato da %s per %d giorni. Motivo: %s", Account_GetName(adminid), days, reason);
-		SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha bannato %s per %d giorni. Motivo: %s", Account_GetName(adminid), Character_GetOOCName(playerid), days, reason);
+		SendMessageToAdmins(true, COLOR_ADMINCMD, "[ADMIN-ALERT]: %s ha bannato %s per %d giorni. Motivo: %s", Account_GetName(adminid), Character_GetOOCName(playerid), days, reason);
 		Discord_SendBanMessage("L'admin **%s** ha _bannato_ il personaggio **%s** appartenente all'account **%s** per **%d* giorni. Motivo: __**%s**.", Account_GetName(adminid), Character_GetOOCName(playerid), Account_GetName(playerid), days, reason);
 	}
 	else
 	{
 		SendFormattedMessage(playerid, COLOR_ORANGE, "Sei stato bannato da %s permanentemente. Motivo: %s", Account_GetName(adminid), reason);
-		SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha bannato %s permanentemente. Motivo: %s", Account_GetName(adminid), Character_GetOOCName(playerid), reason);
+		SendMessageToAdmins(true, COLOR_ADMINCMD, "[ADMIN-ALERT]: %s ha bannato %s permanentemente. Motivo: %s", Account_GetName(adminid), Character_GetOOCName(playerid), reason);
 		Discord_SendBanMessage("L'admin **%s** ha _bannato_ il personaggio **%s** appartenente all'account **%s** permanentemente. Motivo: __**%s**.", Account_GetName(adminid), Character_GetOOCName(playerid), Account_GetName(playerid), reason);
 	}
 
@@ -1292,7 +1292,7 @@ stock BanAccount(playerid, adminid, reason[])
 
 	SendFormattedMessage(playerid, COLOR_ORANGE, "Il tuo account (%s) è stato bannato da %s. Motivo: %s", Account_GetName(playerid), Account_GetName(adminid), reason);
 
-	SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-ALERT]: %s ha bannato l'account di %s (%s). Motivo: %s",
+	SendMessageToAdmins(true, COLOR_ADMINCMD, "[ADMIN-ALERT]: %s ha bannato l'account di %s (%s). Motivo: %s",
 	Account_GetName(adminid), Account_GetName(playerid), Character_GetOOCName(playerid), reason);
 
 	Log(Account_GetName(adminid), Account_GetName(playerid), "BanAccount");
@@ -1321,7 +1321,7 @@ CMD:setchopshop(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Giocatore non connesso.");
 	SendFormattedMessage(id, COLOR_ORANGE, "L'admin %s (%d) ti ha garantito i permessi per il Chop Shop.", Account_GetName(playerid), playerid);
 	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai garantito i permessi per il Chop Shop a %s (%d).", Character_GetOOCName(id), id);
-	SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-CMD]: %s (%d) ha garantito i permessi per il Chop Shop a %s (%d).", Account_GetName(playerid), playerid, Character_GetOOCName(id), id);
+	SendMessageToAdmins(true, COLOR_ADMINCMD, "[ADMIN-CMD]: %s (%d) ha garantito i permessi per il Chop Shop a %s (%d).", Account_GetName(playerid), playerid, Character_GetOOCName(id), id);
 	Character_SetChopShopPrivileges(id, true);
 	Character_SavePrivileges(id);
 	return 1;
@@ -1337,7 +1337,7 @@ CMD:removechopshop(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Giocatore non connesso.");
 	SendFormattedMessage(id, COLOR_ORANGE, "L'admin %s (%d) ti ha rimosso i permessi per il Chop Shop.", Account_GetName(playerid), playerid);
 	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai rimosso i permessi per il Chop Shop a %s (%d).", Character_GetOOCName(id), id);
-	SendMessageToAdmins(true, COLOR_ADMIN, "[ADMIN-CMD]: %s (%d) ha rimosso i permessi per il Chop Shop a %s (%d).", Account_GetName(playerid), playerid, Character_GetOOCName(id), id);
+	SendMessageToAdmins(true, COLOR_ADMINCMD, "[ADMIN-CMD]: %s (%d) ha rimosso i permessi per il Chop Shop a %s (%d).", Account_GetName(playerid), playerid, Character_GetOOCName(id), id);
 	Character_SetChopShopPrivileges(id, false);
 	Character_SavePrivileges(id);
 	return 1;

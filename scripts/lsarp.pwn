@@ -50,6 +50,7 @@
 #define FIX_ClearAnimations_2 0 // Fixes a bug of autowalking anim
 
 #include <a_samp>
+#include <formatnumber>
 //native IsValidVehicle(vehicleid);
 #include <sampmailjs>
 
@@ -219,7 +220,7 @@ hook OnPlayerSpawn(playerid)
 	SetPlayerSkillLevel(playerid, WEAPONSKILL_MICRO_UZI, 1);
 	SetPlayerSkillLevel(playerid, WEAPONSKILL_SAWNOFF_SHOTGUN, 1);
 
-	ShowClockTextDraw(playerid);
+	//ShowClockTextDraw(playerid);
 
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
@@ -390,7 +391,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
     if(!isAllowed)
     {
         SendMessageToAdmins(true, COLOR_ORANGE, "[ADMIN-ALERT]: %s (%d) ha utilizzato un comando proibito (/%s)", Character_GetOOCName(playerid), playerid, cmd);
-        SendClientMessage(playerid, -1, "Il comando inserito non esiste. Digita \"/aiuto\" per una lista di comandi.");
+        SendClientMessage(playerid, -1, "{ADC3E7}Errore:{FFFFFF} Il comando inserito non esiste. Digita {ADC3E7}/aiuto{FFFFFF} o {ADC3E7}/aiutami{FFFFFF} se hai bisogno di assistenza.");
         return 0;
     }
 	if(flags & CMD_ALIVE_USER)
@@ -517,7 +518,7 @@ hook OnPlayerDisconnect(playerid, reason)
 		ProxDetector(playerid, 15.0, string, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY);
 	}
 
-	HideClockTextDraw(playerid);
+	//HideClockTextDraw(playerid);
 	
 	if(Character_IsLogged(playerid))
 	{

@@ -77,34 +77,34 @@ alias:finestrino("fin");
 flags:vluci(CMD_ALIVE_USER);
 CMD:vluci(playerid, params[])
 {
-	return pc_cmd_veicolo(playerid, "luci");
+	return pc_cmd_vehicle(playerid, "luci");
 }
 
 flags:vparcheggia(CMD_ALIVE_USER);
 CMD:vparcheggia(playerid, params[])
 {
-	return pc_cmd_veicolo(playerid, "parcheggia");
+	return pc_cmd_vehicle(playerid, "parcheggia");
 }
 alias:vparcheggia("vpark");
 
 flags:vsicura(CMD_ALIVE_USER);
 CMD:vsicura(playerid, params[])
 {
-    return pc_cmd_veicolo(playerid, "sicura");
+    return pc_cmd_vehicle(playerid, "sicura");
 }
 
 
 flags:vbagagliaio(CMD_ALIVE_USER);
 CMD:vbagagliaio(playerid, params[])
 {
-	return pc_cmd_veicolo(playerid, "bagagliaio");
+	return pc_cmd_vehicle(playerid, "bagagliaio");
 }
 alias:vbagagliaio("vtrunk");
 
 flags:vinventario(CMD_ALIVE_USER);
 CMD:vinventario(playerid, params[])
 {
-	return pc_cmd_veicolo(playerid, "inventario");
+	return pc_cmd_vehicle(playerid, "inventario");
 }
 alias:vinventario("vinv");
 
@@ -235,7 +235,7 @@ CMD:vusa(playerid, params[])
 flags:motore(CMD_ALIVE_USER);
 CMD:motore(playerid, params[])
 {
-    return pc_cmd_veicolo(playerid, "motore");
+    return pc_cmd_vehicle(playerid, "motore");
 }
 
 /*timer TurnOnVehicleEngine[500](playerid)

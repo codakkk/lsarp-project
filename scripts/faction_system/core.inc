@@ -453,7 +453,7 @@ Dialog:ChangeFactionType(playerid, response, listitem, inputtext[])
 	if(!IsNumeric(inputtext) || val < 0 || val >= FACTION_TYPE_LAST)
 		return Dialog_Show(playerid, ChangeFactionType, DIALOG_STYLE_INPUT, "Tipo Fazione", "{FF0000}Il tipo inserito non è valido!\n{FFFFFF}Inserisci il nuovo tipo per la fazione\nTipo Attuale: %d.\nTipi: 0 - %d", "Modifica", "Annulla", Faction_GetType(factionid), FACTION_TYPE_LAST-1);
 	Faction_SetType(factionid, val);
-	SendMessageToAdmins(true, COLOR_ADMIN, "AdmCmd: %s (%d) ha modificato il tipo della fazione %d. Nuovo tipo: %d", Account_GetName(playerid), playerid, factionid, val);
+	SendMessageToAdmins(true, COLOR_ADMINCMD, "AdmCmd: %s (%d) ha modificato il tipo della fazione %d. Nuovo tipo: %d", Account_GetName(playerid), playerid, factionid, val);
 	return 1;
 }
 

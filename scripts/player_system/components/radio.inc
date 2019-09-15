@@ -123,6 +123,13 @@ stock Radio_SendTraceTrigger(frequency)
     return 1;
 }
 
+flags:radiocmds(CMD_USER);
+CMD:radiocmds(playerid, params[])
+{
+	SendClientMessage(playerid, -1, "[RADIO] (/r)adio (/freq)uenza /radiolow (/rlow) /rtrace");
+	return 1;
+}
+
 flags:frequenza(CMD_ALIVE_USER);
 CMD:frequenza(playerid, params[])
 {
@@ -166,7 +173,7 @@ CMD:radio(playerid, params[])
 	format(str, sizeof(str), "(Radio) %s dice: %s", Character_GetRolePlayName(playerid), params);
     ProxDetector(playerid, 15.0, str, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false, false);
     
-    SendMessageToRadio(playerid, frequency, COLOR_YELLOW, "** [CH: %d] %s: %s", frequency, Character_GetRolePlayName(playerid), params);	
+    SendMessageToRadio(playerid, frequency, 0xFFEC8BFF, "** [CH: %d] %s: %s", frequency, Character_GetRolePlayName(playerid), params);	
     return 1;
 }
 alias:radio("r");

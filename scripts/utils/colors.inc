@@ -15,8 +15,8 @@
 #define COLOR_BIZ					(0x33CCFFFF)
 #define COLOR_GREY	   				(0xAFAFAFFF)
 #define COLOR_LIGHTBLUE	    		(0xA9C4E4FF)
-#define COLOR_SENDPM				(0xE5C43EFF)
-#define COLOR_RECEIVEPM				(0xffdb18AA)
+#define COLOR_SENDPM				(0xeee854FF)
+#define COLOR_RECEIVEPM				(0xeccd2dAA)
 #define COLOR_GREEN 				(0x33AA33AA)
 #define COLOR_MODCHAT		 		(0xE1A400FF)
 #define COLOR_ADMINCHAT	    		(0x876200FF)
@@ -30,3 +30,4 @@
 #define COLOR_RECEIVE_REQUEST       (0xEA7500FF) // Color for the received request message
 #define COLOR_REJECT_REQUEST        (0xEA7500FF)
 #define COLOR_ACCEPT_REQUEST        (0xEA7500FF)
+#define COLOR_ADMINCMD              (0xFF6347FF)

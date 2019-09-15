@@ -18,7 +18,7 @@ CMD:dipartimento(playerid, params[])
 		factionid = Character_GetFaction(i);
 		if(Faction_GetType(factionid) == FACTION_TYPE_POLICE || Faction_GetType(factionid) == FACTION_TYPE_MEDICAL)
 		{
-			SendFormattedMessage(i, 0xF17B91FF, "[%s] %s %s dice: %s", shortName, rankName, Character_GetOOCName(playerid), params);
+			SendFormattedMessage(i, 0xF07A7AFF, "[%s] %s %s dice: %s", shortName, rankName, Character_GetOOCName(playerid), params);
 		}
 	}	
 	return 1;

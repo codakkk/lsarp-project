@@ -108,11 +108,15 @@ hook OnCharacterTryBuy(playerid)
 flags:documenti(CMD_ALIVE_USER);
 CMD:documenti(playerid, params[])
 {
-    SendFormattedMessage(playerid, COLOR_GREEN, "Nome e Cognome: %s", Character_GetOOCName(playerid));
-    SendFormattedMessage(playerid, COLOR_GREEN, "- Patente di guida: %s", Character_HasDriveLicense(playerid) ? ("Si") : ("No"));
-    SendFormattedMessage(playerid, COLOR_GREEN, "- Patente nautica: %s", Character_HasBoatLicense(playerid) ? ("Si") : ("No"));
-    SendFormattedMessage(playerid, COLOR_GREEN, "- Patente di volo: %s", Character_HasFlyLicense(playerid) ? ("Si") : ("No"));
-    SendFormattedMessage(playerid, COLOR_GREEN, "- Porto d'armi: %s", Character_HasWeaponLicense(playerid) ? ("Si") : ("No"));
+    Character_AMe(playerid, "guarda la sua carta d'identità.");
+
+    SendClientMessage(playerid, COLOR_GREEN, "__________Las Venturas ID__________");
+    SendFormattedMessage(playerid, -1, "Nome e Cognome: %s", Character_GetOOCName(playerid));
+    SendFormattedMessage(playerid, -1, "- Patente di guida: %s", Character_HasDriveLicense(playerid) ? ("Si") : ("No"));
+    SendFormattedMessage(playerid, -1, "- Patente nautica: %s", Character_HasBoatLicense(playerid) ? ("Si") : ("No"));
+    SendFormattedMessage(playerid, -1, "- Patente di volo: %s", Character_HasFlyLicense(playerid) ? ("Si") : ("No"));
+    SendFormattedMessage(playerid, -1, "- Porto d'armi: %s", Character_HasWeaponLicense(playerid) ? ("Si") : ("No"));
+    SendClientMessage(playerid, COLOR_GREEN, "___________________________________");
     return 1;
 }
 
@@ -132,12 +136,15 @@ CMD:mostradocumenti(playerid, params[])
     if(!IsPlayerInRangeOfPlayer(playerid, id, 5.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
     
-    Character_CharacterMe(playerid, id, "prende i suoi documenti e li mostra a");
-    SendFormattedMessage(id, COLOR_GREEN, "Nome e Cognome: %s", Character_GetOOCName(playerid));
-    SendFormattedMessage(id, COLOR_GREEN, "- Patente di guida: %s", Character_HasDriveLicense(playerid) ? ("Si") : ("No"));
-    SendFormattedMessage(id, COLOR_GREEN, "- Patente nautica: %s", Character_HasBoatLicense(playerid) ? ("Si") : ("No"));
-    SendFormattedMessage(id, COLOR_GREEN, "- Patente di volo: %s", Character_HasFlyLicense(playerid) ? ("Si") : ("No"));
-    SendFormattedMessage(id, COLOR_GREEN, "- Porto d'armi: %s", Character_HasWeaponLicense(playerid) ? ("Si") : ("No"));
+    Character_CharacterMe(playerid, id, "mostra la sua carta d'identità a");
+
+    SendClientMessage(id, COLOR_GREEN, "__________Las Venturas ID__________");
+    SendFormattedMessage(id, -1, "Nome e Cognome: %s", Character_GetOOCName(playerid));
+    SendFormattedMessage(id, -1, "- Patente di guida: %s", Character_HasDriveLicense(playerid) ? ("Si") : ("No"));
+    SendFormattedMessage(id, -1, "- Patente nautica: %s", Character_HasBoatLicense(playerid) ? ("Si") : ("No"));
+    SendFormattedMessage(id, -1, "- Patente di volo: %s", Character_HasFlyLicense(playerid) ? ("Si") : ("No"));
+    SendFormattedMessage(id, -1, "- Porto d'armi: %s", Character_HasWeaponLicense(playerid) ? ("Si") : ("No"));
+    SendClientMessage(playerid, COLOR_GREEN, "___________________________________");
     return 1;
 }
 alias:mostradocumenti("md");

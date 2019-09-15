@@ -50,6 +50,9 @@ public OnLoadCharacter(playerid)
 	if(cache_num_rows() > 0)
 	{
 		Character_LoadData(playerid);
+
+		SendFormattedMessage(playerid, -1, "SERVER: Benvenuto %s", Character_GetOOCName(playerid));
+		GameTextForPlayerStr(playerid, str_format("Benvenuto~n~~y~~h~%s", Character_GetOOCName(playerid)), 2500, 1);
 	}
 	else KickEx(playerid);
 	return 1;

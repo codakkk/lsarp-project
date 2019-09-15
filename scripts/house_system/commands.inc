@@ -182,6 +182,12 @@ CMD:ahousecmds(playerid, params[])
     return 1;
 }
 
+CMD:housecmds(playerid, params[])
+{
+	SendClientMessage(playerid, .1, "[Casa] /casa ");
+	return 1;
+}
+
 flags:casa(CMD_ALIVE_USER);
 CMD:casa(playerid, params[])
 {	

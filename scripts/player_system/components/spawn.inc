@@ -503,7 +503,8 @@ static ForceFirstSpawnSelection(playerid)
 			new count = Account_GetCharactersCount(playerid);
 			static const characterFirstLoginMoney[] = {30000, 20000, 10000};
 			Character_GiveMoney(playerid, characterFirstLoginMoney[count], "FirstSpawn");
-			SendFormattedMessage(playerid, -1, "(( Ti sono stati dati {85bb65}$%d{FFFFFF} per cominciare. ))", characterFirstLoginMoney[count]);
+			SendFormattedMessage(playerid, -1, "(( Hai ricevuto {85bb65}$%d{FFFFFF} per cominciare la tua esperienza. ))", characterFirstLoginMoney[count]);
+			SendClientMessage(playerid, -1, "Utilizza ({85bb65}/inv{FFFFFF})entario per interagire con il tuo inventario.");
 		}
 		
 		SetPlayerHealth(playerid, 100.0);

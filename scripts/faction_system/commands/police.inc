@@ -237,7 +237,7 @@ CMD:megafono(playerid, params[])
 	if(isnull(params) || strlen(params) >= 256)
 		return SendClientMessage(playerid, COLOR_ERROR, "(/m)egafono <testo>");
 	new String:str = str_format("[%s] o< %s", Character_GetRolePlayName(playerid), params);
-	ProxDetectorStr(playerid, 50.0, str, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW);	
+	ProxDetectorStr(playerid, 50.0, str, 0xFFFF00FF, 0xFFFF00FF, 0xFFFF00FF, 0xFFFF00FF, 0xFFFF00FF);	
 	return 1;
 }
 alias:megafono("m");

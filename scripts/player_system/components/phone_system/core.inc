@@ -214,7 +214,7 @@ hook OnCharacterTalk(playerid, text[])
         if(speakerMode)
             ProxDetectorStr(entityId, 10.0, str_format("[Vivavoce] %s dice: %s", Character_GetRolePlayName(playerid), text), COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false, true);
         else
-            SendFormattedMessage(entityId, -1, "[Telefono] %s dice: %s", Character_GetRolePlayName(playerid), text);
+            SendFormattedMessage(entityId, 0xFFFF00FF, "[Telefono] %s dice: %s", Character_GetRolePlayName(playerid), text);
     }
     else if(Character_GetEmergencyStatus(playerid) == 1)
     {
@@ -436,6 +436,9 @@ stock Character_StartCall(playerid, slotid, textNumber[])
     if(number <= 0 || number > 39999999)
         return SendClientMessage(playerid, COLOR_ERROR, "Il numero inserito non esiste o non è al momento raggiungibile. Riprova più tardi."), 0;
 
+    if(number == playerNumber)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi chiamare il tuo stesso numero.");
+
     UsingPhone{playerid} = true;
     UsingPhoneSlotID[playerid] = slotid;
 
@@ -547,11 +550,14 @@ stock Character_StopCall(playerid, slotid)
     {
         if(entityType == ENTITY_TYPE_PLAYER)
         {
-            new name[32];
-            if(PhoneBook_GetContactName(callingNumber, playerNumber, name))
-                SendFormattedMessage(entityId, COLOR_GREEN, "%s ha chiuso la chiamata.", name);
-            else
-                SendFormattedMessage(entityId, COLOR_GREEN, "%d ha chiuso la chiamata.", playerNumber);
+            if(!Phone_IsOff(entityInv, phoneSlotId))
+            {
+                new name[32];
+                if(PhoneBook_GetContactName(callingNumber, playerNumber, name))
+                    SendFormattedMessage(entityId, COLOR_GREEN, "%s ha chiuso la chiamata.", name);
+                else
+                    SendFormattedMessage(entityId, COLOR_GREEN, "%d ha chiuso la chiamata.", playerNumber);
+            }
 
             if(GetPlayerSpecialAction(entityId) == SPECIAL_ACTION_USECELLPHONE)
             {

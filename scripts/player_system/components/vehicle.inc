@@ -23,8 +23,8 @@ hook OnPlayerEnterCheckpoint(playerid)
 	return 1;
 }
 
-flags:veicolo(CMD_ALIVE_USER);
-CMD:veicolo(playerid, params[])
+flags:vehicle(CMD_ALIVE_USER);
+CMD:vehicle(playerid, params[])
 {
 	if(Character_IsBuyingVehicle(playerid))
 		return 0;
@@ -32,8 +32,10 @@ CMD:veicolo(playerid, params[])
 	new command[16], id, vehicleid = GetPlayerVehicleID(playerid);
 	if(sscanf(params, "s[16]D(-1)", command, id))
 	{
-		SendClientMessage(playerid, COLOR_ERROR, "(/v)eicolo <sicura - parcheggia - motore - (inv)entario - bagagliaio - luci - lista ..");
-		SendClientMessage(playerid, COLOR_ERROR, ".. spawn - despawn - respawn - vendi - rottama>");
+		SendClientMessage(playerid, 0xFFEC8BFF, "USA: (/v)ehicle [azione]");
+		SendClientMessage(playerid, 0xFFEC8BFF, "[Azioni] spawn, parcheggia, vendi, luci, sicura, respawn, motore");
+		SendClientMessage(playerid, 0xFFEC8BFF, "[Azioni] lista, bagagliaio, despawn");
+		SendClientMessage(playerid, 0xFFEC8BFF, "[Elimina] rottama (attenzione: il tuo veicolo verrà venduto definitivamente)");
 		return 0;
 	}
 	if(!strcmp(command, "sicura", true))
@@ -210,7 +212,7 @@ CMD:veicolo(playerid, params[])
 	}
 	return 1;
 }
-alias:veicolo("v");
+alias:vehicle("v");
 
 Dialog:Dialog_SellVehicle(playerid, response, listitem, inputtext[])
 {
@@ -545,7 +547,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 			}
 			if(PRESSED(KEY_NO))
 			{
-				pc_cmd_veicolo(playerid, "sicura");
+				pc_cmd_vehicle(playerid, "sicura");
 			}
 		}
 	}

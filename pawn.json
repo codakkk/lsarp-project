@@ -1,8 +1,8 @@
 {
 	"user": "CodaKKK",
 	"repo": "lsarp-project",
-	"entry": "scripts/lsarp.pwn",
-	"output": "gamemodes/lsarp.amx",
+	"entry": "scripts/test.pwn",
+	"output": "gamemodes/test.amx",
 	"dependencies": [
 		"Zeex/amx_assembly@master",
 		"sampctl/samp-stdlib",

@@ -4,6 +4,8 @@
 static enum _:E_TELEPORT
 {
     ID,
+    Name[32],
+
     Float:EnterX,
     Float:EnterY,
     Float:EnterZ,
@@ -18,7 +20,10 @@ static enum _:E_TELEPORT
     Character,
 
     EnterPickup,
-    ExitPickup
+    Text3D:EnterLabel,
+
+    ExitPickup,
+    Text3D:ExitLabel,
 };
 
 static Map:TeleportsMap;
@@ -26,16 +31,61 @@ static Map:TeleportsMap;
 hook OnGameModeInit()
 {
     TeleportsMap = map_new();
+
+    Teleport_LoadAll();
+    return 1;
+}
+
+hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
+{
+    if(Player_HasHotKeysEnabled(playerid) && Character_IsAlive(playerid))
+	{
+		new elementId, E_ELEMENT_TYPE:type;
+		if(Character_GetNearestPickup(playerid, elementId, type))
+		{
+			if(PRESSED(KEY_YES))
+			{
+				// Should I write an "OnInteract" callback?
+				if(type == ELEMENT_TYPE_TELEPORT)
+				{
+					Character_Enter(playerid);
+				}
+            }
+        }
+    }
+    return 1;
+}
+
+hook OnPlayerPickUpElmPickup(playerid, pickupid, elementId, E_ELEMENT_TYPE:type)
+{
+    if(type != ELEMENT_TYPE_TELEPORT)
+	   return 1;
+    new 
+		String:str;
+    
+	if(Account_GetAdminLevel(playerid) > 1 && Player_IsAdminDuty(playerid))
+    {
+	   str += str_format("~r~Teleport~n~~b~ID: %d~w~~n~", elementId);
+    }
+    new name[32];
+	Teleport_GetName(elementId, name);
+	str += str_format("~g~%s~w~~n~", name);
+	
+	GameTextForPlayerStr(playerid, str, 3000, 3);
     return 1;
 }
 
 flags:teleportcreate(CMD_MODERATOR);
 CMD:teleportcreate(playerid, params[])
 {
+    new name[32];
+    if(sscanf(params, "s[32]", name))
+        return SendClientMessage(playerid, COLOR_ERROR, "/teleportcreate <name>");
+    
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
-    Teleport_Create(x, y, z, GetPlayerVirtualWorld(playerid), Character_GetVirtualWorld(playerid));
-    SendClientMessage(playerid, COLOR_GREEN, "Teleport creato con successo. Usa /teleportedit o /tedit per modificarlo.");
+    Teleport_Create(name, x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
+    SendFormattedMessage(playerid, COLOR_GREEN, "Teleport \"%s\" creato con successo. Usa /teleportedit o /tedit per modificarlo.", name);
     return 1;
 }
 alias:teleportcreate("tcreate");
@@ -48,8 +98,11 @@ CMD:gototeleport(playerid, params[])
     new teleportid = strval(params);
     if(!Teleport_IsValid(teleportid))
         return SendClientMessage(playerid, COLOR_ERROR, "Il teleport inserito non è valido.");
-    new Float:x, Float:y, Float:z, interior = Teleport_GetEnterInterior(teleportid), world = Teleport_GetEnterWorld(teleportid);
-
+    new Float:x, Float:y, Float:z, 
+        interior = Teleport_GetEnterInterior(teleportid), 
+        world = Teleport_GetEnterWorld(teleportid);
+    
+    Teleport_GetEnterPosition(teleportid, x, y, z);
     Streamer_UpdateEx(playerid, x, y, z, world, interior);
 
     SetPlayerPos(playerid, x, y, z);
@@ -64,18 +117,32 @@ CMD:teleportedit(playerid, p[])
     new teleportid, command[16], params[256];
     if(sscanf(p, "ds[16]S()[256]", teleportid, command, params))
     {
-	    SendClientMessage(playerid, COLOR_ERROR, "/teleportedit <teleportid> <enter - exit - faction - player>");
+	    SendClientMessage(playerid, COLOR_ERROR, "/teleportedit <teleportid> <name - enter - exit - faction - player>");
         return 0;
     }
     
     if(!Teleport_IsValid(teleportid))
         return SendClientMessage(playerid, COLOR_ERROR, "Teleport non valido.");
-
-    if(!strcmp(command, "enter", true))
+    if(!strcmp(command, "name", true))
+    {
+        new newName[32];
+        if(sscanf(params, "s[32]", newName))
+            return SendFormattedMessage(playerid, COLOR_ERROR, "/teleportedit %d name <name (max 32 chars.)", teleportid);
+        
+        if(Teleport_SetName(teleportid, newName))
+        {
+            SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il nome del teleport id %d. Nuovo nome: %s", teleportid, newName);
+        }
+        else
+        {
+            SendFormattedMessage(playerid, COLOR_ERROR, "Non è stato possibile settare il nome del teleport id %d.", teleportid);
+        }
+    }
+    else if(!strcmp(command, "enter", true))
     {
         new Float:x, Float:y, Float:z;
         GetPlayerPos(playerid, x, y, z);
-        if(Teleport_SetEnterPosition(teleportid, x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(teleportid)))
+        if(Teleport_SetEnterPosition(teleportid, x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid)))
         {
             SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato la posizione del teleport id %d.", teleportid);
         }
@@ -88,7 +155,7 @@ CMD:teleportedit(playerid, p[])
     {
         new Float:x, Float:y, Float:z;
         GetPlayerPos(playerid, x, y, z);
-        if(Teleport_SetExitPosition(teleportid, x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(teleportid)))
+        if(Teleport_SetExitPosition(teleportid, x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid)))
         {
             SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato la posizione d'uscita del teleport id %d.", teleportid);
         }
@@ -101,13 +168,26 @@ CMD:teleportedit(playerid, p[])
     {
         new factionid;
         if(sscanf(params, "d", factionid))
-            return SendFormattedMessage(playerid, COLOR_ERROR, "/teleportedit %d faction <factionid>", teleportid);
+        {
+            SendFormattedMessage(playerid, COLOR_ERROR, "/teleportedit %d faction <factionid>", teleportid);
+            SendFormattedMessage(playerid, COLOR_GREY, "Usa %d come factionid per rimuovere il vincolo.", INVALID_FACTION_ID);
+            return 0;
+        }
 
-        if(!Faction_IsValid(factionid))
+        if(factionid != INVALID_FACTION_ID && !Faction_IsValid(factionid))
             return SendClientMessage(playerid, COLOR_ERROR, "La fazione inserita non esiste.");
         
         if(Teleport_SetFaction(teleportid, factionid))
-            SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il teleport id %d accessibile alla fazione id %d.", teleportid, factionid);
+        {
+            if(factionid == INVALID_FACTION_ID)
+            {
+                SendFormattedMessage(playerid, COLOR_GREEN, "Hai rimosso il vincolo di fazione al teleport id %d.", teleportid);
+            }
+            else
+            {
+                SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il teleport id %d accessibile alla fazione id %d.", teleportid, factionid);
+            }
+        }
         else
             SendFormattedMessage(playerid, COLOR_ERROR, "Non è stato possibile settare la fazione id %d al teleport id %d.", factionid, teleportid);
     }
@@ -148,12 +228,17 @@ hook function Character_Enter(playerid)
     if(type != ELEMENT_TYPE_TELEPORT)
     {
         new teleportid;
-        new Float:x, Float:y, Float:z;
+        new Float:x, Float:y, Float:z, Float:ex, Float:ey, Float:ez;
         for_map(i : TeleportsMap)
         {
             teleportid = iter_get_key(i);
             Teleport_GetEnterPosition(teleportid, x, y, z);
             if(IsPlayerInRangeOfPoint(playerid, range, x, y, z))
+            {
+                elementid = teleportid;
+                break;
+            }
+            else if(IsPlayerInRangeOfPoint(playerid, range, ex, ey, ez))
             {
                 elementid = teleportid;
                 break;
@@ -167,64 +252,146 @@ hook function Character_Enter(playerid)
         if(vehicleid > 0 && GetPlayerVehicleSeat(playerid) != 0)
             return SendClientMessage(playerid, COLOR_ERROR, "Devi essere il guidatore per poter entrare all'interno dell'edificio.");
         
-        new Float:x, Float:y, Float:z;
-        Teleport_GetEnterPosition(elementid, x, y, z);
+        if(!Player_IsAdminDuty(playerid))
+        {
+            new tfactionid = Teleport_GetFaction(elementid);
+            if(Faction_IsValid(tfactionid) || Teleport_GetCharacter(elementid) != 0)
+            {
+                if(tfactionid != Character_GetFaction(playerid) && Teleport_GetCharacter(elementid) != Character_GetID(playerid))
+                    return SendClientMessage(playerid, COLOR_ERROR, "Non puoi entrare.");
 
-        new interiorid = Teleport_GetExitInterior(elementid);
-        new worldid = Teleport_GetExitWorld(elementid);
-        
+            }
+        }
+
+        new Float:gotoX, Float:gotoY, Float:gotoZ,
+                gotoInterior, gotoWorld;
+
+        {
+            new 
+                Float:x, Float:y, Float:z
+            ;
+            
+            Teleport_GetEnterPosition(elementid, x, y, z);
+            if(IsPlayerInRangeOfPoint(playerid, range, x, y, z))
+            {
+                Teleport_GetExitPosition(elementid, gotoX, gotoY, gotoZ);
+                gotoInterior = Teleport_GetExitInterior(elementid);
+                gotoWorld = Teleport_GetExitWorld(elementid);
+            }
+            else
+            {
+                Teleport_GetExitPosition(elementid, x, y, z);
+                if(IsPlayerInRangeOfPoint(playerid, range, x, y, z))
+                {
+                    Teleport_GetEnterPosition(elementid, gotoX, gotoY, gotoZ);
+                    gotoInterior = Teleport_GetEnterInterior(elementid);
+                    gotoWorld = Teleport_GetEnterWorld(elementid);
+                }
+            }
+        }
+
         if(vehicleid > 0)
         {
-            LinkVehicleToInterior(vehicleid, interiorid);
-            SetVehicleVirtualWorld(vehicleid, worldid);
-            SetVehiclePos(vehicleid, x, y, z);
+            LinkVehicleToInterior(vehicleid, gotoInterior);
+            SetVehicleVirtualWorld(vehicleid, gotoWorld);
+            SetVehiclePos(vehicleid, gotoX, gotoY, gotoZ);
             foreach(new p : Player)
             {
                 if(p == playerid || GetPlayerVehicleID(p) != vehicleid) 
                     continue;
                 
-                Character_SetVirtualWorld(p, worldid);
-                SetPlayerInterior(p, interiorid);
+                Character_SetVirtualWorld(p, gotoWorld);
+                SetPlayerInterior(p, gotoInterior);
             }
         }
         else
         {
-            Character_SetSafePosition(playerid, x, y, z, interiorid, worldid);
+            Character_SetSafePosition(playerid, gotoX, gotoY, gotoZ, gotoInterior, gotoWorld);
         }
-        SetPlayerInterior(playerid, interiorid);
-        Character_SetVirtualWorld(playerid, worldid);
+        SetPlayerInterior(playerid, gotoInterior);
+        Character_SetVirtualWorld(playerid, gotoWorld);
     }
 
     return continue(playerid);
 }
 
-stock Teleport_Create(Float:x, Float:y, Float:z, interior, world)
+stock Teleport_Create(const name[], Float:x, Float:y, Float:z, interior, world)
 {
+    new data[E_TELEPORT];
+    set(data[Name], name);
+    data[EnterX] = x;
+    data[EnterY] = y;
+    data[EnterZ] = z;
+    data[EnterInterior] = interior;
+    data[EnterWorld] = world;
+    data[ExitX] = 0.0;
+    data[ExitY] = 0.0;
+    data[ExitZ] = 0.0;
+    data[ExitInterior] = 0;
+    data[ExitWorld] = 0;
+
+    data[Faction] = INVALID_FACTION_ID;
+    data[Character] = 0;
     inline OnInsert()
     {
-        new data[E_TELEPORT];
         data[ID] = cache_insert_id();
-        data[EnterX] = x;
-        data[EnterY] = y;
-        data[EnterZ] = z;
-        data[EnterInterior] = interior;
-        data[EnterWorld] = world;
-        data[ExitX] = 0.0;
-        data[ExitY] = 0.0;
-        data[ExitZ] = 0.0;
-        data[ExitInterior] = 0;
-        data[ExitWorld] = 0;
-
-        data[Faction] = INVALID_FACTION_ID;
-        data[Character] = 0;
-
-        data[EnterPickup] = Pickup_Create(1007, data[ID], x, y, z, ELEMENT_TYPE_TELEPORT, world, interior);
-        data[ExitPickup] = Pickup_Create(1007, data[ID], data[ExitX], data[ExitY], data[ExitZ], ELEMENT_TYPE_TELEPORT, data[ExitWorld], data[ExitInterior]);
 
         map_add_arr(TeleportsMap, data[ID], data);
+
+        Teleport_CreatePickupAndLabel(data[ID]);
     }
-    MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO teleports (enter_x, enter_y, enter_z, enter_interior, enter_world, exit_x, exit_y, exit_z, exit_interior, exit_world, faction_id, character_id) VALUES('%f', '%f', '%f', '%d', '%d', '0.0', '0.0', '0.0', '0', '0', '%d', 0)", 
-    x, y, z, interior, world, INVALID_FACTION_ID);
+    MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO teleports (name, enter_x, enter_y, enter_z, enter_interior, enter_world, exit_x, exit_y, exit_z, exit_interior, exit_world, faction_id, character_id) VALUES('%e', '%f', '%f', '%f', '%d', '%d', '0.0', '0.0', '0.0', '0', '0', '%d', 0)", 
+    name, x, y, z, interior, world, INVALID_FACTION_ID);
+}
+
+static stock bool:Teleport_CreatePickupAndLabel(teleportid)
+{
+    if(!Teleport_IsValid(Teleport_GetID(teleportid)))
+        return false;
+    new Text3D:text, pickupid;
+
+    pickupid = map_get(TeleportsMap, Teleport_GetID(teleportid), EnterPickup);
+    if(IsValidDynamicPickup(pickupid))
+        Pickup_Destroy(pickupid);
+
+    text = Text3D:map_get(TeleportsMap, Teleport_GetID(teleportid), EnterLabel);
+    if(IsValidDynamic3DTextLabel(text))
+        DestroyDynamic3DTextLabel(text);
+
+    pickupid = map_get(TeleportsMap, Teleport_GetID(teleportid), ExitPickup);
+    if(IsValidDynamicPickup(pickupid))
+        Pickup_Destroy(pickupid);
+
+    text = Text3D:map_get(TeleportsMap, Teleport_GetID(teleportid), ExitLabel);
+    if(IsValidDynamic3DTextLabel(text))
+        DestroyDynamic3DTextLabel(text);
+    
+    new 
+        Float:x, Float:y, Float:z, 
+        world = Teleport_GetEnterWorld(teleportid),
+        interior = Teleport_GetEnterInterior(teleportid),
+        name[32];
+
+    Teleport_GetName(teleportid, name);
+
+    Teleport_GetEnterPosition(teleportid, x, y, z);
+    pickupid = Pickup_Create(1239, Teleport_GetID(teleportid), x, y, z, ELEMENT_TYPE_TELEPORT, world, interior);
+    text = CreateDynamic3DTextLabel(name, COLOR_GREY, x, y, z + 0.55, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, world, interior, -1, STREAMER_3D_TEXT_LABEL_SD);
+
+    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterPickup, pickupid);
+    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterLabel, text);
+
+    Teleport_GetExitPosition(teleportid, x, y, z);
+    world = Teleport_GetExitWorld(teleportid);
+    interior = Teleport_GetExitInterior(teleportid);
+
+    pickupid = Pickup_Create(1239, Teleport_GetID(teleportid), x, y, z, ELEMENT_TYPE_TELEPORT, world, interior);
+    text = CreateDynamic3DTextLabel(name, COLOR_GREY, x, y, z + 0.55, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, world, interior, -1, STREAMER_3D_TEXT_LABEL_SD);
+    
+    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitPickup, pickupid);
+    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitLabel, text);
+
+    return true;
 }
 
 stock bool:Teleport_IsValid(id)
@@ -243,17 +410,15 @@ stock bool:Teleport_SetEnterPosition(teleportid, Float:x, Float:y, Float:z, inte
 {
     if(!Teleport_IsValid(teleportid))
         return false;
-    if(!IsValidDynamicPickup(map_get(TeleportsMap, teleportid, EnterPickup)))
-        return false;
-    
     mysql_tquery_f(gMySQL, "UPDATE teleports SET enter_x = '%f', enter_y = '%f', enter_z = '%f', enter_world = '%d', enter_interior = '%d' WHERE id = '%d'", x, y, z, world, interior, Teleport_GetID(teleportid));
-    new pickupid = Pickup_Create(1239, Teleport_GetID(teleportid), x, y, z, ELEMENT_TYPE_TELEPORT, world, interior);
+    
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterX, x);
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterY, z);
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterZ, z);
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterInterior, interior);
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterWorld, world);
-    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterPickup, pickupid);
+    
+    Teleport_CreatePickupAndLabel(Teleport_GetID(teleportid));
     return true;
 }
 
@@ -281,20 +446,16 @@ stock bool:Teleport_SetExitPosition(teleportid, Float:x, Float:y, Float:z, inter
 {
     if(!Teleport_IsValid(teleportid))
         return false;
-    
-    if(!IsValidDynamicPickup(map_get(TeleportsMap, teleportid, ExitPickup)))
-        return false;
-    
+
     mysql_tquery_f(gMySQL, "UPDATE teleports SET exit_x = '%f', exit_y = '%f', exit_z = '%f', exit_world = '%d', exit_interior = '%d' WHERE id = '%d'", x, y, z, world, interior, Teleport_GetID(teleportid));
     
-    new pickupid = Pickup_Create(1007, Teleport_GetID(teleportid), x, y, z, ELEMENT_TYPE_TELEPORT, world, interior);
-    
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitX, x);
-    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitY, z);
+    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitY, y);
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitZ, z);
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitInterior, interior);
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitWorld, world);
-    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitPickup, pickupid);
+
+    Teleport_CreatePickupAndLabel(Teleport_GetID(teleportid));
     return true;
 }
 
@@ -320,7 +481,7 @@ stock Teleport_GetExitWorld(teleportid)
 
 stock bool:Teleport_SetFaction(teleportid, factionid)
 {
-    if(!Teleport_IsValid(Teleport_GetID(teleportid)) || !Faction_IsValid(factionid))
+    if(!Teleport_IsValid(Teleport_GetID(teleportid)) || (factionid != INVALID_FACTION_ID && !Faction_IsValid(factionid)))
         return false;
     mysql_tquery_f(gMySQL, "UPDATE teleports SET faction_id = '%d' WHERE id = '%d'", factionid, Teleport_GetID(teleportid));
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), Faction, factionid);
@@ -356,6 +517,28 @@ stock Teleport_GetCharacter(teleportid)
     return map_get(TeleportsMap, Teleport_GetID(teleportid), Character);
 }
 
+stock bool:Teleport_GetName(teleportid, name[])
+{
+    if(!Teleport_IsValid(teleportid))
+        return false;
+    new Iter:iter = map_iter_at(TeleportsMap, Teleport_GetID(teleportid));
+    iter_get_md_arr(iter, {Name}, name, 32);
+    return true;
+}
+
+stock bool:Teleport_SetName(teleportid, name[])
+{
+    if(!Teleport_IsValid(teleportid))
+        return false;
+    new Iter:iter = Iter:map_iter_at(TeleportsMap, Teleport_GetID(teleportid));
+	iter_set_cells(iter, Name, name, 32);
+
+    mysql_tquery_f(gMySQL, "UPDATE teleports SET name = '%e' WHERE id = '%d'", name, Teleport_GetID(teleportid));
+
+    Teleport_CreatePickupAndLabel(Teleport_GetID(teleportid));
+    return true;
+}
+
 stock Teleport_LoadAll()
 {
     inline OnLoad()
@@ -365,6 +548,7 @@ stock Teleport_LoadAll()
         for(new i = 0; i < rows; ++i)
         {
             cache_get_value_name_int(i, "id", data[ID]);
+            cache_get_value_name(i, "name", data[Name]);
             cache_get_value_name_float(i, "enter_x", data[EnterX]);
             cache_get_value_name_float(i, "enter_y", data[EnterY]);
             cache_get_value_name_float(i, "enter_z", data[EnterZ]);
@@ -375,14 +559,16 @@ stock Teleport_LoadAll()
             cache_get_value_name_float(i, "exit_z", data[ExitZ]);
             cache_get_value_name_int(i, "exit_interior", data[ExitInterior]);
             cache_get_value_name_int(i, "exit_world", data[ExitWorld]);
-
-            data[EnterPickup] = Pickup_Create(1007, data[ID], data[EnterX], data[EnterY], data[EnterZ], ELEMENT_TYPE_TELEPORT, data[EnterWorld], data[EnterInterior]);
-            data[ExitPickup] = Pickup_Create(1007, data[ID], data[ExitX], data[ExitY], data[ExitZ], ELEMENT_TYPE_TELEPORT, data[ExitWorld], data[ExitInterior]);
+            
+            cache_get_value_name_int(i, "faction_id", data[Faction]);
+            cache_get_value_name_int(i, "character_id", data[Character]);
 
             map_add_arr(TeleportsMap, data[ID], data);
+
+            Teleport_CreatePickupAndLabel(data[ID]);
         }
 
-        printf("%d teleports loaded.");
+        printf("%d teleports loaded.", rows);
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM teleports");
     return 1;

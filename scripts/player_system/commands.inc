@@ -27,6 +27,18 @@ CMD:info(playerid, params[])
 }
 alias:info("stats");
 
+flags:time(CMD_ALIVE_USER);
+CMD:time(playerid, params[])
+{
+	new h, m, s;
+	gettime(h, m, s);
+	new String:str = str_format("~g~*~w~%d:%d:%d~g~*~w~~n~", h, m, s);
+	if(Character_GetJailTime(playerid) > 0)
+		str += str_format("Tempo jail rimanente: %d sec.", Character_GetJailTime(playerid));
+	GameTextForPlayerStr(playerid, str, 2000, 1);
+	Character_AMe(playerid, "controlla l'orario.");
+	return 1;
+}	
 flags:tog(CMD_USER);
 CMD:tog(playerid, params[])
 {
@@ -47,12 +59,12 @@ CMD:tog(playerid, params[])
 		Player_SetHUDEnabled(playerid, !Player_HasHUDEnabled(playerid));
 		if(Player_HasHUDEnabled(playerid))
 		{
-			ShowClockTextDraw(playerid);
+			//ShowClockTextDraw(playerid);
 			SetHealthBarVisible(playerid, true);
 		}
 		else
 		{
-			HideClockTextDraw(playerid);
+			//HideClockTextDraw(playerid);
 			SetHealthBarVisible(playerid, false);
 
 		}
@@ -138,29 +150,20 @@ CMD:afk(playerid, params[])
 flags:aiuto(CMD_USER);
 CMD:aiuto(playerid, params[])
 {
-    SendClientMessage(playerid, -1, "[GENERALE]: /info - (/dom)anda - /aiutami - /afk - /hotkeys - /id - /dp - (/pub)blicita");
-    SendClientMessage(playerid, -1, "[GENERALE]: /arma - /oggetto - /onduty - /report - /noads - /lostitems");
-	SendClientMessage(playerid, -1, "[GENERALE]: /casa - /biz - /cancello - /rimuovimaschera");
-	SendClientMessage(playerid, -1, "[GENERALE]: /compra - /annulla - /accetta - /rifiuta - /rimuovi");
-	SendClientMessage(playerid, -1, "[GENERALE]: /stilechat - /stilelotta - /stilecamminata - /sconosciuto - /blindfold");
-	SendClientMessage(playerid, -1, "[GENERALE]: /deposita - /ritira - /bonifico - /bilancio - /zpoints");
-	SendClientMessage(playerid, -1, "[GENERALE]: /rifornisci - /stoprifornimento - /documenti - /mostradocumenti");
-    SendClientMessage(playerid, -1, "[ALTRO]: /chatcmds - /invcmds - /vcmds - /furniturecmds - /cellcmds");
-	SendClientMessage(playerid, -1, "[ALTRO]: (/cambiapass)word - /fcmds - /animlist - /tcmds - /acmds");
-	new factionid = Character_GetFaction(playerid);
-	if(Faction_IsValid(factionid))
-	{
-		if(Faction_GetType(factionid) == FACTION_TYPE_POLICE || 
-			Faction_GetType(factionid) == FACTION_TYPE_MEDICAL ||
-			Faction_GetType(factionid) == FACTION_TYPE_GOVERNMENT)
-		{
-			SendClientMessage(playerid, COLOR_SLATEBLUE, "[FAZIONE]: (/f)azione - /fcmds");
-		}
-	}
+	SendClientMessage(playerid, 0xCCE6E6FF, "_______________www.lv-rp.it_______________");
+	SendClientMessage(playerid, 0xCCE6E6FF, "[ACCOUNT] /stats /inv /oggetto /hotkeys /lostitems /zpoints (/cambiapass)word");
+    SendClientMessage(playerid, 0xCCE6E6FF, "[GENERALE]: /paga /time /compra /id /cellinfo /chiama /bussa /blindfold /sa /animlist");
+    SendClientMessage(playerid, 0xCCE6E6FF, "[GENERALE]: (/pub)blicita /documenti /report /stilechat /stilelotta /stilecamminata");
+	SendClientMessage(playerid, 0xCCE6E6FF, "[CHAT]: (/w)hisper (/o)(OOC) (/s)hout /me /b(OOC) /do /cw /low /pm(OOC) /r /melow /ame /dolow");
+	SendClientMessage(playerid, 0xCCE6E6FF, "[BANCA]: /bilancio /ritira /deposita /bonifico /ritirastipendio");
+	SendClientMessage(playerid, 0xCCE6E6FF, "[HELP]: /cellcmds /housecmds (/v)ehicle /furniturecmds /invcmds /fcmds");
+	SendClientMessage(playerid, 0xCCE6E6FF, "[HELP]: /radiocmds /businesscmds (/dom)anda /aiutami /aiuto");
+	SendClientMessage(playerid, 0xCCE6E6FF, "[TOG/BLOCK]: /tog /tog (f)(hud)(pm)(ooc) /tog all /noads /blockb /blockpm /clearchat");
 	if(Account_GetAdminLevel(playerid) > 0)
 		SendClientMessage(playerid, COLOR_GREEN, "[TESTER]: /tcmds");
 	if(Account_GetAdminLevel(playerid) > 1)
 		SendClientMessage(playerid, COLOR_GREEN, "[ADMIN]: /acmds");
+	SendClientMessage(playerid, 0xCCE6E6FF, "__________________________________________");
     return 1;
 }
 alias:aiuto("cmds", "help", "comandi");
