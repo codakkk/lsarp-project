@@ -27,7 +27,7 @@ stock Character_PayDay(playerid)
 		newPlayerMoney = 0, 
 		interests = 0,
 		paycheck = 0,
-		experiencePerLevel = (Account_GetLevel(playerid)+1) * 2,
+		experiencePerLevel = (Character_GetLevel(playerid)+1) * 2,
 		currentPremiumLevel = Account_GetPremiumLevel(playerid)
 	;
 
@@ -58,32 +58,20 @@ stock Character_PayDay(playerid)
 	}
 
 
-	if(Account_GetLevel(playerid) <= 3)
+	if(Character_GetLevel(playerid) <= 3)
 	{
 		static const payCheck[] = {2000, 1000, 500};
-		new level = Account_GetLevel(playerid) - 1;
+		new level = Character_GetLevel(playerid) - 1;
 		newPlayerMoney = payCheck[level];
 		paycheck += newPlayerMoney;
 	}
 
-	Account_AddExperience(playerid, 1);
-	if(Account_GetExperience(playerid) > experiencePerLevel)
+	Character_AddExperience(playerid, 1);
+	if(Character_GetExperience(playerid) > experiencePerLevel)
 	{
-		Account_IncreaseLevel(playerid, 1);
-	   	Account_SetExperience(playerid, 0);
+		Character_IncreaseLevel(playerid, 1);
+	   	Character_SetExperience(playerid, 0);
 	}
-
-	/*if(Account_GetExperience(playerid) < experiencePerLevel)
-    {
-	   //SendFormattedMessage(playerid, COLOR_YELLOW, "Livello attuale: %d. Attualmente hai %d/%d punti esperienza.", Account_GetLevel(playerid), Account_GetExperience(playerid), experiencePerLevel);
-    }
-    else
-    {
-	   Account_IncreaseLevel(playerid, 1);
-	   Account_SetExperience(playerid, 0);
-	   experiencePerLevel = (Account_GetLevel(playerid)+1) * 2;
-	   //SendFormattedMessage(playerid, COLOR_YELLOW, "Congratulazioni! Hai raggiunto il livello %d. Per il prossimo livello hai bisogno di %d punti esperienza.", Account_GetLevel(playerid), experiencePerLevel);
-    }*/
 
 	if(Character_HasBuildingKey(playerid))
 	{

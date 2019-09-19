@@ -15,6 +15,15 @@ hook OnPlayerClearData(playerid)
 	return 1;
 }
 
+hook OnPlayerUpdate(playerid)
+{
+	if(!Player_HasHUDEnabled(playerid))
+	{
+		SetHealthBarVisible(playerid, false);
+	}
+	return 1;
+}
+
 // CHANGE ME/AME COLOR
 
 
@@ -32,55 +41,73 @@ CMD:time(playerid, params[])
 {
 	new h, m, s;
 	gettime(h, m, s);
-	new String:str = str_format("~g~*~w~%d:%d:%d~g~*~w~~n~", h, m, s);
+	new String:str = str_format("~g~°~w~%d:%d:%d~g~°~w~~n~", h, m, s);
 	if(Character_GetJailTime(playerid) > 0)
 		str += str_format("Tempo jail rimanente: %d sec.", Character_GetJailTime(playerid));
 	GameTextForPlayerStr(playerid, str, 2000, 1);
 	Character_AMe(playerid, "controlla l'orario.");
 	return 1;
-}	
+}
+
+
+
 flags:tog(CMD_USER);
 CMD:tog(playerid, params[])
 {
-	if(isnull(params) || strlen(params) > 16)
-		return SendClientMessage(playerid, COLOR_ERROR, "/tog <(f)chat - hud - pm - ooc>");
-	if(!strcmp(params, "fchat", true) || !strcmp(params, "f", true))
+	if(!isnull(params))
 	{
-		if(Character_GetFaction(playerid) == INVALID_FACTION_ID)
-			return SendClientMessage(playerid, COLOR_ERROR, "Non fai parte di una fazione.");
-		Character_SetFactionOOCEnabled(playerid, !Character_IsFactionOOCEnabled(playerid));
-		if(Character_IsFactionOOCEnabled(playerid))
-			SendClientMessage(playerid, COLOR_GREEN, "Hai attivato la chat fazione OOC.");
-		else
-			SendClientMessage(playerid, COLOR_GREEN, "Hai disattivato la chat fazione OOC.");
-	}
-	else if(!strcmp(params, "hud", true))
-	{
-		Player_SetHUDEnabled(playerid, !Player_HasHUDEnabled(playerid));
-		if(Player_HasHUDEnabled(playerid))
-		{
-			//ShowClockTextDraw(playerid);
-			SetHealthBarVisible(playerid, true);
-		}
-		else
-		{
-			//HideClockTextDraw(playerid);
-			SetHealthBarVisible(playerid, false);
 
+		if(!strcmp(params, "fchat", true))
+		{
+			if(Character_GetFaction(playerid) == INVALID_FACTION_ID)
+				return SendClientMessage(playerid, COLOR_ERROR, "Non fai parte di una fazione.");
+			Character_SetFactionOOCEnabled(playerid, !Character_IsFactionOOCEnabled(playerid));
+			if(Character_IsFactionOOCEnabled(playerid))
+				SendClientMessage(playerid, COLOR_GREEN, "Hai attivato la chat fazione OOC.");
+			else
+				SendClientMessage(playerid, COLOR_GREEN, "Hai disattivato la chat fazione OOC.");
+			return 1;
+		}
+		else if(!strcmp(params, "hud", true))
+		{
+			Player_SetHUDEnabled(playerid, !Player_HasHUDEnabled(playerid));
+			if(Player_HasHUDEnabled(playerid))
+			{
+				SetHealthBarVisible(playerid, true);
+				if(IsPlayerInAnyVehicle(playerid) && GetPlayerVehicleSeat(playerid) == 0 && !IsABike(GetPlayerVehicleID(playerid)))
+					TextDraw_ShowFuel(playerid, true);
+			}
+			else
+			{
+				SetHealthBarVisible(playerid, false);
+				TextDraw_ShowFuel(playerid, false);
+			}
+			return 1;
+		}
+		else if(!strcmp(params, "pm", true))
+		{
+			pc_cmd_blockpm(playerid, "all");
+			return 1;
+		}
+		else if(!strcmp(params, "ooc", true))
+		{
+			pc_cmd_blockb(playerid, "all");
+			return 1;
+		}
+		else if(!strcmp(params, "cheat", true))
+		{
+			Player_SetCheatAlertsEnabled(playerid, !Player_HasCheatAlertsEnabled(playerid));
+			if(Player_HasCheatAlertsEnabled(playerid))
+				SendClientMessage(playerid, COLOR_GREEN, "Hai abilitato gli avvisi cheat.");
+			else
+				SendClientMessage(playerid, COLOR_GREEN, "Hai disattivato gli avvisi cheat.");
+			return 1;
 		}
 	}
-	else if(!strcmp(params, "pm", true))
-	{
-		pc_cmd_blockpm(playerid, "all");
-	}
-	else if(!strcmp(params, "ooc", true))
-	{
-		pc_cmd_blockb(playerid, "all");
-	}
-	else
-	{
-		return SendClientMessage(playerid, COLOR_ERROR, "/tog <fchat - hud - pm - ooc>");
-	}
+
+	SendClientMessage(playerid, COLOR_ERROR, "/tog <fchat - hud - pm - ooc>");
+	if(Account_GetAdminLevel(playerid) > 1)
+		SendClientMessage(playerid, COLOR_GREY, "Admin: cheat");
 	return 1;
 }
 
@@ -232,7 +259,7 @@ CMD:id(playerid, params[])
 		id = strval(params);
 		if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 			return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
-		SendFormattedMessage(playerid, -1, "%s (%d) - Livello: %d", Character_GetOOCName(id), id, Account_GetLevel(id));
+		SendFormattedMessage(playerid, -1, "%s (%d) - Livello: %d", Character_GetOOCName(id), id, Character_GetLevel(id));
 	}
 	else
 	{
@@ -243,7 +270,7 @@ CMD:id(playerid, params[])
 				continue;
 			if(strfind(Character_GetOOCName(i), params, true) != -1)
 			{
-				SendFormattedMessage(playerid, -1, "%s (%d) - Livello: %d", Character_GetOOCName(i), i, Account_GetLevel(i));
+				SendFormattedMessage(playerid, -1, "%s (%d) - Livello: %d", Character_GetOOCName(i), i, Character_GetLevel(i));
 				c++;
 			}
 		}

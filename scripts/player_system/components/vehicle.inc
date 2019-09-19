@@ -432,7 +432,7 @@ hook OnCharacterLoad(playerid)
 
 hook OnPlayerClearData(playerid)
 {
-	PlayerTextDrawHide(playerid, pVehicleFuelText[playerid]);	
+	TextDraw_ShowFuel(playerid, false);
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
@@ -501,7 +501,7 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
 			if(!IsABike(vehicleid))
 			{
 				Internal_UpdateFuelText(playerid, vehicleid);
-				PlayerTextDrawShow(playerid, pVehicleFuelText[playerid]);
+				TextDraw_ShowFuel(playerid, true);
 			}
 			if(Vehicle_GetOwnerID(vehicleid) > 0)
 			{
@@ -520,7 +520,14 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
 	}
 	else if(oldstate == PLAYER_STATE_DRIVER && newstate != PLAYER_STATE_DRIVER)
 	{
-		PlayerTextDrawHide(playerid, pVehicleFuelText[playerid]);
+		TextDraw_ShowFuel(playerid, false);
+	}
+	if(newstate == PLAYER_STATE_PASSENGER)
+	{
+		if(Character_GetWeapon(playerid) == 23 || Character_GetWeapon(playerid) == 24 || Character_GetWeapon(playerid) == 26 || Character_GetWeapon(playerid) == 27)
+		{
+			SetPlayerArmedWeapon(playerid, 0);
+		}
 	}
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
@@ -604,7 +611,7 @@ static Internal_UpdateFuelText(playerid, vehicleid)
 {
 	new string[18];
 	format(string, sizeof(string), "~y~%0.1f%s", Vehicle_GetFuel(vehicleid), "%");
-	PlayerTextDrawSetString(playerid, pVehicleFuelText[playerid], string);
+	TextDraw_SetFuelText(playerid, string);
 }
 
 stock Character_GetVehicleCount(playerid)

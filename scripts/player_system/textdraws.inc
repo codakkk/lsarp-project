@@ -3,10 +3,12 @@
 
 new
 	PlayerText:pMoneyTD[MAX_PLAYERS],
-	PlayerText:PlayerInfoText[MAX_PLAYERS],
-	PlayerText:pVehicleFuelText[MAX_PLAYERS],
 	PlayerText:JailTimePlayerText[MAX_PLAYERS],
 	PlayerText:pDeathTextDraw[MAX_PLAYERS]
+;
+static 
+	PlayerText:pVehicleFuelText[MAX_PLAYERS],
+	PlayerText:PlayerInfoText[MAX_PLAYERS], bool:InfoBoxShown[MAX_PLAYERS char]
 ;
 
 hook OnPlayerConnect(playerid)
@@ -59,5 +61,60 @@ hook OnPlayerConnect(playerid)
 	PlayerTextDrawSetProportional(playerid, pDeathTextDraw[playerid], 1);
 	PlayerTextDrawSetSelectable(playerid, pDeathTextDraw[playerid], 0);
 	
+	return 1;
+}
+
+stock TextDraw_ShowFuel(playerid, bool:show)
+{
+	if(show && Player_HasHUDEnabled(playerid))
+		PlayerTextDrawShow(playerid, pVehicleFuelText[playerid]);
+	else
+		PlayerTextDrawHide(playerid, pVehicleFuelText[playerid]);
+	return 1;
+}
+
+stock TextDraw_SetFuelText(playerid, text[])
+{
+	PlayerTextDrawSetString(playerid, pVehicleFuelText[playerid], text);
+	return 1;
+}
+
+stock Player_Info(playerid, text[], bool:forced = false, time = 2500)
+{
+	if(InfoBoxShown{playerid} == true && !forced)
+		return 1;
+
+	PlayerTextDrawHide(playerid, PlayerInfoText[playerid]);
+	PlayerTextDrawSetString(playerid, PlayerInfoText[playerid], text);
+	PlayerTextDrawShow(playerid, PlayerInfoText[playerid]);
+
+	SetTimerEx("DeleteInfoBox", time, false, "d", playerid);
+	InfoBoxShown{playerid} = true;
+
+	return 1;
+}
+
+stock Player_InfoStr(playerid, String:string, bool:forced = false, time = 2500)
+{
+	/*new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
+	amx_to_ref(var, ptr);
+	str_get(string, ptr[0], .size=size);*/
+
+	static buffer[256];
+	str_get(string, buffer);
+	new result = Player_Info(playerid, /*ptr[0]*/ buffer, forced, time);
+
+	/*amx_free(var);
+	amx_delete(var);*/
+	return result;
+}
+
+forward DeleteInfoBox(playerid); 
+public DeleteInfoBox(playerid)
+{
+	PlayerTextDrawHide(playerid, PlayerInfoText[playerid]);
+
+	InfoBoxShown{playerid} = false;
+
 	return 1;
 }

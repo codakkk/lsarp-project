@@ -5,7 +5,8 @@ static enum e_Bit1_OptionsData
     e_pHotKeys,
 	e_pInvMode, // 0: Dialog - 1: Chat
 	e_pToggleHUD,
-	e_pVehMode // 0: Dialog - 1: Chat
+	e_pVehMode, // 0: Dialog - 1: Chat
+	e_pCheatAlerts
 };
 static BitArray:OptionsBitSet[e_Bit1_OptionsData]<MAX_PLAYERS>;
 
@@ -111,4 +112,14 @@ stock Player_SetVehModeEnabled(playerid, bool:enable)
 stock Player_HasVehModeEnabled(playerid)
 {
 	return Bit_Get(OptionsBitSet[e_pVehMode], playerid);
+}
+
+stock Player_SetCheatAlertsEnabled(playerid, bool:enable)
+{
+	Bit_Set(OptionsBitSet[e_pCheatAlerts], playerid, !enable);
+}
+
+stock Player_HasCheatAlertsEnabled(playerid)
+{
+	return !Bit_Get(OptionsBitSet[e_pCheatAlerts], playerid);
 }

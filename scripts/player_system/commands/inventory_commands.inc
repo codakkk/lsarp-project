@@ -87,9 +87,10 @@ CMD:depositadenaro(playerid, params[])
 }
 alias:depositadenaro("depden", "depositaden", "depdenaro");
 
-flags:depositaarma(CMD_ALIVE_USER);
+flags:depositaarma(CMD_ALIVE_USER | CMD_SLOW_MODE);
 CMD:depositaarma(playerid, params[])
 {
+
 	if(!Character_CanInteract(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	
@@ -121,6 +122,7 @@ CMD:depositaarma(playerid, params[])
 		Player_InfoStr(playerid, str_format("Hai depositato: ~g~%s~w~~n~nell'inventario~n~con ~y~%d~w~ munizioni.", Weapon_GetName(itemid), ammo), true);
 	}
 	Character_RemoveWeapon(playerid, itemid);
+	SetPlayerArmedWeapon(playerid, 0);
 	return 1;
 }
 alias:depositaarma("dep");

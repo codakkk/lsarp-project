@@ -242,7 +242,7 @@ static Character_Spawn(playerid)
 	AC_SetPlayerHealth(playerid, 100.0);
 	AC_SetPlayerArmour(playerid, 0.0);
 
-	Character_FreezeForTime(playerid, 2000);
+	Character_FreezeForTime(playerid, 3000);
 
 	if(IsFirstSpawn{playerid}) // First Login/Spawn
     {
@@ -438,9 +438,10 @@ static Character_LoadSpawnData(playerid)
 	return 1;
 }
 
-timer LoadCharacterDataAfterTime[2000](playerid)
+timer LoadCharacterDataAfterTime[1000](playerid)
 {
 	CallLocalFunction("OnCharacterLateLoad", "d", playerid);
+	SetCameraBehindPlayer(playerid);
 }
 
 /*Dialog:Dialog_SelectFirstSpawn(playerid, response, listitem, inputtext[])

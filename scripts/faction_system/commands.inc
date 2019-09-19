@@ -20,7 +20,8 @@ CMD:dipartimento(playerid, params[])
 		{
 			SendFormattedMessage(i, 0xF07A7AFF, "[%s] %s %s dice: %s", shortName, rankName, Character_GetOOCName(playerid), params);
 		}
-	}	
+	}
+	ProxDetector(playerid, 15.0, "[Radio] %s dice: %s", COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false, false);
 	return 1;
 }
 alias:dipartimento("d");
@@ -75,7 +76,7 @@ CMD:fcreate(playerid, params[])
 
 	Faction_Create(name, shortName, type);
 
-	SendMessageToAdmins(true, COLOR_YELLOW, "[ADMIN-ALERT]: %s (%d) ha creato una nuova fazione. (Tipo: %d)", Account_GetName(playerid), playerid, type);
+	SendMessageToAdmins(true, COLOR_YELLOW, "AdmAlert: %s (%d) ha creato una nuova fazione. (Tipo: %d)", Account_GetName(playerid), playerid, type);
 	Log(Account_GetName(playerid), "", "/fcreate");
 	return 1;
 }

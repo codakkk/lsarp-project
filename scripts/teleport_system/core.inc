@@ -18,6 +18,7 @@ static enum _:E_TELEPORT
     ExitWorld,
     Faction,
     Character,
+    AllowVehicles,
 
     EnterPickup,
     Text3D:EnterLabel,
@@ -75,6 +76,22 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementId, E_ELEMENT_TYPE:type)
     return 1;
 }
 
+stock bool:Teleport_AllowVehicles(teleportid, bool:allow)
+{
+    if(!Teleport_IsValid(teleportid))
+        return false;
+    mysql_tquery_f(gMySQL, "UPDATE `teleports` SET allow_vehicles = '%d' WHERE id = '%d'", allow ? 1 : 0, Teleport_GetID(teleportid));
+    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), AllowVehicles, allow);
+    return true;
+}
+
+stock bool:Teleport_DoesAllowVehicles(teleportid)
+{
+    if(!Teleport_IsValid(teleportid))
+        return false;
+    return map_get(TeleportsMap, Teleport_GetID(teleportid), AllowVehicles) > 0 ? true : false;
+}
+
 flags:teleportcreate(CMD_MODERATOR);
 CMD:teleportcreate(playerid, params[])
 {
@@ -117,7 +134,7 @@ CMD:teleportedit(playerid, p[])
     new teleportid, command[16], params[256];
     if(sscanf(p, "ds[16]S()[256]", teleportid, command, params))
     {
-	    SendClientMessage(playerid, COLOR_ERROR, "/teleportedit <teleportid> <name - enter - exit - faction - player>");
+	    SendClientMessage(playerid, COLOR_ERROR, "/teleportedit <teleportid> <name - enter - exit - faction - player - delete>");
         return 0;
     }
     
@@ -214,6 +231,35 @@ CMD:teleportedit(playerid, p[])
         else
             SendFormattedMessage(playerid, COLOR_ERROR, "Non è stato possibile settare il giocatore al teleport id %d.", teleportid);
     }
+    else if(!strcmp(command, "delete", true))
+    {   
+        if(Teleport_Delete(teleportid))
+        {
+            SendFormattedMessage(playerid, COLOR_GREEN, "Hai deletato il teleport id %d.", teleportid);
+        }
+        else
+        {
+            SendFormattedMessage(playerid, COLOR_ERROR, "Non è stato possibile deletare il teleport id %d.", teleportid);
+        }
+    }
+    else if(!strcmp(command, "allowvehicles", true))
+    {
+        new allow;
+        if(sscanf(params, "d", allow))
+            return SendFormattedMessage(playerid, COLOR_ERROR, "/teleportedit %d allowvehicles <1: allow - 0: don't allow>", teleportid);
+        
+        if(Teleport_AllowVehicles(teleportid, allow ? true : false))
+        {
+            if(allow)
+                SendFormattedMessage(playerid, COLOR_GREEN, "Adesso è possibile entrare nel teleport id %d con i veicoli.", teleportid);
+            else
+                SendFormattedMessage(playerid, COLOR_GREEN, "Non è più possibile entrare nel teleport id %d con i veicoli.", teleportid);
+        }
+        else
+        {
+            SendFormattedMessage(playerid, COLOR_ERROR, "Non è stato possibile modificare l'allow vehicles teleport id %d.", teleportid);
+        }
+    }
     return 1;
 }
 alias:teleportedit("tedit");
@@ -249,8 +295,14 @@ hook function Character_Enter(playerid)
     if(Teleport_IsValid(elementid))
     {
         new vehicleid = GetPlayerVehicleID(playerid);
-        if(vehicleid > 0 && GetPlayerVehicleSeat(playerid) != 0)
-            return SendClientMessage(playerid, COLOR_ERROR, "Devi essere il guidatore per poter entrare all'interno dell'edificio.");
+        if(vehicleid > 0)
+        {
+            if(GetPlayerVehicleSeat(playerid) != 0)
+                return SendClientMessage(playerid, COLOR_ERROR, "Devi essere il guidatore per poter entrare all'interno dell'edificio.");
+            
+            if(!Teleport_DoesAllowVehicles(elementid))
+                return SendClientMessage(playerid, COLOR_ERROR, "Non puoi entrare con un veicolo.");
+        }
         
         if(!Player_IsAdminDuty(playerid))
         {
@@ -344,6 +396,30 @@ stock Teleport_Create(const name[], Float:x, Float:y, Float:z, interior, world)
     name, x, y, z, interior, world, INVALID_FACTION_ID);
 }
 
+stock bool:Teleport_Delete(teleportid)
+{
+    if(!Teleport_IsValid(teleportid))
+        return false;
+    new pickupid, Text3D:text;
+
+    pickupid = map_get(TeleportsMap, Teleport_GetID(teleportid), EnterPickup);
+    Pickup_Destroy(pickupid);
+
+    pickupid = map_get(TeleportsMap, Teleport_GetID(teleportid), ExitPickup);
+    Pickup_Destroy(pickupid);
+
+    text = Text3D:map_get(TeleportsMap, Teleport_GetID(teleportid), EnterLabel);
+    DestroyDynamic3DTextLabel(text);
+
+    text = Text3D:map_get(TeleportsMap, Teleport_GetID(teleportid), ExitLabel);
+    DestroyDynamic3DTextLabel(text);
+
+    mysql_tquery_f(gMySQL, "DELETE FROM `teleports` WHERE id = '%d'", Teleport_GetID(teleportid));
+
+    map_remove_deep(TeleportsMap, Teleport_GetID(teleportid));
+    return true;       
+}
+
 static stock bool:Teleport_CreatePickupAndLabel(teleportid)
 {
     if(!Teleport_IsValid(Teleport_GetID(teleportid)))
@@ -413,7 +489,7 @@ stock bool:Teleport_SetEnterPosition(teleportid, Float:x, Float:y, Float:z, inte
     mysql_tquery_f(gMySQL, "UPDATE teleports SET enter_x = '%f', enter_y = '%f', enter_z = '%f', enter_world = '%d', enter_interior = '%d' WHERE id = '%d'", x, y, z, world, interior, Teleport_GetID(teleportid));
     
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterX, x);
-    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterY, z);
+    map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterY, y);
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterZ, z);
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterInterior, interior);
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterWorld, world);

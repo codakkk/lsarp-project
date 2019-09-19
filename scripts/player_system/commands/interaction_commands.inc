@@ -96,7 +96,7 @@ CMD:paga(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
 	if(!Character_IsAlive(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
-	if(Account_GetLevel(playerid) <= 3)
+	if(Character_GetLevel(playerid) <= 3)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi ancora utilizzare questo comando.");
 	Character_GiveMoney(playerid, -amount);
 	Character_GiveMoney(id, amount);
@@ -424,13 +424,17 @@ CMD:arma(playerid, params[])
 		return 1;
 	}
 	if(slotid == 0)
-		return SetPlayerArmedWeapon(playerid, 0);
+	{
+		SetPlayerArmedWeapon(playerid, 0);
+		ApplyAnimation(playerid, "CARRY", "crry_prtial", 2.0, 0, 0, 0, 0, 0);
+		SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
+		return 1;
+	}
 	if(slotid < 1 || slotid > 6)
 		return SendClientMessage(playerid, COLOR_ERROR, "/arma <slot (0 - 6)>");
 
 	new weaponid, ammo;
-
-    GetPlayerWeaponData(playerid, slotid, weaponid, ammo);
+    Character_GetWeaponData(playerid, slotid, weaponid, ammo);
 
 	switch(weaponid)
 	{

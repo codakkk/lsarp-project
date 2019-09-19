@@ -63,7 +63,7 @@
 	#define _formatnumber_included
 #endif
 
-#if !defined HEX_PREFIX
+/*#if !defined HEX_PREFIX
 	#define HEX_PREFIX  "0x"
 #endif
 
@@ -166,4 +166,17 @@ stock FormatNumber( { _, Float, Text3D, Menu, Text, DB, DBResult, bool, File, he
 	}
 	
 	return s_szReturn;
-}
+}*/
+
+stock FormatNumber(number, const separator[] = ".")
+{
+    new output[15];
+    format(output, sizeof(output), "%d", number);
+
+    for(new i = strlen(output) - 3; i > 0 && output[i-1] != '-'; i -= 3)
+    {
+        strins(output, separator, i);
+    }
+
+    return output;
+}  

@@ -88,7 +88,7 @@ stock Character_HasWeaponInSlot(playerid, slotid)
 {
 	new weapon, ammo;
 	Character_GetWeaponData(playerid, slotid, weapon, ammo);
-	return weapon != 0 && ammo > 0 /*&& AC_AntiWeaponCheck(playerid, weapon, ammo)*/;
+	return weapon != 0 && ammo > 0;
 }
 
 stock Character_GetWeaponInSlot(playerid, slotid)
@@ -102,31 +102,34 @@ stock Character_GetWeaponInSlot(playerid, slotid)
 
 stock Character_RemoveWeapon(playerid, weaponid)
 {
-	new 
+	/*new 
 		w[12] = {0, ...},
 		a[12] = {0, ...}
 	;
 
 	for(new slot = 0; slot != 12; slot++)
 	{
-		GetPlayerWeaponData(playerid, slot, w[slot], a[slot]);
+		//GetPlayerWeaponData(playerid, slot, w[slot], a[slot]);
+		Character_GetWeaponData(playerid, slot, w[slot], a[slot]);
 		if(w[slot] == weaponid)
 		{
 			w[slot] = 0;
 			a[slot] = 0;
 		}
-	}
+	}*/
 
 	static query[128];
 	format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE weapon_id = '%d' AND character_id = '%d';", weaponid, Character_GetID(playerid));
 	mysql_pquery(gMySQL, query);
 
-	Character_ResetWeapons(playerid);
+	ac_RemovePlayerWeapon(playerid, weaponid);
+
+	/*ResetPlayerWeapons(playerid);
 
 	for(new slot = 0; slot != 12; slot++)
 	{
 		Character_GiveWeapon(playerid, w[slot], a[slot]);
-	}
+	}*/
 	return 1;
 }
 

@@ -8,12 +8,12 @@
 enum //E_BUILDING_TYPE
 {
 	BUILDING_TYPE_STORE = 0,
-	BUILDING_TYPE_PAYCHECK,
-    BUILDING_TYPE_GARAGE,
-	BUILDING_TYPE_COMPLEX,
-	BUILDING_TYPE_BANK,
-	BUILDING_TYPE_ADS,
-	BUILDING_TYPE_GAS_STATION,
+	BUILDING_TYPE_PAYCHECK = 1, // Not Used anymore
+    BUILDING_TYPE_GARAGE = 2,
+	BUILDING_TYPE_COMPLEX = 3,
+	BUILDING_TYPE_BANK = 4,
+	BUILDING_TYPE_ADS = 5,
+	BUILDING_TYPE_GAS_STATION = 6,
 
 	// Insert here other types
 	BUILDING_TYPE_LAST
@@ -877,6 +877,9 @@ Dialog:Dialog_BuildingSellToPlayer(playerid, response, listitem, inputtext[])
 
 	if(money < 0 || money > Character_GetMoney(id))
 		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il giocatore non ha abbastanza denaro.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
+
+	if(id == playerid)
+		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Non puoi vendere l'edificio a te stesso.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
 
 	if(Character_HasBuildingKey(id))
 		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il giocatore possiede già un edificio.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");

@@ -67,13 +67,16 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 {
 	if(Character_IsFactionDuty(playerid))
 		return 1;
-	new ammo = Character_GetAmmo(playerid);
-	if(Character_HasWeapon(playerid, weaponid) && ( /*(GetPlayerWeaponState(playerid) == WEAPONSTATE_LAST_BULLET || IsPlayerInAnyVehicle(playerid)) && */ /*AC_AntiWeaponCheck(playerid, weaponid, ammo) &&*/ ammo <= 1))
+	
+	new ammo;
+	Character_GetWeaponData(playerid, Weapon_GetSlot(weaponid), weaponid, ammo);
+
+	if(Character_HasWeapon(playerid, weaponid) && ammo <= 1)
 	{
 		if(Character_HasSpaceForItem(playerid, weaponid, 1))
 		{
 			SendClientMessage(playerid, COLOR_GREEN, "Proiettili esauriti. L'arma è stata rimessa nell'inventario.");
-			Character_AMe(playerid, "ripone l'arma nell'inventario.");
+			//Character_AMe(playerid, "ripone l'arma nell'inventario.");
 			Character_GiveItem(playerid, weaponid, 1, 0, false);
 			Character_RemoveWeapon(playerid, weaponid);
 		}
@@ -419,6 +422,11 @@ Dialog:Dialog_InvItemGivePlayer(playerid, response, listitem, inputtext[])
 					@("Inserisci il nome o l'id del giocatore\nseguito dalla quantità.\n{00FF00}Esempio:{FFFFFF} Mario Rossi 5\nOppure: {00FF00}Mario Rossi{FFFFFF} per dare solo 1."));
 		Dialog_Show_s(playerid, Dialog_InvItemGivePlayer, DIALOG_STYLE_INPUT, title, @("{FF0000}La quantità inserita non è valida.{FFFFFF}\n") % content, "Continua", "Annulla");
 		return 1;
+	}
+	if(!Character_CanInteract(playerid))
+	{
+		SendClientMessage(playerid, COLOR_ERROR, "Non puoi passare un oggetto in questo momento.");
+		return 0;
 	}
 	Character_SendItemRequest(playerid, id, slotid, amount);
 	/*new p[32];

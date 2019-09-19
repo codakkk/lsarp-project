@@ -14,6 +14,12 @@ CMD:animlist(playerid, params[])
 flags:stopanim(CMD_ALIVE_USER);
 CMD:stopanim(playerid, params[])
 {
+	if(IsPlayerInAnyVehicle(playerid))
+	{
+		ApplyAnimation(playerid, "CARRY", "crry_prtial", 2.0, 0, 0, 0, 0, 0);
+		SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
+		return 1;
+	}
 	if(!AnimationCheck(playerid) || !Character_IsAnimLoop(playerid))return 1;
 
 	ClearAnimationsEx(playerid);

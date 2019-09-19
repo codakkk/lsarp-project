@@ -119,7 +119,7 @@ CMD:setpremium(playerid, params[])
 	Account_SetPremiumLevel(id, premiumid);
 	Account_SetPremiumExpiry(id, time ? (gettime() + 3600 * 24 * time) : 0);
 
-	SendMessageToAdmins(true, COLOR_ADMINCMD, "[ADMIN-ALERT]: %s (%d) ha settato %s (%d) premium livello %d.", 
+	SendMessageToAdmins(true, COLOR_ADMINCMD, "AdmAlert: %s (%d) ha settato %s (%d) premium livello %d.", 
 	Account_GetName(playerid), playerid, Account_GetName(id), id, premiumid);
 	return 1;
 }

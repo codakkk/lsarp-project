@@ -1,5 +1,5 @@
 
-static bool:InfoBoxShown[MAX_PLAYERS char];
+
 
 stock Character_CharacterAMe(playerid, otherid, text[], GLOBAL_TAG_TYPES:...)
 {
@@ -65,44 +65,4 @@ stock Character_DoLow(playerid, text[], GLOBAL_TAG_TYPES:...)
     str += str_format(" (( %s ))", Character_GetRolePlayName(playerid));
     ProxDetectorStr(playerid, 4.0, str, 0xC2A2DAFF, 0xC2A2DAFF, 0xC2A2DAFF, 0xC2A2DAFF, 0xC2A2DAFF);
     return 1;
-}
-
-stock Player_Info(playerid, text[], bool:forced = false, time = 2500)
-{
-	if(InfoBoxShown{playerid} == true && !forced)
-		return 1;
-
-	PlayerTextDrawHide(playerid, PlayerInfoText[playerid]);
-	PlayerTextDrawSetString(playerid, PlayerInfoText[playerid], text);
-	PlayerTextDrawShow(playerid, PlayerInfoText[playerid]);
-
-	SetTimerEx("DeleteInfoBox", time, false, "d", playerid);
-	InfoBoxShown{playerid} = true;
-
-	return 1;
-}
-
-stock Player_InfoStr(playerid, String:string, bool:forced = false, time = 2500)
-{
-	/*new ptr[1][] = {{}}, size = str_len(string) + 1, Var:var = amx_alloc(size);
-	amx_to_ref(var, ptr);
-	str_get(string, ptr[0], .size=size);*/
-
-	static buffer[256];
-	str_get(string, buffer);
-	new result = Player_Info(playerid, /*ptr[0]*/ buffer, forced, time);
-
-	/*amx_free(var);
-	amx_delete(var);*/
-	return result;
-}
-
-forward DeleteInfoBox(playerid); 
-public DeleteInfoBox(playerid)
-{
-	PlayerTextDrawHide(playerid, PlayerInfoText[playerid]);
-
-	InfoBoxShown{playerid} = false;
-
-	return 1;
 }

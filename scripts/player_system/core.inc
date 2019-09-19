@@ -78,7 +78,9 @@ forward OnCharacterSpawn(playerid); // Called when Character_Spawn is called.
 static enum E_PLAYER_DATA
 {
     ID,
-	
+	Level,
+	Experience,
+
     Float:Health,
     Float:Armour,
 
@@ -160,18 +162,18 @@ stock Character_ShowStats(playerid, targetid)
 	gettime(hours, minutes, seconds);
 	
     SendFormattedMessage(targetid, COLOR_GREEN, "_____________________[STATISTICHE - %d/%d/%d @ %d:%d]_____________________", day, month, year, hours, minutes);
-	SendFormattedMessage(targetid, -1, "[Account] Nome: %s - Livello: %d - E-Mail: %s", Account_GetName(playerid), Account_GetLevel(playerid), Account_GetEMail(playerid));
+	SendFormattedMessage(targetid, -1, "[Account] Nome: %s - Livello: %d - E-Mail: %s", Account_GetName(playerid), Character_GetLevel(playerid), Account_GetEMail(playerid));
     
 	if(Faction_IsValid(Character_GetFaction(playerid)))
 	{
 		new factionName[MAX_FACTION_NAME], rankName[MAX_FACTION_RANK_NAME];
 		Faction_GetName(Character_GetFaction(playerid), factionName);
 		Faction_GetRankName(Character_GetFaction(playerid), Character_GetRank(playerid), rankName);
-		SendFormattedMessage(targetid, -1, "[Personaggio] Nome: %s - Skin: %d - Fazione: %s - Rank: %s", Character_GetOOCName(playerid), Character_GetSkin(playerid), factionName, rankName);
+		SendFormattedMessage(targetid, -1, "[Personaggio] Nome: %s - Skin: %d - Livello: %d - Esperienza: %d - Fazione: %s - Rank: %s", Character_GetOOCName(playerid), Character_GetSkin(playerid), Character_GetLevel(playerid), Character_GetExperience(playerid), factionName, rankName);
 	}
 	else
 	{
-		SendFormattedMessage(targetid, -1, "[Personaggio] Nome: %s - Skin: %d", Character_GetOOCName(playerid), Character_GetSkin(playerid));
+		SendFormattedMessage(targetid, -1, "[Personaggio] Nome: %s - Skin: %d - Livello: %d - Esperienza: %d", Character_GetOOCName(playerid), Character_GetSkin(playerid), Character_GetLevel(playerid), Character_GetExperience(playerid));
 	}
     SendFormattedMessage(targetid, -1, "[Salute] HP: %.2f - Armatura: %.2f", hp, armour);
     
@@ -355,6 +357,10 @@ stock LoadCharacterResult(playerid)
 		cache_get_value_name_int(0, "banned", isBanned);
 		cache_get_value_name_int(0, "ban_expiry", banTime);
 
+		cache_get_value_name_int(0, "level", PlayerInfo[playerid][Level]);
+		cache_get_value_name_int(0, "experience", PlayerInfo[playerid][Experience]);
+
+		SetPlayerScore(playerid, Character_GetLevel(playerid));
 		if(isBanned)
 		{
 			if(gettime() < banTime)
@@ -406,6 +412,7 @@ stock Character_LoadData(playerid)
 		CallLocalFunction(#OnCharacterLoad, "i", playerid);
 
 		SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
+		TogglePlayerSpectating(playerid, 0);
 		SpawnPlayer(playerid);
 	}
 	else return KickEx(playerid);
@@ -509,4 +516,37 @@ stock Character_IsIDConnected(dbid)
 		}
 	}
 	return playerid;
+}
+
+stock Character_SetLevel(playerid, level)
+{
+	PlayerInfo[playerid][Level] = level;
+	SetPlayerScore(playerid, level);
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET level = '%d' WHERE id = '%d'", level, Account_GetID(playerid));
+}
+
+stock Character_IncreaseLevel(playerid, amount)
+{
+	Character_SetLevel(playerid, Character_GetLevel(playerid) + amount);
+}
+
+stock Character_GetLevel(playerid)
+{
+	return PlayerInfo[playerid][Level];
+}
+
+stock Character_SetExperience(playerid, exp)
+{
+	PlayerInfo[playerid][Experience] = exp;
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET level = '%d' WHERE id = '%d'", exp, Character_GetID(playerid));
+}
+
+stock Character_AddExperience(playerid, amount)
+{
+	Character_SetExperience(playerid, Character_GetExperience(playerid) + amount);
+}
+
+stock Character_GetExperience(playerid)
+{
+	return PlayerInfo[playerid][Experience];
 }

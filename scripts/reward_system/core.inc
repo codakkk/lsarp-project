@@ -346,8 +346,8 @@ Dialog:Dialog_ZPointsBuyRewards(playerid, response, listitem, inputtext[])
 		}
 		case 7: // +1 Level
 		{
-			Account_IncreaseLevel(playerid, 1);
-			SetPlayerScore(playerid, Account_GetLevel(playerid));
+			Character_IncreaseLevel(playerid, 1);
+			SetPlayerScore(playerid, Character_GetLevel(playerid));
 		}
 	}
 	SendFormattedMessage(playerid, -1, "Hai acquistato \"{00AA00}%s{FFFFFF}\" per {AA0000}%d{FFFFFF} Z-Points.", RewardInfo[listitem][rdName], price);

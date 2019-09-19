@@ -23,8 +23,8 @@ flags:ritirastipendio(CMD_ALIVE_USER);
 CMD:ritirastipendio(playerid, params[])
 {
 	new buildingid = Character_GetNearBuildingID(playerid);
-	if(!Building_IsValid(buildingid) || Building_GetType(buildingid) != BUILDING_TYPE_PAYCHECK)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei nell'edificio esatto per ritirare lo stipendio.");
+	if(!Building_IsValid(buildingid) || Building_GetType(buildingid) != BUILDING_TYPE_BANK)
+		return SendClientMessage(playerid, COLOR_ERROR, "Questo comando può essere utilizzato solo in banca.");
 	new paycheck = Character_GetPayCheck(playerid);
 	if(paycheck <= 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai uno stipendio da ritirare.");

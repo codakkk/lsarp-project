@@ -2,44 +2,48 @@
 
 static enum E_WEAPON_DATA
 {
-    wInitialized,
+    bool:wInitialized,
     Float:wDamage,
-    wDamageRatio, // Damage ratio (for different length damages)
     wAmmoItem,
-	wCanBeDisassembled,
+	bool:wCanBeDisassembled,
 };
 static 
     WeaponInfo[47][E_WEAPON_DATA];
 
 hook OnGameModeInit()
 {
-	Weapon_InitializeType(WEAPON_COLT45, gItem_LightAmmo, 25, true);
-	Weapon_InitializeType(WEAPON_SILENCED, gItem_LightAmmo, 30, true);
-	Weapon_InitializeType(WEAPON_DEAGLE, gItem_LightAmmo, 45, true);
+	Weapon_InitializeType(WEAPON_COLT45, gItem_LightAmmo, 25.0, true);
+	Weapon_InitializeType(WEAPON_SILENCED, gItem_LightAmmo, 30.0, true);
+	Weapon_InitializeType(WEAPON_DEAGLE, gItem_LightAmmo, 45.0, true);
 
-	Weapon_InitializeType(WEAPON_SHOTGUN, gItem_BuckShotAmmo, 3, true);
-	Weapon_InitializeType(WEAPON_SAWEDOFF, gItem_BuckShotAmmo, 6, true);
-	Weapon_InitializeType(WEAPON_SHOTGSPA, gItem_BuckShotAmmo, 8, true);
+	Weapon_InitializeType(WEAPON_SHOTGUN, gItem_BuckShotAmmo, 3.0, true);
+	Weapon_InitializeType(WEAPON_SAWEDOFF, gItem_BuckShotAmmo, 6.0, true);
+	Weapon_InitializeType(WEAPON_SHOTGSPA, gItem_BuckShotAmmo, 8.0, true);
 
-	Weapon_InitializeType(WEAPON_UZI, gItem_LightAmmo, 15, true);
-	Weapon_InitializeType(WEAPON_TEC9, gItem_LightAmmo, 15, true);
-	Weapon_InitializeType(WEAPON_MP5, gItem_LightAmmo, 25, true);
+	Weapon_InitializeType(WEAPON_UZI, gItem_LightAmmo, 15.0, true);
+	Weapon_InitializeType(WEAPON_TEC9, gItem_LightAmmo, 15.0, true);
+	Weapon_InitializeType(WEAPON_MP5, gItem_LightAmmo, 25.0, true);
 
-	Weapon_InitializeType(WEAPON_AK47, gItem_HeavyAmmo, 40, true);
-	Weapon_InitializeType(WEAPON_M4, gItem_HeavyAmmo, 35, true);
+	Weapon_InitializeType(WEAPON_AK47, gItem_HeavyAmmo, 40.0, true);
+	Weapon_InitializeType(WEAPON_M4, gItem_HeavyAmmo, 35.0, true);
 
-	Weapon_InitializeType(WEAPON_RIFLE, gItem_RifleAmmo, 70, true);
-	Weapon_InitializeType(WEAPON_SNIPER, gItem_RifleAmmo, 500, true);
+	Weapon_InitializeType(WEAPON_RIFLE, gItem_RifleAmmo, 70.0, true);
+	Weapon_InitializeType(WEAPON_SNIPER, gItem_RifleAmmo, 500.0, true);
+
+	for(new i = 0; i < 15; ++i)
+	{
+		SetWeaponArmourRule(i, false);
+	}
 	return 1;
 }
 
-stock Weapon_InitializeType(weaponid, ammoItem, Float:damages, canBeDisassembled = false, damageRatio = 1)
+stock Weapon_InitializeType(weaponid, ammoItem, Float:damages, bool:canBeDisassembled = false, bool:affectArmour = true)
 {
-	WeaponInfo[weaponid][wInitialized] = 1;
+	WeaponInfo[weaponid][wInitialized] = true;
 	WeaponInfo[weaponid][wAmmoItem] = ammoItem;
 	WeaponInfo[weaponid][wDamage] = damages;
 	WeaponInfo[weaponid][wCanBeDisassembled] = canBeDisassembled;
-	WeaponInfo[weaponid][wDamageRatio] = damageRatio;
+	SetWeaponArmourRule(weaponid, affectArmour);
 	SetWeaponDamage(weaponid, DAMAGE_TYPE_STATIC, damages);
 }
 
@@ -50,10 +54,10 @@ stock Float:Weapon_GetDamage(weaponid)
 	return WeaponInfo[weaponid][wDamage];
 }
 
-stock Weapon_CanBeDisassembled(weaponid)
+stock bool:Weapon_CanBeDisassembled(weaponid)
 {
 	if(weaponid <= 0 || weaponid >= 47 || !WeaponInfo[weaponid][wInitialized])
-		return 0;
+		return false;
 	return WeaponInfo[weaponid][wCanBeDisassembled];
 }
 

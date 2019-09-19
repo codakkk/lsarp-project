@@ -125,7 +125,7 @@ CMD:mostradocumenti(playerid, params[])
 {
     new id;
     if(sscanf(params, "k<u>", id))
-        return SendClientMessage(playerid, COLOR_ERROR, "/mostradocumenti (/md) <playerid/partofname/#code>");
+        return SendClientMessage(playerid, COLOR_ERROR, "/mostradocumenti (/md) <playerid/partofname/#####>");
     
     if(!Character_IsLogged(id))
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore inserito non è collegato.");
@@ -154,7 +154,7 @@ CMD:ritiralicenza(playerid, params[])
 {
     new id, type[16];
     if(sscanf(params, "k<u>s[16]", id, type))
-        return SendClientMessage(playerid, COLOR_ERROR, "/ritiralicenza <playerid/partofname/#code> <patente/nautica/volo/armi>");
+        return SendClientMessage(playerid, COLOR_ERROR, "/ritiralicenza <playerid/partofname/#####> <patente/nautica/volo/armi>");
     
     if(!Character_IsLogged(id))
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore inserito non è collegato.");
@@ -211,7 +211,7 @@ CMD:daiportodarmi(playerid, params[])
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei del rango giusto per poter utilizzare questo comando.");
     new id;
     if(sscanf(params, "k<u>", id))
-        return SendClientMessage(playerid, COLOR_ERROR, "/daiportodarmi <playerid/partofname/#code>");
+        return SendClientMessage(playerid, COLOR_ERROR, "/daiportodarmi <playerid/partofname/#####>");
     
     if(!Character_IsLogged(id))
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore inserito non è collegato.");

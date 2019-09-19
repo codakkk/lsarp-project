@@ -550,7 +550,7 @@ CMD:gedit(playerid, params[])
     {
         new id;
         if(sscanf(otherData, "k<u>", id))
-            return SendFormattedMessage(playerid, COLOR_ERROR, "/gedit %d owner <playerid/partofname/#code>", gateid);
+            return SendFormattedMessage(playerid, COLOR_ERROR, "/gedit %d owner <playerid/partofname/#####>", gateid);
         if(!IsPlayerConnected(id) || !Character_IsLogged(id))
             return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
         SendFormattedMessage(playerid, -1, "Hai settato %s (%d) proprietario del gate id %d.", Character_GetOOCName(id), id, gateid);
