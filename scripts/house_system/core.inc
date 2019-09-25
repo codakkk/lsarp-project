@@ -6,6 +6,12 @@
 
 #define _included_HOUSE 
 
+#define INVALID_HOUSE_ID	(0)
+#define HOUSE_START_WORLD 	(1000)
+
+
+#include <building_system\core>
+
 #include <house_system\components\inventory>
 #include <house_system\components\interiors>
 
@@ -13,8 +19,6 @@
 
 #include <YSI_Coding\y_hooks>
 
-#define INVALID_HOUSE_ID	(-1)
-#define HOUSE_START_WORLD 	(1000)
 
 static enum _:E_HOUSE_DATA
 {
@@ -43,8 +47,9 @@ static enum _:E_HOUSE_DATA
     InteriorType,
 	InteriorID,
 
-    EnterPickup,
-    ExitPickup,
+    EnterCheckpoint,
+    ExitCheckpoint,
+
     Text3D:h3DText,
 };
 
@@ -67,36 +72,62 @@ hook function Character_Enter(playerid)
 {
     if(IsPlayerInAnyVehicle(playerid))
         return continue(playerid);
+
+    new houseid = Character_GetHouse(playerid, false);
+    if(!House_IsValid(houseid))
+        houseid = Character_GetHouse(playerid, true);
     
-    printf("House Enter");
-    new id, E_ELEMENT_TYPE:type;
-    if(Character_GetNearestPickup(playerid, id, type))
+    if(House_IsValid(houseid))
     {
-        if(type == ELEMENT_TYPE_HOUSE_ENTRANCE)
+        
+        new 
+            Float:x = 0.0,
+            Float:y = 0.0,
+            Float:z = 0.0,
+            Float:enterX = 0.0, 
+            Float:enterY = 0.0, 
+            Float:enterZ = 0.0,
+            Float:exitX = 0.0, 
+            Float:exitY = 0.0, 
+            Float:exitZ = 0.0,
+            bool:isEnter = false,
+            interiorId = 0,
+            world = 0;
+        
+        House_GetEnterPosition(houseid, enterX, enterY, enterZ);
+        House_GetExitPosition(houseid, exitX, exitY, exitZ);
+
+        if(IsPlayerInRangeOfPoint(playerid, 2.0, enterX, enterY, enterZ))
         {
-            if(House_IsLocked(id))
-               return GameTextForPlayer(playerid, "~r~Porta Chiusa", 5000, 1);
-            
-            new 
-                Float:x = 0.0, 
-                Float:y = 0.0, 
-                Float:z = 0.0,
-                interiorId = House_GetExitInterior(id),
-                world = House_GetExitWorld(id);
-            
-            House_GetExitPosition(id, x, y, z);
-
-            Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
-
-            SetPlayerInterior(playerid, interiorId);
-            Character_SetVirtualWorld(playerid, world);
-            
-            // Should I use Fading?
-            Character_SetSafePosition(playerid, x, y, z, interiorId, world);
-            
-            Character_AMe(playerid, "apre la porta ed entra.");
-            return 1;
+            x = exitX;
+            y = exitY;
+            z = exitZ;
+            interiorId = House_GetExitInterior(houseid);
+            world = House_GetExitWorld(houseid);
+            isEnter = true;
         }
+        else if(IsPlayerInRangeOfPoint(playerid, 2.0, exitX, exitY, exitZ))
+        {
+            x = enterX;
+            y = enterY;
+            z = enterZ;
+            interiorId = House_GetEnterInterior(houseid);
+            world = House_GetEnterWorld(houseid);
+            isEnter = false;
+        }
+        else
+        {
+            return continue(playerid);
+        }
+        
+        if(House_IsLocked(houseid))
+            return GameTextForPlayer(playerid, "~r~Porta Chiusa", 5000, 1);
+        
+        Character_AMe(playerid, isEnter ? ("apre la porta ed entra.") : ("apre la porta ed esce."));
+        
+        Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
+        Character_SetSafePosition(playerid, x, y, z, interiorId, world);
+        return 1;
     }
     return continue(playerid);
 }
@@ -129,6 +160,47 @@ hook OnCharacterChangeName(playerid, newCharacterName[])
 	return 1;
 }
 
+hook OnPlayerEnterDynamicCP(playerid, checkpointid)
+{
+    new houseid;
+    if(Checkpoint_GetInfoOfType(checkpointid, CHECKPOINT_TYPE_HOUSE, houseid) && House_IsValid(houseid))
+    {
+        if(!House_IsOwned(houseid))
+        {
+            SendClientMessage(playerid, 0x33AA33FF, "Vuoi comprare questo immobile?");
+            SendFormattedMessage(playerid, 0x33AA33FF, "Prezzo: $%s", FormatNumber(House_GetPrice(houseid)));
+            SendClientMessage(playerid, -1, "/compra");
+        }
+        new zone[32];
+        House_GetZoneName(houseid, zone);
+        SendFormattedMessage(playerid, 0x33AA33FF, "%s, Las Venturas, San Andreas", zone);
+        SendClientMessage(playerid, -1, "Comandi disponibili: /entra, /ds(hout), /ddo, /bussa");
+    }
+    return 1;
+}
+
+stock bool:House_GetZoneName(houseid, name[])
+{
+    if(!House_IsValid(houseid))
+        return false;
+    
+    new Float:x, Float:y, Float:z;
+        
+    if(House_GetEnterWorld(houseid) > BUILDING_START_WORLD)
+    {
+        new bid = House_GetEnterWorld(houseid) - BUILDING_START_WORLD;
+        if(Building_IsValid(bid) && Building_GetType(bid) == BUILDING_TYPE_COMPLEX)
+        {
+            Building_GetEnterPos(bid, x, y, z);
+        }
+    }
+    else
+    {
+        House_GetEnterPosition(houseid, x, y, z);
+    }
+    Get2DZoneName(x, y, z, name, 32);
+    return true;
+}
 
 stock House_Create(Float:x, Float:y, Float:z, int, world, interiorType)
 {
@@ -202,23 +274,27 @@ stock House_CreateObjects(houseid)
     House_GetEnterPosition(houseid, x, y, z);
     House_GetExitPosition(houseid, ex, ey, ez);
 
-    new zone[32];
-
-    if(enterWorld != 0)
+    new text[128];
+    
+    if(!House_IsOwned(houseid))
     {
-        format(zone, sizeof(zone), "Casa");
+        format(text, sizeof(text), "Appartamento[%d] In Vendita:\nPrezzo: $%s\nInterior: %d", House_GetID(houseid), FormatNumber(House_GetPrice(houseid)), House_GetInteriorID(houseid));
+	    new Text3D:label = CreateDynamic3DTextLabel(text, 0xC38A39FF, x, y, z + 0.55, 5.0, .worldid = enterWorld, .interiorid = interior, .testlos = 1);
+        map_set_cell_safe(Houses, houseid, h3DText, _:label);
     }
     else
-        Get2DZoneName(x, y, z, zone, sizeof(zone));
+    {
+        //format(text, sizeof(text), "Appartamento[%d]:\nPrezzo: $%s\nInterior: %d", House_GetPrice(houseid), House_GetInteriorID(houseid));
+    }
 
     new 
-	   enterPickupid = Pickup_Create(1273, houseid, x, y, z, ELEMENT_TYPE_HOUSE_ENTRANCE, enterWorld, interior),
-	   exitPickupid = Pickup_Create(1007, houseid, ex, ey, ez, ELEMENT_TYPE_HOUSE_EXIT, exitWorld, einterior),
-	   Text3D:label = CreateDynamic3DTextLabel(zone, 0xFFFFFF, x, y, z + 0.55, 15.0, .worldid = enterWorld, .interiorid = interior, .testlos = 1);
-    
-    map_set_cell(Houses, houseid, EnterPickup, enterPickupid);
-    map_set_cell(Houses, houseid, ExitPickup, exitPickupid);
-    map_set_cell_safe(Houses, houseid, h3DText, _:label);
+       enterCheckpoint = Checkpoint_Create(CHECKPOINT_TYPE_HOUSE, houseid, x, y, z - 0.3, 2.5, enterWorld, interior, 5.0),
+       exitCheckpoint = Checkpoint_Create(CHECKPOINT_TYPE_HOUSE, houseid, ex, ey, ez - 0.3, 2.2, exitWorld, einterior, 5.0)
+	   //exitPickupid = Pickup_Create(1007, houseid, ex, ey, ez, ELEMENT_TYPE_HOUSE_EXIT, exitWorld, einterior)
+    ;
+
+    map_set_cell(Houses, houseid, EnterCheckpoint, _:enterCheckpoint);
+    map_set_cell(Houses, houseid, ExitCheckpoint, _:exitCheckpoint);
     return 1;
 }
 
@@ -226,15 +302,15 @@ stock House_DestroyObjects(houseid)
 {
     if(!House_IsValid(houseid))
 	   return 0;
-    new 
-	   enterPickupid = House_GetEnterPickup(houseid),
-	   exitPickupid = House_GetExitPickup(houseid),
-	   Text3D:label = House_Get3DText(houseid);
+    new
+        enterCheckpoint = map_get(Houses, House_GetID(houseid), EnterCheckpoint),
+        exitCheckpoint = map_get(Houses, House_GetID(houseid), ExitCheckpoint),
+	    Text3D:label = House_Get3DText(houseid);
     
-    if(IsValidDynamicPickup(enterPickupid))
-	   Pickup_Destroy(enterPickupid);
-    if(IsValidDynamicPickup(exitPickupid))
-	   Pickup_Destroy(exitPickupid);
+    if(IsValidDynamicCP(enterCheckpoint))
+	   DestroyDynamicCP(enterCheckpoint);
+    if(IsValidDynamicCP(exitCheckpoint))
+	   DestroyDynamicCP(exitCheckpoint);
     if(IsValidDynamic3DTextLabel(label))
 	   DestroyDynamic3DTextLabelEx(label);
     return 1;
@@ -284,6 +360,8 @@ stock House_SetOwner(houseid, playerid)
     new Iter:it = map_iter_at(Houses, houseid);
     iter_set_cells(it, OwnerName, Character_GetOOCName(playerid));
 
+    House_CreateObjects(houseid);
+
     mysql_tquery_f(gMySQL, "UPDATE `houses` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), House_GetID(houseid));
     return 1;
 }
@@ -295,6 +373,8 @@ stock House_ResetOwner(houseid)
     map_set_cell(Houses, houseid, OwnerID, 0);
     new Iter:it = map_iter_at(Houses, houseid);
     iter_set_cells(it, OwnerName, "");
+
+    House_CreateObjects(houseid);
 
     mysql_tquery_f(gMySQL, "UPDATE `houses` SET owner_id = '0' WHERE id = '%d'", House_GetID(houseid));
     
@@ -479,25 +559,14 @@ stock bool:House_IsRoulotte(houseid)
     return (type == ROULOTTE_VERY_SMALL || type == ROULOTTE_SMALL || type == ROULOTTE_MEDIUM || type == ROULOTTE_BIG);
 }
 
-stock House_GetEnterPickup(houseid)
-{
-    if(!House_IsValid(houseid))
-        return 0;
-    return map_get(Houses, houseid, EnterPickup);
-}
-
-stock House_GetExitPickup(houseid)
-{
-    if(!House_IsValid(houseid))
-        return 0;
-    return map_get(Houses, houseid, ExitPickup);
-}
-
 stock House_SetPrice(houseid, price)
 {
     if(!House_IsValid(houseid))
         return 0;
     map_set_cell(Houses, houseid, Price, price);
+
+    House_CreateObjects(houseid);
+
     mysql_tquery_f(gMySQL, "UPDATE `houses` SET price = '%d' WHERE id = '%d'", price, House_GetID(houseid));
     return 1;
 }
@@ -617,23 +686,6 @@ stock House_LoadAll()
         }
     }
     MySQL_PQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `houses` ORDER BY id");
-}
-
-
-stock IsPlayerInRangeOfHouseEntrance(playerid, houseid, Float:range = 2.5)
-{
-	if(!House_IsValid(houseid))
-		return 0;
-	new pickupid = House_GetEnterPickup(houseid);
-	return IsPlayerInRangeOfPickup(playerid, pickupid, range);
-}
-
-stock IsPlayerInRangeOfHouseExit(playerid, houseid, Float:range = 2.5)
-{
-	if(!House_IsValid(houseid))
-		return 0;
-	new pickupid = House_GetExitPickup(houseid);
-	return IsPlayerInRangeOfPickup(playerid, pickupid, range);
 }
 
 stock Text3D:House_Get3DText(houseid)

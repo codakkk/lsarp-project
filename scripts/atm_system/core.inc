@@ -116,11 +116,11 @@ CMD:atmid(playerid, params[])
 
 CMD:ritira(playerid, params[])
 {
-    if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_ATM) && Building_GetType(Character_GetNearBuilding(playerid, true)) != BUILDING_TYPE_BANK)
+    if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_ATM) && Building_GetType(Character_GetBuilding(playerid, true)) != BUILDING_TYPE_BANK)
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un atm o in banca.");
     new money;
     if(sscanf(params, "d", money))
-        return SendClientMessage(playerid, COLOR_ERROR, "/ritira <ammontare>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USA: /ritira [ammontare]");
 
     if(money < 1 || money > Character_GetBank(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai tutti questi soldi in banca.");
@@ -128,7 +128,7 @@ CMD:ritira(playerid, params[])
     Character_GiveMoney(playerid, money, "atm_withdraw");
     Character_GiveBank(playerid, -money, "atm_withdraw");
 
-    SendFormattedMessage(playerid, -1, "Hai ritirato $%d dal tuo conto bancario.", money);
+    SendFormattedMessage(playerid, COLOR_YELLOW, "Hai prelevato $%d dal tuo conto bancario.", money);
 
     Log(Character_GetOOCName(playerid), "atm", "/ritira", money);
     return 1;
@@ -136,11 +136,11 @@ CMD:ritira(playerid, params[])
 
 CMD:deposita(playerid, params[])
 {
-    if(Building_GetType(Character_GetNearBuilding(playerid, true)) != BUILDING_TYPE_BANK)
+    if(Building_GetType(Character_GetBuilding(playerid, true)) != BUILDING_TYPE_BANK)
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'interno di una banca.");
     new money;
     if(sscanf(params, "d", money))
-        return SendClientMessage(playerid, COLOR_ERROR, "/deposita <ammontare>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USA: /deposita [ammontare]");
 
     if(money < 1 || money > Character_GetMoney(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai tutti questi soldi.");
@@ -156,12 +156,12 @@ CMD:deposita(playerid, params[])
 
 CMD:bonifico(playerid, params[])
 {
-    if(Building_GetType(Character_GetNearBuilding(playerid, true)) != BUILDING_TYPE_BANK)
+    if(Building_GetType(Character_GetBuilding(playerid, true)) != BUILDING_TYPE_BANK)
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'interno di una banca.");
     new n[24], money;
     if(sscanf(params, "s[24]d", n, money))
     {
-        SendClientMessage(playerid, COLOR_ERROR, "/bonifico <nome> <ammontare>");
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USA: /bonifico [nome] [ammontare]");
         SendClientMessage(playerid, COLOR_ERROR, "Ricorda che puoi utilizzare /bonifico gov <ammontare> per inviare un bonifico allo stato.");
         return 1;
     }
@@ -201,7 +201,7 @@ CMD:bonifico(playerid, params[])
                 mysql_tquery_f(gMySQL, "UPDATE `characters` SET bank = '%d' WHERE id = '%d'", newBank, id);
                 mysql_tquery_f(gMySQL, "INSERT INTO `notifications` (character_id, message) VALUES('%d', '%e')", id, msg);
             }
-            SendFormattedMessage(playerid, COLOR_GREEN, "Hai inviato un bonifico di $%d a %s.", money, name);
+            SendFormattedMessage(playerid, 0xCBCCCEFF, "Hai effettuato un bonifico a %s di $%s.", name, FormatNumber(money));
             Character_GiveBank(playerid, -money, "bank_bonifico");
             
             Log(Character_GetOOCName(playerid), name, "/bonifico", money);
@@ -218,10 +218,10 @@ CMD:bonifico(playerid, params[])
 
 CMD:bilancio(playerid, params[])
 {
-    if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_ATM) && Building_GetType(Character_GetNearBuilding(playerid, true)) != BUILDING_TYPE_BANK)
+    if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_ATM) && Building_GetType(Character_GetBuilding(playerid, true)) != BUILDING_TYPE_BANK)
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un atm o in banca.");
     Character_AMe(playerid, "verifica il suo bilancio bancario.");
-    SendFormattedMessage(playerid, -1, "In banca hai $%d.", Character_GetBank(playerid));
+    SendFormattedMessage(playerid, 0xCBCCCEFF, "Sul tuo conto bancario possiedi $%d.", Character_GetBank(playerid));
     return 1;
 }
 

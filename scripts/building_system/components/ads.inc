@@ -20,7 +20,7 @@ CMD:pubblicita(playerid, params[])
     
     new msg[160];
     if(sscanf(params, "s[160]", msg) || strlen(msg) < 10 || strlen(msg) > 160)
-        return SendClientMessage(playerid, COLOR_ERROR, "(/pub)blicita <testo (min 10 caratteri - max 160 caratteri)>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USA: (/pub)blicita [testo (min 10 caratteri - max 160 caratteri)]");
     
     new price = 6 * strlen(msg);
 
@@ -41,7 +41,7 @@ CMD:pubblicita(playerid, params[])
     
     Building_GiveMoney(buildingid, price);
 
-    SendFormattedMessage(playerid, COLOR_GREEN, "Annuncio pubblicato per $%d ($6 per carattere).", price);
+    SendFormattedMessage(playerid, -1, "Hai pubblicato il tuo annuncio per {8fbc8f}$%s{FFFFFF} ($6 per carattere).", FormatNumber(price));
     
     LastServerAdv = GetTickCount();
     return 1;

@@ -674,7 +674,7 @@ stock Character_GetNearBuildingID(playerid)
 	return Character_GetVirtualWorld(playerid) - BUILDING_START_WORLD;
 }
 
-stock Character_GetNearBuilding(playerid, bool:inside)
+stock Character_GetBuilding(playerid, bool:inside)
 {
 	if(inside)
 	{
@@ -694,11 +694,11 @@ stock Character_GetNearBuilding(playerid, bool:inside)
 	return -1;
 }
 
-stock Character_GetNearBuildingIDMenu(playerid, minRank = 3)
+stock Character_GetBuildingMenu(playerid, minRank = 3)
 {
-	new buildingid = Character_GetNearBuilding(playerid, true);
+	new buildingid = Character_GetBuilding(playerid, true);
 	if(!Building_IsValid(buildingid))
-		buildingid = Character_GetNearBuilding(playerid, false);
+		buildingid = Character_GetBuilding(playerid, false);
 	if(Building_IsValid(buildingid))
 	{
 		if(Player_IsAdminDuty(playerid) || Character_DoesOwnBuilding(playerid, buildingid))
@@ -711,7 +711,7 @@ stock Character_GetNearBuildingIDMenu(playerid, minRank = 3)
 
 stock Character_ShowBizDialog(playerid)
 {
-	new buildingid = Character_GetNearBuildingIDMenu(playerid);
+	new buildingid = Character_GetBuildingMenu(playerid);
 	if(Building_IsValid(buildingid) && Building_GetOwnerID(buildingid) == Character_GetID(playerid))
 	{
 		return Dialog_Show(playerid, Dialog_Building, DIALOG_STYLE_LIST, "Edificio", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nGestisci Negozio", "Continua", "Chiudi");
@@ -730,7 +730,7 @@ Dialog:Dialog_Building(playerid, response, listitem, inputtext[])
 {
 	if(!response)
 		return 0;
-	new buildingid = Character_GetNearBuildingIDMenu(playerid);
+	new buildingid = Character_GetBuildingMenu(playerid);
 	if(!Building_IsValid(buildingid) || Building_GetOwnerID(buildingid) != Character_GetID(playerid))
 		return 0;
 	switch(listitem)
@@ -785,7 +785,7 @@ Dialog:Dialog_BuildingDepositMoney(playerid, response, listitem, inputtext[])
 	if(!response)
 		return Character_ShowBizDialog(playerid);
 	
-	new buildingid = Character_GetNearBuildingIDMenu(playerid);
+	new buildingid = Character_GetBuildingMenu(playerid);
 	if(!Building_IsValid(buildingid) || Building_GetOwnerID(buildingid) != Character_GetID(playerid))
 		return 0;
 	
@@ -806,7 +806,7 @@ Dialog:DialogBuildingWithdrawMoney(playerid, response, listitem, inputtext[])
 	if(!response)
 		return Character_ShowBizDialog(playerid);
 	
-	new buildingid = Character_GetNearBuildingIDMenu(playerid);
+	new buildingid = Character_GetBuildingMenu(playerid);
 	if(!Building_IsValid(buildingid) || Building_GetOwnerID(buildingid) != Character_GetID(playerid))
 		return 0;
 	
@@ -827,7 +827,7 @@ Dialog:Dialog_BuildingSell(playerid, response, listitem, inputtext[])
 	if(!response)
 		return Character_ShowBizDialog(playerid);
 	
-	new buildingid = Character_GetNearBuildingIDMenu(playerid);
+	new buildingid = Character_GetBuildingMenu(playerid);
 
 	if(!Building_IsValid(buildingid) || Building_GetOwnerID(buildingid) != Character_GetID(playerid))
 		return 0;
@@ -850,7 +850,7 @@ Dialog:Dialog_BuildingSellToPlayer(playerid, response, listitem, inputtext[])
 	if(!response)
 		return Character_ShowBizDialog(playerid);
 	
-	new buildingid = Character_GetNearBuildingIDMenu(playerid);
+	new buildingid = Character_GetBuildingMenu(playerid);
 
 	if(!Building_IsValid(buildingid) || Building_GetOwnerID(buildingid) != Character_GetID(playerid))
 		return 0;

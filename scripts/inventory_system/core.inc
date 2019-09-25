@@ -467,17 +467,18 @@ static Inventory_ShowInChatStr(Inventory:inventory, playerid, String:title)
 	//else
 	new String:str = str_format("_______________[%S]_______________", title);
 
-	SendClientMessageStr(playerid, COLOR_GREEN, str);
+	SendClientMessageStr(playerid, 0xFF6347FF, str);
 	
 	new tempItem[E_ITEM_DATA], slotid = -1;
 	for_inventory(i : inventory)
 	{
-		new String:s;
 		slotid++;
+		new String:s = str_format("{FF6347}[{FFFFFF} %d. ", slotid);
+		
 		iter_get_arr(i, tempItem);
 		if(iter_sizeof(i) == 0 || tempItem[InvItem] == 0) // If no item
 		{
-			s = str_format("Slot {0080FF}%d{FFFFFF} - Slot Libero", slotid);
+			s += @("Libero");
 		}
 		else
 		{
@@ -485,7 +486,8 @@ static Inventory_ShowInChatStr(Inventory:inventory, playerid, String:title)
 				itemAmount = tempItem[InvAmount],
 				extra = tempItem[InvExtra][0];
 			
-			s = str_format("Slot {0080FF}%d{FFFFFF} - {FFFFFF}%s{FFFFFF} ({FFFFFF}%d{FFFFFF})", slotid, ServerItem_GetName(itemid), itemAmount);
+			
+			s += str_format("%s (%d)", ServerItem_GetName(itemid), itemAmount);
 			
 			if(ServerItem_GetType(itemid) == ITEM_TYPE:ITEM_TYPE_WEAPON)
 			{
@@ -503,16 +505,11 @@ static Inventory_ShowInChatStr(Inventory:inventory, playerid, String:title)
 				else
 					s += str_val(extra);
 			}
+
 		}
+		s += @(" {FF6347}]{FFFFFF}");
 		SendClientMessageStr(playerid, -1, s);
 	}
-	// just a way to conform the underlines. It's useless
-	new String:s = @("________________________________");
-	for(new i = 0, j = str_len(title); i < j; ++i)
-	{
-		s += @("_");
-	}
-	SendClientMessageStr(playerid, COLOR_GREEN, s);
 	return 1;
 }
 

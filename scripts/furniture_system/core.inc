@@ -721,7 +721,7 @@ stock Character_CanFurnish(playerid, bool:outsideCheck = false)
             }
         }
     }
-    if(House_IsValid(currentHouse) && (House_GetOwnerID(currentHouse) == Character_GetID(playerid) || Player_IsAdminDuty(playerid)) && IsPlayerInRangeOfHouseExit(playerid, currentHouse, 100.0))
+    if(House_IsValid(currentHouse) && (House_GetOwnerID(currentHouse) == Character_GetID(playerid) || Player_IsAdminDuty(playerid)))
     {
         return currentHouse;
     }

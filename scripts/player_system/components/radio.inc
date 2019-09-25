@@ -126,7 +126,13 @@ stock Radio_SendTraceTrigger(frequency)
 flags:radiocmds(CMD_USER);
 CMD:radiocmds(playerid, params[])
 {
-	SendClientMessage(playerid, -1, "[RADIO] (/r)adio (/freq)uenza /radiolow (/rlow) /rtrace");
+	SendClientMessage(playerid, 0x33AA33FF, "|_________________________Radio Help_________________________|");
+	SendClientMessage(playerid, -1, "/setchannel - Imposta su quale frequenza vuoi comunicare. ((da rinominare, ora è /frequenza))");
+	SendClientMessage(playerid, -1, "(/r)adio - Parla usando la radio nel channel che hai scelto.");
+	SendClientMessage(playerid, -1, "/rlow - Parla con tono basso alla radio.");
+	SendClientMessage(playerid, -1, "/rtrace - Divisione Investigativa LVMPD");
+	SendClientMessage(playerid, -1, "{33AA33}[(CH: 3409)] {FFFFFF}((frequenza attuale))");
+	SendClientMessage(playerid, 0x33AA33FF, "|____________________________________________________________|");
 	return 1;
 }
 
@@ -139,7 +145,7 @@ CMD:frequenza(playerid, params[])
     new inputFrequency;
 
     if(sscanf(params, "d", inputFrequency))
-    	return SendClientMessage(playerid, COLOR_ERROR, "/(freq)uenza <numero> (0: SPENTA - 1/999).");
+    	return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USA: /(freq)uenza [numero] (0: SPENTA - 1/999).");
 
 	if(Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE && inputFrequency == 911)
 		return SendClientMessage(playerid, COLOR_ERROR, "Questa frequenza non puo' essere utilizzata poiché criptata.");
@@ -165,7 +171,7 @@ CMD:radio(playerid, params[])
     	return SendClientMessage(playerid, COLOR_ERROR, "Non sei connesso ad una frequenza (/(freq)uenza).");
 
     if(strlen(params) <= 0 || strlen(params) > 128)
-    	return SendClientMessage(playerid, COLOR_ERROR, "/r <testo>.");
+    	return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USA: (/r)adio <testo>.");
 
     new frequency = Character_GetRadioFrequency(playerid);
 
@@ -188,7 +194,7 @@ CMD:radiolow(playerid, params[])
     	return SendClientMessage(playerid, COLOR_ERROR, "Non sei connesso ad una frequenza (/(freq)uenza).");
 
     if(strlen(params) <= 0 || strlen(params) > 128)
-    	return SendClientMessage(playerid, COLOR_ERROR, "/rlow <testo>.");
+    	return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USA: /rlow <testo>.");
 
     new frequency = Character_GetRadioFrequency(playerid);
 	
@@ -210,10 +216,10 @@ CMD:rtrace(playerid, params[])
     new inputFrequency;
 
     if(sscanf(params, "d", inputFrequency))
-    	return SendClientMessage(playerid, COLOR_ERROR, "/rtrace <frequenza> (0: DISATTIVA - 1/999).");
+    	return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USA: /rtrace [frequenza] (0: DISATTIVA - 1/999).");
 
     if(!Character_SetTraceFrequency(playerid, inputFrequency))
-    	return SendClientMessage(playerid, COLOR_ERROR, "/rtrace <frequenza> (0: DISATTIVA - 1/999).");
+    	return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USA: /rtrace [frequenza] (0: DISATTIVA - 1/999).");
 
     Character_DestroyRadioGZ(playerid);
 

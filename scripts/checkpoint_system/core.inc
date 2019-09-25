@@ -1,7 +1,7 @@
 
 #include <YSI_Coding\y_hooks>
 
-enum 
+enum E_CHECKPOINT_TYPE
 {
     CHECKPOINT_TYPE_CHOPSHOP,
     CHECKPOINT_TYPE_HOUSE
@@ -9,9 +9,11 @@ enum
 
 static enum e_CHECKPOINT_DATA
 {
-    E_CHECKPOINT_TYPE,
-    E_CHECKPOINT_ID
+    E_CHECKPOINT_TYPE:CHECKPOINT_TYPE,
+    CHECKPOINT_ID
 };
+
+static PlayerCheckPoint[MAX_PLAYERS];
 
 hook OnGameModeInit()
 {
@@ -21,26 +23,40 @@ hook OnGameModeInit()
 
 hook OnPlayerEnterDynamicCP(playerid, checkpointid)
 {
+    PlayerCheckPoint[playerid] = checkpointid;
     printf("Player %d enters checkpoint %d", playerid, checkpointid);
     return 1;
 }
 
 hook OnPlayerLeaveDynamicCP(playerid, checkpointid)
 {
+    PlayerCheckPoint[playerid] = -1;
     printf("Player %d leaving checkpoint %d", playerid, checkpointid);
     return 1;
 }
 
-stock Checkpoint_Create(type, elementid, Float:x, Float:y, Float:z, Float:size, worldid = -1, interiorid = -1)
+stock Checkpoint_Create(E_CHECKPOINT_TYPE:type, elementid, Float:x, Float:y, Float:z, Float:size, worldid = -1, interiorid = -1, Float:renderDist = 1.0)
 {
     new 
-        checkpointid = CreateDynamicCP(x, y, z, size, worldid, interiorid, -1, 1.5),
+        checkpointid = CreateDynamicCP(x, y, z, size, worldid, interiorid, -1, renderDist),
         data[e_CHECKPOINT_DATA]
     ;
-    data[E_CHECKPOINT_TYPE] = type;
-    data[E_CHECKPOINT_ID] = elementid;
+    data[CHECKPOINT_TYPE] = type;
+    data[CHECKPOINT_ID] = elementid;
     Streamer_SetArrayData(STREAMER_TYPE_CP, checkpointid, E_STREAMER_EXTRA_ID, data);
     return 1;
+}
+
+stock bool:Checkpoint_GetInfoOfType(checkpointid, E_CHECKPOINT_TYPE:requestedType, &id)
+{
+    if(!IsValidDynamicCP(checkpointid))
+        return false;
+    new data[e_CHECKPOINT_DATA];
+    Streamer_GetArrayData(STREAMER_TYPE_CP, checkpointid, E_STREAMER_EXTRA_ID, data);
+    if(data[CHECKPOINT_TYPE] != requestedType)
+        return false;
+    id = data[CHECKPOINT_ID];
+    return true;
 }
 
 stock Checkpoint_GetInfo(checkpointid, &id, &type)
@@ -49,7 +65,12 @@ stock Checkpoint_GetInfo(checkpointid, &id, &type)
         return 0;
     new data[e_CHECKPOINT_DATA];
     Streamer_GetArrayData(STREAMER_TYPE_CP, checkpointid, E_STREAMER_EXTRA_ID, data);
-    id = data[E_CHECKPOINT_ID];
-    type = data[E_CHECKPOINT_TYPE];
+    id = data[CHECKPOINT_ID];
+    type = data[CHECKPOINT_TYPE];
     return 1;
+}
+
+stock Character_GetCheckpoint(playerid)
+{
+    return PlayerCheckPoint[playerid];
 }

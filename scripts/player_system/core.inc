@@ -5,6 +5,8 @@
 
 #define _included_PLAYER 
 
+#include <house_system\core>
+
 #include <player_system\enum>
 
 #include <player_system\textdraws>
@@ -155,36 +157,35 @@ stock Character_ShowStats(playerid, targetid)
 	getdate(year, month, day);
 	gettime(hours, minutes, seconds);
 	
-    SendFormattedMessage(targetid, COLOR_GREEN, "_____________________[STATISTICHE - %d/%d/%d @ %d:%d]_____________________", day, month, year, hours, minutes);
-	SendFormattedMessage(targetid, -1, "[Account] Nome: %s - Livello: %d - E-Mail: %s", Account_GetName(playerid), Character_GetLevel(playerid), Account_GetEMail(playerid));
-    
-	if(Faction_IsValid(Character_GetFaction(playerid)))
+	new factionName[MAX_FACTION_NAME] = "N/A", rankName[MAX_FACTION_RANK_NAME] = "N/A";
+    if(Faction_IsValid(Character_GetFaction(playerid)))
 	{
-		new factionName[MAX_FACTION_NAME], rankName[MAX_FACTION_RANK_NAME];
 		Faction_GetName(Character_GetFaction(playerid), factionName);
 		Faction_GetRankName(Character_GetFaction(playerid), Character_GetRank(playerid), rankName);
-		SendFormattedMessage(targetid, -1, "[Personaggio] Nome: %s - Skin: %d - Livello: %d - Esperienza: %d - Fazione: %s - Rank: %s", Character_GetOOCName(playerid), Character_GetSkin(playerid), Character_GetLevel(playerid), Character_GetExperience(playerid), factionName, rankName);
 	}
-	else
-	{
-		SendFormattedMessage(targetid, -1, "[Personaggio] Nome: %s - Skin: %d - Livello: %d - Esperienza: %d", Character_GetOOCName(playerid), Character_GetSkin(playerid), Character_GetLevel(playerid), Character_GetExperience(playerid));
-	}
-    SendFormattedMessage(targetid, -1, "[Salute] HP: %.2f - Armatura: %.2f", hp, armour);
-    
-	if(list_valid(Character_GetOwnedBuildingsList(playerid)))
+
+    SendFormattedMessage(targetid, 0x33AA33FF, "_____________________[Stats Help - %d/%d/%d @ %d:%d:%d]_____________________", day, month, year, hours, minutes, seconds);
+	SendFormattedMessage(targetid, 0xCCE6E6FF, "[Account] %s | Admin Level: [%d] | Premium Level: [%d] | E-Mail: %s", Account_GetName(playerid), Account_GetAdminLevel(playerid), Account_GetPremiumLevel(playerid), Account_GetEMail(playerid));
+	SendFormattedMessage(playerid, 0xCCE6E6FF, "[Personaggio] Livello: [%d] | Esperienza: [%d] | Fazione: [%s] | Rank: [%s]", Character_GetLevel(playerid), Character_GetExperience(playerid), factionName, rankName);
+    SendFormattedMessage(targetid, 0xCCE6E6FF, "[Personaggio] HP: [%.2f] | Armatura: [%.2f] | Ore di gioco: [%d]", hp, armour, 0);
+	SendFormattedMessage(targetid, 0xCCE6E6FF, "[Personaggio] Soldi: [$%s] | Banca: [$%s] | Stipendio: [$%s]", FormatNumber(Character_GetMoney(playerid)), FormatNumber(Character_GetBank(playerid)), FormatNumber(Character_GetPayCheck(playerid)));
+    SendFormattedMessage(playerid, 0xCCE6E6FF, "[Altro] Interior: [%d] | VW: [%d]", GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
+    SendClientMessage(targetid, 0x33AA33FF, "_______________________________________________________");
+	
+	/*if(list_valid(Character_GetOwnedBuildingsList(playerid)))
 	{
 		for_list(i : Character_GetOwnedBuildingsList(playerid))
 		{
 			SendFormattedMessage(playerid, -1, "[Proprietà] Business: %d", iter_get(i));
 		}
-	}
+	}*/
 
-	if(Character_HasHouseKey(playerid))
-	   SendFormattedMessage(targetid, -1, "[Proprietà] Casa: %d", Character_GetHouseKey(playerid));
+	//if(Character_HasHouseKey(playerid))
+	   //SendFormattedMessage(targetid, -1, "[Proprietà] Casa: %d", Character_GetHouseKey(playerid));
 	
-	SendFormattedMessage(targetid, -1, "[Altro] Soldi: $%d - Banca: $%d - Stipendio: $%d - Interior: %d - VW: %d", Character_GetMoney(playerid), Character_GetBank(playerid), Character_GetPayCheck(playerid), GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
+	//SendFormattedMessage(targetid, -1, "[Altro] Soldi: $%d - Banca: $%d - Stipendio: $%d - Interior: %d - VW: %d", Character_GetMoney(playerid), Character_GetBank(playerid), Character_GetPayCheck(playerid), GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
 	
-	if(Account_GetPremiumLevel(playerid) > 0 && Account_GetPremiumExpiry(playerid) > gettime())
+	/*if(Account_GetPremiumLevel(playerid) > 0 && Account_GetPremiumExpiry(playerid) > gettime())
 	{
 		static premiumNames[][16] = {"Nerone", "Caligola", "Giulio Cesare"};
 		TimestampToDate(Account_GetPremiumExpiry(playerid), year, month, day, hours, minutes, seconds, 1);
@@ -193,11 +194,10 @@ stock Character_ShowStats(playerid, targetid)
 	}
 	
 	if(Account_GetAdminLevel(playerid) > 0)
-		SendFormattedMessage(targetid, -1, "[Staff] %s", GetAdminLevelName(Account_GetAdminLevel(playerid)));
+		SendFormattedMessage(targetid, -1, "[Staff] %s", GetAdminLevelName(Account_GetAdminLevel(playerid)));*/
 
 	//SendFormattedMessage(targetid, -1, "Ti mancano %d/%d punti esperienza per salire di livello.", Character_GetExp(playerid), expForNewLevel);
-    SendFormattedMessage(targetid, -1, "Tempo rimanente al PayDay: %d minuti", 60 - Account_GetPayDay(playerid));
-    //SendClientMessage(targetid, COLOR_GREEN, "_______________________________________________________");
+    //SendFormattedMessage(targetid, -1, "Tempo rimanente al PayDay: %d minuti", 60 - Account_GetPayDay(playerid));
     return 1;
 }
 
@@ -277,26 +277,29 @@ stock List:Character_GetOwnedHouses(playerid)
 	return list;
 }
 
-stock Character_GetNearHouseID(playerid, bool:inside = false)
+stock Character_GetHouse(playerid, bool:inside = false)
 {
+	new houseid = INVALID_HOUSE_ID;
+	new hid = INVALID_HOUSE_ID;
 	if(inside)
 	{
-		return Character_GetHouseID(playerid);
+		if(Checkpoint_GetInfoOfType(Character_GetCheckpoint(playerid), CHECKPOINT_TYPE_HOUSE, houseid) && House_IsValid(houseid) && Character_GetVirtualWorld(playerid) == House_GetExitWorld(houseid))
+		{
+			hid = houseid;
+		}
 	}
-	else
+	else if(Checkpoint_GetInfoOfType(Character_GetCheckpoint(playerid), CHECKPOINT_TYPE_HOUSE, houseid) && House_IsValid(houseid) && Character_GetVirtualWorld(playerid) == House_GetEnterWorld(houseid))
 	{
-		new id, E_ELEMENT_TYPE:type;
-		if(Character_GetNearestPickup(playerid, id, type) && (type == ELEMENT_TYPE_HOUSE_ENTRANCE || type == ELEMENT_TYPE_HOUSE_EXIT))
-			return id;
+		hid = houseid;
 	}
-	return INVALID_HOUSE_ID;
+	return hid;
 }
 
-stock Character_GetNearHouseIDMenu(playerid)
+stock Character_GetHouseMenu(playerid)
 {
-	new houseid = Character_GetNearHouseID(playerid, true);
+	new houseid = Character_GetHouse(playerid, true);
 	if(!House_IsValid(houseid))
-		houseid = Character_GetNearHouseID(playerid, false);
+		houseid = Character_GetHouse(playerid, false);
 	if(House_IsValid(houseid))
 	{
 		if(Player_IsAdminDuty(playerid))

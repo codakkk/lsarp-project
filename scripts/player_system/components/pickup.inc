@@ -45,7 +45,7 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
 		}
 		GameTextForPlayerStr(playerid, string, 2000, 5);
 	}
-	else if(type == ELEMENT_TYPE_HOUSE_ENTRANCE)
+	/*else if(type == ELEMENT_TYPE_HOUSE_ENTRANCE)
 	{
 		new houseid = elementid, String:string;
 		if(Account_GetAdminLevel(playerid) > 1)
@@ -71,6 +71,6 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
 		}
 		string += str_format("~r~Interno:~w~ %d~n~", House_GetInteriorID(houseid));
 		GameTextForPlayerStr(playerid, string, 2000, 5);
-	}
+	}*/
     return 1;
 }

@@ -41,15 +41,13 @@ hook OnCharacterLoad(playerid)
 
 hook OnCharacterTryBuy(playerid)
 {
+	new houseid = Character_GetHouse(playerid, false);
+	if(House_IsValid(houseid))
+		return Character_BuyHouse(playerid, houseid);
+				
 	new elementid, E_ELEMENT_TYPE:type;
-	if(Character_GetNearestPickup(playerid, elementid, type))
-	{
-		if(type == ELEMENT_TYPE_HOUSE_ENTRANCE && House_IsValid(elementid))
-			return Character_BuyHouse(playerid, elementid);
-		
-		if(type == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_IsValid(elementid))
-			return Character_BuyBuilding(playerid, elementid);
-	}
+	if(Character_GetNearestPickup(playerid, elementid, type) && type == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_IsValid(elementid))
+		return Character_BuyBuilding(playerid, elementid);
 	return 1;
 }
 
@@ -107,9 +105,9 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 stock Character_Enter(playerid)
 {   
 	new buildingid, E_ELEMENT_TYPE:type;
-	printf("Last Enter");
     if(Character_GetNearestPickup(playerid, buildingid, type) && type == ELEMENT_TYPE_BUILDING_ENTRANCE)
     {
+		printf("Last Enter");
 		if(IsPlayerInAnyVehicle(playerid))
 			return 0;
 		
@@ -287,13 +285,15 @@ stock Character_BuyHouse(playerid, houseid)
 
     Character_GiveMoney(playerid, -price, "Character_BuyHouse");
 
-    SendFormattedMessage(playerid, COLOR_GREEN, "Congratulazioni! Hai acquistato questa casa per $%d.", price);
+	new zone[32];
+	House_GetZoneName(houseid, zone);
+    SendFormattedMessage(playerid, 0x33AA33FF, "Hai acquistato l'immobile situato a %s, Las Venturas, San Andreas.", zone);
     return 1;
 }
 
 stock Character_ShowHouseDialog(playerid)
 {
-	new houseid = Character_GetNearHouseIDMenu(playerid);
+	new houseid = Character_GetHouseMenu(playerid);
 	if(House_IsValid(houseid))
 	{
 		return Dialog_Show(playerid, Dialog_House, DIALOG_STYLE_LIST, "Casa", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nCambia Interior", "Continua", "Chiudi");

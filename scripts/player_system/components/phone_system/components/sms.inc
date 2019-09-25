@@ -87,9 +87,9 @@ stock Character_SendSMS(playerid, slot, number, const msg[])
     
     new name[32];
     if(PhoneBook_GetContactName(senderNumber, number, name))
-        SendFormattedMessage(playerid, COLOR_GREEN, "SMS inviato al contatto %s. Testo: %s", name, msg);
+        SendFormattedMessage(playerid, COLOR_YELLOW, "SMS inviato al contatto %s. Testo: %s", name, msg);
     else
-        SendFormattedMessage(playerid, COLOR_GREEN, "SMS inviato al numero %d. Testo: %s", number, msg);
+        SendFormattedMessage(playerid, COLOR_YELLOW, "SMS inviato al numero %d. Testo: %s", number, msg);
 
     new Inventory:entityInv, entityId, E_ENTITY_TYPE:entityType, phoneSlotId;
     if(World_FindPhoneByNumber(number, entityInv, entityId, entityType, phoneSlotId) && !Phone_IsOff(entityInv, phoneSlotId))

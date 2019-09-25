@@ -279,6 +279,7 @@ hook function Character_Enter(playerid)
         {
             teleportid = iter_get_key(i);
             Teleport_GetEnterPosition(teleportid, x, y, z);
+            Teleport_GetExitPosition(teleportid, ex, ey, ez);
             if(IsPlayerInRangeOfPoint(playerid, range, x, y, z))
             {
                 elementid = teleportid;
@@ -358,6 +359,7 @@ hook function Character_Enter(playerid)
         }
         else
         {
+            printf("Teleport Set Pos");
             Character_SetSafePosition(playerid, gotoX, gotoY, gotoZ, gotoInterior, gotoWorld);
         }
         SetPlayerInterior(playerid, gotoInterior);

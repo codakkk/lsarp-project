@@ -87,7 +87,7 @@ CMD:paga(playerid, params[])
 {
 	new id, amount;
 	if(sscanf(params, "k<u>d", id, amount))
-		return SendClientMessage(playerid, COLOR_ERROR, "/paga <playerid/partofname> <ammontare>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USA: /paga [playerid/partofname] [ammontare]");
 	if(id == playerid || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 	if(amount < 0 || amount > Character_GetMoney(playerid))
@@ -101,8 +101,8 @@ CMD:paga(playerid, params[])
 	Character_GiveMoney(playerid, -amount);
 	Character_GiveMoney(id, amount);
 	Character_AMe(playerid, "prende dei soldi e li da a %s.", Character_GetRolePlayName(id));
-	SendFormattedMessage(id, COLOR_GREEN, "%s ti ha dato $%d.", Character_GetRolePlayName(playerid), amount);
-	SendFormattedMessage(playerid, COLOR_GREEN, "Hai dato $%d a %s.", amount, Character_GetRolePlayName(id));
+	SendFormattedMessage(id, -1, "{cbccce}%s ti ha dato {8fbc8f}$%s{cbccce}.", Character_GetRolePlayName(playerid), FormatNumber(amount));
+	SendFormattedMessage(playerid, -1, "{cbccce}Hai dato {8fbc8f}$%s{cbccce} a %s.", FormatNumber(amount), Character_GetRolePlayName(id));
 
 	if(amount >= 10000)
 		SendMessageToAdmins(1, COLOR_ORANGE, "AdmAlert: %s ha pagato $%d a %s.", Character_GetOOCName(playerid), amount, Character_GetOOCName(id));
@@ -452,5 +452,11 @@ CMD:arma(playerid, params[])
 		}
 		default: SetPlayerArmedWeapon(playerid, 0);
 	}
+	return 1;
+}
+
+CMD:myweapons(playerid, params[])
+{
+	SendClientMessage(playerid, 0xFF6347FF, "Le armi che possiedi sono:");
 	return 1;
 }

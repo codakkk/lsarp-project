@@ -61,7 +61,8 @@ CMD:aiutami(playerid, params[])
 
     StaffRequest_Add(playerid, REQUEST_TYPE_SUPPORTER, params);
 
-    SendMessageToTesters(0, 0xe9de98ff, "[TESTER-REQ]: %s (%d) chiede: %s", Character_GetOOCName(playerid), playerid, params);
+    SendMessageToTesters(0, 0xe9de98ff, "[TESTER]: %s (%d) ha effettuato una richiesta: %s", Character_GetOOCName(playerid), playerid, params);
+    SendMessageToTesters(0, 0xE9DE98FF, "Digita /ar per accettare la richiesta.");
 
     SendClientMessage(playerid, -1, "Richiesta inviata ai testers.");
     SendFormattedMessage(playerid, -1, "Al momento ci sono %d richieste prima della tua.", StaffRequest_GetQueue(REQUEST_TYPE_SUPPORTER, gettime()));

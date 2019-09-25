@@ -327,6 +327,7 @@ hook function Character_Enter(playerid)
         }
         else
         {
+            printf("Garage Building Enter");
             Character_SetSafePosition(playerid, x, y, z, interiorid, worldid);
         }
         SetPlayerInterior(playerid, interiorid);

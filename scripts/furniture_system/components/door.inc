@@ -10,9 +10,9 @@ CMD:porta(playerid, params[])
     {
         if(!Player_IsAdminDuty(playerid))
         {
-            if(House_IsValid(houseid) && Character_GetNearHouseIDMenu(playerid) != houseid)
+            if(House_IsValid(houseid) && Character_GetHouseMenu(playerid) != houseid)
                 return 0;
-            if(Building_IsValid(buildingid) && Character_GetNearBuildingIDMenu(playerid, 10) != buildingid)
+            if(Building_IsValid(buildingid) && Character_GetBuildingMenu(playerid, 10) != buildingid)
                 return 0;
         }
 

@@ -15,11 +15,17 @@
 static Map:PlayerVehicles; //<PlayerID, List:e_PlayerVehicle>
 */
 
-static SelectedVehicle[MAX_PLAYERS];
+static 
+	SelectedVehicle[MAX_PLAYERS],
+	bool:Localizing[MAX_PLAYERS char];
 
 hook OnPlayerEnterCheckpoint(playerid)
 {
-	DisablePlayerCheckpoint(playerid);
+	if(Localizing[playerid])
+	{
+		DisablePlayerCheckpoint(playerid);
+		Localizing[playerid] = false;
+	}
 	return 1;
 }
 
@@ -366,7 +372,7 @@ public LoadCharacterVehicle(playerid, slotid)
 	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai spawnato il tuo veicolo (%s). Segui il checkpoint per trovarlo.", Vehicle_GetNameFromModel(modelid));
 
 	SetPlayerCheckpoint(playerid, x, y, z, 5.0);
-
+	Localizing[playerid] = true;
 	return 1;
 }
 

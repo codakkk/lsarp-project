@@ -360,7 +360,7 @@ CMD:rispondi(playerid, params[])
     UsingPhoneSlotID[playerid] = slot;
 
     SendClientMessage(playerid, COLOR_GREEN, "Hai risposto alla chiamata.");
-    
+    SendClientMessage(playerid, 0x8C8C8CFF, "[!] Puoi parlare ora usando la chat box.");
     SetPlayerSpecialAction(playerid, SPECIAL_ACTION_USECELLPHONE);
 	SetPlayerAttachedObject(playerid, 6, 330, 6, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 1.000000, 1.000000, 1.000000);
 
@@ -434,7 +434,7 @@ stock Character_StartCall(playerid, slotid, textNumber[])
     new number = PhoneBook_ParseValue(playerNumber, textNumber);
 
     if(number <= 0 || number > 39999999)
-        return SendClientMessage(playerid, COLOR_ERROR, "Il numero inserito non esiste o non è al momento raggiungibile. Riprova più tardi."), 0;
+        return SendClientMessage(playerid, 0x8C8C8CFF, "[!] Il numero inserito non esiste o non è al momento raggiungibile. Riprova più tardi."), 0;
 
     if(number == playerNumber)
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi chiamare il tuo stesso numero.");
@@ -489,7 +489,7 @@ stock Character_StartCall(playerid, slotid, textNumber[])
     if(Inventory_GetSlotTempExtra(entityInv, validSlotId, "phone_state") == PHONE_STATE_OFF)
     {        
         Character_StopCall(playerid, slotid);
-        return SendClientMessage(playerid, COLOR_ERROR, "Il numero chiamato ha il cellulare spento."), 0;
+        return SendClientMessage(playerid, 0x8C8C8CFF, "[!] Il numero chiamato ha il cellulare spento."), 0;
     }
 
 
@@ -524,7 +524,7 @@ stock Character_StartCall(playerid, slotid, textNumber[])
 
     if(Phone_IsBusy(entityInv, validSlotId))
     {
-        SendClientMessage(playerid, COLOR_ERROR, "Il numero inserito è attualmente occupato.");
+        SendClientMessage(playerid, 0x8C8C8CFF, "[!] Il numero inserito è attualmente occupato.");
         Character_StopCall(playerid, slotid);
         return 0;
     }
@@ -586,7 +586,7 @@ stock Character_StopCall(playerid, slotid)
     RemovePlayerAttachedObject(playerid, 6);
     SetPlayerSpecialAction(playerid, SPECIAL_ACTION_STOPUSECELLPHONE);
     ClearAnimations(playerid, 1);
-    SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso la chiamata.");
+    SendClientMessage(playerid, 0x8C8C8CFF, "[!] La chiamata è terminata.");
     return 1;
 }
 

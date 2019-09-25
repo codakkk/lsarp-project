@@ -31,7 +31,10 @@ CMD:ritirastipendio(playerid, params[])
 	
 	Character_GiveMoney(playerid, paycheck, "paycheck");
 	Character_SetPayCheck(playerid, 0);
-	SendFormattedMessage(playerid, -1, "Hai ritirato il tuo stipendio. Ammontare: {85bb65}$%d{FFFFFF}", paycheck);
+	new str[128];
+	format(str, sizeof(str), "HAI APPENA RICEVUTO IL TUO STIPENDIO: $%s", FormatNumber(paycheck));
+	GameTextForPlayer(playerid, str, 5000, 4);
+	SendFormattedMessage(playerid, -1, "HAI APPENA RICEVUTO IL TUO STIPENDIO: $%s", FormatNumber(paycheck));
 	return 1;
 }
 

@@ -88,7 +88,7 @@ stock Character_AddToPhoneBook(playerid, slotid, number, const name[])
         return SendClientMessage(playerid, COLOR_ERROR, "Hai già salvato questo numero. Controlla la rubrica.");
 
     if(PhoneBook_AddContact(playerNumber, number, name))
-        SendFormattedMessage(playerid, COLOR_GREEN, "Hai aggiunto il numero %d alla rubrica con il nome %s.", number, name);
+        SendFormattedMessage(playerid, COLOR_YELLOW, "Hai aggiunto il numero %d alla rubrica con il nome %s.", number, name);
     else
         SendClientMessage(playerid, COLOR_ERROR, "Non è stato possibile aggiungere il numero alla rubrica. Errore sconosciuto.");
     return 1;
@@ -267,7 +267,7 @@ Dialog:Dialog_PhoneBookDeleteContact(playerid, response, listitem, inputtext[])
     new name[32];
     PhoneBook_GetContactName(Character_GetSelectedPhone(playerid), SelectedContactNumber[playerid], name);
 
-    SendFormattedMessage(playerid, COLOR_GREEN, "Hai rimosso il contatto (%s) dalla rubrica.", name);
+    SendFormattedMessage(playerid, COLOR_YELLOW, "Hai rimosso il contatto (%s) dalla rubrica.", name);
     
     if(PhoneBook_DeleteContact(Character_GetSelectedPhone(playerid), SelectedContactNumber[playerid]))
     {

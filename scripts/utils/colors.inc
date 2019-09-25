@@ -31,3 +31,4 @@
 #define COLOR_REJECT_REQUEST        (0xEA7500FF)
 #define COLOR_ACCEPT_REQUEST        (0xEA7500FF)
 #define COLOR_ADMINCMD              (0xFF6347FF)
+#define COLOR_COMMAND_ERROR         (0xFF6347FF)

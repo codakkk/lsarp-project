@@ -195,6 +195,26 @@ CMD:casa(playerid, params[])
 }
 alias:casa("cmenu");
 
+flags:bussa(CMD_ALIVE_USER);
+CMD:bussa(playerid, params[])
+{
+	new houseid = Character_GetHouse(playerid, false);
+	new buildingid = Character_GetBuilding(playerid, false);
+
+	if(!House_IsValid(houseid) && !Building_IsValid(buildingid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata di un biz o di una casa.");
+
+	new world = House_IsValid(houseid) ? House_GetExitWorld(houseid) : Building_GetExitWorld(buildingid);
+
+	foreach(new p : Player)
+	{
+		if(Character_GetVirtualWorld(p) == world)
+			SendClientMessage(p, COLOR_PURPLE, "** Qualcuno sta bussando alla porta di casa. **");
+	}
+	Character_AMe(playerid, "bussa alla porta.");
+	return 1;
+}
+
 flags:resethousefurnitures(CMD_JR_MODERATOR);
 CMD:resethousefurnitures(playerid, params[])
 {

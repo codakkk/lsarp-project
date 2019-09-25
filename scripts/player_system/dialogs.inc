@@ -4,7 +4,7 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
     if(!response)
 	   return 0;
     
-	new houseid = Character_GetNearHouseIDMenu(playerid);
+	new houseid = Character_GetHouseMenu(playerid);
 
 	if(!House_IsValid(houseid))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno della tua casa.");
@@ -72,7 +72,7 @@ Dialog:Dialog_HouseDeposit(playerid, response, listitem, inputtext[])
 {
     if(!response)
 	   return 0;
-    new houseid = Character_GetNearHouseIDMenu(playerid);
+    new houseid = Character_GetHouseMenu(playerid);
 	if(houseid == -1)
 		return 0;
     new amount = strval(inputtext);
@@ -89,7 +89,7 @@ Dialog:Dialog_HouseWithdraw(playerid, response, listitem, inputtext[])
 {
     if(!response)
 	   return 0;
-	new houseid = Character_GetNearHouseIDMenu(playerid);
+	new houseid = Character_GetHouseMenu(playerid);
 	if(houseid == -1)
 		return 0;
     new amount = strval(inputtext);
@@ -106,7 +106,7 @@ Dialog:Dialog_HouseSell(playerid, response, listitem, inputtext[])
 {
     if(!response)
 	   return Character_ShowHouseDialog(playerid);
-	new houseid = Character_GetNearHouseIDMenu(playerid);
+	new houseid = Character_GetHouseMenu(playerid);
 	printf("House ID: %d", houseid);
 	if(houseid == -1)
 		return 0;
@@ -121,14 +121,10 @@ Dialog:Dialog_HouseSell(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_HouseInterior(playerid, response, listitem, inputtext[])
 {
-	new houseid = Character_GetNearHouseIDMenu(playerid);
+	new houseid = Character_GetHouseMenu(playerid);
     if(!response || !House_IsValid(houseid))
 	{
 		return 0;
-	}
-	if(!IsPlayerInRangeOfHouseEntrance(playerid, houseid))
-	{
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata della tua casa."), 0;
 	}
 
     if(House_SetInterior(houseid, House_GetInteriorType(houseid), listitem))
