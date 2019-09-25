@@ -15,7 +15,7 @@ hook OnPlayerConnect(playerid)
 task OnServerTimeUpdate[1000]() 
 {
     static 
-        hour, minute, second, string[64];
+        hour, minute, second;
     gettime(hour, minute, second);
 	
 	hour += Server_GetTimeAdd();

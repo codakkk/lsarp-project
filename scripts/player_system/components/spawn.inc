@@ -170,11 +170,18 @@ CMD:spawnpoint(playerid, params[])
 	}
 	else if(spawnType == SPAWN_POINT_TYPE_BUSINESS)
 	{
-		if(!Character_HasBuildingKey(playerid))
+		if(extraid == -1)
+		{
+			SendClientMessage(playerid, COLOR_ERROR, "/spawnpoint 3 <businessid>");
+			SendClientMessage(playerid, COLOR_ERROR, "Tipi - 0: Spawn scelto, 1: Casa, 2: Fazione, 3: Business");
+			return 1;
+		}
+
+		if(!list_valid(Character_GetOwnedBuildingsList(playerid)))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi un business.");
 		
 		Character_SetSpawnPointType(playerid, SPAWN_POINT_TYPE_BUSINESS);
-		Character_SetSpawnPointID(playerid, Character_GetBuildingKey(playerid));
+		Character_SetSpawnPointID(playerid, extraid);
 
 		SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo spawn point. La prossima volta respawnerai al tuo negozio.");
 	}
@@ -287,11 +294,9 @@ static Character_Spawn(playerid)
 		}
 		else if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_BUSINESS)
 		{
-			new buildingkey = Character_GetBuildingKey(playerid);
-			if(!Building_IsValid(buildingkey) || Building_GetOwnerID(buildingkey) != Character_GetID(playerid))
+			new buildingkey = Character_GetSpawnPointID(playerid);
+			if(!Building_IsValid(buildingkey))
 			{
-				SendClientMessage(playerid, COLOR_ERROR, "Non possiedi più il business. Il tuo spawn-point è stato resettato alla posizione scelta all'inizio.");
-				
 				Character_SetSpawnPointType(playerid, SPAWN_POINT_TYPE_NONE);
 				Character_SetSpawnPointID(playerid, 0);
 
@@ -432,7 +437,8 @@ static Character_LoadSpawnData(playerid)
 		cache_get_value_name_float(0, "spawn_a", PlayerSpawnData[playerid][SpawnA]);
 		cache_get_value_name_int(0, "spawn_interior", PlayerSpawnData[playerid][SpawnInterior]);
 		cache_get_value_name_int(0, "spawn_world", PlayerSpawnData[playerid][SpawnVirtualWorld]);
-	
+
+		SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `character_spawn_data` WHERE character_id = '%d'", Character_GetID(playerid));
 	return 1;

@@ -164,7 +164,7 @@ enum (<<= 1)
 #include <atm_system\core>
 #include <discord_system\core>
 #include <teleport_system\core>
-
+#include <gambling_system\core>
 
 // ========== [ DIALOGS ] ==========
 #include <player_system\dialogs>
@@ -438,7 +438,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 	{
 		if(!Faction_IsValid(factionid) || Faction_GetType(factionid) != FACTION_TYPE_POLICE || !Character_IsAlive(playerid) || !Character_IsFactionDuty(playerid))
 		{
-			SendClientMessage(playerid, COLOR_ERROR, "Devi essere un membro della Guardia Nazionale in servizio per utilizzare questo comando.");
+			SendClientMessage(playerid, COLOR_ERROR, "Devi essere un membro del Las Venturas Metropolitan Police Department in servizio per utilizzare questo comando.");
 			return 0;
 		}
 	}

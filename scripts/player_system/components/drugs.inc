@@ -58,7 +58,7 @@ CMD:resetdrugstats(playerid, params[])
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Giocatore non collegato.");
 	SendMessageToAdmins(false, COLOR_ADMINCMD, "AdmAlert: %s ha resettato le stats della droga a %s.", Account_GetName(playerid), Character_GetOOCName(id));
-	SendFormattedMessage(id, COLOR_GREEN, "[ADMIN]: %s ti ha resettato le stats della droga.", Account_GetName(playerid));
+	SendFormattedMessage(id, COLOR_GREEN, "L'admin %s ti ha resettato le stats della droga.", Account_GetName(playerid));
 	new data[e_PlayerDrugAddictionInfo];
 	for(new i = 0; i < MAX_PLAYER_DRUGS; ++i)
 	{

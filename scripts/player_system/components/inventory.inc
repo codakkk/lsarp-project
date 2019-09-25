@@ -43,9 +43,6 @@ stock bool:Character_UnloadInventory(playerid)
 
 hook OnCharacterLoad(playerid)
 {
-	#if defined LSARP_DEBUG
-		printf("player_inventory.pwn/OnCharacterLoad");
-	#endif
 	Character_InitializeInventory(playerid);
 	Character_LoadInventory(playerid);
 	return 1;
@@ -53,9 +50,6 @@ hook OnCharacterLoad(playerid)
 
 hook OnPlayerClearData(playerid)
 {
-	#if defined LSARP_DEBUG
-		printf("player_inventory.pwn/OnPlayerClearData");
-	#endif
 	SelectedListItem[playerid] = -1;
 	Character_ResetInventory(playerid);
 	Character_UnloadInventory(playerid);

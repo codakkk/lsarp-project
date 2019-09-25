@@ -31,7 +31,7 @@ new
 #include <faction_system\skins>
 #include <faction_system\ranks>
 
-#include <faction_system\national_guard\core>
+#include <faction_system\police\core>
 
 #include <faction_system\commands>
 #include <faction_system\commands\police>

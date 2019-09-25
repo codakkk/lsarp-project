@@ -3,14 +3,20 @@
 
 #include <YSI_Coding\y_hooks>
 
-static 
-	PlayerBuildingKey[MAX_PLAYERS],
+static
 	PlayerHouseKey[MAX_PLAYERS]
 ;
 
+static 
+	List:CharacterBuildings[MAX_PLAYERS],
+	List:CharacterHouses[MAX_PLAYERS];
+
 hook OnPlayerClearData(playerid)
 {
-	PlayerBuildingKey[playerid] = PlayerHouseKey[playerid] = 0;
+	if(list_valid(CharacterBuildings[playerid]))
+		list_delete_deep(CharacterBuildings[playerid]);
+	
+	PlayerHouseKey[playerid] = 0;
 	return 1;
 }
 
@@ -18,10 +24,18 @@ hook OnCharacterLoad(playerid)
 {
 	inline OnLoad()
 	{
-		cache_get_value_index_int(0, 0, PlayerBuildingKey[playerid]);
-		cache_get_value_index_int(0, 1, PlayerHouseKey[playerid]);
+		cache_get_value_index_int(0, 0, PlayerHouseKey[playerid]);
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT building_key, house_key FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT house_key FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
+
+	for_map(i : GetBuildingsMap())
+	{
+		new buildingid = iter_get_key(i);
+		if(Building_GetOwnerID(buildingid) == Character_GetID(playerid))
+		{
+			Character_AddOwnedBuilding(playerid, buildingid);
+		}
+	}
 	return 1;
 }
 
@@ -37,22 +51,6 @@ hook OnCharacterTryBuy(playerid)
 			return Character_BuyBuilding(playerid, elementid);
 	}
 	return 1;
-}
-
-stock Character_HasBuildingKey(playerid)
-{
-    return PlayerBuildingKey[playerid] > 0;
-}
-
-stock Character_GetBuildingKey(playerid)
-{
-    return PlayerBuildingKey[playerid];
-}
-
-stock Character_SetBuildingKey(playerid, buildingid)
-{
-    PlayerBuildingKey[playerid] = buildingid;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET building_key = '%d' WHERE id = '%d'", buildingid, Character_GetID(playerid));
 }
 
 stock Character_HasHouseKey(playerid)
@@ -116,7 +114,7 @@ stock Character_Enter(playerid)
 			return 0;
 		
 		if(Building_IsLocked(buildingid))
-			return GameTextForPlayer(playerid, "~r~Porta Chiusa", 5000, 1);
+			return GameTextForPlayer(playerid, "~r~Porta Chiusa", 5000, 1), 0;
 		new 
 			Float:x = 0.0, 
 			Float:y = 0.0, 
@@ -259,8 +257,6 @@ stock Character_BuyBuilding(playerid, buildingid)
     Character_GiveMoney(playerid, -Building_GetPrice(buildingid));
     
     Building_SetOwner(buildingid, playerid);
-    
-    Character_SetBuildingKey(playerid, buildingid);
 
 	new name[MAX_BUILDING_NAME];
 	Building_GetName(buildingid, name);
@@ -303,4 +299,78 @@ stock Character_ShowHouseDialog(playerid)
 		return Dialog_Show(playerid, Dialog_House, DIALOG_STYLE_LIST, "Casa", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nCambia Interior", "Continua", "Chiudi");
 	}
 	return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno di casa tua."), 0;
+}
+
+stock bool:Character_AddOwnedBuilding(playerid, buildingid)
+{
+	if(!Character_IsLogged(playerid) || !Building_IsValid(buildingid))
+		return false;
+	
+	if(!list_valid(CharacterBuildings[playerid]))
+		CharacterBuildings[playerid] = list_new();
+	
+	list_add(CharacterBuildings[playerid], buildingid);
+	return true;
+}
+
+stock bool:Character_RemoveOwnedBuilding(playerid, buildingid)
+{
+	if(!Character_IsLogged(playerid) || !Building_IsValid(buildingid))
+		return false;
+	
+	if(!list_valid(CharacterBuildings[playerid]))
+		return false;
+	new index = -1;
+	for(new i = 0, j = list_size(CharacterBuildings[playerid]); i < j; ++i)
+	{
+		if(list_get(CharacterBuildings[playerid], i) == buildingid)
+		{
+			index = i;
+			break;
+		}
+	}
+	if(index != -1)
+	{
+		list_remove(CharacterBuildings[playerid], index);
+		return true;
+	}
+	return false;
+}
+
+stock List:Character_GetOwnedBuildingsList(playerid)
+{
+	if(!list_valid(CharacterBuildings[playerid]))
+		return List:0;
+	return CharacterBuildings[playerid];
+}
+
+stock bool:Character_DoesOwnBuilding(playerid, buildingid)
+{
+	if(!list_valid(CharacterBuildings[playerid]) || list_size(CharacterBuildings[playerid]) == 0)
+		return false;
+	new bool:result = false;
+	for_list(i : CharacterBuildings[playerid])
+	{
+		if(iter_get(i) == buildingid)
+		{
+			result = true;
+			break;
+		}
+	}
+	return result;
+}
+
+// Returns a List of buildings by type owned by player
+stock List:Character_GetBuildingsByType(playerid, E_BUILDING_TYPE:type)
+{
+	if(!list_valid(CharacterBuildings[playerid]) || list_size(CharacterBuildings[playerid]) == 0)
+		return List:0;
+	new List:list = list_new(), buildingid = 0;
+	for_list(i : CharacterBuildings[playerid])
+	{
+		buildingid = iter_get(i);
+		if(Building_GetType(buildingid) == _:type)
+			list_add(list, buildingid);
+	}
+	return list;
 }

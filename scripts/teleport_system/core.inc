@@ -134,7 +134,7 @@ CMD:teleportedit(playerid, p[])
     new teleportid, command[16], params[256];
     if(sscanf(p, "ds[16]S()[256]", teleportid, command, params))
     {
-	    SendClientMessage(playerid, COLOR_ERROR, "/teleportedit <teleportid> <name - enter - exit - faction - player - delete>");
+	    SendClientMessage(playerid, COLOR_ERROR, "/teleportedit <teleportid> <name - enter - exit - faction - player - delete - allowvehicles>");
         return 0;
     }
     

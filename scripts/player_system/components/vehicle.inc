@@ -507,14 +507,6 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
 			{
 				SendFormattedMessage(playerid, COLOR_GREEN, "(( Questo veicolo (%s) appartiene a %s ))", Vehicle_GetName(vehicleid), Vehicle_GetOwnerName(vehicleid));
 			}
-			if(Vehicle_IsEngineBroken(vehicleid))
-			{
-				new Float:hp;
-				GetVehicleHealth(vehicleid, hp);
-				if(hp >= VEHICLE_MIN_HEALTH_FOR_ENGINE)
-					SendClientMessage(playerid, COLOR_ERROR, "(( Il veicolo è stato distrutto di recente. Il motore è danneggiato ma ancora funzionante. ))");
-				
-			}
 		}
 		SetPlayerArmedWeapon(playerid, 0);
 	}

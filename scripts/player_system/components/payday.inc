@@ -73,12 +73,12 @@ stock Character_PayDay(playerid)
 	   	Character_SetExperience(playerid, 0);
 	}
 
-	if(Character_HasBuildingKey(playerid))
+	for_list(i : Character_GetOwnedBuildingsList(playerid))
 	{
-		new id = Character_GetBuildingKey(playerid);
-		if(Building_IsValid(id))
+		new buildingid = iter_get(i);
+		if(Building_IsValid(buildingid))
 		{
-			new price = Building_GetPrice(id)/100;
+			new price = Building_GetPrice(buildingid)/100;
 			businessMoney = price;
 			paycheck += price;
 		}

@@ -1901,6 +1901,28 @@ ac_fpublic ac_AntiCheatGetInterior(playerid) return ACInfo[playerid][acInt];
 
 #endif
 
+stock bool:ac_RemovePlayerWeapon(playerid, weaponid)
+{
+	if(!IsPlayerConnected(playerid))
+		return false;
+	
+	ResetPlayerWeapons(playerid);
+
+	for(new ac_i = 12; ac_i >= 0; --ac_i)
+	{
+		if(ACInfo[playerid][acWeapon][ac_i] == weaponid)
+		{
+			ACInfo[playerid][acWeapon][ac_i] = ACInfo[playerid][acAmmo][ac_i] = 0;
+			ACInfo[playerid][acSetWeapon][ac_i] = -1;
+			ACInfo[playerid][acGiveAmmo][ac_i] = -65535;
+            continue;
+		}
+		GivePlayerWeapon(playerid, ACInfo[playerid][acWeapon][ac_i], ACInfo[playerid][acAmmo][ac_i]);
+	}
+
+	return true;
+}
+
 stock acc_AddStaticVehicle(modelid, Float:spawn_x, Float:spawn_y, Float:spawn_z, Float:z_angle, color1, color2)
 {
 	new ac_vehicleid = AddStaticVehicle(modelid, spawn_x, spawn_y, spawn_z, z_angle, color1, color2);

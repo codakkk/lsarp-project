@@ -111,12 +111,6 @@ hook OnPlayerRequestClass(playerid, classid)
 	return 1;
 }
 
-hook OnCharacterLoad(playerid)
-{
-	SetPlayerName(playerid, CharacterName[playerid]);
-	return 1;
-}
-
 stock Character_SetVirtualWorld(playerid, virtualWorld)
 {
 	new old = Character_GetVirtualWorld(playerid);
@@ -177,11 +171,15 @@ stock Character_ShowStats(playerid, targetid)
 	}
     SendFormattedMessage(targetid, -1, "[Salute] HP: %.2f - Armatura: %.2f", hp, armour);
     
-	if(Character_HasBuildingKey(playerid) && Character_HasHouseKey(playerid))
-	   SendFormattedMessage(targetid, -1, "[Proprietà] Edificio: %d - Casa: %d", Character_GetBuildingKey(playerid), Character_GetHouseKey(playerid));
-    else if(Character_HasBuildingKey(playerid))
-	   SendFormattedMessage(targetid, -1, "[Proprietà] Edificio: %d", Character_GetBuildingKey(playerid));
-    else if(Character_HasHouseKey(playerid))
+	if(list_valid(Character_GetOwnedBuildingsList(playerid)))
+	{
+		for_list(i : Character_GetOwnedBuildingsList(playerid))
+		{
+			SendFormattedMessage(playerid, -1, "[Proprietà] Business: %d", iter_get(i));
+		}
+	}
+
+	if(Character_HasHouseKey(playerid))
 	   SendFormattedMessage(targetid, -1, "[Proprietà] Casa: %d", Character_GetHouseKey(playerid));
 	
 	SendFormattedMessage(targetid, -1, "[Altro] Soldi: $%d - Banca: $%d - Stipendio: $%d - Interior: %d - VW: %d", Character_GetMoney(playerid), Character_GetBank(playerid), Character_GetPayCheck(playerid), GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
@@ -409,11 +407,16 @@ stock Character_LoadData(playerid)
 	{
 		Character_SetLogged(playerid, true);
 
-		CallLocalFunction(#OnCharacterLoad, "i", playerid);
+		CancelSelectTextDraw(playerid);
+
+		TogglePlayerSpectating(playerid, 0);
 
 		SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
-		TogglePlayerSpectating(playerid, 0);
 		SpawnPlayer(playerid);
+
+		SetPlayerName(playerid, CharacterName[playerid]);
+
+		CallLocalFunction(#OnCharacterLoad, "i", playerid);
 	}
 	else return KickEx(playerid);
 	return 1;

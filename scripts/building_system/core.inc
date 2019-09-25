@@ -113,21 +113,6 @@ hook OnGameModeInit()
 	return 1;
 }
 
-hook OnCharacterLoad(playerid)
-{
-	new buildingid = Character_GetBuildingKey(playerid);
-	if(buildingid > 0)
-	{
-		if(!Building_IsValid(buildingid) || Building_GetOwnerID(buildingid) != Character_GetID(playerid))
-		{
-			SendClientMessage(playerid, COLOR_ERROR, "L'edificio che possedevi non esiste più o non è più tuo.");
-			Character_SetBuildingKey(playerid, 0);
-		}
-	}
-	return 1;
-}
-
-
 hook OnCharacterChangeName(playerid, newCharacterName[])
 {
 	for_map(i : Buildings)
@@ -363,6 +348,8 @@ stock Building_SetOwner(buildingid, playerid)
 
 	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), Building_GetID(buildingid));
 
+	Character_AddOwnedBuilding(playerid, buildingid);
+
     Log(Character_GetOOCName(playerid), "", "Building_SetOwner", buildingid);
     return 1;
 }
@@ -376,15 +363,21 @@ stock Building_ResetOwner(buildingid)
 	iter_set_cells(iter, OwnerName, "");
 
 	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET owner_id = '0' WHERE id = '%d'", Building_GetID(buildingid));
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET building_key = '0' WHERE building_key = '%d'", Building_GetID(buildingid));
 	
 	foreach(new i : Player)
 	{
-		if(!Character_IsLogged(i) || Character_GetBuildingKey(i) != Building_GetID(buildingid))
+		if(!Character_DoesOwnBuilding(i, buildingid))
 			continue;
-		SendClientMessage(i, COLOR_ORANGE, "L'edificio di cui eri proprietario non ti appartiene piu'.");
-		Character_SetBuildingKey(i, 0);
+		Character_RemoveOwnedBuilding(i, buildingid);
 	}
+
+	/*foreach(new i : Player)
+	{
+		if(!Character_IsLogged(i) || !Character_DoesOwnBuilding(playerid, buildingid))
+			continue;
+		SendFormattedMessage(i, COLOR_ORANGE, "Il business (ID %d) di cui eri proprietario non ti appartiene piu'.", buildingid);
+		Character_RemoveOwnedBuilding(playerid, buildingid);
+	}*/
 
     Log("", "", "Building_ResetOwner", buildingid);
     return 1;
@@ -468,7 +461,7 @@ stock Building_IsOwned(a)
 {
 	if(!Building_IsValid(a))
 		return 0;
-    return Building_IsOwnable(a) && Building_GetOwnerID(a) != 0;
+    return Building_IsOwnable(a) && Building_GetOwnerID(a) > 0;
 }
 
 stock Building_GetOwnerID(a)
@@ -708,7 +701,7 @@ stock Character_GetNearBuildingIDMenu(playerid, minRank = 3)
 		buildingid = Character_GetNearBuilding(playerid, false);
 	if(Building_IsValid(buildingid))
 	{
-		if(Player_IsAdminDuty(playerid) || Building_GetOwnerID(buildingid) == Character_GetID(playerid) || Building_GetID(buildingid) == Character_GetBuildingKey(playerid))
+		if(Player_IsAdminDuty(playerid) || Character_DoesOwnBuilding(playerid, buildingid))
 			return buildingid;
 		if(Faction_IsValid(Character_GetFaction(playerid)) && Character_GetFaction(playerid) == Building_GetFaction(buildingid) && Character_GetRank(playerid) <= minRank)
 			return buildingid;
@@ -848,9 +841,7 @@ Dialog:Dialog_BuildingSell(playerid, response, listitem, inputtext[])
 
 	SendFormattedMessage(playerid, -1, "Hai venduto il tuo edificio (%s) per $%d.", name, price);
 
-	Character_SetBuildingKey(playerid, 0);
 	Building_ResetOwner(buildingid);
-
 	return 1;
 }
 
@@ -881,8 +872,8 @@ Dialog:Dialog_BuildingSellToPlayer(playerid, response, listitem, inputtext[])
 	if(id == playerid)
 		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Non puoi vendere l'edificio a te stesso.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
 
-	if(Character_HasBuildingKey(id))
-		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il giocatore possiede già un edificio.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
+	//if(Character_HasBuildingKey(id))
+		//return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il giocatore possiede già un edificio.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
 
 	Character_SetRequest(playerid, id, REQUEST_TYPE_BUILDING, buildingid, money);
 	SendFormattedMessage(id, COLOR_RECEIVE_REQUEST, "%s vuole venderti il suo edificio per $%d.", Character_GetRolePlayName(playerid), money);

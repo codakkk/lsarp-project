@@ -165,7 +165,7 @@ static GetCheatName(code)
     return name;
 }
 
-stock bool:ac_RemovePlayerWeapon(playerid, weaponid)
+/*stock bool:ac_RemovePlayerWeapon(playerid, weaponid)
 {
 	if(!IsPlayerConnected(playerid))
 		return false;
@@ -179,12 +179,13 @@ stock bool:ac_RemovePlayerWeapon(playerid, weaponid)
 			ACInfo[playerid][acWeapon][ac_i] = ACInfo[playerid][acAmmo][ac_i] = 0;
 			ACInfo[playerid][acSetWeapon][ac_i] = -1;
 			ACInfo[playerid][acGiveAmmo][ac_i] = -65535;
+            continue;
 		}
 		GivePlayerWeapon(playerid, ACInfo[playerid][acWeapon][ac_i], ACInfo[playerid][acAmmo][ac_i]);
 	}
 
 	return true;
-}
+}*/
 
 stock Server_GetOnlineStaffCount()
 {

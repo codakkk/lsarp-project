@@ -29,12 +29,12 @@ CMD:tduty(playerid, params[])
     if(Account_IsSupporterDuty(playerid))
 	{
 		SetPlayerColor(playerid, 0xa52a2aff);
-		SendMessageToTesters(0, 0xa52a2aff, "[TESTERS]: %s è ora in servizio.", Character_GetOOCName(playerid));
+		SendMessageToTesters(0, 0xe9de98ff, "[TESTERS]: %s è ora in servizio.", Character_GetOOCName(playerid));
 	}
 	else
 	{
 		SetPlayerColor(playerid, 0xFFFFFFFF);
-		SendMessageToTesters(0, 0xa52a2aff, "[TESTERS]: %s non è più in servizio.", Character_GetOOCName(playerid));
+		SendMessageToTesters(0, 0xe9de98ff, "[TESTERS]: %s non è più in servizio.", Character_GetOOCName(playerid));
 	}
     return 1;
 }
@@ -48,7 +48,7 @@ CMD:tchat(playerid, params[])
 	if(isnull(params) || strlen(params) > 128)
 		return SendClientMessage(playerid, COLOR_ERROR, "(/t)chat <testo>");
 	
-	SendMessageToTesters(0, 0xa52a2aff, "[TESTER-CHAT] %s (%s): %s", Account_GetName(playerid), Character_GetOOCName(playerid), params);
+	SendMessageToTesters(0, 0xe9de98ff, "[TESTER-CHAT] %s (%s): %s", Account_GetName(playerid), Character_GetOOCName(playerid), params);
 	return 1;
 }
 alias:tchat("t");

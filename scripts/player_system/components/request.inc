@@ -12,7 +12,7 @@ enum _:e_PendingType
 	REQUEST_TYPE_CARE,
 	REQUEST_TYPE_FACTION,
 	REQUEST_TYPE_VEHICLE,
-
+	REQUEST_TYPE_BLACKJACK,
 	// Write request types before REQUEST_TYPE_LAST
 
 	REQUEST_TYPE_LAST
@@ -176,7 +176,7 @@ stock Character_AcceptItemRequest(playerid)
 
 	new
 		itemid = Character_GetSlotItem(senderid, slotid),
-		slotAmount = Character_GetItemAmount(playerid, itemid),
+		slotAmount = Character_GetItemAmount(senderid, itemid),
 		extra = Character_GetSlotExtra(senderid, slotid, 0)
 	;
 
@@ -226,6 +226,7 @@ stock Request_GetTypeName(type)
 	   case REQUEST_TYPE_CARE: l = "Cura";
 	   case REQUEST_TYPE_FACTION: l = "Fazione";
 	   case REQUEST_TYPE_VEHICLE: l = "Veicolo";
+	   case REQUEST_TYPE_BLACKJACK: l = "Blackjack";
 	   default: l = "Sconosciuto";
     }
     return l;

@@ -21,7 +21,7 @@ CMD:dipartimento(playerid, params[])
 			SendFormattedMessage(i, 0xF07A7AFF, "[%s] %s %s dice: %s", shortName, rankName, Character_GetOOCName(playerid), params);
 		}
 	}
-	ProxDetector(playerid, 15.0, "[Radio] %s dice: %s", COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false, false);
+	ProxDetectorStr(playerid, 15.0, str_format("[Radio] %s dice: %s", Character_GetRolePlayName(playerid), params), COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false, false);
 	return 1;
 }
 alias:dipartimento("d");
@@ -144,7 +144,7 @@ CMD:setfaction(playerid, params[])
 	Faction_GetRankName(factionid, rankid, rankName);
 
 	SendFormattedMessage(id, COLOR_GREEN, "%s (%d) ti ha settato nella fazione %s. Rank: %s", Account_GetName(playerid), playerid, name, rankName);
-	SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%d) ha settato %s (%d) nella fazione %s. Rank: %s", Account_GetName(playerid), playerid, Character_GetOOCName(id), id, name, rankName);
+	SendMessageToAdmins(0, COLOR_ADMINCMD, "AdmCmd: %s (%d) ha settato %s (%d) nella fazione %s. Rank: %s", Account_GetName(playerid), playerid, Character_GetOOCName(id), id, name, rankName);
 	return 1;
 }
 
@@ -167,7 +167,7 @@ CMD:afactionkick(playerid, params[])
 	Character_SetFaction(id, INVALID_FACTION_ID);
 	Character_SetRank(id, 0);
 	SendClientMessageStr(id, COLOR_GREEN, str_format("%s (%d) ti ha kickato dalla tua fazione.", Account_GetName(playerid), playerid));
-	SendMessageToAdminsStr(0, COLOR_YELLOW, str_format("[ADMIN-ALERT] %s (%d) ha kickato %s (%d) dalla sua fazione.", Account_GetName(playerid), playerid, Character_GetOOCName(id), id));
+	SendMessageToAdminsStr(0, COLOR_YELLOW, str_format("AdmCmd: %s (%d) ha kickato %s (%d) dalla sua fazione.", Account_GetName(playerid), playerid, Character_GetOOCName(id), id));
 	return 1;
 }
 

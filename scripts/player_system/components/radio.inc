@@ -228,7 +228,6 @@ stock SendMessageToRadio(issuerid, frequency, color, const msg[], GLOBAL_TAG_TYP
 {
     foreach(new i : Player)
 	{
-        // We should avoid this Character_HasItem call here. It's a little bit expansive on the long road.
 		if(Character_IsConnectedToFreq(i, frequency) == 0)
 			continue;
 

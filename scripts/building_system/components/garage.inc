@@ -242,34 +242,30 @@ Dialog:Dialog_BuyMechComponents(playerid, response, listitem, inputtext[])
     return 1;
 }
 
-stock Character_HasGarage(playerid)
+stock bool:Character_HasGarage(playerid)
 {
-    new buildingid = Character_GetBuildingKey(playerid);
-    
-    if(!Building_IsValid(buildingid))
-        return 0;
-    
-    if(Building_GetType(buildingid) != BUILDING_TYPE_GARAGE)
-        return 0;
-    
-    return 1;
+    new List:list = Character_GetBuildingsByType(playerid, E_BUILDING_TYPE:BUILDING_TYPE_GARAGE);
+    return list_valid(list) && list_size(list) > 0;
 }
 
-stock Character_CanUseGarage(playerid)
+stock bool:Character_CanUseGarage(playerid)
 {
-    if(!Character_HasGarage(playerid))
-        return 0;
+    new List:list = Character_GetBuildingsByType(playerid, E_BUILDING_TYPE:BUILDING_TYPE_GARAGE);
+    if(!list_valid(list) || list_size(list) <= 0)
+        return false;
     
-    new garageid = Character_GetBuildingKey(playerid);
-    
-    if(Character_GetNearBuildingID(playerid) == garageid)
-        return 1;
-    
-    new Float:x, Float:y, Float:z;
-    Building_GetEnterPos(garageid, x, y, z);
-    if(GetPlayerDistanceFromPoint(playerid, x, y, z) <= 25.0)
-        return 1;
-    return 0;
+    new garageid, Float:x, Float:y, Float:z;
+    for_list(i : list)
+    {
+        garageid = iter_get(i);
+        if(Character_GetNearBuildingID(playerid) == garageid)
+            return true;
+        Building_GetEnterPos(garageid, x, y, z);
+        if(GetPlayerDistanceFromPoint(playerid, x, y, z) <= 25.0)
+            return true;
+    }
+
+    return false;
 }
 
 hook function Character_Enter(playerid)

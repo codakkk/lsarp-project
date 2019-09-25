@@ -1,5 +1,7 @@
 #include <YSI_Coding\y_hooks>
 
+static SelectedSlot[MAX_PLAYERS];
+
 hook OnCharacterUseItem(playerid, slotid, itemid)
 {
     if(!ServerItem_IsWeapon(itemid))
@@ -34,7 +36,8 @@ hook OnCharacterUseItem(playerid, slotid, itemid)
             else
             {
                 SetPVarInt(playerid, "InventorySelect_WeaponItem", itemid);
-                new ammos = Inventory_GetItemAmount(Character_GetInventory(playerid), Weapon_GetAmmoType(itemid));
+                SelectedSlot[playerid] = slotid;
+                new ammos = Character_GetItemAmount(playerid, Weapon_GetAmmoType(itemid));
                 Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "Immetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}.", "Usa", "Annulla", ammos);
             }
         }
@@ -54,16 +57,21 @@ Dialog:Dialog_InvSelectAmmo(playerid, response, listitem, inputtext[])
 {
     if(!response)
 	   return 0;
+    new slotid = SelectedSlot[playerid],
+        itemid = Character_GetSlotItem(playerid, slotid);
+    
+    if(!ServerItem_IsWeapon(itemid))
+        return 0;
+    
     new ammo = strval(inputtext), 
-	   itemid = GetPVarInt(playerid, "InventorySelect_WeaponItem"),
-	   ammoType = Weapon_GetAmmoType(itemid);
-    if(ammo <= 0 || ammo > Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType))
-	   return Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "{FF0000}Munizioni non valide!{FFFFFF}\nImmetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}", "Usa", "Annulla", 
-				Inventory_GetItemAmount(Character_GetInventory(playerid), ammoType));
+	   ammoType = Weapon_GetAmmoType(itemid),
+       avaiableAmount = Character_GetItemAmount(playerid, ammoType);
+    if(ammo <= 0 || ammo > avaiableAmount)
+        return Dialog_Show(playerid, Dialog_InvSelectAmmo, DIALOG_STYLE_INPUT, "Inserisci le munizioni", "{FF0000}Munizioni non valide!{FFFFFF}\nImmetti la quantità di munizioni che vuoi inserire nell'arma.\nQuantità: {00FF00}%d{FFFFFF}", "Usa", "Annulla", avaiableAmount);
     
 	Character_GiveWeapon(playerid, itemid, ammo);
     
-	Character_DecreaseItemAmount(playerid, itemid, 1);
+    Character_DecreaseSlotAmount(playerid, slotid, 1);
     Character_DecreaseItemAmount(playerid, ammoType, ammo);
 
 	Player_InfoStr(playerid, str_format("Hai equipaggiato: ~g~%s~w~", Weapon_GetName(itemid)), true);

@@ -25,7 +25,7 @@ CMD:acmds(playerid, params[])
 	if(Account_GetAdminLevel(playerid) >= 4)
 	{
 		SendClientMessage(playerid, -1, "[ADMIN]: /amm - /giveitem - /givevehicleitem  - /vowner - /vsave - /vdespawn");
-		SendClientMessage(playerid, -1, "[ADMIN]: /vfaction - /avmaxhp - /atmcmds");
+		SendClientMessage(playerid, -1, "[ADMIN]: /vfaction - /avmaxhp - /atmcmds - /settester");
 		SendClientMessage(playerid, -1, "[ADMIN]: /banip - /unbanip - /gcreate - /gedit - /setchopshop - /ahousecmds");
 	}
 	if(Account_GetAdminLevel(playerid) >= 5)
@@ -95,7 +95,7 @@ CMD:aduty(playerid, params[])
 		SetPlayerName(playerid, Character_GetOOCName(playerid));
 		AC_SetPlayerHealth(playerid, 100);
 		AC_SetPlayerArmour(playerid, 0);
-		SendMessageToAdmins(0, COLOR_ADMINCHAT, "[ADMIN] %s (%d) non è più in servizio.", Account_GetName(playerid), playerid);
+		SendMessageToAdmins(0, 0xFF6347FF, "AdmCmd: %s (%d) non è più in servizio.", Account_GetName(playerid), playerid);
 		
 		SetPlayerColor(playerid, LastColor[playerid]);
 		LastColor[playerid] = 0xFFFFFFFF;
@@ -113,7 +113,7 @@ CMD:aduty(playerid, params[])
 		AC_SetPlayerHealth(playerid, 99999.0);
 		AC_SetPlayerArmour(playerid, 99999.0);
 		//pc_cmd_jetpack(playerid, NULL);
-		SendMessageToAdmins(0, COLOR_ADMINCHAT, "[ADMIN] %s (%d) è in servizio.", Account_GetName(playerid), playerid);
+		SendMessageToAdmins(0, 0xFF6347FF, "AdmCmd: %s (%d) è in servizio.", Account_GetName(playerid), playerid);
 		
 		LastColor[playerid] = GetPlayerColor(playerid);
 		
@@ -187,6 +187,36 @@ CMD:setskin(playerid, params[])
     return 1;
 }
 
+flags:settester(CMD_ADMIN);
+CMD:settester(playerid, params[])
+{
+	new id, lvl;
+	if(sscanf(params, "k<u>d", id, lvl))
+		return SendClientMessage(playerid, COLOR_ERROR, "/settester <playerid/nome>");
+
+	if(!Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+	
+	if(Account_GetAdminLevel(id) > 1)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su un utente che è già moderatore o più.");
+	
+	if(Account_GetAdminLevel(id) == 1)
+	{
+		SendFormattedMessage(id, COLOR_ADMINCMD, "AdmCmd: %s (%d) ti ha rimosso dallo staff.", Account_GetName(playerid), playerid);
+		SendFormattedMessage(playerid, COLOR_ADMINCMD, "Hai rimosso %s (%d) dallo staff.", Account_GetName(id), id);
+		SendMessageToAdmins(true, COLOR_ADMINCMD, "AdmAlert: %s (%d) ha rimosso %s (%d) dallo staff.", Account_GetName(playerid), playerid, Account_GetName(id), id);
+		Account_SetAdminLevel(id, 0);
+	}
+	else
+	{
+		SendFormattedMessage(id, COLOR_ADMINCMD, "AdmCmd: %s (%d) ti ha settato Tester.", Account_GetName(playerid), playerid, GetAdminLevelName(lvl));
+		SendFormattedMessage(playerid, COLOR_ADMINCMD, "%s (%d) è stato settato Tester.", Account_GetName(id), id, GetAdminLevelName(lvl));
+		SendMessageToAdmins(true, COLOR_ADMINCMD, "AdmAlert: %s (%d) ha settato %s (%d) Tester.", Account_GetName(playerid), playerid, Account_GetName(id), id);
+		Account_SetAdminLevel(id, 1);
+	}
+	return 1;
+}
+
 flags:setadmin(CMD_RCON);
 CMD:setadmin(playerid, params[])
 {
@@ -194,7 +224,7 @@ CMD:setadmin(playerid, params[])
 	if(sscanf(params, "k<u>d", id, lvl))
 		return SendClientMessage(playerid, COLOR_ERROR, "/setadmin <playerid/nome> <level (0 - 5)>");
 
-	if(id < 0 || id >= MAX_PLAYERS || !Character_IsLogged(id))
+	if(!Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "L'utente non è collegato.");
 	if(lvl < 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Livello Admin non valido.");
@@ -202,14 +232,14 @@ CMD:setadmin(playerid, params[])
 	{
 		if(Player_IsAdminDuty(id))
 			pc_cmd_aduty(id, "");
-		SendFormattedMessage(id, COLOR_ERROR, "[ADMIN] %s (%d) ti ha rimosso dallo staff.", Account_GetName(playerid), playerid);
+		SendFormattedMessage(id, COLOR_ERROR, "AdmCmd: %s (%d) ti ha rimosso dallo staff.", Account_GetName(playerid), playerid);
 		SendFormattedMessage(playerid, COLOR_ERROR, "Hai rimosso %s (%d) dallo staff.", Account_GetName(id), id);
 		SendMessageToAdmins(true, COLOR_ADMINCMD, "AdmAlert: %s (%d) ha rimosso %s (%d) dallo staff.", Account_GetName(playerid), playerid, Account_GetName(id), id);
 	}
 	else
 	{
 		//new ln[] = ;
-		SendFormattedMessage(id, COLOR_GREEN, "[ADMIN] %s (%d) ti ha settato %s.", Account_GetName(playerid), playerid, GetAdminLevelName(lvl));
+		SendFormattedMessage(id, COLOR_GREEN, "AdmCmd: %s (%d) ti ha settato %s.", Account_GetName(playerid), playerid, GetAdminLevelName(lvl));
 		SendFormattedMessage(playerid, COLOR_GREEN, "%s (%d) è stato settato %s.", Account_GetName(id), id, GetAdminLevelName(lvl));
 		SendMessageToAdmins(true, COLOR_ADMINCMD, "AdmAlert: %s (%d) ha settato %s (%d) %s.", Account_GetName(playerid), playerid, Account_GetName(id), id, GetAdminLevelName(lvl));
 	}
@@ -230,8 +260,8 @@ CMD:givemoney(playerid, params[])
     
     Character_GiveMoney(id, hp);
     // Send admin alert (?)
-    SendMessageToAdmins(1, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha dato $%d a %s (%d).", Account_GetName(playerid), Character_GetOOCName(playerid), hp, Character_GetOOCName(id), id);
-    SendFormattedMessage(id, COLOR_GREEN, "[ADMIN] %s (%s) ti ha givato $%d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
+    SendMessageToAdmins(1, COLOR_YELLOW, "AdmCmd: %s (%s) ha dato $%d a %s (%d).", Account_GetName(playerid), Character_GetOOCName(playerid), hp, Character_GetOOCName(id), id);
+    SendFormattedMessage(id, COLOR_GREEN, "L'admin %s (%s) ti ha givato $%d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
     Log(Account_GetName(playerid), Character_GetOOCName(id), "/givemoney", hp);
     return 1;
 }
@@ -248,7 +278,7 @@ CMD:givebankmoney(playerid, params[])
     
     Character_GiveBank(id, hp);
     // Send admin alert (?)
-    SendMessageToAdmins(1, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha dato $%d in banca a %s (%d).", Account_GetName(playerid), Character_GetOOCName(playerid), hp, Character_GetOOCName(id), id);
+    SendMessageToAdmins(1, COLOR_YELLOW, "AdmCmd: %s (%s) ha dato $%d in banca a %s (%d).", Account_GetName(playerid), Character_GetOOCName(playerid), hp, Character_GetOOCName(id), id);
     SendFormattedMessage(id, COLOR_GREEN, "[ADMIN] %s (%s) ti ha givato $%d in banca.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
     Log(Account_GetName(playerid), Character_GetOOCName(id), "/givemoney", hp);
     return 1;
@@ -272,7 +302,7 @@ CMD:sethp(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su un giocatore in sistema morte.");
 
     AC_SetPlayerHealth(id, hp);
-    SendMessageToAdmins(0, COLOR_ADMINCMD, "[ADMIN-ALERT] %s (%s) ha settato gli HP di %s (%d) a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), Character_GetOOCName(id), id, hp);
+    SendMessageToAdmins(0, COLOR_ADMINCMD, "AdmCmd: %s (%s) ha settato gli HP di %s (%d) a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), Character_GetOOCName(id), id, hp);
     SendFormattedMessage(playerid, COLOR_GREEN, "[ADMIN] %s (%s) ti ha settato gli HP a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
     Log(Account_GetName(playerid), Character_GetOOCName(id), "/sethp", hp);
     return 1;
@@ -293,7 +323,7 @@ CMD:setarmour(playerid, params[])
 	   return SendClientMessage(playerid, COLOR_ERROR, "Valore Armatura non valido.");
 
     AC_SetPlayerArmour(id, hp);
-    SendMessageToAdmins(0, COLOR_ADMINCMD, "[ADMIN-ALERT] %s (%s) ha settato l'armatura di %s (%d) a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), Character_GetOOCName(id), id, hp);
+    SendMessageToAdmins(0, COLOR_ADMINCMD, "AdmCmd: %s (%s) ha settato l'armatura di %s (%d) a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), Character_GetOOCName(id), id, hp);
     SendFormattedMessage(playerid, COLOR_GREEN, "[ADMIN] %s (%s) ti ha settato l'armatura a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
     Log(Account_GetName(playerid), Character_GetOOCName(id), "/setarmour", hp);
     return 1;
@@ -434,7 +464,7 @@ CMD:setvhp(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "La salute inserita per il veicolo non è valida.");
 	//RepairVehicle(id);
 	SetVehicleHealth(id, hp);
-	SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha settato gli HP a %f del veicolo %d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp, id);
+	SendMessageToAdmins(0, COLOR_YELLOW, "AdmCmd: %s (%s) ha settato gli HP a %f del veicolo %d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp, id);
 	Log(Account_GetName(playerid), "", "/setvhp", id);
 	return 1;
 }
@@ -454,7 +484,7 @@ CMD:fixveh(playerid, params[])
 
     Vehicle_Repair(id);
 
-    SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%d) ha riparato il veicolo id %d.", Account_GetName(playerid), playerid, id);
+    SendMessageToAdmins(0, COLOR_YELLOW, "AdmCmd: %s (%d) ha riparato il veicolo id %d.", Account_GetName(playerid), playerid, id);
     Log(Account_GetName(playerid), "", "/fixveh", id);
     return 1;
 }
@@ -739,7 +769,7 @@ CMD:giveitem(playerid, params[])
 			result = Character_GiveItem(id, itemid, quantity, extra);
 		if(result == INVENTORY_ADD_SUCCESS)
 		{
-			SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha givato %s (Qnt: %d) a %s (%d).", 
+			SendMessageToAdmins(0, COLOR_YELLOW, "AdmCmd: %s (%s) ha givato %s (Qnt: %d) a %s (%d).", 
 			Account_GetName(playerid), Character_GetOOCName(playerid), ServerItem_GetName(itemid), quantity, Character_GetOOCName(id), id);
 		}
 		else if(result == INVENTORY_NO_SPACE)
@@ -751,7 +781,7 @@ CMD:giveitem(playerid, params[])
     {
 		quantity = -quantity;
 		Character_DecreaseItemAmount(id, itemid, quantity);
-		SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha rimosso %s (Qnt: %d) a %s (%d).", 
+		SendMessageToAdmins(0, COLOR_YELLOW, "AdmCmd: %s (%s) ha rimosso %s (Qnt: %d) a %s (%d).", 
 		Account_GetName(playerid), Character_GetOOCName(playerid), ServerItem_GetName(itemid), quantity, Character_GetOOCName(id), id);
 	}
 	//Inventory_Print(Character_GetInventory(id));
@@ -861,7 +891,7 @@ CMD:givevehicleitem(playerid, params[])
 	   new result = Vehicle_GiveItem(id, itemid, quantity);
 	   if(result == INVENTORY_ADD_SUCCESS)
 	   {
-		  SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha givato %s (Qnt: %d) nel veicolo id %d.", 
+		  SendMessageToAdmins(0, COLOR_YELLOW, "AdmCmd: %s (%s) ha givato %s (Qnt: %d) nel veicolo id %d.", 
 		  Account_GetName(playerid), Character_GetOOCName(playerid), ServerItem_GetName(itemid), quantity, id);
 	   }
 	   else if(result == INVENTORY_NO_SPACE)
@@ -873,7 +903,7 @@ CMD:givevehicleitem(playerid, params[])
     {
 	   quantity = -quantity;
 	   Vehicle_DecreaseItemAmount(id, itemid, quantity);
-	   SendMessageToAdmins(0, COLOR_YELLOW, "[ADMIN-ALERT] %s (%s) ha rimosso %s (Qnt: %d) al veicolo %d.", 
+	   SendMessageToAdmins(0, COLOR_YELLOW, "AdmCmd: %s (%s) ha rimosso %s (Qnt: %d) al veicolo %d.", 
 	   Account_GetName(playerid), Character_GetOOCName(playerid), ServerItem_GetName(itemid), quantity, id);
     }
     //Inventory_Print(Character_GetInventory(id));

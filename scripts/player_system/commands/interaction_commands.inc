@@ -202,6 +202,10 @@ CMD:accetta(playerid, params[])
 		{
 			Character_AcceptVehicleRequest(playerid);	
 		}
+		else if(!strcmp(params, "blackjack", true))
+		{
+			Character_AcceptBlackJack(playerid);
+		}
 		//else
 			//CallLocalFunction(#OnCharacterAccept, "ds", playerid, params);
 	}
@@ -209,7 +213,7 @@ CMD:accetta(playerid, params[])
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "/accetta <oggetto>");
 		SendClientMessage(playerid, COLOR_GREY, "Oggetti: arma, oggetto, morte, cure,  veicolo, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
-		SendClientMessage(playerid, COLOR_GREY, "... (edi)ficio (biz), (faz)ione, veicolo");
+		SendClientMessage(playerid, COLOR_GREY, "... (edi)ficio (biz), (faz)ione, blackjack");
 	}
     return 1;
 }
@@ -256,6 +260,10 @@ CMD:rifiuta(playerid, params[])
 	{
 		type = REQUEST_TYPE_FACTION;
 	}
+	else if(!strcmp(params, "blackjack", true))
+	{
+		type = REQUEST_TYPE_BLACKJACK;
+	}
 	if(type != REQUEST_TYPE_NONE)
 	{
 		DeclineRequest(playerid, type);
@@ -264,7 +272,7 @@ CMD:rifiuta(playerid, params[])
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "/rifiuta <text>");
 		SendClientMessage(playerid, COLOR_GREY, "Text: arma, oggetto, morte, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
-		SendClientMessage(playerid, COLOR_GREY, "... (edi)ficio (biz), cure, veicolo");
+		SendClientMessage(playerid, COLOR_GREY, "... (edi)ficio (biz), cure, veicolo, blackjack");
 	}
 	return 1;
 }

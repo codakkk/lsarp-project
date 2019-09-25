@@ -23,7 +23,7 @@ CMD:givezpoints(playerid, params[])
 	
 	Account_AddPoints(id, points);
 
-	SendMessageToAdmins(true, COLOR_ADMINCMD, "[ADMIN-ALERT] %s (%d) ha dato %d Z-Points a %s (%d).", 
+	SendMessageToAdmins(true, COLOR_ADMINCMD, "AdmCmd: %s (%d) ha dato %d Z-Points a %s (%d).", 
 	Account_GetName(playerid), playerid, points, Account_GetName(id), id);
 
 	return 1;

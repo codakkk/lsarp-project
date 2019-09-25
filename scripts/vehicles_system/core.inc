@@ -8,7 +8,6 @@
 #include "inventory"
 #include <YSI_Coding\y_hooks>
 
-#define VEHICLE_MIN_HEALTH_BEFORE_RESPAWN	250.0
 #define VEHICLE_MIN_HEALTH					300.0
 #define VEHICLE_MIN_HEALTH_FOR_ENGINE		350.0
 // Remove OwnerName from enum and create an indipendent variable (VehicleOwnerName)
@@ -54,8 +53,7 @@ static enum e_Bit1_VehicleData
 	e_vDestroyed,
 	e_vLocked,
 	e_vTemporary,
-	e_vEngine,
-	e_vIsEngineBroken,
+	e_vEngine
 };
 
 static BitArray:VehicleBitState[e_Bit1_VehicleData]<MAX_VEHICLES>;
@@ -134,24 +132,24 @@ task OnVehicleMinuteUpdate[60000]()
 	}
 }
 
-task OnVehicleUpdate[500]()
+task OnVehicleUpdate[250]()
 {
 	foreach(new v : Vehicle)
 	{
 		if(!Vehicle_IsValid(v))
 			continue;
-		if(Vehicle_GetHealth(v) <= VEHICLE_MIN_HEALTH_BEFORE_RESPAWN)
+		if(Vehicle_GetHealth(v) <= VEHICLE_MIN_HEALTH)
 		{
-			new Float:x, Float:y, Float:z, Float:a;
+			//new Float:x, Float:y, Float:z, Float:a;
 			
-			GetVehiclePos(v, x, y, z);
-			GetVehicleZAngle(v, a);
-			
-			Vehicle_SetDestroyed(v, true);
-			Vehicle_Respawn(v);
+			//GetVehiclePos(v, x, y, z);
+			//GetVehicleZAngle(v, a);
+			SetVehicleHealth(v, VEHICLE_MIN_HEALTH);
+			//Vehicle_SetDestroyed(v, true);
+			//Vehicle_Respawn(v);
 
-			SetVehicleZAngle(v, a);
-			SetVehiclePos(v, x, y, z);
+			//SetVehicleZAngle(v, a);
+			//SetVehiclePos(v, x, y, z);
 		}
 	}
 }
@@ -275,7 +273,7 @@ stock Vehicle_InsertInDatabase(vehicleid)
 		//Vehicle_UpdateLockState(vehicleid);
 		Vehicle_SetTemporary(vehicleid, false);
 		Vehicle_InitializeInventory(vehicleid);
-		//Vehicle_GeneratePlate(vehicleid);
+		Vehicle_GeneratePlate(vehicleid);
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO `vehicles` (owner_id, model, color_1, color_2, x, y, z, angle, locked, faction, price, last_health, max_health) \
 		VALUES('%d', '%d', '%d', '%d', '%f', '%f', '%f', '%f', '0', '%d', '%d', '999.0', '%f')",
@@ -307,7 +305,6 @@ stock Vehicle_Reset(vehicleid)
     VehicleInfo[vehicleid][A] = 0.0;
 	VehicleInfo[vehicleid][Faction] = INVALID_FACTION_ID;
 	VehicleDamages[vehicleid] = CleanVehicleDamages;
-	Vehicle_SetEngineBroken(vehicleid, false);
 	Vehicle_SetTemporary(vehicleid, false);
     Vehicle_SetLocked(vehicleid, false);
 	Vehicle_SetLastChopShopTime(vehicleid, 0);
@@ -490,22 +487,19 @@ stock String:Vehicle_GetOwnerNameStr(vehicleid)
 // TODO: This doesn't work neither
 stock Vehicle_GeneratePlate(vehicleid)
 {
-	/*inline OnPlate(string:plate[])
-	{
-		if(cache_num_rows() > 0)
-			return Vehicle_GeneratePlate(vehicleid);
-		Vehicle_SetPlate(vehicleid, plate);
-		Vehicle_Respawn(vehicleid);
-		mysql_tquery_f(gMySQL, "UPDATE vehicles SET Plate = '%e' WHERE ID = '%d'", plate, Vehicle_GetID(vehicleid));
-	}
-
-	new query[128], tempPlate[9];
-
+	new tempPlate[9];
 	static const RandomLetters[26][5] = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
 	format(tempPlate, sizeof(tempPlate), "%d%s%s%s%d", random(10), RandomLetters[random(26)], RandomLetters[random(26)], RandomLetters[random(26)], vehicleid);
 	
-	format(query, sizeof(query), "SELECT ID FROM vehicles WHERE Plate = '%e'", tempPlate);
-	mysql_tquery_inline(gMySQL, query, using inline OnPlate, "s", tempPlate);*/
+	inline OnPlate()
+	{
+		if(cache_num_rows() > 0)
+			return Vehicle_GeneratePlate(vehicleid);
+		Vehicle_SetPlate(vehicleid, tempPlate);
+		Vehicle_Respawn(vehicleid);
+	}
+	MySQL_TQueryInline(gMySQL, using inline OnPlate, "SELECT id FROM vehicles WHERE Plate = '%e'", tempPlate);
+	return 1;
 }
 
 stock Vehicle_SetPlate(vehicleid, plate[])
@@ -600,7 +594,7 @@ public Vehicle_LoadAll()
 		cache_get_value_name_float(i, "fuel", VehicleFuel[vehicleid]);	  
 		cache_get_value_name_int(i, "faction", VehicleInfo[vehicleid][Faction]);
 		cache_get_value_name_int(i, "last_chop_shop_time", VehicleInfo[vehicleid][LastChopShopTime]);
-		cache_get_value_name_int(i, "plate", VehicleInfo[vehicleid][Plate]);
+		cache_get_value_name(i, "plate", VehicleInfo[vehicleid][Plate]);
 		cache_get_value_name_int(i, "price", VehicleInfo[vehicleid][Price]);
 
 		cache_get_value_name_float(i, "last_health", health);
@@ -899,24 +893,16 @@ stock Vehicle_SetMaxHealth(vehicleid, Float:health)
 	return 1;
 }
 
-stock Vehicle_SetEngineBroken(vehicleid, bool:isBroken)
-{
-	Bit_Set(VehicleBitState[e_vIsEngineBroken], vehicleid, isBroken);
-}
-
-stock bool:Vehicle_IsEngineBroken(vehicleid)
-{
-	return Bit_Get(VehicleBitState[e_vIsEngineBroken], vehicleid);
-}
-
 stock Vehicle_Reload(vehicleid)
 {
 	if(!Vehicle_IsValid(vehicleid))
 		return 0;
 	
+	SetVehicleNumberPlate(vehicleid, VehicleInfo[vehicleid][Plate]);
+	SetVehicleToRespawn(vehicleid);
+
 	Vehicle_ResetStats(vehicleid);
 	
-	SetVehicleNumberPlate(vehicleid, VehicleInfo[vehicleid][Plate]);
 
 	SetVehicleZAngle(vehicleid, VehicleInfo[vehicleid][A]);
 	SetVehiclePos(vehicleid, VehicleInfo[vehicleid][X], VehicleInfo[vehicleid][Y], VehicleInfo[vehicleid][Z]);
@@ -930,15 +916,7 @@ stock Vehicle_Reload(vehicleid)
 	if(Vehicle_IsDestroyed(vehicleid) /*&& !Faction_IsValid(Vehicle_GetFaction(vehicleid))*/)
 	{
 		Vehicle_SetDestroyed(vehicleid, false);
-		if(Vehicle_IsEngineBroken(vehicleid))
-		{
-			SetVehicleHealth(vehicleid, VEHICLE_MIN_HEALTH);
-		}
-		else
-		{
-			SetVehicleHealth(vehicleid, VEHICLE_MIN_HEALTH_FOR_ENGINE + 50.0);
-		}
-		Vehicle_SetEngineBroken(vehicleid, true);
+		SetVehicleHealth(vehicleid, VEHICLE_MIN_HEALTH);
 	}
 	else
 	{
@@ -974,7 +952,6 @@ stock Vehicle_Repair(vehicleid)
 		return 0;
 	RepairVehicle(vehicleid);
 	SetVehicleHealth(vehicleid, Vehicle_GetMaxHealth(vehicleid));
-	Vehicle_SetEngineBroken(vehicleid, false);
 	return 1;
 }
 
