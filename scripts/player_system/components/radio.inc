@@ -135,7 +135,7 @@ CMD:radiocmds(playerid, params[])
 	SendClientMessage(playerid, 0x33AA33FF, "|____________________________________________________________|");
 	return 1;
 }
-
+//
 flags:frequenza(CMD_ALIVE_USER);
 CMD:frequenza(playerid, params[])
 {
