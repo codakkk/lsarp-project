@@ -56,7 +56,7 @@ CMD:fcreate(playerid, params[])
 	new type, name[MAX_FACTION_NAME], shortName[MAX_FACTION_SHORT_NAME];
 	if(sscanf(params, "ds[8]s[32]", type, shortName, name))
 	{
-		SendClientMessage(playerid, COLOR_ERROR, "/fcreate <type> <short name> <name>");
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /fcreate <type> <short name> <name>");
 		SendClientMessage(playerid, COLOR_ERROR, "[TIPI]: 0: Forze dell'ordine - 1: Medico - 2: Governo - 3: Illegale Import Armi - 4: Illegale Import Droga");
 		return SendClientMessage(playerid, COLOR_ERROR, "[TIPI]: 4: Importo Cibo - 6: Altro");
 	}
@@ -104,7 +104,7 @@ CMD:fedit(playerid, params[])
 
 		Faction_SetSpawnPos(factionid, x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
 	}
-	else SendClientMessage(playerid, COLOR_ERROR, "/fedit <spawn>");
+	else SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /fedit <spawn>");
 	return 1;
 }
 
@@ -121,7 +121,7 @@ CMD:setfaction(playerid, params[])
 	new id, factionid, rankid;
 	if(sscanf(params, "k<u>dd", id, factionid, rankid))
 	{
-		SendClientMessage(playerid, COLOR_ERROR, "/setfaction <playerid/partofname> <factionid> <rank (1 - 10)>");
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setfaction <playerid/partofname> <factionid> <rank (1 - 10)>");
 		SendClientMessage(playerid, COLOR_ERROR, "Usa /afactionslist per una lista completa.");
 		return 1;	
 	}
@@ -154,7 +154,7 @@ CMD:afactionkick(playerid, params[])
 	new id;
 	if(sscanf(params, "k<u>", id))
 	{
-		SendClientMessage(playerid, COLOR_ERROR, "/afactionkick <playerid/partofname>");
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /afactionkick <playerid/partofname>");
 		return 1;	
 	}
 	if(!Character_IsLogged(id))

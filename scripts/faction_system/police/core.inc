@@ -70,7 +70,7 @@ stock IsPlayerNearAnyArrestPos(playerid)
 CMD:espulsionezona(playerid, params[])
 {
 	if(sscanf(params, "k<u>s[128]", id, reason))
-		return SendClientMessage(playerid, COLOR_ERROR, "/espulsionezona <playerid/partofname/#####> <motivo>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /espulsionezona <playerid/partofname/#####> <motivo>");
 	
 	SendFormattedMessage(id, COLOR_ERROR, "Sei stato espulso dalla zona sicura da %s.", Character_GetOOCName(playerid));
 	SendFormattedMessage(playerid, COLOR_ERROR, "Hai espulso %s dalla zona governativa.", Character_GetOOCName(id));

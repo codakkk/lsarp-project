@@ -79,7 +79,7 @@ CMD:uniforme(playerid, params[])
 	printf("Uniformi Size: %d", list_size(factionSkins));
 	if(sscanf(params, "d", uniform_id))
 	{
-		SendClientMessage(playerid, COLOR_ERROR, "/uniforme <id uniforme>");
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /uniforme <id uniforme>");
 		SendClientMessage(playerid, -1, "== {00FF00}Uniformi Disponibili{FFFFFF} ==");
 		new String:str;
 		for(new i = 0, j = list_size(factionSkins); i < j; ++i)
@@ -117,7 +117,7 @@ CMD:fcaccia(playerid, params[])
 	
 	new name[24];
 	if(sscanf(params, "s[24]", name))
-		return SendClientMessage(playerid, COLOR_ERROR, "/fcaccia <nome>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /fcaccia <nome>");
 	
 	inline OnQuery()
 	{
@@ -167,7 +167,7 @@ CMD:frank(playerid, params[])
 	
 	new id, rank;
 	if(sscanf(params, "k<u>d", id, rank))
-		return SendClientMessage(playerid, COLOR_ERROR, "/frank <playerid/partofname/#####> <rank>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /frank <playerid/partofname/#####> <rank>");
 	
 	if(!Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
@@ -219,7 +219,7 @@ CMD:finvita(playerid, params[])
 	
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_ERROR, "/finvita <playerid/partofname/#####>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /finvita <playerid/partofname/#####>");
 	
 	if(!Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");

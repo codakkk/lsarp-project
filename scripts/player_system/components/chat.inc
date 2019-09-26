@@ -16,7 +16,7 @@ CMD:stilechat(playerid, params[])
 {
 	new style;
 	if(sscanf(params, "d", style))
-		return SendClientMessage(playerid, COLOR_ERROR, "/stilechat <0 - 8> (0 per disattivare)");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /stilechat <0 - 8> (0 per disattivare)");
 	
 	if(style < 0 || style > 8)
 		return SendClientMessage(playerid, COLOR_ERROR, "Stile non valido. (0 - 8)");

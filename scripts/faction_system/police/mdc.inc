@@ -97,7 +97,7 @@ Dialog:Dialog_MDCSearchCharacter(playerid, response, listitem, inputtext[])
             if(cache_num_rows() <= 0)
                 return SendClientMessage(playerid, COLOR_ERROR, "Il cittadino non è più presente nel database.");
             
-            new id, tempName[MAX_PLAYER_NAME], name[MAX_PLAYER_NAME], surname[MAX_PLAYER_NAME], hid = 0, bid = 0;
+            new id, address[64], tempName[MAX_PLAYER_NAME], name[MAX_PLAYER_NAME], surname[MAX_PLAYER_NAME], hid = 0, bid = 0;
 
             cache_get_value_index_int(0, 0, id);
             cache_get_value_index(0, 1, tempName);
@@ -106,36 +106,33 @@ Dialog:Dialog_MDCSearchCharacter(playerid, response, listitem, inputtext[])
 
             sscanf(tempName, "p<_>s[24]s[24]", name, surname);
 
-            /*new count = 0, len = strlen(name);
-            
-            for(new i = 0; i < len; ++i)
-            {
-                if(tempName[i] == '_')
-                {
-                    count = 0;
-                    continue;
-                }
-                name[count] = tempName[i];
-            }*/
-
             new String:end = str_format("{FFFFFF}==== SCHEDA DEL CITTADINO ====\n- Nome: %s\n- Cognome: %s\n\n==== Case ====\n\n", name, surname);
 
             if(House_IsValid(hid))
-                end += str_format("- %d (%s)\n", hid, House_GetAddress(hid));
+            {
+                House_GetAddress(hid, address);
+                end += str_format("- %d (%s)\n", hid, address);
+            }
 
             for_map(i : GetHousesMap())
             {
                 new houseid = iter_get_key(i);
-                if(House_IsValid(houseid) && House_GetOwnerID(houseid) == id && hid != houseid)
+                if(House_GetOwnerID(houseid) == id && hid != houseid)
                 {
-                    end += str_format("- %d (%s)\n", houseid, House_GetAddress(houseid));
+                    House_GetAddress(houseid, address);
+                    end += str_format("{33AA33}%s{FFFFFF}\n", address);
                 }
             }
             
             end += @("\n==== Edifici (Biz) ====\n\n");
-
-            if(Building_IsValid(bid))
-                end += str_format("- %d (%s)\n", bid, Building_GetAddress(bid));    
+            foreach_building(buildingid)
+            {
+                if(Building_GetOwnerID(buildingid) == id)
+                {
+                    address = Building_GetAddress(buildingid);
+                    end += str_format("{33AA33}%s{FFFFFF}\n", address);
+                }
+            } 
 
             end += @("\n");
 

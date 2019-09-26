@@ -47,7 +47,7 @@ CMD:ripara(playerid, params[])
     new id, price;
     if(sscanf(params, "k<u>d", id, price))
     {
-        SendClientMessage(playerid, COLOR_ERROR, "/ripara <playerid/partofname/#id> <prezzo>");
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /ripara <playerid/partofname/#id> <prezzo>");
         return SendClientMessage(playerid, COLOR_GREY, "Utilizza il tuo id/nome per riparare il tuo veicolo.");
     }
 
@@ -104,7 +104,7 @@ CMD:vernicia(playerid, params[])
     new id, price, color1, color2;
     if(sscanf(params, "dddd", id, price, color1, color2))
     {
-        SendClientMessage(playerid, COLOR_ERROR, "/vernicia <playerid/partofname/#id> <prezzo> <colore 1> <colore 2>");
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /vernicia <playerid/partofname/#id> <prezzo> <colore 1> <colore 2>");
         return SendClientMessage(playerid, COLOR_GREY, "Utilizza il tuo id/nome per riverniciare il tuo veicolo.");
     }
     

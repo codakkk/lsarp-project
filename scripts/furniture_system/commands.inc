@@ -84,7 +84,7 @@ CMD:rinominaobject(playerid, params[])
     new id, name[64];
     
     if(sscanf(params, "ds[64]", id, name) || strlen(name) < 3)
-        return SendClientMessage(playerid, COLOR_ERROR, "/rinominaobject <localid> <nome (min 3 caratteri - max 64 caratteri)>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /rinominaobject <localid> <nome (min 3 caratteri - max 64 caratteri)>");
     
     new houseid = Character_CanFurnish(playerid, true);
 
@@ -108,7 +108,7 @@ CMD:spostaoggetto(playerid, params[])
     
     new id;
     if(sscanf(params, "d", id))
-        return SendClientMessage(playerid, COLOR_ERROR, "/spostaoggetto <local id>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /spostaoggetto <local id>");
     
     new houseid = Character_CanFurnish(playerid, true);
 
@@ -141,7 +141,7 @@ CMD:textureoggetto(playerid, params[])
     
     new id, index, modelid, txd[64], texture[64];
     if(sscanf(params, "ddds[64]s[64]", id, index, modelid, txd, texture))
-        return SendClientMessage(playerid, COLOR_ERROR, "/textureoggetto <local id> <index> <modelid> <txd> <texture>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /textureoggetto <local id> <index> <modelid> <txd> <texture>");
     
     new houseid = Character_CanFurnish(playerid, true);
 
@@ -173,7 +173,7 @@ CMD:aplacefurniture(playerid, params[])
     
     new modelid;
     if(sscanf(params, "d", modelid))
-        return SendClientMessage(playerid, COLOR_ERROR, "/aplacefurniture <modelid>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /aplacefurniture <modelid>");
     
     new worldid = Character_GetVirtualWorld(playerid), Float:x, Float:y, Float:z;
 
@@ -191,7 +191,7 @@ CMD:adeletefurniture(playerid, params[])
 {
     new objectid;
     if(sscanf(params, "d", objectid))
-        return SendClientMessage(playerid, COLOR_ERROR, "/adeletefurniture <objectid>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /adeletefurniture <objectid>");
     if(Furniture_RemoveByObjectID(objectid))
     {
         SendFormattedMessage(playerid, COLOR_GREEN, "Hai rimosso il mobile id %d.", objectid);
@@ -212,7 +212,7 @@ CMD:atextureobject(playerid, params[])
     
     new objectid, index, modelid, txd[32], texture[32];
     if(sscanf(params, "ddds[32]s[32]", objectid, index, modelid, txd, texture))
-        return SendClientMessage(playerid, COLOR_ERROR, "/atextureobject <objectid> <index> <modelid> <txd name> <texture>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /atextureobject <objectid> <index> <modelid> <txd name> <texture>");
     
     if(!Furniture_IsValid(objectid))
         return SendClientMessage(playerid, COLOR_ERROR, "L'id inserito non è di un mobile."), 0;

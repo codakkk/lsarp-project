@@ -47,7 +47,7 @@ CMD:rubrica(playerid, params[])
 {
     new slotid;
     if(sscanf(params, "d", slotid))
-        return SendClientMessage(playerid, COLOR_ERROR, "/rubrica <slotid>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /rubrica <slotid>");
     Character_ShowPhoneBook(playerid, slotid);
     return 1;
 }
@@ -146,7 +146,7 @@ static Map:PhoneBook_Get(number)
     return Map:map_get(PhoneBooks, number);
 }
 
-static PhoneBook_GetContactID(ownerNumber, number)
+static stock PhoneBook_GetContactID(ownerNumber, number)
 {
     new Map:phonebook = PhoneBook_Get(ownerNumber);
     if(!map_has_key(phonebook, number))

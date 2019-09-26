@@ -637,7 +637,7 @@ CMD:avplate(playerid, params[])
 {
 	new vehicleid, plate[9];
 	if(sscanf(params, "ds[8]", vehicleid, plate))
-		return SendClientMessage(playerid, COLOR_ERROR, "/avplate <vehicleid> <testo (max 8)>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /avplate <vehicleid> <testo (max 8)>");
 
 	if(!Vehicle_IsValid(vehicleid))
 		return SendClientMessage(playerid, COLOR_ERROR, "L'id del veicolo inserito non è valido.");

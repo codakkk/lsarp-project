@@ -40,7 +40,7 @@ CMD:dp(playerid, params[])
 		SendFormattedMessage(playerid, -1, "Hai rimosso il DP %d.", slotid+1);
 	}
 	else
-		return SendFormattedMessage(playerid, COLOR_ERROR, "/dp <slotid 1 - %d> <facoltativo: testo> (usa \"|\" per andare a capo).", max_slots);
+		return SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "USO: /dp <slotid 1 - %d> <facoltativo: testo> (usa \"|\" per andare a capo).", max_slots);
 	return 1;
 }
 

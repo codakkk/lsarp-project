@@ -19,7 +19,7 @@ CMD:givezpoints(playerid, params[])
 {
 	new id, points;
 	if(sscanf(params, "k<u>d", id, points))	
-		return SendClientMessage(playerid, COLOR_ERROR, "/givezpoints <playerid/partofname> <points>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /givezpoints <playerid/partofname> <points>");
 	
 	Account_AddPoints(id, points);
 
@@ -36,7 +36,7 @@ CMD:blockpm(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei un premium di almeno livello Bronzo o non hai acquistato il blocco PM.");
 	
     if(isnull(params) || strlen(params) <= 0)
-        return SendClientMessage(playerid, COLOR_ERROR, "/blockpm <all o playerid/partofname>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /blockpm <all o playerid/partofname>");
 
     if(!strcmp(params, "all", true))
     {
@@ -49,7 +49,7 @@ CMD:blockpm(playerid, params[])
     {
         new id;
         if(sscanf(params, "k<u>", id))
-            return SendClientMessage(playerid, COLOR_ERROR, "/blockpm <all o playerid/partofname>");
+            return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /blockpm <all o playerid/partofname>");
 		if(!Account_HasPMAllEnabled(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Hai già disabilitato i PM da e verso tutti.");
         if(id == playerid || !Character_IsLogged(id))
@@ -84,7 +84,7 @@ CMD:blockb(playerid, params[])
     {
         new id;
         if(sscanf(params, "k<u>", id))
-            return SendClientMessage(playerid, COLOR_ERROR, "/blockb <all o playerid/partofname>");
+            return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /blockb <all o playerid/partofname>");
 		if(!Account_HasOOCEnabled(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Hai già disabilitato la chat OOC da e verso tutti.");
         if(id == playerid || !Character_IsLogged(id))
@@ -108,7 +108,7 @@ CMD:setpremium(playerid, params[])
 {
 	new id, premiumid, time;
 	if(sscanf(params, "k<u>dd", id, premiumid, time))
-		return SendClientMessage(playerid, COLOR_ERROR, "/setpremium <playerid/partofname> <premium (0 - 3)> <giorni>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setpremium <playerid/partofname> <premium (0 - 3)> <giorni>");
 	if(!IsPlayerConnected(id) || IsPlayerNPC(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido");
 	if(premiumid < 0 || premiumid > 3)

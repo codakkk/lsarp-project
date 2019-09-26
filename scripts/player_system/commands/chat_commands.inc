@@ -14,7 +14,7 @@ CMD:low(playerid, params[])
 	if(Character_IsDead(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
     if(isnull(params) || strlen(params) > 128) 
-        return SendClientMessage(playerid, COLOR_ERROR, "/low <testo>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /low <testo>");
     new String:string = str_format("%s dice a bassa voce: %s", Character_GetRolePlayName(playerid), params);
     ProxDetectorStr(playerid, 5.0, string, 0x9d9d9dFF, 0x9d9d9dFF, 0x9d9d9dFF, 0x9d9d9dFF, 0x9d9d9dFF);
     return 1;
@@ -31,7 +31,7 @@ CMD:pm(playerid, params[])
 	}*/
     new id, s[128];
     if(sscanf(params, "k<u>s[128]", id, s) || isnull(s) || strlen(s) > 128)
-        return SendClientMessage(playerid, COLOR_ERROR, "/pm <playerid/partofname> <testo>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /pm <playerid/partofname> <testo>");
     if(id < 0 || id >= MAX_PLAYERS  || !Character_IsLogged(id))
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
 	if(playerid == id)
@@ -86,7 +86,7 @@ flags:shout(CMD_ALIVE_USER);
 CMD:shout(playerid, params[])
 {
     if(isnull(params) || strlen(params) > 128) 
-        return SendClientMessage(playerid, COLOR_ERROR, "/s(hout) <testo>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /s(hout) <testo>");
     new String:string = str_format("%s grida: %s", Character_GetRolePlayName(playerid), params);
     ProxDetectorStr(playerid, 40.0, string, COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
     return 1;
@@ -99,7 +99,7 @@ CMD:do(playerid, params[])
 	//if(Character_IsDead(playerid))
 		//return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
     if(isnull(params) || strlen(params) > 128) 
-        return SendClientMessage(playerid, COLOR_ERROR, "/do <testo>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /do <testo>");
     Character_Do(playerid, params);
     return 1;
 }
@@ -110,7 +110,7 @@ CMD:dolow(playerid, params[])
 	//if(Character_IsDead(playerid))
 		//return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
     if(isnull(params) || strlen(params) > 128) 
-        return SendClientMessage(playerid, COLOR_ERROR, "/dolow <testo>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /dolow <testo>");
     Character_DoLow(playerid, params);
     return 1;
 }
@@ -121,7 +121,7 @@ CMD:me(playerid, params[])
 	if(Character_IsDead(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
     if(isnull(params) || strlen(params) > 128) 
-        return SendClientMessage(playerid, COLOR_ERROR, "/me <testo>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /me <testo>");
 	if(Character_IsInjured(playerid))
 		return pc_cmd_melow(playerid, params);
     Character_Me(playerid, params);
@@ -134,7 +134,7 @@ CMD:melow(playerid, params[])
 	if(Character_IsDead(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
     if(isnull(params) || strlen(params) > 128) 
-        return SendClientMessage(playerid, COLOR_ERROR, "/melow <testo>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /melow <testo>");
     Character_MeLow(playerid, params);
     return 1;
 }
@@ -145,7 +145,7 @@ CMD:ame(playerid, params[])
 	if(Character_IsDead(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
     if(isnull(params) || strlen(params) > 128) 
-        return SendClientMessage(playerid, COLOR_ERROR, "/ame <descrizione>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /ame <descrizione>");
     Character_AMe(playerid, params);
     return 1;
 }
@@ -156,7 +156,7 @@ CMD:b(playerid, params[])
 	if(!Account_HasOOCEnabled(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Hai disabilitato la chat OOC. Usa \"/blockb all\" per riattivarla.");
     if(isnull(params) || strlen(params) > 128) 
-        return SendClientMessage(playerid, COLOR_ERROR, "/b <testo>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /b <testo>");
     new String:string;
     if(Player_IsAdminDuty(playerid))
     {
@@ -179,7 +179,7 @@ CMD:whisper(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
     new id, text[128];
     if(sscanf(params, "k<u>s[128]", id, text) || strlen(text) > 128)
-        return SendClientMessage(playerid, COLOR_ERROR, "/w(hisper) <playerid/partofname> <testo>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /w(hisper) <playerid/partofname> <testo>");
     if(!IsPlayerConnected(id) || !Character_IsLogged(id))
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
     if(playerid == id)
@@ -203,7 +203,7 @@ CMD:cwhisper(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
     new text[128];
     if(sscanf(params, "s[128]", text) || strlen(text) > 128)
-        return SendClientMessage(playerid, COLOR_ERROR, "/cw(hisper) <testo>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /cw(hisper) <testo>");
     new vehicleid = GetPlayerVehicleID(playerid);
     if(vehicleid <= 0 || vehicleid == INVALID_VEHICLE_ID || IsABike(vehicleid) || IsAMotorBike(vehicleid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei in un veicolo.");

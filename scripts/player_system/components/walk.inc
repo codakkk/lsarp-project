@@ -45,7 +45,7 @@ CMD:stilecamminata(playerid, params[])
 {
 	new style;
 	if(sscanf(params, "d", style) || (style-- && (style < 0 || style >= WALK_LAST)))
-		return SendFormattedMessage(playerid, COLOR_ERROR, "/stilecamminata <style (1 - %d)> (0 per disattivare).", WALK_LAST);
+		return SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "USO: /stilecamminata <style (1 - %d)> (0 per disattivare).", WALK_LAST);
 	Character_SetWalkingStyle(playerid, style);
 	SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo stile camminata. Stile: %d", style+1);
 	return 1;

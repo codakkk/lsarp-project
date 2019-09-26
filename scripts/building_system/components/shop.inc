@@ -86,7 +86,7 @@ hook OnCharacterTryBuy(playerid)
 {
     new id, item, price;
     if(sscanf(params, "dk<item>d", id, item, price))
-        return SendClientMessage(playerid, COLOR_ERROR, "/addsell <buildingid> <itemid/nome> <prezzo>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /addsell <buildingid> <itemid/nome> <prezzo>");
     
     if(price < 0)
         return SendClientMessage(playerid, COLOR_ERROR, "Il prezzo inserito non è valido.");

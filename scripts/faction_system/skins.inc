@@ -39,7 +39,7 @@ CMD:afactionskin(playerid, params[])
 {
 	new factionid, command[32], skinid;
 	if(sscanf(params, "ds[32]D(-1)", factionid, command, skinid))
-		return SendClientMessage(playerid, COLOR_ERROR, "/fskin <factionid> <(a)dd/(r)emove/(l)ist>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /fskin <factionid> <(a)dd/(r)emove/(l)ist>");
 	
 	if(!Faction_IsValid(factionid))
 		return SendClientMessage(playerid, COLOR_ERROR, "La fazione inserita non esiste.");
@@ -47,7 +47,7 @@ CMD:afactionskin(playerid, params[])
 	if(!strcmp(command, "add", true) || !strcmp(command, "a", true))
 	{
 		if(skinid <= -1)
-			return SendFormattedMessage(playerid, COLOR_ERROR, "/fskin %d add <skinid>", factionid);
+			return SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "USO: /fskin %d add <skinid>", factionid);
 		if(Faction_AddSkin(factionid, skinid))
 			SendFormattedMessage(playerid, COLOR_GREEN, "Hai aggiunto la skin id %d alla fazione %d.", skinid, factionid);
 		else
@@ -57,7 +57,7 @@ CMD:afactionskin(playerid, params[])
 	else if(!strcmp(command, "remove", true) || !strcmp(command, "r", true))
 	{
 		if(skinid <= -1)
-			return SendFormattedMessage(playerid, COLOR_ERROR, "/fskin %d remove <skinid>", factionid);
+			return SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "USO: /fskin %d remove <skinid>", factionid);
 		
 		if(Faction_RemoveSkin(factionid, skinid))
 			SendFormattedMessage(playerid, COLOR_GREEN, "Hai rimosso la skin id %d dalla fazione %d.", skinid, factionid);

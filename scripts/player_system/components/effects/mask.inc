@@ -62,7 +62,7 @@ CMD:mask(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_ERROR, "/mask <#codice>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /mask <#codice>");
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
 	if(!Character_IsMasked(id))
@@ -114,7 +114,7 @@ CMD:rimuovimaschera(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_ERROR, "/rimuovimaschera <playerid/partofname/#maskid>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /rimuovimaschera <playerid/partofname/#maskid>");
 	
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id) || !IsPlayerInRangeOfPlayer(playerid, id, 2.5))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");

@@ -3,7 +3,7 @@
 
 #include <YSI_Coding\y_hooks>
 
-new Float:PokerTableMiscObjOffsets[6][6] =
+new stock Float:PokerTableMiscObjOffsets[6][6] =
 {
 	{-1.25, -0.470, 0.1, 0.0, 0.0, 180.0}, // (Slot 2)
 	{-1.25, 0.470, 0.1, 0.0, 0.0, 180.0}, // (Slot 1)
@@ -46,5 +46,6 @@ enum
 
 stock bool:Character_CanCasino(playerid)
 {
+	#pragma unused playerid
     return true;
 }

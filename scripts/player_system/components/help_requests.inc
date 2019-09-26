@@ -51,7 +51,7 @@ flags:aiutami(CMD_USER);
 CMD:aiutami(playerid, params[])
 {
     if(isnull(params) || strlen(params) <= 0 || strlen(params) > 255)
-        return SendClientMessage(playerid, COLOR_ERROR, "/aiutami <testo>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /aiutami <testo>");
     
     if(RequestTime[playerid] > gettime())
         return SendFormattedMessage(playerid, COLOR_ERROR, "Devi aspettare %d secondi tra una richiesta e l'altra.", RequestTime[playerid] - gettime());
@@ -114,7 +114,7 @@ CMD:rr(playerid, params[])
 {
     new rid, reason[128];
     if(sscanf(params, "ds[128]", rid, reason))
-        return SendClientMessage(playerid, COLOR_ERROR, "/rr <requestid> <motivo>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /rr <requestid> <motivo>");
     
     StaffRequest_Decline(playerid, rid, reason);
     return 1;
@@ -125,7 +125,7 @@ CMD:ar(playerid, params[])
 {
     new rid;
     if(sscanf(params, "d", rid))
-        return SendClientMessage(playerid, COLOR_ERROR, "/ar <requestid>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /ar <requestid>");
     
     StaffRequest_Accept(playerid, rid);
     return 1;

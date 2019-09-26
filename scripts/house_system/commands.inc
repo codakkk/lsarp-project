@@ -4,7 +4,7 @@ CMD:gotohouse(playerid, params[])
 {
 	new houseid;
     if(sscanf(params, "d", houseid))
-	   return SendClientMessage(playerid, COLOR_ERROR, "/gotohouse <houseid>");
+	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gotohouse <houseid>");
 	if(!House_IsValid(houseid) || !House_IsCreated(houseid))
 		return SendClientMessage(playerid, COLOR_ERROR, "La casa inserita non esiste.");
 	new Float:x, Float:y, Float:z;
@@ -22,7 +22,7 @@ CMD:hinttypes(playerid, params[])
 	new type;
 	if(sscanf(params, "d", type) || !HouseInterior_IsValidType(type))
 	{
-		SendClientMessage(playerid, COLOR_ERROR, "/hinttypes <tipo interno>");
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /hinttypes <tipo interno>");
 		SendClientMessage(playerid, COLOR_GREY, "1: Casa molto piccola - 2: Casa piccola - 3: Casa media - 4: Casa grande");
 		SendClientMessage(playerid, COLOR_GREY, "5: Casa molto grande - 6: Roulotte molto piccola - 7: Roulotte piccola");
 		SendClientMessage(playerid, COLOR_GREY, "8: Roulotte media - 9: Roulotte grande");
@@ -47,7 +47,7 @@ CMD:hcreate(playerid, params[])
     new type;
     if(sscanf(params, "d", type))
 	{
-		SendClientMessage(playerid, COLOR_ERROR, "/hcreate <tipo interno>");
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /hcreate <tipo interno>");
 		SendClientMessage(playerid, COLOR_GREY, "Usa /hinttypes per una lista.");
 		return 1;
 	}
@@ -75,7 +75,7 @@ CMD:hdelete(playerid, params[])
 {
 	new houseid = strval(params);
 	if(houseid <= 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "/hdelete <house id>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /hdelete <house id>");
 	if(House_Delete(houseid))
 	{
 		SendMessageToAdmins(true, COLOR_ORANGE, "AdmCmd: %s (%d) ha rimosso la casa id %d.", Account_GetName(playerid), playerid, houseid);
@@ -93,7 +93,7 @@ CMD:hresetowner(playerid, params[])
 	new houseid = strval(params);
 	
 	if(houseid <= 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "/hresetowner <houseid>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /hresetowner <houseid>");
 
 	if(!House_IsValid(houseid))
 	   return SendClientMessage(playerid, COLOR_ERROR, "L'id della casa inserita non è valido.");
@@ -114,7 +114,7 @@ CMD:hedit(playerid, params[])
 {
     new houseid, command[16], value, value2;
     if(sscanf(params, "ds[16]D(-1)D(-1)", houseid, command, value, value2))
-	   return SendClientMessage(playerid, COLOR_ERROR, "/hedit <houseid> <pos - interior - price - lock>");
+	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /hedit <houseid> <pos - interior - price - lock>");
     
     if(!House_IsValid(houseid))
 	   return SendClientMessage(playerid, COLOR_ERROR, "L'id della casa inserita non è valido.");
@@ -136,7 +136,7 @@ CMD:hedit(playerid, params[])
     {
 	   	if(value == -1 || value2 == -1)
 		{
-			SendClientMessage(playerid, COLOR_ERROR, "/hedit <houseid> <interior type> <interior id>");
+			SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /hedit <houseid> <interior type> <interior id>");
 			SendClientMessage(playerid, COLOR_GREY, "Usa /hinttypes per una lista");
 			return 0;
 		}
@@ -153,7 +153,7 @@ CMD:hedit(playerid, params[])
     else if(!strcmp(command, "price", true))
     {
 	   if(value == -1)
-		  return SendClientMessage(playerid, COLOR_ERROR, "/hedit <houseid> <price> <price>");
+		  return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /hedit <houseid> <price> <price>");
 	   if(value <= 0)
 		  return SendClientMessage(playerid, COLOR_ERROR, "Il prezzo della casa deve essere maggiore di 0.");
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato il prezzo di vendita della casa %d. Nuovo prezzo: %d", houseid, value);
@@ -162,7 +162,7 @@ CMD:hedit(playerid, params[])
     else if(!strcmp(command, "lock", true))
     {
 	   if(value != 0 && value != 1)
-		  return SendClientMessage(playerid, COLOR_ERROR, "/hedit <houseid> <lock> <0: open - 1: lock>");
+		  return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /hedit <houseid> <lock> <0: open - 1: lock>");
 	   new s[8];
 	   if(value)
 		  s = "Chiusa";
@@ -171,7 +171,7 @@ CMD:hedit(playerid, params[])
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato lo stato della porta della casa %d. Stato: %s", houseid, s);
 	   House_SetLocked(houseid, value);
     }
-    else return SendClientMessage(playerid, COLOR_ERROR, "/hedit <houseid> <pos - interior - price - lock>");
+    else return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /hedit <houseid> <pos - interior - price - lock>");
     return 1;
 }
 
@@ -215,12 +215,107 @@ CMD:bussa(playerid, params[])
 	return 1;
 }
 
+flags:dshout(CMD_ALIVE_USER);
+CMD:dshout(playerid, params[])
+{
+	if(isnull(params) || strlen(params) <= 0)
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: (/ds)hout [testo]");
+	
+	new houseid = Character_GetHouse(playerid, false);
+	new buildingid = Character_GetBuilding(playerid, false);
+
+	if(House_IsValid(houseid) || Building_IsValid(buildingid))
+	{
+		new world = House_IsValid(houseid) ? House_GetExitWorld(houseid) : Building_GetExitWorld(buildingid);
+		foreach(new p : Player)
+		{
+			if(Character_GetVirtualWorld(p) == world)
+				SendFormattedMessage(p, -1, "[Porta] %s grida: %s!", Character_GetRolePlayName(playerid), params);
+		}
+		pc_cmd_shout(playerid, params);
+	}
+	else
+	{
+		houseid = Character_GetHouse(playerid, true);
+		buildingid = Character_GetBuilding(playerid, true);
+
+		if(!House_IsValid(houseid) && !Building_IsValid(buildingid))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita di un biz o di una casa.");
+		
+		new Float:x, Float:y, Float:z, world, interior;
+		if(House_IsValid(houseid))
+		{
+			House_GetEnterPosition(houseid, x, y, z);
+			world = House_GetEnterWorld(houseid);
+			interior = House_GetEnterInterior(houseid);
+		}
+		else
+		{
+			Building_GetEnterPos(buildingid, x, y, z);
+			world = Building_GetEnterWorld(buildingid);
+			interior = Building_GetEnterInterior(buildingid);
+		}
+		pc_cmd_shout(playerid, params);
+		SendRangedMessageStr(20.0, x, y, z, world, interior, str_format("[Porta] %s grida: %s", Character_GetRolePlayName(playerid), params), COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false);
+	}
+	return 1;
+}
+alias:dshout("ds");
+
+flags:ddo(CMD_ALIVE_USER);
+CMD:ddo(playerid, params[])
+{
+	if(isnull(params) || strlen(params) <= 0)
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /ddo [testo]");
+	
+	new houseid = Character_GetHouse(playerid, false);
+	new buildingid = Character_GetBuilding(playerid, false);
+
+	if(House_IsValid(houseid) || Building_IsValid(buildingid))
+	{
+		new world = House_IsValid(houseid) ? House_GetExitWorld(houseid) : Building_GetExitWorld(buildingid);
+		foreach(new p : Player)
+		{
+			if(Character_GetVirtualWorld(p) == world)
+				SendFormattedMessage(p, -1, "* [Porta] %s (( %s ))", params, Character_GetRolePlayName(playerid));
+		}
+		pc_cmd_do(playerid, params);
+	}
+	else
+	{
+		houseid = Character_GetHouse(playerid, true);
+		buildingid = Character_GetBuilding(playerid, true);
+
+		if(!House_IsValid(houseid) && !Building_IsValid(buildingid))
+			return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita di un biz o di una casa.");
+		
+		new Float:x, Float:y, Float:z, world, interior;
+		if(House_IsValid(houseid))
+		{
+			House_GetEnterPosition(houseid, x, y, z);
+			world = House_GetEnterWorld(houseid);
+			interior = House_GetEnterInterior(houseid);
+		}
+		else
+		{
+			Building_GetEnterPos(buildingid, x, y, z);
+			world = Building_GetEnterWorld(buildingid);
+			interior = Building_GetEnterInterior(buildingid);
+		}
+		
+		pc_cmd_do(playerid, params);
+
+		SendRangedMessageStr(20.0, x, y, z, world, interior, str_format("* [Porta] %s (( %s ))", params, Character_GetRolePlayName(playerid)), COLOR_INTERACTION, COLOR_INTERACTION, COLOR_INTERACTION, COLOR_INTERACTION, COLOR_INTERACTION, false);
+	}
+	return 1;
+}
+
 flags:resethousefurnitures(CMD_JR_MODERATOR);
 CMD:resethousefurnitures(playerid, params[])
 {
     new houseid;
     if(sscanf(params, "d", houseid))
-        return SendClientMessage(playerid, COLOR_ERROR, "/resethouseexterior <houseid>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /resethouseexterior <houseid>");
     if(!House_IsValid(houseid))
         return SendClientMessage(playerid, COLOR_ERROR, "La casa inserita non è valida.");
     

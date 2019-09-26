@@ -14,7 +14,7 @@ CMD:gotobuilding(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "d", id))
-		return SendClientMessage(playerid, COLOR_ERROR, "/gotobuilding <buildingid>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gotobuilding <buildingid>");
 	if(!Building_IsValid(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "L'edificio inserito non è valido.");
 	new Float:x, Float:y, Float:z;
@@ -42,7 +42,7 @@ CMD:abdelete(playerid, params[])
 {
     new id;
     if(sscanf(params, "i", id))
-	   return SendClientMessage(playerid, COLOR_ERROR, "/abdelete <buildingid>");
+	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abdelete <buildingid>");
     
     if(!Building_IsValid(id))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Invalid Building ID");
@@ -64,8 +64,8 @@ CMD:abedit(playerid, p[])
     new buildingid, command[16], params[256];
     if(sscanf(p, "ds[16]S()[256]", buildingid, command, params))
     {
-	    SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> <pos - interior - price - lock - rmowner - name - type - ..");
-        SendClientMessage(playerid, COLOR_ERROR, ".. faction - exit - ownable - welcometext >");
+	    SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit [buildingid] [pos - interior - price - lock - rmowner - name - type - ..");
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, ".. faction - exit - ownable - welcometext]");
         return 0;
     }
     
@@ -93,7 +93,7 @@ CMD:abedit(playerid, p[])
     {
         new price;
 	    if(sscanf(params, "d", price))
-            return SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> <price>");
+            return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit <buildingid> <price>");
 	    if(Building_SetPrice(buildingid, price))
         {
             SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato il prezzo del building %d. Nuovo Prezzo: $%d", buildingid, price);
@@ -114,7 +114,7 @@ CMD:abedit(playerid, p[])
     {
         new name[MAX_BUILDING_NAME];
         if(sscanf(params, "s[64]", name))
-            return SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> name <name (max 64 characters)>");
+            return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit <buildingid> name <name (max 64 characters)>");
         
         if(strlen(name) > MAX_BUILDING_NAME)
     	   return SendClientMessage(playerid, COLOR_ERROR, "Nome troppo lungo.");
@@ -134,7 +134,7 @@ CMD:abedit(playerid, p[])
         new type;
         if(sscanf(params, "d", type))
         {
-            SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> type <typeid>");
+            SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit <buildingid> type <typeid>");
             SendClientMessage(playerid, COLOR_ERROR, "0: Store, 1: Paycheck, 2: Garage, 3: Complex, 4: Banca, 5: Pubblicità, 6: Benzina");
             return 0;
         }
@@ -150,7 +150,7 @@ CMD:abedit(playerid, p[])
         new factionid;
         if(sscanf(params, "d", factionid))
         {
-            SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> faction <factionid>");
+            SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit <buildingid> faction <factionid>");
             return 0;
         }
 
@@ -184,7 +184,7 @@ CMD:abedit(playerid, p[])
     {
         new ownable;
         if(sscanf(params, "d", ownable))
-            return SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> ownable <1: yes - 0: no>");
+            return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit <buildingid> ownable <1: yes - 0: no>");
 
         if(Building_SetOwnable(buildingid, ownable))
         {
@@ -203,7 +203,7 @@ CMD:abedit(playerid, p[])
     {
         new lock;
         if(sscanf(params, "d", lock))
-            return SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> lock <1: lock - 0: open>");
+            return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit <buildingid> lock <1: lock - 0: open>");
 
         Building_SetLocked(buildingid, (lock > 0) ? (1) : (0));
 
@@ -217,7 +217,7 @@ CMD:abedit(playerid, p[])
     {
         new welcomeText[MAX_WELCOME_TEXT_LENGTH];
         if(sscanf(params, "s[128]", welcomeText))
-            return SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> welcometext <text (max 128 characters)>");
+            return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit <buildingid> welcometext <text (max 128 characters)>");
 
         Building_SetWelcomeText(buildingid, welcomeText);
 
@@ -234,7 +234,7 @@ CMD:abedit(playerid, p[])
     }
     else 
     {
-        SendClientMessage(playerid, COLOR_ERROR, "/abedit <buildingid> <pos - interior - price - lock - rmowner - name - type - ..");
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit <buildingid> <pos - interior - price - lock - rmowner - name - type - ..");
         SendClientMessage(playerid, COLOR_ERROR, ".. faction - exit - ownable - welcometext >");
     }
     return 1;

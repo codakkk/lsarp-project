@@ -38,7 +38,7 @@ CMD:manette(playerid, params[])
 		
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_ERROR, "/manette <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /manette <playerid/partofname>");
 	
 	if(!Character_IsLogged(id) || id == playerid || Player_IsAdminDuty(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
@@ -66,7 +66,7 @@ CMD:arresta(playerid, params[])
 		
 	new id, time;
 	if(sscanf(params, "k<u>d", id, time))
-		return SendClientMessage(playerid, COLOR_ERROR, "/arresta <playerid/partofname> <minuti>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /arresta <playerid/partofname> <minuti>");
 
 	if(id == playerid || !Character_IsLogged(id) || IsPlayerNPC(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
@@ -122,7 +122,7 @@ CMD:trascina(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_ERROR, "/trascina <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /trascina <playerid/partofname>");
 
 	if(playerid == id || !Character_IsLogged(id) || IsPlayerNPC(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
@@ -176,7 +176,7 @@ CMD:cura(playerid, params[])
 	}
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_ERROR, "/cura <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /cura <playerid/partofname>");
 	
 	if( (!Player_IsAdminDuty(playerid) && id == playerid) || !IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
@@ -207,7 +207,7 @@ CMD:perquisisci(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	new id;
 	if(sscanf(params, "k<u>d", id))
-		return SendClientMessage(playerid, COLOR_ERROR, "/perquisisci <playerid/partofname/#id>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /perquisisci <playerid/partofname/#id>");
 
 	if(id == playerid)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso.");

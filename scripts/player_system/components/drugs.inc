@@ -54,7 +54,7 @@ CMD:resetdrugstats(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_ERROR, "/resetdrugstats <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /resetdrugstats <playerid/partofname>");
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Giocatore non collegato.");
 	SendMessageToAdmins(false, COLOR_ADMINCMD, "AdmAlert: %s ha resettato le stats della droga a %s.", Account_GetName(playerid), Character_GetOOCName(id));

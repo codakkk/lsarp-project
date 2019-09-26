@@ -45,9 +45,6 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
 			if(House_IsValid(Character_GetHouseID(playerid)))
 				return SendClientMessage(playerid, COLOR_ERROR, "Devi essere all'esterno della casa per poter cambiare interior.");
 			
-			if(House_IsRoulotte(Character_GetHouseID(playerid)))
-				return SendClientMessage(playerid, COLOR_ERROR, "Non puoi cambiare l'interno di una roulotte.");
-			
 			new String:string, interiorType = House_GetInteriorType(houseid);
 			
 			new List:list = HouseInterior_GetListByType(interiorType);

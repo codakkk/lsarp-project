@@ -39,7 +39,7 @@ CMD:sms(playerid, params[])
 {
     new slot, number[9], message[128];
     if(sscanf(params, "ds[9]s[128]", slot, number, message))
-        return SendClientMessage(playerid, COLOR_ERROR, "/sms <slot> <numero/nome rubrica> <messaggio>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /sms <slot> <numero/nome rubrica> <messaggio>");
     
     if(!Character_HasPhoneInSlot(playerid, slot))
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai un cellulare in questo slot.");

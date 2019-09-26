@@ -19,7 +19,7 @@ CMD:traccia(playerid, params[])
 {
     new number;
     if(sscanf(params, "d", number))
-        return SendClientMessage(playerid, COLOR_ERROR, "/traccia <numero>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /traccia <numero>");
 
     new Float:x, Float:y, Float:z;
 
@@ -73,7 +73,7 @@ CMD:traccia(playerid, params[])
 {
     new number;
     if(sscanf(params, "d", number))
-        return SendClientMessage(playerid, COLOR_ERROR, "/traccia <numero>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /traccia <numero>");
 
     new Float:x, Float:y, Float:z, bool:isPlayer = false;
 

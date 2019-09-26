@@ -60,7 +60,7 @@ CMD:danni(playerid, params[])
 		valstr(s, playerid);
 		pc_cmd_danni(playerid, s);
 		return 1;
-		//return SendClientMessage(playerid, COLOR_ERROR, "/danni <playerid/partofname>");
+		//return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /danni <playerid/partofname>");
 	}
 	
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))

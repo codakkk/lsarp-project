@@ -16,6 +16,9 @@ hook OnPlayerClearData(playerid)
 	if(list_valid(CharacterBuildings[playerid]))
 		list_delete_deep(CharacterBuildings[playerid]);
 	
+	if(list_valid(CharacterHouses[playerid]))
+		list_delete_deep(CharacterHouses[playerid]);
+
 	PlayerHouseKey[playerid] = 0;
 	return 1;
 }
@@ -36,6 +39,15 @@ hook OnCharacterLoad(playerid)
 			Character_AddOwnedBuilding(playerid, buildingid);
 		}
 	}
+
+	for_map(i : GetHousesMap())
+	{
+		new houseid = iter_get_key(i);
+		if(House_GetOwnerID(houseid) == Character_GetID(playerid))
+		{
+			Character_AddOwnedHouse(playerid, houseid);
+		}
+	}
 	return 1;
 }
 
@@ -48,6 +60,12 @@ hook OnCharacterTryBuy(playerid)
 	new elementid, E_ELEMENT_TYPE:type;
 	if(Character_GetNearestPickup(playerid, elementid, type) && type == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_IsValid(elementid))
 		return Character_BuyBuilding(playerid, elementid);
+	return 1;
+}
+
+CMD:myhouses(playerid, params[])
+{
+	SendClientMessage(playerid, 0xFF6347FF, "Le case che possiedi sono:");
 	return 1;
 }
 
@@ -100,44 +118,6 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 		}
 	}
 	return Y_HOOKS_CONTINUE_RETURN_1;
-}
-
-stock Character_Enter(playerid)
-{   
-	new buildingid, E_ELEMENT_TYPE:type;
-    if(Character_GetNearestPickup(playerid, buildingid, type) && type == ELEMENT_TYPE_BUILDING_ENTRANCE)
-    {
-		printf("Last Enter");
-		if(IsPlayerInAnyVehicle(playerid))
-			return 0;
-		
-		if(Building_IsLocked(buildingid))
-			return GameTextForPlayer(playerid, "~r~Porta Chiusa", 5000, 1), 0;
-		new 
-			Float:x = 0.0, 
-			Float:y = 0.0, 
-			Float:z = 0.0,
-			interiorId = Building_GetExitInterior(buildingid),
-			world = Building_GetExitWorld(buildingid)
-		;
-
-		new String:str = Building_GetWelcomeTextStr(buildingid);
-		if(str_len(str) > 0)
-			SendClientMessageStr(playerid, COLOR_GREEN, str);
-		
-		Building_GetExitPos(buildingid, x, y, z);
-
-		Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
-
-		SetPlayerInterior(playerid, interiorId);
-		Character_SetVirtualWorld(playerid, world);
-		// Should I use Fading?
-		Character_SetSafePosition(playerid, x, y, z, interiorId, world);
-
-		CallLocalFunction(#OnPlayerEnterBuilding, "dd", playerid, buildingid);
-		return 1;
-    }
-    return 0;
 }
 
 stock Character_Exit(playerid, elementId, E_ELEMENT_TYPE:type)
@@ -241,6 +221,12 @@ static Internal_ExitBuilding(playerid, buildingid)
 	return 1;
 }
 
+stock Character_Enter(playerid)
+{
+	#pragma unused playerid
+	return 1;
+}
+
 stock Character_BuyBuilding(playerid, buildingid)
 {
     if(!Building_IsValid(buildingid))
@@ -256,10 +242,11 @@ stock Character_BuyBuilding(playerid, buildingid)
     
     Building_SetOwner(buildingid, playerid);
 
+	Character_AddOwnedBuilding(playerid, buildingid);
+
 	new name[MAX_BUILDING_NAME];
 	Building_GetName(buildingid, name);
-
-    SendFormattedMessage(playerid, COLOR_GREEN, "Hai acquistato questo edificio (%s) per $%d.", name, Building_GetPrice(buildingid));
+    SendFormattedMessage(playerid, COLOR_GREEN, "Hai acquistato questo business (%s) per $%d.", name, Building_GetPrice(buildingid));
     return 1;
 }
 
@@ -285,8 +272,8 @@ stock Character_BuyHouse(playerid, houseid)
 
     Character_GiveMoney(playerid, -price, "Character_BuyHouse");
 
-	new zone[32];
-	House_GetZoneName(houseid, zone);
+	new zone[64];
+	House_GetAddress(houseid, zone);
     SendFormattedMessage(playerid, 0x33AA33FF, "Hai acquistato l'immobile situato a %s, Las Venturas, San Andreas.", zone);
     return 1;
 }
@@ -373,4 +360,63 @@ stock List:Character_GetBuildingsByType(playerid, E_BUILDING_TYPE:type)
 			list_add(list, buildingid);
 	}
 	return list;
+}
+
+stock bool:Character_AddOwnedHouse(playerid, houseid)
+{
+	if(!Character_IsLogged(playerid) || !House_IsValid(houseid))
+		return false;
+	
+	if(!list_valid(CharacterHouses[playerid]))
+		CharacterHouses[playerid] = list_new();
+	
+	list_add(CharacterHouses[playerid], houseid);
+	return true;
+}
+
+stock bool:Character_RemoveOwnedHouse(playerid, houseid)
+{
+	if(!Character_IsLogged(playerid) || !House_IsValid(houseid))
+		return false;
+	
+	if(!list_valid(CharacterHouses[playerid]))
+		return false;
+	new index = -1;
+	for(new i = 0, j = list_size(CharacterHouses[playerid]); i < j; ++i)
+	{
+		if(list_get(CharacterHouses[playerid], i) == houseid)
+		{
+			index = i;
+			break;
+		}
+	}
+	if(index != -1)
+	{
+		list_remove(CharacterHouses[playerid], index);
+		return true;
+	}
+	return false;
+}
+
+stock List:Character_GetOwnedHousesList(playerid)
+{
+	if(!list_valid(CharacterHouses[playerid]))
+		return List:0;
+	return CharacterHouses[playerid];
+}
+
+stock bool:Character_DoesOwnHouse(playerid, houseid)
+{
+	if(!list_valid(CharacterHouses[playerid]) || list_size(CharacterHouses[playerid]) == 0)
+		return false;
+	new bool:result = false;
+	for_list(i : CharacterHouses[playerid])
+	{
+		if(iter_get(i) == houseid)
+		{
+			result = true;
+			break;
+		}
+	}
+	return result;
 }

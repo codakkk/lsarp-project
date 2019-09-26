@@ -145,7 +145,7 @@ CMD:spawnpoint(playerid, params[])
 	new spawnType = 0, extraid;
 	if(sscanf(params, "dD(-1)", spawnType, extraid))
 	{
-		SendClientMessage(playerid, COLOR_ERROR, "/spawnpoint <type>");
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /spawnpoint <type>");
 		SendClientMessage(playerid, COLOR_ERROR, "Tipi - 0: Spawn scelto, 1: Casa, 2: Fazione, 3: Business");
 		return 1;
 	}
@@ -153,7 +153,7 @@ CMD:spawnpoint(playerid, params[])
 	{
 		if(extraid == -1)
 		{
-			SendClientMessage(playerid, COLOR_ERROR, "/spawnpoint 1 <houseid>");
+			SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /spawnpoint 1 <houseid>");
 			SendClientMessage(playerid, COLOR_ERROR, "Tipi - 0: Spawn scelto, 1: Casa, 2: Fazione, 3: Business");
 			return 1;
 		}
@@ -172,7 +172,7 @@ CMD:spawnpoint(playerid, params[])
 	{
 		if(extraid == -1)
 		{
-			SendClientMessage(playerid, COLOR_ERROR, "/spawnpoint 3 <businessid>");
+			SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /spawnpoint 3 <businessid>");
 			SendClientMessage(playerid, COLOR_ERROR, "Tipi - 0: Spawn scelto, 1: Casa, 2: Fazione, 3: Business");
 			return 1;
 		}

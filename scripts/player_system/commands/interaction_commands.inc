@@ -33,7 +33,7 @@ CMD:dai(playerid, params[])
         text[128];
     if(sscanf(params, "k<u>s[128]", id, text))
     {
-        SendClientMessage(playerid, COLOR_ERROR, "/dai <playerid/partofname> <oggetto>");
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /dai <playerid/partofname> <oggetto>");
         SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma");
         return 1;
     }
@@ -211,7 +211,7 @@ CMD:accetta(playerid, params[])
 	}
 	else
 	{
-		SendClientMessage(playerid, COLOR_ERROR, "/accetta <oggetto>");
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /accetta <oggetto>");
 		SendClientMessage(playerid, COLOR_GREY, "Oggetti: arma, oggetto, morte, cure,  veicolo, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
 		SendClientMessage(playerid, COLOR_GREY, "... (edi)ficio (biz), (faz)ione, blackjack");
 	}
@@ -270,7 +270,7 @@ CMD:rifiuta(playerid, params[])
 	}
 	else 
 	{
-		SendClientMessage(playerid, COLOR_ERROR, "/rifiuta <text>");
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /rifiuta <text>");
 		SendClientMessage(playerid, COLOR_GREY, "Text: arma, oggetto, morte, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
 		SendClientMessage(playerid, COLOR_GREY, "... (edi)ficio (biz), cure, veicolo, blackjack");
 	}
@@ -361,7 +361,7 @@ CMD:annulla(playerid, params[])
 	}
 	else 
 	{
-		SendClientMessage(playerid, COLOR_ERROR, "/annulla <text>");
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /annulla <text>");
 		SendClientMessage(playerid, COLOR_GREY, "Text: arma, oggetto, cure, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
 		SendClientMessage(playerid, COLOR_GREY, "... (edi)ficio (biz)");
 	}
@@ -398,7 +398,7 @@ CMD:rimuovi(playerid, params[])
         text[128];
     if(sscanf(params, "s[128]", text))
     {
-        SendClientMessage(playerid, COLOR_ERROR, "/rimuovi <oggetto>");
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /rimuovi <oggetto>");
         SendClientMessage(playerid, COLOR_ERROR, "Oggetti: zaino");
         return 1;
     }
@@ -427,7 +427,7 @@ CMD:arma(playerid, params[])
 	new slotid;
 	if(sscanf(params, "d", slotid))
 	{
-		SendClientMessage(playerid, COLOR_ERROR, "/arma <slot (0 - 6)>");
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /arma <slot (0 - 6)>");
 		SendClientMessage(playerid, COLOR_ERROR, "0: disarma, 1: armi bianche, 2: pistole, 3: fucili, 4: SMG, 5: Fucili d'assalto, 6: Fucile di precisione");
 		return 1;
 	}
@@ -439,7 +439,7 @@ CMD:arma(playerid, params[])
 		return 1;
 	}
 	if(slotid < 1 || slotid > 6)
-		return SendClientMessage(playerid, COLOR_ERROR, "/arma <slot (0 - 6)>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /arma <slot (0 - 6)>");
 
 	new weaponid, ammo;
     Character_GetWeaponData(playerid, slotid, weaponid, ammo);

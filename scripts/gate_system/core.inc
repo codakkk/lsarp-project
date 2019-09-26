@@ -451,7 +451,7 @@ CMD:gcreate(playerid, params[])
     new val = strval(params);
 
     if(isnull(params) || val <= 0)
-        return SendClientMessage(playerid, COLOR_ERROR, "/gcreate <modelid>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gcreate <modelid>");
     
     static const valids[] = {19912, 985, 2933, 2990, 986, 971, 976, 19870, 19795, 19796, 6400, 2928, 9093, 19910, 988, 2909, 3036, 975, 969, 10149};
 
@@ -484,7 +484,7 @@ CMD:gdelete(playerid, params[])
 {
     new val = strval(params);
     if(val <= 0)
-        return SendClientMessage(playerid, COLOR_ERROR, "/gdelete <gate id>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gdelete <gate id>");
     if(Gate_Delete(val))
 	{
 		SendMessageToAdmins(true, COLOR_ORANGE, "AdmCmd: %s (%d) ha rimosso il cancello id %d.", Account_GetName(playerid), playerid, val);
@@ -501,7 +501,7 @@ CMD:gotogate(playerid, params[])
 {
     new val = strval(params);
     if(val <= 0)
-        return SendClientMessage(playerid, COLOR_ERROR, "/gotogate <garage id>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gotogate <garage id>");
     
     new Float:x, Float:y, Float:z;
     if(Gate_GetStartPos(val, x, y, z))
@@ -516,7 +516,7 @@ CMD:gedit(playerid, params[])
 {
     new gateid, command[16], otherData[32];
     if(sscanf(params, "ds[16]S(0)[32]", gateid, command, otherData))
-        return SendClientMessage(playerid, COLOR_ERROR, "/gedit <gateid> <startpos - endpos - faction - owner - rmowner>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gedit <gateid> <startpos - endpos - faction - owner - rmowner>");
     
     if(!Gate_IsValid(gateid))
         return SendClientMessage(playerid, COLOR_ERROR, "Il gateid inserito non è valido.");
@@ -533,7 +533,7 @@ CMD:gedit(playerid, params[])
     {
         new factionid;
         if(sscanf(otherData, "d", factionid))
-            return SendFormattedMessage(playerid, COLOR_ERROR, "/gedit %d faction <factionid>", gateid);
+            return SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gedit %d faction <factionid>", gateid);
         
         if(factionid == INVALID_FACTION_ID)
         {
@@ -550,7 +550,7 @@ CMD:gedit(playerid, params[])
     {
         new id;
         if(sscanf(otherData, "k<u>", id))
-            return SendFormattedMessage(playerid, COLOR_ERROR, "/gedit %d owner <playerid/partofname/#####>", gateid);
+            return SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gedit %d owner <playerid/partofname/#####>", gateid);
         if(!IsPlayerConnected(id) || !Character_IsLogged(id))
             return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
         SendFormattedMessage(playerid, -1, "Hai settato %s (%d) proprietario del gate id %d.", Character_GetOOCName(id), id, gateid);
@@ -563,6 +563,6 @@ CMD:gedit(playerid, params[])
         map_set_cell(Gates, gateid, OwnerID, 0);
     }
     else 
-        return SendClientMessage(playerid, COLOR_ERROR, "/gedit <gateid> <startpos - endpos - faction - owner>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gedit <gateid> <startpos - endpos - faction - owner>");
     return 1;
 }

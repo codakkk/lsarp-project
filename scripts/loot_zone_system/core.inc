@@ -620,7 +620,7 @@ CMD:lzedit(playerid, p[])
 {
 	new lootzoneid, command[16], params[128];
 	if(sscanf(p, "ds[16]S()[128]", lootzoneid, command, params))
-		return SendClientMessage(playerid, COLOR_ERROR, "/lzedit <lootzoneid> <pos - additem - rmitem - resetinv - refresh - items - delete>");	
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /lzedit <lootzoneid> <pos - additem - rmitem - resetinv - refresh - items - delete>");	
 	
 	if(!LootZone_IsValid(lootzoneid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Loot Zone id non valido.");
@@ -651,7 +651,7 @@ CMD:lzedit(playerid, p[])
 		new itemid, minQuantity, maxQuantity, drop;
 		if(sscanf(params, "k<item>ddd", itemid, minQuantity, maxQuantity, drop))
 		{
-			SendClientMessage(playerid, COLOR_ERROR, "/lzedit <lootzoneid> additem <itemid/name> <min quant.> <max. quant.> <drop chance.>");
+			SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /lzedit <lootzoneid> additem <itemid/name> <min quant.> <max. quant.> <drop chance.>");
 			SendClientMessage(playerid, COLOR_GREY, "INFO: aggiunge itemid tra gli item droppabili.");
 			return 0;
 		}
@@ -681,7 +681,7 @@ CMD:lzedit(playerid, p[])
 		new itemid;
 		if(sscanf(params, "k<item>", itemid))
 		{
-			SendClientMessage(playerid, COLOR_ERROR, "/lzedit <lootzoneid> rmitem <itemid/name>");
+			SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /lzedit <lootzoneid> rmitem <itemid/name>");
 			SendClientMessage(playerid, COLOR_GREY, "INFO: rimuove itemid tra gli item droppabili. Usa 'all' come ultimo parametro per resettarli tutti.");
 			return 0;
 		}
@@ -732,7 +732,7 @@ CMD:lzedit(playerid, p[])
 	}
 	else
 	{
-		return SendClientMessage(playerid, COLOR_ERROR, "/lzedit <lootzoneid> <pos - additem - rmitem - resetinv - refresh - items - delete>");	
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /lzedit <lootzoneid> <pos - additem - rmitem - resetinv - refresh - items - delete>");	
 	}
 	return 1;
 }

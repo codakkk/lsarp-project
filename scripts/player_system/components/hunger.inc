@@ -31,7 +31,7 @@ CMD:sethunger(playerid, params[])
 {
 	new id, hunger;
 	if(sscanf(params, "k<u>d", id, hunger))
-		return SendClientMessage(playerid, COLOR_ERROR, "/sethunger <playerid/partofname/####> <valore 0 - 100>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /sethunger <playerid/partofname/####> <valore 0 - 100>");
 
 	if(hunger < 0 || hunger > 100)
 		return SendClientMessage(playerid, COLOR_ERROR, "Valore minimo: 0 - Valore Massimo: 100");

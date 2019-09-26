@@ -120,7 +120,7 @@ CMD:recon(playerid, params[])
     }
     new id;
     if(sscanf(params, "k<u>", id))
-        return SendClientMessage(playerid, COLOR_ERROR, "/recon <playerid/partofname/#####>. Usa /recon off per smettere.");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /recon <playerid/partofname/#####>. Usa /recon off per smettere.");
 
     if(!Character_IsLogged(id) || id == playerid)
         return SendClientMessage(playerid, COLOR_ERROR, "ID non valido.");

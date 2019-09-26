@@ -25,6 +25,8 @@ enum //E_BUILDING_TYPE
 #define BUILDING_START_WORLD		(5000)
 #define INVALID_BUILDING_ID			(0)
 
+#define foreach_building(%0) new %0 = 0; for_map(a : GetBuildingsMap()) %0 = iter_get_key(a);
+
 #include <pickup_system\core>
 #include <faction_system\core>
 #include <player_system\core>
@@ -127,6 +129,10 @@ hook OnCharacterChangeName(playerid, newCharacterName[])
 	return 1;
 }
 
+stock Building:Building_Find(buildingid)
+{
+	return Building:map_iter_at(Buildings, buildingid);
+}
 
 stock Building_Create(Float:x, Float:y, Float:z, interior, world)
 {
@@ -342,13 +348,16 @@ stock Building_SetOwner(buildingid, playerid)
 {
     if(!Building_IsValid(buildingid) || !Building_IsOwnable(buildingid) || !Character_IsLogged(playerid))
 	   return 0;
+
+	Building_ResetOwner(buildingid);
+
 	map_set_cell(Buildings, buildingid, OwnerID, Character_GetID(playerid));
 	new Iter:iter = Iter:map_iter_at(Buildings, buildingid);
 	iter_set_cells(iter, OwnerName, Character_GetOOCName(playerid));
 
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), Building_GetID(buildingid));
-
 	Character_AddOwnedBuilding(playerid, buildingid);
+
+	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), Building_GetID(buildingid));
 
     Log(Character_GetOOCName(playerid), "", "Building_SetOwner", buildingid);
     return 1;
@@ -879,4 +888,42 @@ Dialog:Dialog_BuildingSellToPlayer(playerid, response, listitem, inputtext[])
 	SendFormattedMessage(id, COLOR_RECEIVE_REQUEST, "%s vuole venderti il suo edificio per $%d.", Character_GetRolePlayName(playerid), money);
 	SendFormattedMessage(playerid, COLOR_SEND_REQUEST, "Hai proposto il tuo edificio a %s per $%d.", Character_GetRolePlayName(id), money);
 	return 1;
+}
+
+hook function Character_Enter(playerid)
+{   
+	new buildingid, E_ELEMENT_TYPE:type;
+    if(Character_GetNearestPickup(playerid, buildingid, type) && type == ELEMENT_TYPE_BUILDING_ENTRANCE)
+    {
+		printf("Last Enter");
+		if(IsPlayerInAnyVehicle(playerid))
+			return 0;
+		
+		if(Building_IsLocked(buildingid))
+			return GameTextForPlayer(playerid, "~r~Porta Chiusa", 5000, 1), 0;
+		new 
+			Float:x = 0.0, 
+			Float:y = 0.0, 
+			Float:z = 0.0,
+			interiorId = Building_GetExitInterior(buildingid),
+			world = Building_GetExitWorld(buildingid)
+		;
+
+		new String:str = Building_GetWelcomeTextStr(buildingid);
+		if(str_len(str) > 0)
+			SendClientMessageStr(playerid, COLOR_GREEN, str);
+		
+		Building_GetExitPos(buildingid, x, y, z);
+
+		Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
+
+		SetPlayerInterior(playerid, interiorId);
+		Character_SetVirtualWorld(playerid, world);
+		// Should I use Fading?
+		Character_SetSafePosition(playerid, x, y, z, interiorId, world);
+
+		CallLocalFunction(#OnPlayerEnterBuilding, "dd", playerid, buildingid);
+		return 1;
+    }
+    return 0;
 }

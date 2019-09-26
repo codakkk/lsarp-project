@@ -105,7 +105,7 @@ CMD:tog(playerid, params[])
 		}
 	}
 
-	SendClientMessage(playerid, COLOR_ERROR, "/tog <fchat - hud - pm - ooc>");
+	SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /tog <fchat - hud - pm - ooc>");
 	if(Account_GetAdminLevel(playerid) > 1)
 		SendClientMessage(playerid, COLOR_GREY, "Admin: cheat");
 	return 1;
@@ -144,7 +144,7 @@ CMD:report(playerid, params[])
 
 	new id, reason[128];
 	if(sscanf(params, "k<u>s[128]", id, reason))
-		return SendClientMessage(playerid, COLOR_ERROR, "/report <playerid/partofname/#####> <motivo>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /report <playerid/partofname/#####> <motivo>");
 	
 	if(!Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
@@ -164,7 +164,7 @@ CMD:afk(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_ERROR, "/afk <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /afk <playerid/partofname>");
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Non valido.");
 	if(Account_GetAdminLevel(playerid) < 1 && Account_GetAdminLevel(id) > 1)
@@ -253,7 +253,7 @@ CMD:id(playerid, params[])
 {
 	new id;
 	if(isnull(params))
-		return SendClientMessage(playerid, COLOR_ERROR, "/id <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /id <playerid/partofname>");
 	if(IsNumeric(params))
 	{
 		id = strval(params);
@@ -308,7 +308,7 @@ CMD:stilelotta(playerid, params[])
 	if(sscanf(params, "d", id) || id < 0 || id > 3)
 	{
 		// Show Dialog? nah
-		return SendClientMessage(playerid, COLOR_ERROR, "/stilelotta <id (0 - 3)>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /stilelotta <id (0 - 3)>");
 	}
 	else
 	{

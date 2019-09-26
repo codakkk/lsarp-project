@@ -52,7 +52,7 @@ stock Character_AMe(playerid, text[], GLOBAL_TAG_TYPES:...)
     format(textString, sizeof(textString), text, ___2);
 
     format(temp, sizeof(temp), "> %s ", textString);
-    SendTwoLinesMessage(playerid, 0xC2A2DAFF, "%s %s ", Character_GetRolePlayName(playerid), textString); //0xD6C3E3FF
+    SendTwoLinesMessage(playerid, COLOR_INTERACTION, "%s %s ", Character_GetRolePlayName(playerid), textString); //0xD6C3E3FF
     
     format(temp, 120, "%s", textString);
 	if(strlen(temp) > 43)
@@ -62,7 +62,7 @@ stock Character_AMe(playerid, text[], GLOBAL_TAG_TYPES:...)
 	strins(temp, "* ", 0, sizeof(temp));
 	strins(temp, " *", strlen(temp), sizeof(temp));
 
-    UpdateDynamic3DTextLabelText(PlayerAMe3DText[playerid], 0xC2A2DAFF, temp);
+    UpdateDynamic3DTextLabelText(PlayerAMe3DText[playerid], COLOR_INTERACTION, temp);
     
 
     new Float:x, Float:y, Float:z;

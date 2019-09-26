@@ -228,7 +228,7 @@ CMD:vusa(playerid, params[])
 {
 	new slotid;
 	if(sscanf(params, "d", slotid))
-		return SendClientMessage(playerid, COLOR_ERROR, "/vusa <slotid>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /vusa <slotid>");
 	return 1;
 }*/
 

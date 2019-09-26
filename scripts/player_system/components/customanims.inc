@@ -14,7 +14,7 @@ CMD:anim(playerid, params[])
 	
 	new animName[32];
 	if(sscanf(params, "s[32]", animName))
-		return SendClientMessage(playerid, COLOR_ERROR, "/anim <custom anim name>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /anim <custom anim name>");
 	
 	inline OnFind()
 	{
@@ -37,7 +37,7 @@ alias:anim("ca");
 CMD:customanim(playerid, params[])
 {
 	if(isnull(params) || strlen(params) > 10)
-		return SendClientMessage(playerid, COLOR_ERROR, "/customanim <crea - lista>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /customanim <crea - lista>");
 	if(!strcmp(params, "crea", true) || !strcmp(params, "create", true) || !strcmp(params, "c", true))
 	{
 		Dialog_Show(playerid, Dialog_CreateCustomAnim, DIALOG_STYLE_INPUT, "Nuova Animazione Personalizzata", "Inserisci la libreria della nuova animazione.", "Continua", "Annulla");
@@ -73,7 +73,7 @@ CMD:customanim(playerid, params[])
 		}
 		MySQL_TQueryInline(gMySQL, using inline OnFind, "SELECT name, library, anim_name, is_loop FROM `character_custom_animations` WHERE character_id = '%d';", Character_GetID(playerid));
 	}
-	else return SendClientMessage(playerid, COLOR_ERROR, "/customanim <crea - lista>");
+	else return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /customanim <crea - lista>");
 	return 1;
 }
 

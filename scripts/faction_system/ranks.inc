@@ -52,7 +52,7 @@ CMD:afranks(playerid, params[])
 {
 	new factionid, command[32];
 	if(sscanf(params, "ds[32]", factionid, command))
-		return SendClientMessage(playerid, COLOR_ERROR, "/afranks <factionid> <(a)dd/(e)dit(r)emove/(l)ist>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /afranks <factionid> <(a)dd/(e)dit(r)emove/(l)ist>");
 	
 	if(!Faction_IsValid(factionid))
 		return SendClientMessage(playerid, COLOR_ERROR, "La fazione inserita non esiste.");
@@ -72,7 +72,7 @@ CMD:afranks(playerid, params[])
 	{
 		new rankid, salary, name[MAX_FACTION_RANK_NAME];
 		if(sscanf(command, "dds[16]", rankid, salary, name) || rankid < 1 || rankid > 10)
-			return SendFormattedMessage(playerid, COLOR_ERROR, "/afranks %d add <rankid (1 - 10)> <salario> <nome (%d max caratteri)>", factionid, MAX_FACTION_RANK_NAME);
+			return SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "USO: /afranks %d add <rankid (1 - 10)> <salario> <nome (%d max caratteri)>", factionid, MAX_FACTION_RANK_NAME);
 		if(salary < 0)
 			salary = 0;
 		if(Faction_AddRank(factionid, rankid, name, salary))
@@ -84,7 +84,7 @@ CMD:afranks(playerid, params[])
 	{
 		new rankid;
 		if(sscanf(command, "d", rankid) || rankid < 1 || rankid > 10)
-			return SendFormattedMessage(playerid, COLOR_ERROR, "/afranks %d remove <rankid (1 - 10)>", factionid);
+			return SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "USO: /afranks %d remove <rankid (1 - 10)>", factionid);
 		if(Faction_RemoveRank(factionid, rankid))
 			SendFormattedMessage(playerid, COLOR_GREEN, "Hai rimosso il rank id %d dalla fazione id %d.", rankid, factionid);
 		else
@@ -94,12 +94,12 @@ CMD:afranks(playerid, params[])
 	{
 		new rankid, what[8];
 		if(sscanf(command, "ds[8]", rankid, what) || rankid < 1 || rankid > 10)
-			return SendFormattedMessage(playerid, COLOR_ERROR, "/afranks %d edit <rankid (1 - 10)> <salary/name>", factionid);
+			return SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "USO: /afranks %d edit <rankid (1 - 10)> <salary/name>", factionid);
 		if(!strcmp(what, "salary", true))
 		{
 			new salary;
 			if(sscanf(what, "d", salary) || salary <= 0)
-				return SendFormattedMessage(playerid, COLOR_ERROR, "/afranks %d edit <rankid (1 - 10)> <salary (> 0)> <new-salary>", factionid);
+				return SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "USO: /afranks %d edit <rankid (1 - 10)> <salary (> 0)> <new-salary>", factionid);
 			Faction_SetRankSalary(factionid, rankid, salary);
 			SendFormattedMessage(playerid, COLOR_GREEN, "Hai modificato il salario del rank id %d alla fazione %d.", rankid, factionid);
 		}
@@ -107,12 +107,12 @@ CMD:afranks(playerid, params[])
 		{
 			new name[MAX_FACTION_RANK_NAME];
 			if(sscanf(what, "s[16]", name) || strlen(name) <= 0)
-				return SendFormattedMessage(playerid, COLOR_ERROR, "/afranks %d edit <rankid (1 - 10)> <name> <new-rank-name>", factionid);
+				return SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "USO: /afranks %d edit <rankid (1 - 10)> <name> <new-rank-name>", factionid);
 			Faction_SetRankName(factionid, rankid, name);
 			SendFormattedMessage(playerid, COLOR_GREEN, "Hai modificato il nome del rank id %d alla fazione %d.", rankid, factionid);
 		}
 	}
-	else SendClientMessage(playerid, COLOR_ERROR, "/afranks <factionid> <(a)dd/(e)dit(r)emove/(l)ist>");
+	else SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /afranks <factionid> <(a)dd/(e)dit(r)emove/(l)ist>");
 	return 1;
 }
 stock Faction_ShowRankList(factionid, playerid)

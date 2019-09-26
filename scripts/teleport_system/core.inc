@@ -97,7 +97,7 @@ CMD:teleportcreate(playerid, params[])
 {
     new name[32];
     if(sscanf(params, "s[32]", name))
-        return SendClientMessage(playerid, COLOR_ERROR, "/teleportcreate <name>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /teleportcreate <name>");
     
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
@@ -111,7 +111,7 @@ flags:gototeleport(CMD_MODERATOR);
 CMD:gototeleport(playerid, params[])
 {
     if(isnull(params))
-        return SendClientMessage(playerid, COLOR_ERROR, "/gototeleport <teleportid>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gototeleport <teleportid>");
     new teleportid = strval(params);
     if(!Teleport_IsValid(teleportid))
         return SendClientMessage(playerid, COLOR_ERROR, "Il teleport inserito non è valido.");
@@ -134,7 +134,7 @@ CMD:teleportedit(playerid, p[])
     new teleportid, command[16], params[256];
     if(sscanf(p, "ds[16]S()[256]", teleportid, command, params))
     {
-	    SendClientMessage(playerid, COLOR_ERROR, "/teleportedit <teleportid> <name - enter - exit - faction - player - delete - allowvehicles>");
+	    SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /teleportedit <teleportid> <name - enter - exit - faction - player - delete - allowvehicles>");
         return 0;
     }
     
@@ -144,7 +144,7 @@ CMD:teleportedit(playerid, p[])
     {
         new newName[32];
         if(sscanf(params, "s[32]", newName))
-            return SendFormattedMessage(playerid, COLOR_ERROR, "/teleportedit %d name <name (max 32 chars.)", teleportid);
+            return SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "USO: /teleportedit %d name <name (max 32 chars.)", teleportid);
         
         if(Teleport_SetName(teleportid, newName))
         {
@@ -186,7 +186,7 @@ CMD:teleportedit(playerid, p[])
         new factionid;
         if(sscanf(params, "d", factionid))
         {
-            SendFormattedMessage(playerid, COLOR_ERROR, "/teleportedit %d faction <factionid>", teleportid);
+            SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "USO: /teleportedit %d faction <factionid>", teleportid);
             SendFormattedMessage(playerid, COLOR_GREY, "Usa %d come factionid per rimuovere il vincolo.", INVALID_FACTION_ID);
             return 0;
         }
@@ -213,7 +213,7 @@ CMD:teleportedit(playerid, p[])
         new id;
         if(sscanf(params, "k<u>", id))
         {
-            SendFormattedMessage(playerid, COLOR_ERROR, "/teleportedit %d player <playerid/partofname/####>", teleportid);
+            SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "USO: /teleportedit %d player <playerid/partofname/####>", teleportid);
             SendClientMessage(playerid, COLOR_GREY, "Usa -1 come playerid per rimuovere il vincolo.");
             return 0;
         }
@@ -246,7 +246,7 @@ CMD:teleportedit(playerid, p[])
     {
         new allow;
         if(sscanf(params, "d", allow))
-            return SendFormattedMessage(playerid, COLOR_ERROR, "/teleportedit %d allowvehicles <1: allow - 0: don't allow>", teleportid);
+            return SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "USO: /teleportedit %d allowvehicles <1: allow - 0: don't allow>", teleportid);
         
         if(Teleport_AllowVehicles(teleportid, allow ? true : false))
         {

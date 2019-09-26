@@ -151,7 +151,7 @@ CMD:frequenza(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Questa frequenza non puo' essere utilizzata poiché criptata.");
 		
     if(!Character_SetRadioFrequency(playerid, inputFrequency))
-    	return SendClientMessage(playerid, COLOR_ERROR, "/(freq)uenza <numero> (0: SPENTA - 1/999).");
+    	return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /(freq)uenza <numero> (0: SPENTA - 1/999).");
 
     if(inputFrequency == 0)
     	SendClientMessage(playerid, COLOR_BLUE, "Hai spento la radio.");

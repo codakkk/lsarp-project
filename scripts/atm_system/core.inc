@@ -242,7 +242,7 @@ CMD:atmedit(playerid, params[])
 {
     new id, command[16];
     if(sscanf(params, "ds[16]", id, command))
-        return SendClientMessage(playerid, COLOR_ERROR, "/atmedit <atmid> <pos - delete>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /atmedit <atmid> <pos - delete>");
     
     if(!ATM_IsValid(id))
         return SendClientMessage(playerid, COLOR_ERROR, "L'ATM id inserito non è valido.");

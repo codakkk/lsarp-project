@@ -171,15 +171,15 @@ hook OnPlayerEnterDynamicCP(playerid, checkpointid)
             SendFormattedMessage(playerid, 0x33AA33FF, "Prezzo: $%s", FormatNumber(House_GetPrice(houseid)));
             SendClientMessage(playerid, -1, "/compra");
         }
-        new zone[32];
-        House_GetZoneName(houseid, zone);
-        SendFormattedMessage(playerid, 0x33AA33FF, "%s, Las Venturas, San Andreas", zone);
+        new zone[64];
+        House_GetAddress(houseid, zone);
+        SendClientMessage(playerid, 0x33AA33FF, zone);
         SendClientMessage(playerid, -1, "Comandi disponibili: /entra, /ds(hout), /ddo, /bussa");
     }
     return 1;
 }
 
-stock bool:House_GetZoneName(houseid, name[])
+stock bool:House_GetAddress(houseid, name[])
 {
     if(!House_IsValid(houseid))
         return false;
@@ -356,9 +356,14 @@ stock House_SetOwner(houseid, playerid)
 {
     if(!House_IsValid(houseid) || !IsPlayerConnected(playerid) || !Character_IsLogged(playerid) || Character_HasHouseKey(playerid))
 	   return 0;
+    
+    House_ResetOwner(houseid);
+
     map_set_cell(Houses, houseid, OwnerID, Character_GetID(playerid));
     new Iter:it = map_iter_at(Houses, houseid);
     iter_set_cells(it, OwnerName, Character_GetOOCName(playerid));
+
+    Character_AddOwnedHouse(playerid, houseid);
 
     House_CreateObjects(houseid);
 
@@ -373,6 +378,13 @@ stock House_ResetOwner(houseid)
     map_set_cell(Houses, houseid, OwnerID, 0);
     new Iter:it = map_iter_at(Houses, houseid);
     iter_set_cells(it, OwnerName, "");
+
+    foreach(new i : Player)
+	{
+		if(!Character_DoesOwnHouse(i, houseid))
+			continue;
+		Character_RemoveOwnedHouse(i, houseid);
+	}
 
     House_CreateObjects(houseid);
 
@@ -543,20 +555,11 @@ stock House_GetInteriorType(houseid)
     return map_get(Houses, houseid, InteriorType);
 }
 
-
 stock House_GetInteriorID(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
     return map_get(Houses, houseid, InteriorID);
-}
-
-stock bool:House_IsRoulotte(houseid)
-{
-    if(!House_IsValid(houseid))
-        return false;
-    new type = House_GetInteriorType(houseid);
-    return (type == ROULOTTE_VERY_SMALL || type == ROULOTTE_SMALL || type == ROULOTTE_MEDIUM || type == ROULOTTE_BIG);
 }
 
 stock House_SetPrice(houseid, price)
@@ -616,14 +619,6 @@ stock House_SetMoney(houseid, amount)
     map_set_cell(Houses, houseid, Money, amount);
     mysql_tquery_f(gMySQL, "UPDATE `houses` SET money = '%d' WHERE id = '%d'", amount, House_GetID(houseid));
     return 1;
-}
-
-stock House_GetAddress(houseid)
-{
-    new zone[32], Float:x, Float:y, Float:z;
-    House_GetEnterPosition(houseid, x, y, z);
-    Get2DZoneName(x, y, z, zone, sizeof(zone));
-    return zone;
 }
 
 stock House_LoadAll()

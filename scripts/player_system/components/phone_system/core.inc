@@ -284,7 +284,7 @@ CMD:cellinfo(playerid, params[])
 {
     new slotid;
     if(sscanf(params, "d", slotid))
-        return SendClientMessage(playerid, COLOR_ERROR, "/cellinfo <slotid>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /cellinfo <slotid>");
     
     if(!Character_HasPhoneInSlot(playerid, slotid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai un telefono in questo slot.");
@@ -320,7 +320,7 @@ CMD:chiama(playerid, params[])
 
     new slot, norn[9];
     if(sscanf(params, "ds[9]", slot, norn))
-        return SendClientMessage(playerid, COLOR_ERROR, "/chiama <slot> <numero/nome rubrica>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /chiama <slot> <numero/nome rubrica>");
 
     Character_StartCall(playerid, slot, norn);
     return 1;
@@ -385,7 +385,7 @@ CMD:vivavoce(playerid, params[])
 {
     new slotid;
     if(sscanf(params, "d", slotid))
-        return SendClientMessage(playerid, COLOR_ERROR, "/vivavoce <slotid>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /vivavoce <slotid>");
     
     if(!Character_HasPhoneInSlot(playerid, slotid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai un cellulare in questo slot.");
