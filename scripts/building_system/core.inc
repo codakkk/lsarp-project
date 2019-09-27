@@ -24,9 +24,10 @@ enum //E_BUILDING_TYPE
 #define MAX_WELCOME_TEXT_LENGTH 	(120)
 #define BUILDING_START_WORLD		(5000)
 #define INVALID_BUILDING_ID			(0)
-#define INVALID_BUILDING			(Building:0)
+#define INVALID_BUILDING			(Building:VAR_NULL)
 
-#define for_building(%0) for(new Building:%0=Building:map_iter(GetBuildingsMap());iter_inside(Iter:%0);iter_move_next(Iter:%0))
+//#define for_building(%0) for(new Iter:%0_iter=map_iter(GetBuildingsMap()),Building:%0=Building:iter_get_value(%0_iter);iter_inside(Iter:%0_iter);(iter_move_next(%0_iter) ? (%0=Building:iter_get_value(%0_iter)) : (%0=INVALID_BUILDING)))
+#define for_building(%0) for(new Iter:iter=map_iter(GetBuildingsMap()), Building:%0=Building:iter_get_value(iter);iter_inside(iter);%0=(iter_move_next(iter) != ITER_NULL ? (Building:iter_get_value(iter)) : (Building:0)))
 
 #include <pickup_system\core>
 #include <faction_system\core>
@@ -50,7 +51,6 @@ forward OnPlayerEnterBuilding(playerid, Building:building);
 static enum _:E_BUILDING_INFO
 {
     ID,
-    Exists,
     Name[MAX_BUILDING_NAME],
     WelcomeText[MAX_WELCOME_TEXT_LENGTH],
     Float:EnterX,
@@ -123,7 +123,7 @@ hook OnCharacterChangeName(playerid, newCharacterName[])
 	{
 		if(Building_GetOwnerID(building) == Character_GetID(playerid))
 		{
-			iter_set_cells(Iter:building, OwnerName, newCharacterName, MAX_PLAYER_NAME);
+			var_set_cells(Variant:building, OwnerName, newCharacterName, MAX_PLAYER_NAME);
 		}
 	}
 	return 1;
@@ -131,7 +131,7 @@ hook OnCharacterChangeName(playerid, newCharacterName[])
 
 stock Building:Building_Find(buildingid)
 {
-	return Building:map_iter_at(Buildings, buildingid);
+	return Building:map_get(Buildings, buildingid);
 }
 
 stock Building_Create(Float:x, Float:y, Float:z, interior, world)
@@ -139,33 +139,46 @@ stock Building_Create(Float:x, Float:y, Float:z, interior, world)
     inline OnInsert()
     {
 		new id = cache_insert_id();
-
-		new data[E_BUILDING_INFO];
-		data[ID] = id;
-		set(data[Name], "SET_NAME");
-		set(data[WelcomeText], "");
-		set(data[OwnerName], "");
 		
-		data[EnterX] = x;
-		data[EnterY] = y;
-		data[EnterZ] = z;
-		data[EnterInterior] = interior;
-		data[EnterWorld] = world;
-		data[Ownable] = 0;
-		data[OwnerID] = 0;
-		data[Price] = 0;
-		data[Locked] = 1;
-		data[Exists] = 1;
+		new Building:building = Building:var_new_buf(E_BUILDING_INFO);//Building:MEM_new(E_BUILDING_INFO);
+		var_acquire(Variant:building);
+		var_set_cell(Variant:building, ID, id);
+		var_set_cells(Variant:building, Name, "SET NAME");
+		var_set_cells(Variant:building, WelcomeText, "");
+		var_set_cells(Variant:building, OwnerName, "");
+		var_set_cell(Variant:building, EnterX, _:x);
+		var_set_cell(Variant:building, EnterY, _:y);
+		var_set_cell(Variant:building, EnterZ, _:z);
+		var_set_cell(Variant:building, EnterInterior, interior);
+		var_set_cell(Variant:building, EnterWorld, world);
+		var_set_cell(Variant:building, Ownable, 0);
+		var_set_cell(Variant:building, OwnerID, 0);
+		var_set_cell(Variant:building, Price, 0);
+		var_set_cell(Variant:building, ExitWorld, BUILDING_START_WORLD + id);
+		var_set_cell(Variant:building, Locked, 1);
+		/*MEM_set_val(building, ID, id);
+		MEM_set_val(building, Name, MEM_new_arr("SET NAME", strlen("SET NAME") + 1));
+		MEM_set_val(building, WelcomeName, MEM_NULLPTR);
+		MEM_set_val(building, OwnerName, MEM_NULLPTR);
+		MEM_set_val(building, EnterX, _:x);
+		MEM_set_val(building, EnterY, _:y);
+		MEM_set_val(building, EnterZ, _:z);
+		MEM_set_val(building, EnterInterior, interior);
+		MEM_set_val(building, EnterWorld, world);
+		MEM_set_val(building, Ownable, 0);
+		MEM_set_val(building, OwnerID, 0);
+		MEM_set_val(building, Price, 0);
+		MEM_set_val(building, ExitWorld, BUILDING_START_WORLD + id);
+		MEM_set_val(building, Locked, 1);*/
 
-		map_add_arr(Buildings, id, data);
+		map_add(Buildings, id, _:building);
 
-		new Building:building = Building_Find(id);
 		Building_CreateElements(building);
 
 		CallLocalFunction(#OnBuildingLoaded, "d", _:building);
     }
     MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO buildings (name, welcome_text, enter_x, enter_y, enter_z, enter_interior, enter_world, exit_x, exit_y, exit_z, exit_interior, ownable, owner_id, price, locked) \
-						   VALUES('SET_NAME', '', '%f', '%f', '%f', '%d', '%d', '0.0', '0.0', '0.0', '0', '0', '0', '0', '1')", 
+						   VALUES('SET NAME', '', '%f', '%f', '%f', '%d', '%d', '0.0', '0.0', '0.0', '0', '0', '0', '0', '1')", 
 										  x, y, z, interior, world);
     return 1;
 }
@@ -202,19 +215,35 @@ stock Building_LoadAll()
 
 			data[ExitWorld] = BUILDING_START_WORLD + data[ID];
 
-			data[Exists] = 1;
+			new Building:building = Building:var_new_buf(E_BUILDING_INFO);
+			var_acquire(Variant:building);
+			var_set_cell(Variant:building, ID, data[ID]);
+			var_set_cells(Variant:building, Name, data[Name]);
+			var_set_cells(Variant:building, WelcomeText, data[WelcomeText]);
+			var_set_cells(Variant:building, OwnerName, data[OwnerName]);
+			var_set_cell(Variant:building, EnterX, _:data[EnterX]);
+			var_set_cell(Variant:building, EnterY, _:data[EnterY]);
+			var_set_cell(Variant:building, EnterZ, _:data[EnterZ]);
+			var_set_cell(Variant:building, EnterInterior, data[EnterInterior]);
+			var_set_cell(Variant:building, EnterWorld, data[EnterWorld]);
+			var_set_cell(Variant:building, ExitX, _:data[EnterX]);
+			var_set_cell(Variant:building, ExitY, _:data[EnterY]);
+			var_set_cell(Variant:building, ExitZ, _:data[EnterZ]);
+			var_set_cell(Variant:building, ExitInterior, data[EnterInterior]);
+			var_set_cell(Variant:building, ExitWorld, data[EnterWorld]);
+			var_set_cell(Variant:building, Ownable, data[Ownable]);
+			var_set_cell(Variant:building, OwnerID, data[OwnerID]);
+			var_set_cell(Variant:building, Price, data[Price]);
+			var_set_cell(Variant:building, Locked, data[Locked]);
+			var_set_cell(Variant:building, Faction, data[Faction]);
+			var_set_cell(Variant:building, Type, data[Type]);
 
+			map_add(Buildings, data[ID], building);
 
-
-			printf("Building ID: %d - %d", data[ID], i);
-			map_add_arr(Buildings, data[ID], data);
-			
-			new Building:building = Building_Find(data[ID]);
+			printf("Building ID: %d", Building_GetID(building));
 
 			Building_CreateElements(building);
 			CallLocalFunction(#OnBuildingLoaded, "d", _:building);
-			//printf("Type: %d", BuildingInfo[i][Type]);
-			//Iter_Add(Buildings, i);
 		}
 		printf("%d buildings loaded.\n", count);
 
@@ -232,7 +261,7 @@ stock Building_LoadAll()
 						return 0;
 					new name[MAX_PLAYER_NAME];
 					cache_get_value_name(0, "name", name);
-					iter_set_cells(Iter:building, OwnerName, name);
+					var_set_cells(Variant:building, OwnerName, name);
 				}
 				MySQL_TQueryInline(gMySQL, using inline OnLoadOwnerName, "SELECT name FROM `characters` WHERE id = '%d'", ownerid);*/
 				new Cache:cache = mysql_query_f(gMySQL, true, "SELECT name FROM `characters` WHERE id = '%d'", ownerid);
@@ -240,7 +269,7 @@ stock Building_LoadAll()
 					continue;
 				new name[MAX_PLAYER_NAME];
 				cache_get_value_name(0, "name", name);
-				iter_set_cells(Iter:building, OwnerName, name);
+				var_set_cells(Variant:building, OwnerName, name);
 				cache_delete(cache);
 			}
 		}
@@ -250,18 +279,18 @@ stock Building_LoadAll()
 	return 1;
 }
 
+
 stock Building_SetPosition(Building:building, Float:x, Float:y, Float:z, vw, int)
 {
-	new buildingid = Building_GetID(building);
 
-	iter_set_cell(Iter:building, EnterX, x);
-	iter_set_cell(Iter:building, EnterY, y);
-	iter_set_cell(Iter:building, EnterZ, z);
-	iter_set_cell(Iter:building, EnterWorld, vw);
-	iter_set_cell(Iter:building, EnterInterior, int);
+	var_set_cell(Variant:building, EnterX, x);
+	var_set_cell(Variant:building, EnterY, y);
+	var_set_cell(Variant:building, EnterZ, z);
+	var_set_cell(Variant:building, EnterWorld, vw);
+	var_set_cell(Variant:building, EnterInterior, int);
     
 	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET enter_x = '%f', enter_y = '%f', enter_z = '%f', enter_interior = '%d', enter_world = '%d' WHERE id = '%d'", 
-					x, y, z, int, vw, buildingid);
+					x, y, z, int, vw, Building_GetID(building));
 
     Building_DestroyElements(building);
     Building_CreateElements(building);
@@ -271,7 +300,7 @@ stock Building_SetPosition(Building:building, Float:x, Float:y, Float:z, vw, int
 stock bool:Building_SetName(Building:building, name[MAX_BUILDING_NAME])
 {
 
-	iter_set_cells(Iter:building, Name, name);
+	var_set_cells(Variant:building, Name, name);
     
 	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET name = '%e' WHERE id = '%d'", name, Building_GetID(building));
 
@@ -283,11 +312,11 @@ stock bool:Building_SetName(Building:building, name[MAX_BUILDING_NAME])
 stock Building_SetInterior(Building:building, Float:x, Float:y, Float:z, interiorid)
 {
 
-	iter_set_cell(Iter:building, ExitX, x);
-	iter_set_cell(Iter:building, ExitY, y);
-	iter_set_cell(Iter:building, ExitZ, z);
-	iter_set_cell(Iter:building, ExitInterior, interiorid);
-	iter_set_cell(Iter:building, ExitWorld, BUILDING_START_WORLD + Building_GetID(building));
+	var_set_cell(Variant:building, ExitX, x);
+	var_set_cell(Variant:building, ExitY, y);
+	var_set_cell(Variant:building, ExitZ, z);
+	var_set_cell(Variant:building, ExitInterior, interiorid);
+	var_set_cell(Variant:building, ExitWorld, BUILDING_START_WORLD + Building_GetID(building));
 
     mysql_tquery_f(gMySQL, "UPDATE `buildings` SET exit_x = '%f', exit_y = '%f', exit_z = '%f', exit_interior = '%d' WHERE id = '%d'", 
 					x, y, z, interiorid, Building_GetID(building));
@@ -299,14 +328,14 @@ stock Building_SetInterior(Building:building, Float:x, Float:y, Float:z, interio
 
 stock Building_SetOwnable(Building:building, ownable)
 {
-	iter_set_cell(Iter:building, Ownable, ownable);
+	var_set_cell(Variant:building, Ownable, ownable);
     mysql_tquery_f(gMySQL, "UPDATE `buildings` SET ownable = '%d' WHERE id = '%d'", ownable, Building_GetID(building));
     return 1;
 }
 
 stock Building_SetPrice(Building:building, price)
 {
-    iter_set_cell(Iter:building, Price, price);
+    var_set_cell(Variant:building, Price, price);
     
 	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET price = '%d' WHERE id = '%d'", price, Building_GetID(building));
     return 1;
@@ -314,7 +343,7 @@ stock Building_SetPrice(Building:building, price)
 
 stock Building_SetWelcomeText(Building:building, text[MAX_WELCOME_TEXT_LENGTH])
 {
-	iter_set_cells(Iter:building, WelcomeText, text);
+	var_set_cells(Variant:building, WelcomeText, text);
 
 	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET welcome_text = '%e' WHERE id = '%d'", text, Building_GetID(building));
 	return 1;
@@ -322,7 +351,7 @@ stock Building_SetWelcomeText(Building:building, text[MAX_WELCOME_TEXT_LENGTH])
 
 stock Building_GetWelcomeText(Building:building, text[MAX_WELCOME_TEXT_LENGTH])
 {
-    iter_get_md_arr(Iter:building, {WelcomeText}, text);
+    var_get_md_arr(Variant:building, {WelcomeText}, text);
 	return 1;
 }
 
@@ -340,8 +369,8 @@ stock Building_SetOwner(Building:building, playerid)
 
 	Building_ResetOwner(building);
 
-	iter_set_cell(Iter:building, OwnerID, Character_GetID(playerid));
-	iter_set_cells(Iter:building, OwnerName, Character_GetOOCName(playerid));
+	var_set_cell(Variant:building, OwnerID, Character_GetID(playerid));
+	var_set_cells(Variant:building, OwnerName, Character_GetOOCName(playerid));
 
 	Character_AddOwnedBuilding(playerid, building);
 
@@ -353,12 +382,10 @@ stock Building_SetOwner(Building:building, playerid)
 
 stock Building_ResetOwner(Building:building)
 {
-    iter_set_cell(Iter:building, OwnerID, 0);
-	iter_set_cells(Iter:building, OwnerName, "");
+    var_set_cell(Variant:building, OwnerID, 0);
+	var_set_cells(Variant:building, OwnerName, "");
 
-	new buildingid = Building_GetID(building);
-
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET owner_id = '0' WHERE id = '%d'", buildingid);
+	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET owner_id = '0' WHERE id = '%d'", Building_GetID(building));
 	
 
 	foreach(new i : Player)
@@ -368,7 +395,7 @@ stock Building_ResetOwner(Building:building)
 		Character_RemoveOwnedBuilding(i, building);
 	}
 
-    Log("", "", "Building_ResetOwner", buildingid);
+    Log("", "", "Building_ResetOwner", Building_GetID(building));
     return 1;
 }
 
@@ -383,7 +410,7 @@ stock Building_Delete(Building:building)
 	// UPDATE OWNERID -> BUILDING_ID TO 0.
     CallLocalFunction(#OnBuildingDeleted, "d", _:building);
 
-	iter_erase_deep(Iter:building);
+	map_remove_deep(Buildings, Building_GetID(building));
     return 1;
 }
 
@@ -396,44 +423,44 @@ stock Building_CreateElements(Building:building)
 	Building_GetEnterPos(building, enterX, enterY, enterZ);
 	Building_GetExitPos(building, exitX, exitY, exitZ);
 
-	new enterPickup = Pickup_Create(1239, Building_GetID(building), enterX, enterY, enterZ, ELEMENT_TYPE_BUILDING_ENTRANCE, Building_GetEnterWorld(building), Building_GetEnterInterior(building));
-	iter_set_cell(Iter:building, EnterPickupID, enterPickup);
+	new enterPickup = Pickup_Create(1239, building, enterX, enterY, enterZ, ELEMENT_TYPE_BUILDING_ENTRANCE, Building_GetEnterWorld(building), Building_GetEnterInterior(building));
+	var_set_cell(Variant:building, EnterPickupID, enterPickup);
 
     new Text3D:enterText = CreateDynamic3DTextLabel(name, COLOR_LIGHTBLUE/*2*/, enterX, enterY, enterZ + 0.55, 20, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, Building_GetEnterWorld(building));
-	iter_set_cell(Iter:building, Enter3DText, enterText);
+	var_set_cell(Variant:building, Enter3DText, enterText);
 
-    new exitPickup = Pickup_Create(1007, Building_GetID(building), exitX, exitY, exitZ, ELEMENT_TYPE_BUILDING_EXIT, Building_GetExitWorld(building), Building_GetExitInterior(building));
-	iter_set_cell(Iter:building, ExitPickupID, exitPickup);
+    new exitPickup = Pickup_Create(1007, building, exitX, exitY, exitZ, ELEMENT_TYPE_BUILDING_EXIT, Building_GetExitWorld(building), Building_GetExitInterior(building));
+	var_set_cell(Variant:building, ExitPickupID, exitPickup);
 
 	new Text3D:exitText = CreateDynamic3DTextLabel("Uscita", COLOR_LIGHTBLUE/*2*/, exitX, exitY, exitZ + 0.55, 20, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, Building_GetExitWorld(building), Building_GetExitInterior(building));
-	iter_set_cell(Iter:building, Exit3DText, exitText);
+	var_set_cell(Variant:building, Exit3DText, exitText);
 
 }
 
 stock Building_DestroyElements(Building:building)
 {
-    Pickup_Destroy(iter_get(Iter:building, EnterPickupID));
-    Pickup_Destroy(iter_get(Iter:building, ExitPickupID));
-	new Text3D:t = Text3D:iter_get(Iter:building, Enter3DText);
+    Pickup_Destroy(var_get(Variant:building, EnterPickupID));
+    Pickup_Destroy(var_get(Variant:building, ExitPickupID));
+	new Text3D:t = Text3D:var_get(Variant:building, Enter3DText);
     DestroyDynamic3DTextLabelEx(t);
-	t = Text3D:iter_get(Iter:building, Exit3DText);
+	t = Text3D:var_get(Variant:building, Exit3DText);
 	DestroyDynamic3DTextLabelEx(t);
 	return 1;
 }
 
 // GET/SET
 
-stock bool:Building_IsValid(Building:building) return iter_inside(Iter:building);
+stock bool:Building_IsValid(Building:building) return var_valid(Variant:building);
 
 stock Building_GetName(Building:building, name[MAX_BUILDING_NAME])
 {
-    iter_get_md_arr(Iter:building, {Name}, name);
+	var_get_md_arr(Variant:building, {Name}, name);
     return 1;
 }
 
 stock Building_IsOwnable(Building:building)
 {
-    return iter_get(Iter:building, Ownable);
+    return var_get(Variant:building, Ownable);
 }
 
 stock bool:Building_IsOwned(Building:building)
@@ -443,28 +470,28 @@ stock bool:Building_IsOwned(Building:building)
 
 stock Building_GetOwnerID(Building:building)
 {
-    return iter_get(Iter:building, OwnerID);
+    return var_get(Variant:building, OwnerID);
 }
 
 stock Building_GetOwnerName(Building:building, name[MAX_PLAYER_NAME])
 {
-    iter_get_md_arr(Iter:building, {OwnerName}, name);
+    var_get_md_arr(Variant:building, {OwnerName}, name);
     return 1;
 }
 
 stock Building_IsLocked(Building:building)
 {
-    return iter_get(Iter:building, Locked);// || Building_GetType(a) == BUILDING_TYPE_GAS_STATION;
+    return var_get(Variant:building, Locked);// || Building_GetType(a) == BUILDING_TYPE_GAS_STATION;
 }
 
 stock Building_GetPrice(Building:building)
 {
-    return iter_get(Iter:building, Price);
+    return var_get(Variant:building, Price);
 }
 
 stock Building_SetFaction(Building:building, factionid)
 {
-	iter_set_cell(Iter:building, Faction, factionid);
+	var_set_cell(Variant:building, Faction, factionid);
 
 	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET faction = '%d' WHERE id = '%d'", factionid, Building_GetID(building));
 	return 1;
@@ -472,55 +499,55 @@ stock Building_SetFaction(Building:building, factionid)
 
 stock Building_GetFaction(Building:building)
 {
-	return iter_get(Iter:building, Faction);
+	return var_get(Variant:building, Faction);
 }
 
 stock Building_GetEnterInterior(Building:building)
 {
-	return iter_get(Iter:building, EnterInterior);
+	return var_get(Variant:building, EnterInterior);
 }
 
 stock Building_GetEnterWorld(Building:building)
 {
-	return iter_get(Iter:building, EnterWorld);
+	return var_get(Variant:building, EnterWorld);
 }
 
 stock Building_GetExitInterior(Building:building)
 {
-	return iter_get(Iter:building, ExitInterior);
+	return var_get(Variant:building, ExitInterior);
 }
 
 stock Building_GetExitWorld(Building:building)
 {
-	return iter_get(Iter:building, ExitWorld);
+	return var_get(Variant:building, ExitWorld);
 }
 
 stock Building_GetEnterPos(Building:building, &Float:x, &Float:y, &Float:z)
 {
-	x = Float:iter_get(Iter:building, EnterX);
-	y = Float:iter_get(Iter:building, EnterY);
-	z = Float:iter_get(Iter:building, EnterZ);
+	x = Float:var_get(Variant:building, EnterX);
+	y = Float:var_get(Variant:building, EnterY);
+	z = Float:var_get(Variant:building, EnterZ);
 	return 1;
 }
 
 stock Building_GetExitPos(Building:building, &Float:x, &Float:y, &Float:z)
 {
-	x = Float:iter_get(Iter:building, ExitX);
-	y = Float:iter_get(Iter:building, ExitY);
-	z = Float:iter_get(Iter:building, ExitZ);
+	x = Float:var_get(Variant:building, ExitX);
+	y = Float:var_get(Variant:building, ExitY);
+	z = Float:var_get(Variant:building, ExitZ);
 	return 1;
 }
 
 stock Building_GetType(Building:building)
 {
-	return iter_get(Iter:building, Type);
+	return var_get(Variant:building, Type);
 }
 
 stock bool:Building_SetType(Building:building, type)
 {
 	if(type < 0 || type >= BUILDING_TYPE_LAST)
 		return false;
-	iter_set_cell(Iter:building, Type, type);
+	var_set_cell(Variant:building, Type, type);
 
 	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET type = '%d' WHERE id = '%d'", type, Building_GetID(building));
 	return true;
@@ -528,12 +555,12 @@ stock bool:Building_SetType(Building:building, type)
 
 stock Building_GetID(Building:building)
 {
-	return iter_get(Iter:building, ID);
+	return var_get(Variant:building, ID);
 }
 
 stock Building_SetLocked(Building:building, locked)
 {
-	iter_set_cell(Iter:building, Locked, locked);
+	var_set_cell(Variant:building, Locked, locked);
 
 	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET locked = '%d' WHERE id = '%d'", 
 					locked, Building_GetID(building));
@@ -542,17 +569,17 @@ stock Building_SetLocked(Building:building, locked)
 
 stock Building_GetMoney(Building:building)
 {
-	return iter_get(Iter:building, Money);
+	return var_get(Variant:building, Money);
 }
 
 stock Building_GiveMoney(Building:building, amount)
 {
-	return Building_SetMoney(building, iter_get(Iter:building, Money) + amount);
+	return Building_SetMoney(building, var_get(Variant:building, Money) + amount);
 }
 
 stock Building_SetMoney(Building:building, amount)
 {
-	iter_set_cell(Iter:building, Money, amount);
+	var_set_cell(Variant:building, Money, amount);
 	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET money = '%d' WHERE id = '%d'", 
 					amount, Building_GetID(building));
 	return 1;
@@ -627,18 +654,18 @@ stock Building:Character_GetCurrentBuilding(playerid)
 
 stock Building:Character_GetBuilding(playerid, bool:inside)
 {
-	new buildingid = 0;
+	new Building:building = INVALID_BUILDING;
 	if(inside)
 	{
-		buildingid = Character_GetNearBuildingID(playerid);
+		building = Building_Find(Character_GetNearBuildingID(playerid));
 	}
 	else
 	{
-		new id, E_ELEMENT_TYPE:type;
-		if(Character_GetNearestPickup(playerid, id, type) && (type == ELEMENT_TYPE_BUILDING_ENTRANCE || type == ELEMENT_TYPE_BUILDING_EXIT))
-			buildingid = id;
+		new Building:temp, E_ELEMENT_TYPE:type;
+		if(Character_GetNearestPickup(playerid, temp, type) && (type == ELEMENT_TYPE_BUILDING_ENTRANCE || type == ELEMENT_TYPE_BUILDING_EXIT))
+			building = temp;
 	}
-	return Building_Find(buildingid);
+	return building;
 }
 
 stock bool:Character_CanUseBuildingMenu(playerid, Building:building, minRank = 3)
@@ -825,10 +852,9 @@ Dialog:Dialog_BuildingSellToPlayer(playerid, response, listitem, inputtext[])
 
 hook function Character_Enter(playerid)
 {   
-	new buildingid, E_ELEMENT_TYPE:type;
-    if(Character_GetNearestPickup(playerid, buildingid, type) && type == ELEMENT_TYPE_BUILDING_ENTRANCE)
+	new Building:building, E_ELEMENT_TYPE:type;
+    if(Character_GetNearestPickup(playerid, building, type) && Building_IsValid(building) && type == ELEMENT_TYPE_BUILDING_ENTRANCE)
     {
-		new Building:building = Building_Find(buildingid);
 
 		if(IsPlayerInAnyVehicle(playerid))
 			return 0;

@@ -53,7 +53,7 @@
 
 #include <a_samp>
 #include <formatnumber>
-//native IsValidVehicle(vehicleid);
+#include <memory.inc>
 #include <sampmailjs>
 
 // Define this for some bugs related to MySQL_TQueryInline
@@ -88,7 +88,7 @@
 #include <streamer>
 #define PP_SYNTAX 1
 //#define PP_SYNTAX_GENERIC 1
-#define PP_ADDITIONAL_TAGS E_ITEM_DATA, Text3D, Pool, Inventory
+#define PP_ADDITIONAL_TAGS E_ITEM_DATA, Text3D, Pool, Inventory, Building
 #include <PawnPlus>
 // #include <pp-mysql> // Must update pp first
 #include <OPA>

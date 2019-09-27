@@ -4,7 +4,7 @@
 #include <YSI_Coding\y_hooks>
 
 static 
-    Map:SellingItems; // <buildingid, map<itemid, price>>
+    Map:SellingItems; // <Building:building, map<itemid, price>>
 
 static SelectedItemID[MAX_PLAYERS char];
 
@@ -24,7 +24,7 @@ hook OnGameModeInit()
 
 hook OnBuildingLoaded(Building:building)
 {
-    map_add(SellingItems, Building_GetID(building), map_new());
+    map_add(SellingItems, building, map_new());
 
     inline OnLoad()
     {
@@ -32,7 +32,7 @@ hook OnBuildingLoaded(Building:building)
         if(rows <= 0)
             return 0;
         
-        new Map:map = Map:map_get(SellingItems, Building_GetID(building));
+        new Map:map = Map:map_get(SellingItems, building);
 
         new itemid, price;
         for(new i = 0; i < rows; ++i)
@@ -52,7 +52,7 @@ hook OnBuildingLoaded(Building:building)
 
 hook OnPlayerEnterBuilding(playerid, Building:building)
 {
-    if(Building_CanSellItems(building) && map_size(Map:map_get(SellingItems, Building_GetID(building))) > 0)
+    if(Building_CanSellItems(building) && map_size(Map:map_get(SellingItems, building)) > 0)
     {
         SendClientMessage(playerid, COLOR_ORANGE, "Questo edificio ha degli oggetti in vendita. Usa \"/compra\" per visualizzarne la lista.");
     }
@@ -105,7 +105,7 @@ Dialog:Dialog_BuildingSellingItems(playerid, response, listitem, inputtext[])
     if(!Building_IsValid(building))
         return 0;
 
-    new Map:items = Map:map_get(SellingItems, Building_GetID(building));
+    new Map:items = Map:map_get(SellingItems, building);
     
     if(map_size(items) <= 0 || listitem >= map_size(items))
         return SendClientMessage(playerid, COLOR_ERROR, "L'oggetto non è piu' disponibile.");
@@ -199,6 +199,10 @@ stock Character_EditSellableItems(playerid)
 Dialog:Dialog_EditSellableItems(playerid, response, listitem, inputtext[])
 {
     new Building:building = Character_GetCurrentBuilding(playerid);
+    
+    if(!Building_IsValid(building))
+        return 0;
+    
     if(!response)
         return Character_ShowBizDialog(playerid);
     if(listitem == 0)
@@ -212,12 +216,15 @@ Dialog:Dialog_EditSellableItems(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_EditSellableItemList(playerid, response, listitem, inputtext[])
 {
-    new buildingid = Character_GetNearBuildingID(playerid);
+    new Building:building = Character_GetCurrentBuilding(playerid);
+
+    if(!Building_IsValid(building))
+        return 0;
     
     if(!response)
         return Character_EditSellableItems(playerid);
     
-    new Map:items = Map:map_get(SellingItems, buildingid);
+    new Map:items = Map:map_get(SellingItems, building);
     new 
         itemid = SelectedItemID{playerid} = map_key_at(items, listitem),
         price = map_value_at(items, listitem);
@@ -332,7 +339,7 @@ static Building_GetSellableItemPrice(Building:building, itemid)
 {
     if(!Building_IsValid(building))
         return -1;
-    new Map:map = Map:map_get(SellingItems, Building_GetID(building));
+    new Map:map = Map:map_get(SellingItems, building);
     if(!map_has_key(map, itemid))
         return 0;
     return map_get(map, itemid);
@@ -343,7 +350,7 @@ static Building_AddSellableItem(Building:building, itemid, price)
     if(!Building_IsValid(building) || !ServerItem_IsValid(itemid) || price < 0 || Building_HasSellableItem(building, itemid))
         return 0;
     
-    map_add(Map:map_get(SellingItems, Building_GetID(building)), itemid, price);
+    map_add(Map:map_get(SellingItems, building), itemid, price);
     mysql_tquery_f(gMySQL, "INSERT INTO `building_selling_items` (building_id, item_id, price) VALUES('%d', '%d', '%d')", Building_GetID(building), itemid, price);
     return 1;    
 }
@@ -352,7 +359,7 @@ static Building_SetSellableItemPrice(Building:building, itemid, newprice)
 {
     if(newprice < 0 || !Building_HasSellableItem(building, itemid))
         return 0;
-    new Map:items = Map:map_get(SellingItems, Building_GetID(building));
+    new Map:items = Map:map_get(SellingItems, building);
     map_set(items, itemid, newprice);
     mysql_tquery_f(gMySQL, "UPDATE `building_selling_items` SET price = '%d' WHERE building_id = '%d' AND item_id = '%d'", newprice, Building_GetID(building), newprice);
     return 1;
@@ -363,7 +370,7 @@ static Building_RemoveSellableItem(Building:building, itemid)
     if(!ServerItem_IsValid(itemid) || !Building_HasSellableItem(building, itemid))
         return 0;
     
-    new Map:items = Map:map_get(SellingItems, Building_GetID(building));
+    new Map:items = Map:map_get(SellingItems, building);
     map_remove(items, itemid);
     mysql_tquery_f(gMySQL, "DELETE FROM `building_selling_items` WHERE building_id = '%d' AND item_id = '%d'", Building_GetID(building), itemid);
     return 1;    
@@ -373,7 +380,7 @@ static bool:Building_HasSellableItem(Building:building, itemid)
 {
     if(!ServerItem_IsValid(itemid))
         return false;
-    return map_has_key(Map:map_get(SellingItems, Building_GetID(building)), itemid);
+    return map_has_key(Map:map_get(SellingItems, building), itemid);
 }
 
 static Building_ShowSellingItems(Building:building, toPlayer)
@@ -381,7 +388,7 @@ static Building_ShowSellingItems(Building:building, toPlayer)
     if(!Character_IsLogged(toPlayer))
         return 0;
     new 
-        Map:items = Map:map_get(SellingItems, Building_GetID(building)),
+        Map:items = Map:map_get(SellingItems, building),
         String:text = @("Oggetto\tPrezzo ({85bb65}${FFFFFF})\tDisponibilità\n"),
         Inventory:buildingInv = Building_GetInventory(building);
 
@@ -413,7 +420,7 @@ static Building_ShowSellingItems(Building:building, toPlayer)
 static Building_ShowSellingItemsEdit(Building:building, toPlayer)
 {
     new 
-        Map:items = Map:map_get(SellingItems, Building_GetID(building)),
+        Map:items = Map:map_get(SellingItems, building),
         String:str = @("{FFFFFF}Oggetto{FFFFFF}\t{FFFFFF}Prezzo{FFFFFF} ({85bb65}${FFFFFF})\n")
     ;
     new itemid, price;

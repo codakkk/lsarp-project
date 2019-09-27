@@ -3,7 +3,7 @@
 
 static enum _:E_DIALOG_HOUSE_DATA
 {
-    BuildingID,
+    Building:Building,
     Inventory:Inventory,
     SlotID,
 	ItemToDeposit
@@ -77,14 +77,14 @@ stock Building_ShowInventory(Building:building, playerid)
 	
 	if(map_has_key(PlayerBuildingInventory, playerid))
 	{
-		map_set_cell(PlayerBuildingInventory, playerid, BuildingID, Building_GetID(building));
+		map_set_cell(PlayerBuildingInventory, playerid, Building, _:building);
 		map_set_cell(PlayerBuildingInventory, playerid, Inventory, List:inventory);
 		map_set_cell(PlayerBuildingInventory, playerid, SlotID, -1);
 	}
 	else
 	{
 		new data[E_DIALOG_HOUSE_DATA];
-		data[BuildingID] = Building_GetID(building);
+		data[Building] = building;
 		data[Inventory] = inventory;
 		data[SlotID] = -1;
 		map_add_arr(PlayerBuildingInventory, playerid, data);
@@ -104,7 +104,7 @@ Dialog:Dialog_BizInventory(playerid, response, listitem, inputtext[])
 
 Dialog:BuildingInventoryAction(playerid, response, listitem, inputtext[])
 {
-	new Building:building = Building_Find(Internal_GetBuildingID(playerid));
+	new Building:building = Internal_GetBuilding(playerid);
     if(!response)
         return Building_ShowInventory(building, playerid);
     new 
@@ -180,7 +180,7 @@ Dialog:BuildingInvWithdrawAmount(playerid, response, listitem, inputtext[])
 
 	Character_SaveInventory(playerid);
 
-	new Building:building = Building_Find(Internal_GetBuildingID(playerid));
+	new Building:building = Internal_GetBuilding(playerid);
 	Building_SaveInventory(building);
 
 	Building_ShowInventory(building, playerid);
@@ -194,7 +194,7 @@ Dialog:BuildingInvDepSelectItem(playerid, response, listitem, inputtext[])
 		return Internal_ShowBuildingSlotAction(playerid, Internal_GetSlotID(playerid));
 	
 	new 
-		Building:building = Building_Find(Internal_GetBuildingID(playerid)), 
+		Building:building = Internal_GetBuilding(playerid), 
 		Inventory:inventoryRef = Internal_GetInventory(playerid),
 		itemid = Character_GetSlotItem(playerid, listitem),
 		amount = Character_GetSlotAmount(playerid, listitem)
@@ -229,7 +229,7 @@ Dialog:BuildingInvDepositAmount(playerid, response, listitem, inputtext[])
 	if(!response)
 		return Internal_ShowBuildingSlotAction(playerid, Internal_GetSlotID(playerid));
 	new 
-		Building:building = Building_Find(Internal_GetBuildingID(playerid)), 
+		Building:building = Internal_GetBuilding(playerid), 
 		val = strval(inputtext),
 		Inventory:inventoryRef = Internal_GetInventory(playerid),
 		itemid = Internal_GetItemToDeposit(playerid),
@@ -274,11 +274,11 @@ static Internal_ShowBuildingSlotAction(playerid, slotid)
 	return 1;
 }
 
-static Internal_GetBuildingID(playerid)
+static Building:Internal_GetBuilding(playerid)
 {
 	if(!map_has_key(PlayerBuildingInventory, playerid))
-		return 0;
-	return map_get(PlayerBuildingInventory, playerid, BuildingID);
+		return INVALID_BUILDING;
+	return Building:map_get(PlayerBuildingInventory, playerid, Building);
 }
 
 static Inventory:Internal_GetInventory(playerid)

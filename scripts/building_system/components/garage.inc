@@ -254,13 +254,15 @@ stock bool:Character_CanUseGarage(playerid)
     if(!list_valid(list) || list_size(list) <= 0)
         return false;
     
-    new garageid, Float:x, Float:y, Float:z;
+    new Building:current = Character_GetCurrentBuilding(playerid);
+
+    new Building:garageid, Float:x, Float:y, Float:z;
     for_list(i : list)
     {
-        garageid = iter_get(i);
-        if(Character_GetNearBuildingID(playerid) == garageid)
+        garageid = Building:iter_get(i);
+        if(current == garageid)
             return true;
-        Building_GetEnterPos(Building_Find(garageid), x, y, z);
+        Building_GetEnterPos(garageid, x, y, z);
         if(GetPlayerDistanceFromPoint(playerid, x, y, z) <= 25.0)
             return true;
     }
@@ -270,13 +272,11 @@ stock bool:Character_CanUseGarage(playerid)
 
 hook function Character_Enter(playerid)
 {
-    new buildingid, E_ELEMENT_TYPE:type;
-    Character_GetNearestPickup(playerid, buildingid, type);
+    new Building:building, E_ELEMENT_TYPE:type;
+    Character_GetNearestPickup(playerid, building, type);
+    
     if(type != ELEMENT_TYPE_BUILDING_ENTRANCE)
         return continue(playerid);
-
-    new Building:building = Building_Find(buildingid);
-    
     
     new vehicleid = GetPlayerVehicleID(playerid);
     new Float:range = Vehicle_IsValid(vehicleid) ? 7.0 : 1.5;
@@ -296,7 +296,7 @@ hook function Character_Enter(playerid)
         }
     }
 
-    if(Building_GetType(building) != BUILDING_TYPE_GARAGE)
+    if(!Building_IsValid(building) || Building_GetType(building) != BUILDING_TYPE_GARAGE)
         return continue(playerid);
 
     if(Building_IsValid(building))

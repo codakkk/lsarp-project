@@ -4,15 +4,14 @@
 
 #include <YSI_Coding\y_hooks>
 
-hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
+hook OnPlayerPickUpElmPickup(playerid, pickupid, Building:building, E_ELEMENT_TYPE:type)
 {
-    if(type == ELEMENT_TYPE_BUILDING_ENTRANCE)
+    if(Building_IsValid(building) && type == ELEMENT_TYPE_BUILDING_ENTRANCE)
     {
-		new Building:building = Building_Find(elementid),
-			String:string;
+		new String:string;
 		if(Account_GetAdminLevel(playerid) > 1)
 		{
-			string += str_format("~r~ID:~w~ %d~n~", elementid);
+			string += str_format("~r~ID:~w~ %d~n~", Building_GetID(building));
 		}
 		if(Building_IsOwnable(building))
 		{

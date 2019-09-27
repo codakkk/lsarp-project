@@ -292,7 +292,7 @@ stock bool:Character_AddOwnedBuilding(playerid, Building:building)
 	if(!list_valid(CharacterBuildings[playerid]))
 		CharacterBuildings[playerid] = list_new();
 	
-	list_add(CharacterBuildings[playerid], Building_GetID(building));
+	list_add(CharacterBuildings[playerid], _:building);
 	return true;
 }
 
@@ -305,11 +305,11 @@ stock bool:Character_RemoveOwnedBuilding(playerid, Building:building)
 		return false;
 	
 	new index = -1;
-	for_list(i : CharacterBuildings[playerid])
+	for(new i = 0, j = list_size(CharacterBuildings[playerid]); i < j; ++i)
 	{
-		if(iter_get(i) == Building_GetID(building))
+		if(list_get(CharacterBuildings[playerid], i) == _:building)
 		{
-			index = iter_get(i);
+			index = i;
 			break;
 		}
 	}
@@ -335,7 +335,7 @@ stock bool:Character_DoesOwnBuilding(playerid, Building:building)
 	new bool:result = false;
 	for_list(i : CharacterBuildings[playerid])
 	{
-		if(Building_GetID(building) == iter_get(i))
+		if(_:building == iter_get(i))
 		{
 			result = true;
 			break;
@@ -349,12 +349,12 @@ stock List:Character_GetBuildingsByType(playerid, E_BUILDING_TYPE:type)
 {
 	if(!list_valid(CharacterBuildings[playerid]) || list_size(CharacterBuildings[playerid]) == 0)
 		return List:0;
-	new List:list = list_new(), buildingid = 0;
+	new List:list = list_new(), Building:building = INVALID_BUILDING;
 	for_list(i : CharacterBuildings[playerid])
 	{
-		buildingid = iter_get(i);
-		if(Building_GetType(Building_Find(buildingid)) == _:type)
-			list_add(list, buildingid);
+		building = Building:iter_get(i);
+		if(Building_IsValid(building) && Building_GetType(building) == _:type)
+			list_add(list, _:building);
 	}
 	return list;
 }

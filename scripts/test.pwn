@@ -1,4 +1,5 @@
 #include <a_samp>
+#include <memory.inc>
 
 new 
     PlayerText:CharacterModelTextdraw[MAX_PLAYERS][9],
@@ -7,7 +8,27 @@ new
 
 // Should I use a Map instead of preloaded arrays?
 
-main() {}
+enum _:E_TEST
+{
+    A,
+    B,
+    C,
+    D
+}
+
+main() 
+{
+    new Pointer:test = MEM_new(E_TEST);
+    MEM_set_val(test, A, 1);
+    MEM_set_val(test, B, 2);
+    MEM_set_val(test, C, 3);
+    MEM_set_val(test, D, 4);
+    printf("V: %d", E_TEST);
+    printf("V: %d", MEM_get_val(test, A));
+    printf("V: %d", MEM_get_val(test, B));
+    printf("V: %d", MEM_get_val(test, C));
+    printf("V: %d", MEM_get_val(test, D));
+}
 
 public OnGameModeInit()
 {

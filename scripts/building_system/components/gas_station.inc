@@ -135,9 +135,8 @@ stock Character_IsDoingGas(playerid)
 
 hook function Character_Enter(playerid)
 {
-    new buildingid, E_ELEMENT_TYPE:type;
-    Character_GetNearestPickup(playerid, buildingid, type);
-    new Building:building = Building_Find(buildingid);
+    new Building:building, E_ELEMENT_TYPE:type;
+    Character_GetNearestPickup(playerid, building, type);
     if(type == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_IsValid(building) && Building_GetType(building) == BUILDING_TYPE_GAS_STATION)
         return 0;
     return continue(playerid);
