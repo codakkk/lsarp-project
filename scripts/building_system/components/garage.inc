@@ -270,13 +270,12 @@ stock bool:Character_CanUseGarage(playerid)
 
 hook function Character_Enter(playerid)
 {
-    new Building:building, E_ELEMENT_TYPE:type;
-    Character_GetNearestPickup(playerid, building, type);
+    new buildingid, E_ELEMENT_TYPE:type;
+    Character_GetNearestPickup(playerid, buildingid, type);
     if(type != ELEMENT_TYPE_BUILDING_ENTRANCE)
         return continue(playerid);
-    
-    if(Building_GetType(building) != BUILDING_TYPE_GARAGE)
-        return continue(playerid);
+
+    new Building:building = Building_Find(buildingid);
     
     
     new vehicleid = GetPlayerVehicleID(playerid);
@@ -296,6 +295,9 @@ hook function Character_Enter(playerid)
             }
         }
     }
+
+    if(Building_GetType(building) != BUILDING_TYPE_GARAGE)
+        return continue(playerid);
 
     if(Building_IsValid(building))
     {

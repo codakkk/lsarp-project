@@ -6,11 +6,7 @@
 flags:entra(CMD_ALIVE_USER);
 CMD:entra(playerid, params[])
 {
-	//new id, E_ELEMENT_TYPE:type;
-    //if(Character_GetNearestPickup(playerid, id, type))
 	Character_Enter(playerid);
-    //else 
-		//SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata di un edificio.");
     return 1;
 }
 

@@ -123,8 +123,8 @@ stock Character_Exit(playerid, elementId, E_ELEMENT_TYPE:type)
 {
     if((type != ELEMENT_TYPE_BUILDING_EXIT && type != ELEMENT_TYPE_HOUSE_EXIT))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'uscita di un edificio."), 0;
-	new Building:building = Building:elementId;
-    if(type == ELEMENT_TYPE_BUILDING_EXIT)
+	new Building:building = Building_Find(elementId);
+    if(Building_IsValid(building) && type == ELEMENT_TYPE_BUILDING_EXIT)
     {
 		if(Building_GetType(building) == BUILDING_TYPE_GARAGE)
 			return Internal_ExitGarage(playerid, building);

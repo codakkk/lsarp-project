@@ -88,6 +88,7 @@ stock Map:GetBuildingsMap()
 hook OnGameModeInit()
 {
 	Buildings = map_new();
+	map_set_ordered(Buildings, true);
 	mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS `buildings` ( \
 						`id` int(11) NOT NULL AUTO_INCREMENT, \
 						`name` varchar(64) DEFAULT NULL, \
@@ -224,6 +225,7 @@ stock Building_LoadAll()
 			ownerid = Building_GetOwnerID(building);
 			if(ownerid > 0)
 			{
+				/*iter_acquire(Iter:building);
 				inline OnLoadOwnerName()
 				{
 					if(cache_num_rows() <= 0)
@@ -232,7 +234,14 @@ stock Building_LoadAll()
 					cache_get_value_name(0, "name", name);
 					iter_set_cells(Iter:building, OwnerName, name);
 				}
-				MySQL_TQueryInline(gMySQL, using inline OnLoadOwnerName, "SELECT name FROM `characters` WHERE id = '%d'", ownerid);
+				MySQL_TQueryInline(gMySQL, using inline OnLoadOwnerName, "SELECT name FROM `characters` WHERE id = '%d'", ownerid);*/
+				new Cache:cache = mysql_query_f(gMySQL, true, "SELECT name FROM `characters` WHERE id = '%d'", ownerid);
+				if(cache_num_rows() <= 0)
+					continue;
+				new name[MAX_PLAYER_NAME];
+				cache_get_value_name(0, "name", name);
+				iter_set_cells(Iter:building, OwnerName, name);
+				cache_delete(cache);
 			}
 		}
 	}
@@ -387,13 +396,13 @@ stock Building_CreateElements(Building:building)
 	Building_GetEnterPos(building, enterX, enterY, enterZ);
 	Building_GetExitPos(building, exitX, exitY, exitZ);
 
-	new enterPickup = Pickup_Create(1239, building, enterX, enterY, enterZ, ELEMENT_TYPE_BUILDING_ENTRANCE, Building_GetEnterWorld(building), Building_GetEnterInterior(building));
+	new enterPickup = Pickup_Create(1239, Building_GetID(building), enterX, enterY, enterZ, ELEMENT_TYPE_BUILDING_ENTRANCE, Building_GetEnterWorld(building), Building_GetEnterInterior(building));
 	iter_set_cell(Iter:building, EnterPickupID, enterPickup);
 
     new Text3D:enterText = CreateDynamic3DTextLabel(name, COLOR_LIGHTBLUE/*2*/, enterX, enterY, enterZ + 0.55, 20, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, Building_GetEnterWorld(building));
 	iter_set_cell(Iter:building, Enter3DText, enterText);
 
-    new exitPickup = Pickup_Create(1007, building, exitX, exitY, exitZ, ELEMENT_TYPE_BUILDING_EXIT, Building_GetExitWorld(building), Building_GetExitInterior(building));
+    new exitPickup = Pickup_Create(1007, Building_GetID(building), exitX, exitY, exitZ, ELEMENT_TYPE_BUILDING_EXIT, Building_GetExitWorld(building), Building_GetExitInterior(building));
 	iter_set_cell(Iter:building, ExitPickupID, exitPickup);
 
 	new Text3D:exitText = CreateDynamic3DTextLabel("Uscita", COLOR_LIGHTBLUE/*2*/, exitX, exitY, exitZ + 0.55, 20, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, Building_GetExitWorld(building), Building_GetExitInterior(building));
@@ -816,10 +825,11 @@ Dialog:Dialog_BuildingSellToPlayer(playerid, response, listitem, inputtext[])
 
 hook function Character_Enter(playerid)
 {   
-	new Building:building, E_ELEMENT_TYPE:type;
-    if(Character_GetNearestPickup(playerid, building, type) && type == ELEMENT_TYPE_BUILDING_ENTRANCE)
+	new buildingid, E_ELEMENT_TYPE:type;
+    if(Character_GetNearestPickup(playerid, buildingid, type) && type == ELEMENT_TYPE_BUILDING_ENTRANCE)
     {
-		printf("Last Enter");
+		new Building:building = Building_Find(buildingid);
+
 		if(IsPlayerInAnyVehicle(playerid))
 			return 0;
 		

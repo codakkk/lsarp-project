@@ -8,7 +8,7 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
 {
     if(type == ELEMENT_TYPE_BUILDING_ENTRANCE)
     {
-		new Building:building = Building:elementid,
+		new Building:building = Building_Find(elementid),
 			String:string;
 		if(Account_GetAdminLevel(playerid) > 1)
 		{
