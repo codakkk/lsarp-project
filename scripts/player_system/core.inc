@@ -452,13 +452,11 @@ stock Character_Delete(playerid, character_db_id, character_name[])
     }
     MySQL_TQueryInline(gMySQL, using inline OnVehicles, "SELECT id FROM `vehicles` WHERE owner_id = '%d'", character_db_id);
 
-	for_map(b : GetBuildingsMap())
+	for_building(building)
 	{
-		new key = iter_get_key(b);
-		if(Building_GetOwnerID(key) == Character_GetID(playerid))
+		if(Building_GetOwnerID(building) == Character_GetID(playerid))
 		{
-			Building_ResetOwner(key);
-			break;
+			Building_ResetOwner(building);
 		}
 	}
 

@@ -176,11 +176,11 @@ stock Character_GetWorldPosition(playerid, &Float:x, &Float:y, &Float:z)
     }
     else if(world >= BUILDING_START_WORLD)
     {
-        new bid = Character_GetNearBuildingID(playerid);
+        new Building:building = Character_GetBuilding(playerid, true);
         
-        if(!Building_IsValid(bid))
+        if(!Building_IsValid(building))
             return 0;
-        Building_GetEnterPos(bid, x, y, z);
+        Building_GetEnterPos(building, x, y, z);
     }
     return 1;
 }
@@ -203,12 +203,12 @@ stock Drop_GetWorldPosition(dropid, &Float:x, &Float:y, &Float:z)
     }
     else if(world >= BUILDING_START_WORLD)
     {
-        new bid = Drop_GetVirtualWorld(dropid) - BUILDING_START_WORLD;
+        new Building:building = Building_Find(Drop_GetVirtualWorld(dropid) - BUILDING_START_WORLD);
         
-        if(!Building_IsValid(bid))
+        if(!Building_IsValid(building))
             return 0;
         
-        Building_GetEnterPos(bid, x, y, z);
+        Building_GetEnterPos(building, x, y, z);
     }
     return 1;
 }

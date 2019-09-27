@@ -131,11 +131,10 @@ stock Faction_Delete(factionid)
 	mysql_tquery_f(gMySQL, "UPDATE `characters` SET faction = '%d', faction_rank = '0' WHERE faction = '%d'", INVALID_FACTION_ID, factionid);
 	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET faction = '%d' WHERE faction = '%d'", INVALID_FACTION_ID, factionid);
 	
-	for_map(b : GetBuildingsMap())
+	for_building(building)
 	{
-		new key = iter_get_key(b);
-		if(Building_GetFaction(key) == factionid)
-			Building_SetFaction(key, -1);
+		if(Building_GetFaction(building) == factionid)
+			Building_SetFaction(building, INVALID_FACTION_ID);
 	}
 
 	foreach(new i : Player)

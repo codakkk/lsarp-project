@@ -31,12 +31,11 @@ hook OnCharacterLoad(playerid)
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT house_key FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
 
-	for_map(i : GetBuildingsMap())
+	for_building(building)
 	{
-		new buildingid = iter_get_key(i);
-		if(Building_GetOwnerID(buildingid) == Character_GetID(playerid))
+		if(Building_GetOwnerID(building) == Character_GetID(playerid))
 		{
-			Character_AddOwnedBuilding(playerid, buildingid);
+			Character_AddOwnedBuilding(playerid, building);
 		}
 	}
 
@@ -57,9 +56,9 @@ hook OnCharacterTryBuy(playerid)
 	if(House_IsValid(houseid))
 		return Character_BuyHouse(playerid, houseid);
 				
-	new elementid, E_ELEMENT_TYPE:type;
-	if(Character_GetNearestPickup(playerid, elementid, type) && type == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_IsValid(elementid))
-		return Character_BuyBuilding(playerid, elementid);
+	new Building:building, E_ELEMENT_TYPE:type;
+	if(Character_GetNearestPickup(playerid, building, type) && type == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_IsValid(building))
+		return Character_BuyBuilding(playerid, building);
 	return 1;
 }
 
@@ -124,12 +123,12 @@ stock Character_Exit(playerid, elementId, E_ELEMENT_TYPE:type)
 {
     if((type != ELEMENT_TYPE_BUILDING_EXIT && type != ELEMENT_TYPE_HOUSE_EXIT))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'uscita di un edificio."), 0;
-
+	new Building:building = Building:elementId;
     if(type == ELEMENT_TYPE_BUILDING_EXIT)
     {
-		if(Building_GetType(elementId) == BUILDING_TYPE_GARAGE)
-			return Internal_ExitGarage(playerid, elementId);
-	   	return Internal_ExitBuilding(playerid, elementId);
+		if(Building_GetType(building) == BUILDING_TYPE_GARAGE)
+			return Internal_ExitGarage(playerid, building);
+	   	return Internal_ExitBuilding(playerid, building);
     }
     else if(type == ELEMENT_TYPE_HOUSE_EXIT)
     {
@@ -139,18 +138,18 @@ stock Character_Exit(playerid, elementId, E_ELEMENT_TYPE:type)
 }
 
 
-static Internal_ExitGarage(playerid, buildingid)
+static Internal_ExitGarage(playerid, Building:building)
 {
-	if(Building_IsLocked(buildingid))
+	if(Building_IsLocked(building))
 		return GameTextForPlayer(playerid, "~r~Chiuso", 8000, 1), 0;
 	new 
 	   Float:x = 0.0, 
 	   Float:y = 0.0, 
 	   Float:z = 0.0,
-	   interiorId = Building_GetEnterInterior(buildingid),
-	   world = Building_GetEnterWorld(buildingid)
+	   interiorId = Building_GetEnterInterior(building),
+	   world = Building_GetEnterWorld(building)
 	;
-	Building_GetEnterPos(buildingid, x, y, z);
+	Building_GetEnterPos(building, x, y, z);
 
 	new vehicleid = GetPlayerVehicleID(playerid);
 	
@@ -196,18 +195,18 @@ static Internal_ExitHouse(playerid, houseid)
 	return 1;
 }
 
-static Internal_ExitBuilding(playerid, buildingid)
+static Internal_ExitBuilding(playerid, Building:building)
 {
 	if(IsPlayerInAnyVehicle(playerid))
 		return 0;
-	if(Building_IsLocked(buildingid))
+	if(Building_IsLocked(building))
 		return GameTextForPlayer(playerid, "~r~Chiuso", 4000, 1), 0;
 	new 
 	   Float:x = 0.0, 
 	   Float:y = 0.0, 
 	   Float:z = 0.0,
-	   interiorId = Building_GetEnterInterior(buildingid),
-	   world = Building_GetEnterWorld(buildingid)
+	   interiorId = Building_GetEnterInterior(building),
+	   world = Building_GetEnterWorld(building)
 	;
 	
 	Character_AMe(playerid, "apre la porta ed esce.");
@@ -215,7 +214,7 @@ static Internal_ExitBuilding(playerid, buildingid)
     SetPlayerInterior(playerid, interiorId);
     Character_SetVirtualWorld(playerid, world);
 	
-	Building_GetEnterPos(buildingid, x, y, z);
+	Building_GetEnterPos(building, x, y, z);
     Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
     Character_SetSafePosition(playerid, x, y, z, interiorId, world);
 	return 1;
@@ -227,26 +226,23 @@ stock Character_Enter(playerid)
 	return 1;
 }
 
-stock Character_BuyBuilding(playerid, buildingid)
+stock Character_BuyBuilding(playerid, Building:building)
 {
-    if(!Building_IsValid(buildingid))
-	   return 0;
-    
-    if(!Building_IsOwnable(buildingid) || Building_GetOwnerID(buildingid) != 0)
+    if(!Building_IsOwned(building))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
 
-    if(Character_GetMoney(playerid) < Building_GetPrice(buildingid))
+    if(Character_GetMoney(playerid) < Building_GetPrice(building))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi per acquistare questa proprietà.");
     
-    Character_GiveMoney(playerid, -Building_GetPrice(buildingid));
+    Character_GiveMoney(playerid, -Building_GetPrice(building));
     
-    Building_SetOwner(buildingid, playerid);
+    Building_SetOwner(building, playerid);
 
-	Character_AddOwnedBuilding(playerid, buildingid);
+	Character_AddOwnedBuilding(playerid, building);
 
 	new name[MAX_BUILDING_NAME];
-	Building_GetName(buildingid, name);
-    SendFormattedMessage(playerid, COLOR_GREEN, "Hai acquistato questo business (%s) per $%d.", name, Building_GetPrice(buildingid));
+	Building_GetName(building, name);
+    SendFormattedMessage(playerid, COLOR_GREEN, "Hai acquistato questo business (%s) per $%d.", name, Building_GetPrice(building));
     return 1;
 }
 
@@ -288,31 +284,32 @@ stock Character_ShowHouseDialog(playerid)
 	return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno di casa tua."), 0;
 }
 
-stock bool:Character_AddOwnedBuilding(playerid, buildingid)
+stock bool:Character_AddOwnedBuilding(playerid, Building:building)
 {
-	if(!Character_IsLogged(playerid) || !Building_IsValid(buildingid))
+	if(!Character_IsLogged(playerid))
 		return false;
 	
 	if(!list_valid(CharacterBuildings[playerid]))
 		CharacterBuildings[playerid] = list_new();
 	
-	list_add(CharacterBuildings[playerid], buildingid);
+	list_add(CharacterBuildings[playerid], Building_GetID(building));
 	return true;
 }
 
-stock bool:Character_RemoveOwnedBuilding(playerid, buildingid)
+stock bool:Character_RemoveOwnedBuilding(playerid, Building:building)
 {
-	if(!Character_IsLogged(playerid) || !Building_IsValid(buildingid))
+	if(!Character_IsLogged(playerid))
 		return false;
 	
 	if(!list_valid(CharacterBuildings[playerid]))
 		return false;
+	
 	new index = -1;
-	for(new i = 0, j = list_size(CharacterBuildings[playerid]); i < j; ++i)
+	for_list(i : CharacterBuildings[playerid])
 	{
-		if(list_get(CharacterBuildings[playerid], i) == buildingid)
+		if(iter_get(i) == Building_GetID(building))
 		{
-			index = i;
+			index = iter_get(i);
 			break;
 		}
 	}
@@ -331,14 +328,14 @@ stock List:Character_GetOwnedBuildingsList(playerid)
 	return CharacterBuildings[playerid];
 }
 
-stock bool:Character_DoesOwnBuilding(playerid, buildingid)
+stock bool:Character_DoesOwnBuilding(playerid, Building:building)
 {
 	if(!list_valid(CharacterBuildings[playerid]) || list_size(CharacterBuildings[playerid]) == 0)
 		return false;
 	new bool:result = false;
 	for_list(i : CharacterBuildings[playerid])
 	{
-		if(iter_get(i) == buildingid)
+		if(Building_GetID(building) == iter_get(i))
 		{
 			result = true;
 			break;
@@ -356,7 +353,7 @@ stock List:Character_GetBuildingsByType(playerid, E_BUILDING_TYPE:type)
 	for_list(i : CharacterBuildings[playerid])
 	{
 		buildingid = iter_get(i);
-		if(Building_GetType(buildingid) == _:type)
+		if(Building_GetType(Building_Find(buildingid)) == _:type)
 			list_add(list, buildingid);
 	}
 	return list;

@@ -4,18 +4,17 @@
 flags:porta(CMD_ALIVE_USER);
 CMD:porta(playerid, params[])
 {
-    new buildingid = Character_GetNearBuildingID(playerid),
+    new Building:building = Character_GetBuilding(playerid, true),
         houseid = Character_GetHouseID(playerid);
-    if(Building_IsValid(buildingid) || House_IsValid(houseid))
+    if(Building_IsValid(building) || House_IsValid(houseid))
     {
         if(!Player_IsAdminDuty(playerid))
         {
             if(House_IsValid(houseid) && Character_GetHouseMenu(playerid) != houseid)
                 return 0;
-            if(Building_IsValid(buildingid) && Character_GetBuildingMenu(playerid, 10) != buildingid)
+            if(Building_IsValid(building) && Character_CanUseBuildingMenu(playerid, building, 10))
                 return 0;
         }
-
         Character_OpenNearDoor(playerid);
     }
     return 1;

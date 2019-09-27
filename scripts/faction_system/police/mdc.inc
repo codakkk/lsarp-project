@@ -1,3 +1,4 @@
+#include <building_system\core>
 #include <YSI_Coding\y_hooks>
 
 static
@@ -125,11 +126,11 @@ Dialog:Dialog_MDCSearchCharacter(playerid, response, listitem, inputtext[])
             }
             
             end += @("\n==== Edifici (Biz) ====\n\n");
-            foreach_building(buildingid)
+            for_building(building)
             {
-                if(Building_GetOwnerID(buildingid) == id)
+                if(Building_GetOwnerID(building) == id)
                 {
-                    address = Building_GetAddress(buildingid);
+                    address = Building_GetAddress(building);
                     end += str_format("{33AA33}%s{FFFFFF}\n", address);
                 }
             } 

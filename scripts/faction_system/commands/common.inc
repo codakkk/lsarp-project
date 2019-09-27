@@ -33,8 +33,8 @@ CMD:servizio(playerid, params[])
 	if(!Character_IsAlive(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	
-	new buildingid = Character_GetBuilding(playerid, true);
-	if(Building_IsValid(buildingid) && Building_GetFaction(buildingid) == factionid)
+	new Building:building = Character_GetBuilding(playerid, true);
+	if(Building_IsValid(building) && Building_GetFaction(building) == factionid)
 	{
 		if(!Character_IsFactionDuty(playerid))
 		{

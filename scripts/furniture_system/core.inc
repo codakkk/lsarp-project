@@ -123,7 +123,9 @@ static stock Internal_ValidateObjectPos(objectid, Float:newX, Float:newY, Float:
     
     if(linked >= BUILDING_START_WORLD)
     {
-        Building_GetEnterPos(linked - BUILDING_START_WORLD, x, y, z);
+        new Building:building = Building_Find(linked - BUILDING_START_WORLD);
+        if(Building_IsValid(building))
+            Building_GetEnterPos(building, x, y, z);
     }
     else if(linked >= HOUSE_START_WORLD)
     {

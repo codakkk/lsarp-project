@@ -260,7 +260,7 @@ stock bool:Character_CanUseGarage(playerid)
         garageid = iter_get(i);
         if(Character_GetNearBuildingID(playerid) == garageid)
             return true;
-        Building_GetEnterPos(garageid, x, y, z);
+        Building_GetEnterPos(Building_Find(garageid), x, y, z);
         if(GetPlayerDistanceFromPoint(playerid, x, y, z) <= 25.0)
             return true;
     }
@@ -270,47 +270,45 @@ stock bool:Character_CanUseGarage(playerid)
 
 hook function Character_Enter(playerid)
 {
-    new elementid, E_ELEMENT_TYPE:type;
-    Character_GetNearestPickup(playerid, elementid, type);
+    new Building:building, E_ELEMENT_TYPE:type;
+    Character_GetNearestPickup(playerid, building, type);
     if(type != ELEMENT_TYPE_BUILDING_ENTRANCE)
         return continue(playerid);
     
-    if(Building_GetType(elementid) != BUILDING_TYPE_GARAGE)
+    if(Building_GetType(building) != BUILDING_TYPE_GARAGE)
         return continue(playerid);
     
     
     new vehicleid = GetPlayerVehicleID(playerid);
     new Float:range = Vehicle_IsValid(vehicleid) ? 7.0 : 1.5;
     
-    if(!Building_IsValid(elementid))
+    if(!Building_IsValid(building))
     {
-        new 
-            buildingid = 0,
+        new
             Float:x, Float:y, Float:z;
-        for_map(i : GetBuildingsMap())
+        for_building(b)
         {
-            buildingid = iter_get_key(i);
-            Building_GetEnterPos(buildingid, x, y, z);
+            Building_GetEnterPos(b, x, y, z);
             if(IsPlayerInRangeOfPoint(playerid, range, x, y, z))
             {
-                elementid = buildingid;
+                building = b;
                 break;
             }
         }
     }
 
-    if(Building_IsValid(elementid))
+    if(Building_IsValid(building))
     {
         if(vehicleid > 0 && GetPlayerVehicleSeat(playerid) != 0)
             return SendClientMessage(playerid, COLOR_ERROR, "Devi essere il guidatore per poter entrare all'interno dell'edificio.");
         
-        if(Building_IsLocked(elementid))
+        if(Building_IsLocked(building))
 		    return GameTextForPlayer(playerid, "~r~Chiuso", 5000, 1);
         
-        new interiorid = Building_GetExitInterior(elementid);
-        new worldid = Building_GetExitWorld(elementid);
+        new interiorid = Building_GetExitInterior(building);
+        new worldid = Building_GetExitWorld(building);
         new Float:x, Float:y, Float:z;
-        Building_GetExitPos(elementid, x, y, z);
+        Building_GetExitPos(building, x, y, z);
         if(vehicleid > 0)
         {
             LinkVehicleToInterior(vehicleid, interiorid);
@@ -333,7 +331,7 @@ hook function Character_Enter(playerid)
         SetPlayerInterior(playerid, interiorid);
         Character_SetVirtualWorld(playerid, worldid);
 
-        CallLocalFunction(#OnPlayerEnterBuilding, "dd", playerid, elementid);
+        //CallLocalFunction(#OnPlayerEnterBuilding, "dd", playerid, building);
         return 1;
     }
     return continue(playerid);

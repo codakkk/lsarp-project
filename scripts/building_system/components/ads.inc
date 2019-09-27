@@ -14,8 +14,8 @@ hook OnPlayerClearData(playerid)
 flags:pubblicita(CMD_ALIVE_USER);
 CMD:pubblicita(playerid, params[])
 {
-    new buildingid = Character_GetNearBuildingID(playerid);
-    if(!Building_IsValid(buildingid) || Building_GetType(buildingid) != BUILDING_TYPE_ADS)
+    new Building:building = Character_GetBuilding(playerid, true);
+    if(!Building_IsValid(building) || Building_GetType(building) != BUILDING_TYPE_ADS)
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'interno di un ufficio pubblicitario.");
     
     new msg[160];
@@ -39,7 +39,7 @@ CMD:pubblicita(playerid, params[])
 
     Character_GiveMoney(playerid, -price, "adv");
     
-    Building_GiveMoney(buildingid, price);
+    Building_GiveMoney(building, price);
 
     SendFormattedMessage(playerid, -1, "Hai pubblicato il tuo annuncio per {8fbc8f}$%s{FFFFFF} ($6 per carattere).", FormatNumber(price));
     

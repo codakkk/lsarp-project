@@ -30,61 +30,61 @@ hook OnGameModeInit()
 	return 1;
 }
 
-hook OnBuildingLoaded(buildingid)
+hook OnBuildingLoaded(Building:building)
 {
-	Building_InitializeInventory(buildingid);
-	Building_LoadInventory(buildingid);
+	Building_InitializeInventory(building);
+	Building_LoadInventory(building);
 	return 1;
 }
 
-static Inventory:Building_InitializeInventory(buildingid)
+static Inventory:Building_InitializeInventory(Building:building)
 {
-    if(map_has_key(BuildingInventory, buildingid))
+    if(map_has_key(BuildingInventory, Building_GetID(building)))
 		return Inventory:0;
 	new Inventory:inv = Inventory_New(30);
-	map_add(BuildingInventory, buildingid, List:inv);
+	map_add(BuildingInventory, Building_GetID(building), List:inv);
 	return inv;
 }
 
-stock Inventory:Building_GetInventory(buildingid)
+stock Inventory:Building_GetInventory(Building:building)
 {
 	new Inventory:inv;
-	if(map_get_safe(BuildingInventory, buildingid, List:inv))
+	if(map_get_safe(BuildingInventory, Building_GetID(building), List:inv))
 	{
 		return inv;
 	}
 	return Inventory:0;
 }
 
-stock Building_SaveInventory(buildingid)
+stock Building_SaveInventory(Building:building)
 {
-	Inventory_SaveInDatabase(Building_GetInventory(buildingid), "building_inventory", "building_id", Building_GetID(buildingid));
+	Inventory_SaveInDatabase(Building_GetInventory(building), "building_inventory", "building_id", Building_GetID(building));
 	return 1;
 }
 
-static Building_LoadInventory(buildingid)
+static Building_LoadInventory(Building:building)
 {
-    Inventory_LoadFromDatabase(Building_GetInventory(buildingid), "building_inventory", "building_id", Building_GetID(buildingid));
+    Inventory_LoadFromDatabase(Building_GetInventory(building), "building_inventory", "building_id", Building_GetID(building));
     return 1;
 }
 
-stock Building_ShowInventory(buildingid, playerid)
+stock Building_ShowInventory(Building:building, playerid)
 {
-    if(!Building_IsValid(buildingid))
+    if(!Building_IsValid(building))
         return 0;
     
-    new Inventory:inventory = Building_GetInventory(buildingid);
+    new Inventory:inventory = Building_GetInventory(building);
 	
 	if(map_has_key(PlayerBuildingInventory, playerid))
 	{
-		map_set_cell(PlayerBuildingInventory, playerid, BuildingID, buildingid);
+		map_set_cell(PlayerBuildingInventory, playerid, BuildingID, Building_GetID(building));
 		map_set_cell(PlayerBuildingInventory, playerid, Inventory, List:inventory);
 		map_set_cell(PlayerBuildingInventory, playerid, SlotID, -1);
 	}
 	else
 	{
 		new data[E_DIALOG_HOUSE_DATA];
-		data[BuildingID] = buildingid;
+		data[BuildingID] = Building_GetID(building);
 		data[Inventory] = inventory;
 		data[SlotID] = -1;
 		map_add_arr(PlayerBuildingInventory, playerid, data);
@@ -104,8 +104,9 @@ Dialog:Dialog_BizInventory(playerid, response, listitem, inputtext[])
 
 Dialog:BuildingInventoryAction(playerid, response, listitem, inputtext[])
 {
+	new Building:building = Building_Find(Internal_GetBuildingID(playerid));
     if(!response)
-        return Building_ShowInventory(Internal_GetBuildingID(playerid), playerid);
+        return Building_ShowInventory(building, playerid);
     new 
 		slotid = Internal_GetSlotID(playerid),
 		itemid = Inventory_GetSlotItem(Internal_GetInventory(playerid), slotid),
@@ -142,10 +143,10 @@ Dialog:BuildingInventoryAction(playerid, response, listitem, inputtext[])
 			Character_GiveItem(playerid, itemid, 1, 0, true);
 
 			Character_SaveInventory(playerid);
-			Building_SaveInventory(Internal_GetBuildingID(playerid));
+			Building_SaveInventory(building);
 
 			SendFormattedMessage(playerid, COLOR_ORANGE, "Hai ritirato gli oggetti dall'inventario dell'edificio. (Oggetto: %s - Quantità: 1)", ServerItem_GetName(itemid));
-			return Building_ShowInventory(Internal_GetBuildingID(playerid), playerid);
+			return Building_ShowInventory(building, playerid);
 		}
 		else
 		{
@@ -178,9 +179,11 @@ Dialog:BuildingInvWithdrawAmount(playerid, response, listitem, inputtext[])
 	Character_GiveItem(playerid, itemid, val, 0, true);
 
 	Character_SaveInventory(playerid);
-	Building_SaveInventory(Internal_GetBuildingID(playerid));
 
-	Building_ShowInventory(Internal_GetBuildingID(playerid), playerid);
+	new Building:building = Building_Find(Internal_GetBuildingID(playerid));
+	Building_SaveInventory(building);
+
+	Building_ShowInventory(building, playerid);
 	return 1;
 }
 
@@ -191,6 +194,7 @@ Dialog:BuildingInvDepSelectItem(playerid, response, listitem, inputtext[])
 		return Internal_ShowBuildingSlotAction(playerid, Internal_GetSlotID(playerid));
 	
 	new 
+		Building:building = Building_Find(Internal_GetBuildingID(playerid)), 
 		Inventory:inventoryRef = Internal_GetInventory(playerid),
 		itemid = Character_GetSlotItem(playerid, listitem),
 		amount = Character_GetSlotAmount(playerid, listitem)
@@ -206,10 +210,10 @@ Dialog:BuildingInvDepSelectItem(playerid, response, listitem, inputtext[])
 		Character_DecreaseItemAmount(playerid, itemid, amount);
 
 		Character_SaveInventory(playerid);
-		Building_SaveInventory(Internal_GetBuildingID(playerid));
+		Building_SaveInventory(building);
 
 		SendFormattedMessage(playerid, COLOR_ORANGE, "Hai depositato gli oggetti nell'inventario del tuo edificio. (Oggetto: %s - Quantità: %d)", ServerItem_GetName(itemid), amount);
-		Building_ShowInventory(Internal_GetBuildingID(playerid), playerid);
+		Building_ShowInventory(building, playerid);
 	}
 	else
 	{
@@ -225,6 +229,7 @@ Dialog:BuildingInvDepositAmount(playerid, response, listitem, inputtext[])
 	if(!response)
 		return Internal_ShowBuildingSlotAction(playerid, Internal_GetSlotID(playerid));
 	new 
+		Building:building = Building_Find(Internal_GetBuildingID(playerid)), 
 		val = strval(inputtext),
 		Inventory:inventoryRef = Internal_GetInventory(playerid),
 		itemid = Internal_GetItemToDeposit(playerid),
@@ -241,11 +246,11 @@ Dialog:BuildingInvDepositAmount(playerid, response, listitem, inputtext[])
 	Character_DecreaseItemAmount(playerid, itemid, val);
 
 	Character_SaveInventory(playerid);
-	Building_SaveInventory(Internal_GetBuildingID(playerid));
+	Building_SaveInventory(building);
 
 	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai depositato gli oggetti nell'inventario del tuo edificio. (Oggetto: %s - Quantità: %d)", ServerItem_GetName(itemid), val);
 	
-	Building_ShowInventory(Internal_GetBuildingID(playerid), playerid);
+	Building_ShowInventory(building, playerid);
 	return 1;
 }
 

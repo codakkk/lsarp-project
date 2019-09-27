@@ -199,12 +199,12 @@ flags:bussa(CMD_ALIVE_USER);
 CMD:bussa(playerid, params[])
 {
 	new houseid = Character_GetHouse(playerid, false);
-	new buildingid = Character_GetBuilding(playerid, false);
+	new Building:building = Character_GetBuilding(playerid, false);
 
-	if(!House_IsValid(houseid) && !Building_IsValid(buildingid))
+	if(!House_IsValid(houseid) && !Building_IsValid(building))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata di un biz o di una casa.");
 
-	new world = House_IsValid(houseid) ? House_GetExitWorld(houseid) : Building_GetExitWorld(buildingid);
+	new world = House_IsValid(houseid) ? House_GetExitWorld(houseid) : Building_GetExitWorld(building);
 
 	foreach(new p : Player)
 	{
@@ -222,11 +222,11 @@ CMD:dshout(playerid, params[])
 		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: (/ds)hout [testo]");
 	
 	new houseid = Character_GetHouse(playerid, false);
-	new buildingid = Character_GetBuilding(playerid, false);
+	new Building:building = Character_GetBuilding(playerid, false);
 
-	if(House_IsValid(houseid) || Building_IsValid(buildingid))
+	if(House_IsValid(houseid) || Building_IsValid(building))
 	{
-		new world = House_IsValid(houseid) ? House_GetExitWorld(houseid) : Building_GetExitWorld(buildingid);
+		new world = House_IsValid(houseid) ? House_GetExitWorld(houseid) : Building_GetExitWorld(building);
 		foreach(new p : Player)
 		{
 			if(Character_GetVirtualWorld(p) == world)
@@ -237,9 +237,9 @@ CMD:dshout(playerid, params[])
 	else
 	{
 		houseid = Character_GetHouse(playerid, true);
-		buildingid = Character_GetBuilding(playerid, true);
+		building = Character_GetBuilding(playerid, true);
 
-		if(!House_IsValid(houseid) && !Building_IsValid(buildingid))
+		if(!House_IsValid(houseid) && !Building_IsValid(building))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita di un biz o di una casa.");
 		
 		new Float:x, Float:y, Float:z, world, interior;
@@ -251,9 +251,9 @@ CMD:dshout(playerid, params[])
 		}
 		else
 		{
-			Building_GetEnterPos(buildingid, x, y, z);
-			world = Building_GetEnterWorld(buildingid);
-			interior = Building_GetEnterInterior(buildingid);
+			Building_GetEnterPos(building, x, y, z);
+			world = Building_GetEnterWorld(building);
+			interior = Building_GetEnterInterior(building);
 		}
 		pc_cmd_shout(playerid, params);
 		SendRangedMessageStr(20.0, x, y, z, world, interior, str_format("[Porta] %s grida: %s", Character_GetRolePlayName(playerid), params), COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false);
@@ -269,11 +269,11 @@ CMD:ddo(playerid, params[])
 		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /ddo [testo]");
 	
 	new houseid = Character_GetHouse(playerid, false);
-	new buildingid = Character_GetBuilding(playerid, false);
+	new Building:building = Character_GetBuilding(playerid, false);
 
-	if(House_IsValid(houseid) || Building_IsValid(buildingid))
+	if(House_IsValid(houseid) || Building_IsValid(building))
 	{
-		new world = House_IsValid(houseid) ? House_GetExitWorld(houseid) : Building_GetExitWorld(buildingid);
+		new world = House_IsValid(houseid) ? House_GetExitWorld(houseid) : Building_GetExitWorld(building);
 		foreach(new p : Player)
 		{
 			if(Character_GetVirtualWorld(p) == world)
@@ -284,9 +284,9 @@ CMD:ddo(playerid, params[])
 	else
 	{
 		houseid = Character_GetHouse(playerid, true);
-		buildingid = Character_GetBuilding(playerid, true);
+		building = Character_GetBuilding(playerid, true);
 
-		if(!House_IsValid(houseid) && !Building_IsValid(buildingid))
+		if(!House_IsValid(houseid) && !Building_IsValid(building))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita di un biz o di una casa.");
 		
 		new Float:x, Float:y, Float:z, world, interior;
@@ -298,9 +298,9 @@ CMD:ddo(playerid, params[])
 		}
 		else
 		{
-			Building_GetEnterPos(buildingid, x, y, z);
-			world = Building_GetEnterWorld(buildingid);
-			interior = Building_GetEnterInterior(buildingid);
+			Building_GetEnterPos(building, x, y, z);
+			world = Building_GetEnterWorld(building);
+			interior = Building_GetEnterInterior(building);
 		}
 		
 		pc_cmd_do(playerid, params);

@@ -75,10 +75,10 @@ stock Character_PayDay(playerid)
 
 	for_list(i : Character_GetOwnedBuildingsList(playerid))
 	{
-		new buildingid = iter_get(i);
-		if(Building_IsValid(buildingid))
+		new Building:building = Building_Find(iter_get(i));
+		if(Building_IsValid(building))
 		{
-			new price = Building_GetPrice(buildingid)/100;
+			new price = Building_GetPrice(building)/100;
 			businessMoney = price;
 			paycheck += price;
 		}

@@ -188,10 +188,10 @@ stock bool:House_GetAddress(houseid, name[])
         
     if(House_GetEnterWorld(houseid) > BUILDING_START_WORLD)
     {
-        new bid = House_GetEnterWorld(houseid) - BUILDING_START_WORLD;
-        if(Building_IsValid(bid) && Building_GetType(bid) == BUILDING_TYPE_COMPLEX)
+        new Building:building = Building_Find(House_GetEnterWorld(houseid) - BUILDING_START_WORLD);
+        if(Building_IsValid(building) && Building_GetType(building) == BUILDING_TYPE_COMPLEX)
         {
-            Building_GetEnterPos(bid, x, y, z);
+            Building_GetEnterPos(building, x, y, z);
         }
     }
     else

@@ -41,6 +41,8 @@
 	#warning LSARP_DEBUG is enabled. Care!!
 #endif
 
+#define CUSTOM_TAG_TYPES Building
+
 #define CreateDynamicObjectWithHighDD CreateDynamicObject
 
 #define FIXES_Single

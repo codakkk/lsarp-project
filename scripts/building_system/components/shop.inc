@@ -22,9 +22,9 @@ hook OnGameModeInit()
     return 1;
 }
 
-hook OnBuildingLoaded(buildingid)
+hook OnBuildingLoaded(Building:building)
 {
-    map_add(SellingItems, buildingid, map_new());
+    map_add(SellingItems, Building_GetID(building), map_new());
 
     inline OnLoad()
     {
@@ -32,7 +32,7 @@ hook OnBuildingLoaded(buildingid)
         if(rows <= 0)
             return 0;
         
-        new Map:map = Map:map_get(SellingItems, buildingid);
+        new Map:map = Map:map_get(SellingItems, Building_GetID(building));
 
         new itemid, price;
         for(new i = 0; i < rows; ++i)
@@ -46,20 +46,13 @@ hook OnBuildingLoaded(buildingid)
             map_add(map, itemid, price);
         }
     }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `building_selling_items` WHERE building_id = '%d'", buildingid);
+    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `building_selling_items` WHERE building_id = '%d'", Building_GetID(building));
     return 1;
 }
 
-hook OnBuildingDeleted(buildingid)
+hook OnPlayerEnterBuilding(playerid, Building:building)
 {
-    //map_remove
-    return 1;
-}
-
-
-hook OnPlayerEnterBuilding(playerid, buildingid)
-{
-    if(Building_CanSellItems(buildingid) && map_size(Map:map_get(SellingItems, buildingid)) > 0)
+    if(Building_CanSellItems(building) && map_size(Map:map_get(SellingItems, Building_GetID(building))) > 0)
     {
         SendClientMessage(playerid, COLOR_ORANGE, "Questo edificio ha degli oggetti in vendita. Usa \"/compra\" per visualizzarne la lista.");
     }
@@ -68,17 +61,17 @@ hook OnPlayerEnterBuilding(playerid, buildingid)
 
 hook OnCharacterTryBuy(playerid)
 {
-    new buildingid = Character_GetNearBuildingID(playerid);
-    if(!Building_IsValid(buildingid))
+    new Building:building = Character_GetBuilding(playerid, true);
+    if(!Building_IsValid(building))
         return 0;
     
-    if(Building_GetType(buildingid) != BUILDING_TYPE_STORE)
+    if(Building_GetType(building) != BUILDING_TYPE_STORE)
         return 0;
 
-    if(!Building_CanSellItems(buildingid))
+    if(!Building_CanSellItems(building))
         return SendClientMessage(playerid, COLOR_ERROR, "Questo edificio non ha nulla da vendere.");
     
-    Building_ShowSellingItems(buildingid, playerid);
+    Building_ShowSellingItems(building, playerid);
     return 1;
 }
 
@@ -107,12 +100,12 @@ Dialog:Dialog_BuildingSellingItems(playerid, response, listitem, inputtext[])
     if(!response)
         return 0;
     
-    new buildingid = Character_GetNearBuildingID(playerid);
-
-    if(!Building_IsValid(buildingid) || !Building_CanSellItems(buildingid))
+    new Building:building = Character_GetBuilding(playerid, true);
+    
+    if(!Building_IsValid(building))
         return 0;
 
-    new Map:items = Map:map_get(SellingItems, buildingid);
+    new Map:items = Map:map_get(SellingItems, Building_GetID(building));
     
     if(map_size(items) <= 0 || listitem >= map_size(items))
         return SendClientMessage(playerid, COLOR_ERROR, "L'oggetto non è piu' disponibile.");
@@ -120,7 +113,7 @@ Dialog:Dialog_BuildingSellingItems(playerid, response, listitem, inputtext[])
     new itemid = map_key_at(items, listitem),
         price = map_value_at(items, listitem);
 
-    new Inventory:buildingInv = Building_GetInventory(buildingid);
+    new Inventory:buildingInv = Building_GetInventory(building);
 
     new quantity = Inventory_GetItemAmount(buildingInv, itemid);
     if(quantity <= 0)
@@ -137,21 +130,22 @@ Dialog:Dialog_BuildingSellingItems(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_BuyBuildingItem(playerid, response, listitem, inputtext[])
 {
-    new buildingid = Character_GetNearBuildingID(playerid);
-    if(!Building_IsValid(buildingid) || !Building_CanSellItems(buildingid))
+    new Building:building = Character_GetBuilding(playerid, true);
+    
+    if(!Building_IsValid(building) || !Building_CanSellItems(building))
         return 0;
     
     if(!response)
-        return Building_ShowSellingItems(buildingid, playerid);
+        return Building_ShowSellingItems(building, playerid);
     
     new itemid = SelectedItemID{playerid};
 
-    if(!Building_HasSellableItem(buildingid, itemid))
+    if(!Building_HasSellableItem(building, itemid))
         return SendClientMessage(playerid, COLOR_ERROR, "L'oggetto non è piu' disponibile.");
 
     new 
-        price = Building_GetSellableItemPrice(buildingid, itemid),
-        Inventory:buildingInv = Building_GetInventory(buildingid),
+        price = Building_GetSellableItemPrice(building, itemid),
+        Inventory:buildingInv = Building_GetInventory(building),
         buildingQuantity = Inventory_GetItemAmount(buildingInv, itemid);
 
     if(buildingQuantity <= 0)
@@ -184,8 +178,8 @@ Dialog:Dialog_BuyBuildingItem(playerid, response, listitem, inputtext[])
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai acquistato l'oggetto (%s - Quantità: %d) dall'edificio.", ServerItem_GetName(itemid), buyingQuantity);
 
     Inventory_DecreaseItemAmount(buildingInv, itemid, buyingQuantity);
-    Building_SaveInventory(Building_GetID(buildingid));
-    Building_GiveMoney(buildingid, buyingQuantity * price);
+    Building_SaveInventory(building);
+    Building_GiveMoney(building, buyingQuantity * price);
     Character_GiveItem(playerid, itemid, buyingQuantity);
     Character_GiveMoney(playerid, -price * buyingQuantity, "buying_from_building");
     return 1;
@@ -193,10 +187,10 @@ Dialog:Dialog_BuyBuildingItem(playerid, response, listitem, inputtext[])
 
 stock Character_EditSellableItems(playerid)
 {
-    new buildingid = Character_GetNearBuildingID(playerid);
-    if(!Building_IsValid(buildingid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Devi essere all'interno dell'edificio per utilizzare quest'opzione.");
-    if(!Building_CanSellItems(buildingid))
+    new Building:building = Character_GetCurrentBuilding(playerid);
+    if(!Building_IsValid(building))
+        return SendClientMessage(playerid, COLOR_ERROR, "Devi essere vicino il business per utilizzare quest'opzione.");
+    if(!Building_CanSellItems(building))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare quest'opzione su questo tipo di edificio.");
     Dialog_Show(playerid, Dialog_EditSellableItems, DIALOG_STYLE_LIST, "Gestione Negozio", "Lista\nAggiungi Oggetto", "Seleziona", "Chiudi");
     return 1;
@@ -204,12 +198,12 @@ stock Character_EditSellableItems(playerid)
 
 Dialog:Dialog_EditSellableItems(playerid, response, listitem, inputtext[])
 {
-    new buildingid = Character_GetNearBuildingID(playerid);
+    new Building:building = Character_GetCurrentBuilding(playerid);
     if(!response)
         return Character_ShowBizDialog(playerid);
     if(listitem == 0)
     {
-        Building_ShowSellingItemsEdit(buildingid, playerid);
+        Building_ShowSellingItemsEdit(building, playerid);
     }
     else if(listitem == 1)
         Dialog_Show(playerid, Dialog_AddSellableItem, DIALOG_STYLE_INPUT, "Aggiungi Oggetto", "Inserisci l'ID o il nome dell'oggetto che vuoi aggiungere tra i vendibili seguito dal prezzo.\nEsempi:\n- 83 10\n- Pane 10\n\n- Usa _ invece di spazio nei nomi. Esempio:\n- Componenti_Meccanici 5", "Aggiungi", "Chiudi");
@@ -234,12 +228,13 @@ Dialog:Dialog_EditSellableItemList(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_EditSellableItem(playerid, response, listitem, inputtext[])
 {
-    new buildingid = Character_GetNearBuildingID(playerid);
-
+    new Building:building = Character_GetCurrentBuilding(playerid);
+    if(!Building_IsValid(building))
+        return 0;
     if(!response)
         return Character_EditSellableItems(playerid);
     
-    new String:title = str_format("%s (%d) - {85bb65}${FFFFFF}%d", ServerItem_GetName(SelectedItemID{playerid}), SelectedItemID{playerid}, Building_GetSellableItemPrice(buildingid, SelectedItemID{playerid}));
+    new String:title = str_format("%s (%d) - {85bb65}${FFFFFF}%d", ServerItem_GetName(SelectedItemID{playerid}), SelectedItemID{playerid}, Building_GetSellableItemPrice(building, SelectedItemID{playerid}));
     if(listitem == 0)
     {
         Dialog_Show_s(playerid, Dialog_EditSellableItemPrice, DIALOG_STYLE_INPUT, title, @("Inserisci il nuovo prezzo per l'oggetto."), "Modifica", "Annulla");
@@ -253,12 +248,15 @@ Dialog:Dialog_EditSellableItem(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_EditSellableItemPrice(playerid, response, listitem, inputtext[])
 {
-    new buildingid = Character_GetNearBuildingID(playerid);
+    new Building:building = Character_GetCurrentBuilding(playerid);
+
+    if(!Building_IsValid(building))
+        return 0;
 
     if(!response)
         return Character_ShowBizDialog(playerid);
     
-    if(!Building_HasSellableItem(buildingid, SelectedItemID{playerid}))
+    if(!Building_HasSellableItem(building, SelectedItemID{playerid}))
     {
         SendClientMessage(playerid, COLOR_ERROR, "L'oggetto non è più in lista.");
         Character_EditSellableItems(playerid);
@@ -268,24 +266,27 @@ Dialog:Dialog_EditSellableItemPrice(playerid, response, listitem, inputtext[])
     new val = strval(inputtext);
     if(val < 0)
     {
-        new String:title = str_format("%s (%d) - {85bb65}${FFFFFF}%d", ServerItem_GetName(SelectedItemID{playerid}), SelectedItemID{playerid}, Building_GetSellableItemPrice(buildingid, SelectedItemID{playerid}));
+        new String:title = str_format("%s (%d) - {85bb65}${FFFFFF}%d", ServerItem_GetName(SelectedItemID{playerid}), SelectedItemID{playerid}, Building_GetSellableItemPrice(building, SelectedItemID{playerid}));
         return Dialog_Show_s(playerid, Dialog_EditSellableItemPrice, DIALOG_STYLE_INPUT, title, @("{FF0000}Il prezzo inserito non è valido.{FFFFFF}\nInserisci il nuovo prezzo per l'oggetto."), "Modifica", "Annulla");
     }
 
-    Building_SetSellableItemPrice(buildingid, SelectedItemID{playerid}, val);
-    SendFormattedMessage(playerid, COLOR_GREEN, "Hai modificato il prezzo dell'oggetto (%s). Nuovo Prezzo: $%d", ServerItem_GetName(SelectedItemID{playerid}), Building_GetSellableItemPrice(buildingid, SelectedItemID{playerid}));
-    Building_ShowSellingItemsEdit(buildingid, playerid);
+    Building_SetSellableItemPrice(building, SelectedItemID{playerid}, val);
+    SendFormattedMessage(playerid, COLOR_GREEN, "Hai modificato il prezzo dell'oggetto (%s). Nuovo Prezzo: $%d", ServerItem_GetName(SelectedItemID{playerid}), Building_GetSellableItemPrice(building, SelectedItemID{playerid}));
+    Building_ShowSellingItemsEdit(building, playerid);
     return 1;
 }
 
 Dialog:Dialog_EditSellableItemRemove(playerid, response, listitem, inputtext[])
 {
-    new buildingid = Character_GetNearBuildingID(playerid);
+    new Building:building = Character_GetCurrentBuilding(playerid);
+
+    if(!Building_IsValid(building))
+        return 0;
 
     if(!response)
         return Character_EditSellableItems(playerid);
     
-    Building_RemoveSellableItem(buildingid, SelectedItemID{playerid});
+    Building_RemoveSellableItem(building, SelectedItemID{playerid});
     SendFormattedMessage(playerid, COLOR_GREEN, "L'oggetto (%s) è stato rimosso dalla lista.", ServerItem_GetName(SelectedItemID{playerid}));
     SelectedItemID{playerid} = 0;
     return 1;
@@ -293,7 +294,10 @@ Dialog:Dialog_EditSellableItemRemove(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_AddSellableItem(playerid, response, listitem, inputtext[])
 {
-    new buildingid = Character_GetNearBuildingID(playerid);
+    new Building:building = Character_GetCurrentBuilding(playerid);
+
+    if(!Building_IsValid(building))
+        return 0;
     
     if(!response)
         return Character_EditSellableItems(playerid);
@@ -307,79 +311,79 @@ Dialog:Dialog_AddSellableItem(playerid, response, listitem, inputtext[])
     if(price < 0)
         return Dialog_Show(playerid, Dialog_AddSellableItem, DIALOG_STYLE_INPUT, "Aggiungi Oggetto", "{FF0000}Il prezzo inserito non è valido.{FFFFFF}\nInserisci l'ID o il nome dell'oggetto che vuoi aggiungere tra i vendibili seguito dal prezzo.\nEsempi:\n- 83 10\n- Pane 10\n\n- Usa _ invece di spazio nei nomi. Esempio:\n- Componenti_Meccanici 5", "Aggiungi", "Chiudi");
     
-    if(Building_HasSellableItem(buildingid, itemid))
+    if(Building_HasSellableItem(building, itemid))
         return Dialog_Show(playerid, Dialog_AddSellableItem, DIALOG_STYLE_INPUT, "Aggiungi Oggetto", "{FF0000}L'oggetto è già in vendita.{FFFFFF}\nInserisci l'ID o il nome dell'oggetto che vuoi aggiungere tra i vendibili seguito dal prezzo.\nEsempi:\n- 83 10\n- Pane 10\n\n- Usa _ invece di spazio nei nomi. Esempio:\n- Componenti_Meccanici 5", "Aggiungi", "Chiudi");
 
-    Building_AddSellableItem(buildingid, itemid, price); 
+    Building_AddSellableItem(building, itemid, price); 
     
     SendFormattedMessage(playerid, COLOR_GREEN, "L'oggetto (%s) è stato aggiunto alla lista degli acquistabili al prezzo di $%d.", ServerItem_GetName(itemid), price);
 
-    Building_ShowSellingItemsEdit(buildingid, playerid);
+    Building_ShowSellingItemsEdit(building, playerid);
     return 1;
 }
 
-stock Building_CanSellItems(buildingid)
+stock bool:Building_CanSellItems(Building:building)
 {
-    new type = Building_GetType(buildingid);
-    return Building_IsOwned(buildingid) && Building_IsOwnable(buildingid) && type == BUILDING_TYPE_STORE;
+    new type = Building_GetType(building);
+    return Building_IsOwned(building) && Building_IsOwnable(building) && type == BUILDING_TYPE_STORE;
 }
 
-static Building_GetSellableItemPrice(buildingid, itemid)
+static Building_GetSellableItemPrice(Building:building, itemid)
 {
-    if(!Building_IsValid(buildingid))
+    if(!Building_IsValid(building))
         return -1;
-    new Map:map = Map:map_get(SellingItems, buildingid);
+    new Map:map = Map:map_get(SellingItems, Building_GetID(building));
     if(!map_has_key(map, itemid))
         return 0;
     return map_get(map, itemid);
 }
 
-static Building_AddSellableItem(buildingid, itemid, price)
+static Building_AddSellableItem(Building:building, itemid, price)
 {
-    if(!Building_IsValid(buildingid) || !ServerItem_IsValid(itemid) || price < 0 || Building_HasSellableItem(buildingid, itemid))
+    if(!Building_IsValid(building) || !ServerItem_IsValid(itemid) || price < 0 || Building_HasSellableItem(building, itemid))
         return 0;
     
-    map_add(Map:map_get(SellingItems, buildingid), itemid, price);
-    mysql_tquery_f(gMySQL, "INSERT INTO `building_selling_items` (building_id, item_id, price) VALUES('%d', '%d', '%d')", Building_GetID(buildingid), itemid, price);
+    map_add(Map:map_get(SellingItems, Building_GetID(building)), itemid, price);
+    mysql_tquery_f(gMySQL, "INSERT INTO `building_selling_items` (building_id, item_id, price) VALUES('%d', '%d', '%d')", Building_GetID(building), itemid, price);
     return 1;    
 }
 
-static Building_SetSellableItemPrice(buildingid, itemid, newprice)
+static Building_SetSellableItemPrice(Building:building, itemid, newprice)
 {
-    if(!Building_IsValid(buildingid) ||newprice < 0 || !Building_HasSellableItem(buildingid, itemid))
+    if(newprice < 0 || !Building_HasSellableItem(building, itemid))
         return 0;
-    new Map:items = Map:map_get(SellingItems, buildingid);
+    new Map:items = Map:map_get(SellingItems, Building_GetID(building));
     map_set(items, itemid, newprice);
-    mysql_tquery_f(gMySQL, "UPDATE `building_selling_items` SET price = '%d' WHERE building_id = '%d' AND item_id = '%d'", newprice, Building_GetID(buildingid), newprice);
+    mysql_tquery_f(gMySQL, "UPDATE `building_selling_items` SET price = '%d' WHERE building_id = '%d' AND item_id = '%d'", newprice, Building_GetID(building), newprice);
     return 1;
 }
 
-static Building_RemoveSellableItem(buildingid, itemid)
+static Building_RemoveSellableItem(Building:building, itemid)
 {
-    if(!Building_IsValid(buildingid) || !ServerItem_IsValid(itemid) || !Building_HasSellableItem(buildingid, itemid))
+    if(!ServerItem_IsValid(itemid) || !Building_HasSellableItem(building, itemid))
         return 0;
     
-    new Map:items = Map:map_get(SellingItems, buildingid);
+    new Map:items = Map:map_get(SellingItems, Building_GetID(building));
     map_remove(items, itemid);
-    mysql_tquery_f(gMySQL, "DELETE FROM `building_selling_items` WHERE building_id = '%d' AND item_id = '%d'", Building_GetID(buildingid), itemid);
+    mysql_tquery_f(gMySQL, "DELETE FROM `building_selling_items` WHERE building_id = '%d' AND item_id = '%d'", Building_GetID(building), itemid);
     return 1;    
 }
  
-static bool:Building_HasSellableItem(buildingid, itemid)
+static bool:Building_HasSellableItem(Building:building, itemid)
 {
-    if(!Building_IsValid(buildingid) || !ServerItem_IsValid(itemid) || !Building_IsValid(buildingid))
+    if(!ServerItem_IsValid(itemid))
         return false;
-    return map_has_key(Map:map_get(SellingItems, buildingid), itemid);
+    return map_has_key(Map:map_get(SellingItems, Building_GetID(building)), itemid);
 }
 
-static Building_ShowSellingItems(buildingid, toPlayer)
+static Building_ShowSellingItems(Building:building, toPlayer)
 {
-    if(!Building_IsValid(buildingid) || !Character_IsLogged(toPlayer))
+    if(!Character_IsLogged(toPlayer))
         return 0;
     new 
-        Map:items = Map:map_get(SellingItems, buildingid),
+        Map:items = Map:map_get(SellingItems, Building_GetID(building)),
         String:text = @("Oggetto\tPrezzo ({85bb65}${FFFFFF})\tDisponibilità\n"),
-        Inventory:buildingInv = Building_GetInventory(buildingid);
+        Inventory:buildingInv = Building_GetInventory(building);
 
     if(map_size(items) <= 0)
         return SendClientMessage(toPlayer, COLOR_ERROR, "L'edificio non ha nulla da vendere.");
@@ -406,12 +410,10 @@ static Building_ShowSellingItems(buildingid, toPlayer)
     return 1;
 }
 
-static Building_ShowSellingItemsEdit(buildingid, toPlayer)
+static Building_ShowSellingItemsEdit(Building:building, toPlayer)
 {
-    if(!Building_IsValid(buildingid))
-        return 0;
     new 
-        Map:items = Map:map_get(SellingItems, buildingid),
+        Map:items = Map:map_get(SellingItems, Building_GetID(building)),
         String:str = @("{FFFFFF}Oggetto{FFFFFF}\t{FFFFFF}Prezzo{FFFFFF} ({85bb65}${FFFFFF})\n")
     ;
     new itemid, price;

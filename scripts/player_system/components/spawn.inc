@@ -294,8 +294,8 @@ static Character_Spawn(playerid)
 		}
 		else if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_BUSINESS)
 		{
-			new buildingkey = Character_GetSpawnPointID(playerid);
-			if(!Building_IsValid(buildingkey))
+			new Building:building = Building_Find(Character_GetSpawnPointID(playerid));
+			if(!Building_IsValid(building))
 			{
 				Character_SetSpawnPointType(playerid, SPAWN_POINT_TYPE_NONE);
 				Character_SetSpawnPointID(playerid, 0);
@@ -305,9 +305,9 @@ static Character_Spawn(playerid)
 			else
 			{
 				new Float:x, Float:y, Float:z;
-				Building_GetEnterPos(buildingkey, x, y, z);
+				Building_GetEnterPos(building, x, y, z);
 
-				Character_SetSafePosition(playerid, x, y, z, Building_GetEnterInterior(buildingkey), Building_GetEnterWorld(buildingkey));
+				Character_SetSafePosition(playerid, x, y, z, Building_GetEnterInterior(building), Building_GetEnterWorld(building));
 			}
 		}
 		else if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_FACTION && Faction_IsValid(Character_GetFaction(playerid)))

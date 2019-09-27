@@ -97,7 +97,7 @@ ptask OnRequestUpdateTimer[1000](playerid)
 	return 1;
 }
 
-stock Character_SetRequest(byPlayer, toPlayer, type, item = 0, amount = 0, slot = -1)
+stock Character_SetRequest(byPlayer, toPlayer, type, GLOBAL_TAG_TYPES:item = 0, amount = 0, slot = -1)
 {
 	if(! (REQUEST_TYPE_NONE < type < REQUEST_TYPE_LAST))
 		return 1;
