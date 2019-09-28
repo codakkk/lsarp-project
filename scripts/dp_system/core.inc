@@ -44,7 +44,7 @@ CMD:dp(playerid, params[])
 	return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	for(new i = 0; i < MAX_DPS_PER_PLAYER; ++i)
 	{

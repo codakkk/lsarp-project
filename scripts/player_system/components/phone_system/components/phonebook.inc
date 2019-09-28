@@ -24,7 +24,7 @@ hook OnGameModeInit()
     return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     for(new i = 0, j = Character_GetInventorySize(playerid); i < j; ++i)
     {

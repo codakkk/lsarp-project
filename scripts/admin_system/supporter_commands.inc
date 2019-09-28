@@ -5,7 +5,7 @@ static
 	bool:HelpRequest[MAX_PLAYERS] = {false, ...},
 	LastHelpRequestTime[MAX_PLAYERS] = {0, ...};
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	HelpRequest{playerid} = false;
 	LastHelpRequestTime[playerid] = 0;

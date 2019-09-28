@@ -5,7 +5,7 @@ static
     LastServerAdv = 0,
     bool:NoAds[MAX_PLAYERS char];
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     NoAds{playerid} = false;
     return 1;

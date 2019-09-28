@@ -10,6 +10,9 @@ CMD:dipartimento(playerid, params[])
 	if(Faction_GetType(factionid) != FACTION_TYPE_POLICE && Faction_GetType(factionid) != FACTION_TYPE_MEDICAL)
 		return 0;
 	
+	if(!Character_IsFactionDuty(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Devi essere in servizio per poter utilizzare questo comando.");
+
 	Faction_GetShortName(factionid, shortName);
 	Faction_GetRankName(factionid, Character_GetRank(playerid), rankName);
 
@@ -121,7 +124,7 @@ CMD:setfaction(playerid, params[])
 	new id, factionid, rankid;
 	if(sscanf(params, "k<u>dd", id, factionid, rankid))
 	{
-		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setfaction <playerid/partofname> <factionid> <rank (1 - 10)>");
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setfaction [playerid/partofname] <factionid> <rank (1 - 10)>");
 		SendClientMessage(playerid, COLOR_ERROR, "Usa /afactionslist per una lista completa.");
 		return 1;	
 	}
@@ -154,7 +157,7 @@ CMD:afactionkick(playerid, params[])
 	new id;
 	if(sscanf(params, "k<u>", id))
 	{
-		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /afactionkick <playerid/partofname>");
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /afactionkick [playerid/partofname]");
 		return 1;	
 	}
 	if(!Character_IsLogged(id))

@@ -19,12 +19,6 @@
 
 #include "ac"
 
-#define AC_GetPlayerHealth AntiCheatGetHealth
-#define AC_SetPlayerHealth SetPlayerHealth
-
-#define AC_GetPlayerArmour AntiCheatGetArmour
-#define AC_SetPlayerArmour SetPlayerArmour
-
 #define COLOR_ANTICHEAT 0xFF6347AA
 
 static enum _:E_CHEAT_DATA
@@ -36,7 +30,7 @@ static enum _:E_CHEAT_DATA
 static 
     Map:CheatData[MAX_PLAYERS];
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     if(map_valid(CheatData[playerid]))
         map_delete_deep(CheatData[playerid]);

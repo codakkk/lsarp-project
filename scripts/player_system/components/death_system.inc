@@ -34,7 +34,7 @@ static stock
 ;
 
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	Character_SetDeathState(playerid, DEATH_STATE_NONE);
 	if(IsValidDynamic3DTextLabel(PlayerDeathState[playerid][pDeathText]))
@@ -93,7 +93,7 @@ ptask OnPlayerDeathSystemUpdate[500](playerid)
 			{
 				PlayerTextDrawSetStringStr(playerid, pDeathTextDraw[playerid], @("Digita ~g~/respawnme~w~ per respawnare."));
 			}
-			AC_SetPlayerHealth(playerid, 9999.0);
+			Character_SetHealth(playerid, 9999.0);
 		}
 		
 		if(GetPlayerDistanceFromPoint(playerid, x, y, z) > 3.0 || GetPlayerInterior(playerid) != interior || Character_GetVirtualWorld(playerid) != world)
@@ -195,8 +195,8 @@ static Internal_UpdateDeathState(playerid)
 			
 			PlayerDeathState[playerid][pDeathText] = CreateDynamic3DTextLabel(str, COLOR_ADMIN, 0.0, 0.0, 0.5, 30.0, playerid, INVALID_VEHICLE_ID, 1, -1, -1, -1, 100.0);
 			
-			AC_SetPlayerHealth(playerid, 20.0);
-			AC_SetPlayerArmour(playerid, 0.0);
+			Character_SetHealth(playerid, 20.0);
+			Character_SetArmour(playerid, 0.0);
 
 			SetCameraBehindPlayer(playerid);
 
@@ -219,7 +219,7 @@ static Internal_UpdateDeathState(playerid)
 			Character_OffDuty(playerid);
 			Character_ResetWeapons(playerid);
 			
-			AC_SetPlayerHealth(playerid, 9999.0); // Sets invincible
+			Character_SetHealth(playerid, 9999.0); // Sets invincible
 			
 			new str[64];
 			
@@ -257,7 +257,7 @@ stock Character_AcceptDeathState(playerid)
 	if(!Character_IsInjured(playerid)) 
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei in sistema ferito.");
 
-	AC_SetPlayerHealth(playerid, 0.0);
+	Character_SetHealth(playerid, 0.0);
 	Character_SetDeathTime(playerid, 0);
 
 	CallLocalFunction(#OnCharacterAcceptDeath, "d", playerid);

@@ -31,7 +31,7 @@ static
     PlayerRewardData[MAX_PLAYERS][E_PLAYER_REWARD_DATA],
     CleanRewardData[E_PLAYER_REWARD_DATA];
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	PlayerRewardData[playerid] = CleanRewardData;
     return 1;

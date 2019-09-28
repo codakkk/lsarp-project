@@ -3,7 +3,7 @@
 static stock
 	Text3D:pMaskText3D[MAX_PLAYERS];
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	Character_RemoveMask(playerid);
 	return Y_HOOKS_CONTINUE_RETURN_1;

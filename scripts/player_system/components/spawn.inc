@@ -16,12 +16,6 @@ enum
 
 static enum E_PLAYER_SPAWN_DATA
 {
-	Float:StartSpawnX,
-	Float:StartSpawnY,
-	Float:StartSpawnZ,
-	StartSpawnInterior,
-	StartSpawnWorld,
-
 	Float:SpawnX,
 	Float:SpawnY,
 	Float:SpawnZ,
@@ -75,7 +69,7 @@ hook OnGameModeInit()
 	return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	IsSpawned{playerid} = IsFirstSpawn{playerid} = false;
 	SpawnPointType{playerid} = SPAWN_POINT_TYPE_NONE;
@@ -115,7 +109,6 @@ static Internal_SavePos(playerid)
 {
 	new 
 		Float:x, Float:y, Float:z, Float:a,
-		Float:health, Float:armour,
 		interior = GetPlayerInterior(playerid),
 		world = Character_GetVirtualWorld(playerid),
 		isSpawned = Character_IsAlive(playerid) ? 1 : 0
@@ -124,9 +117,6 @@ static Internal_SavePos(playerid)
 	GetPlayerPos(playerid, x, y, z);
 	GetPlayerFacingAngle(playerid, a);
 
-	AC_GetPlayerHealth(playerid, health);
-	AC_GetPlayerArmour(playerid, armour);
-
 	mysql_tquery_f(gMySQL, "UPDATE `character_spawn_data` SET \
 	last_x = '%f', last_y = '%f', last_z = '%f', last_a = '%f', last_interior = '%d', last_world = '%d', \
 	last_health = '%f', last_armour = '%f', \
@@ -134,7 +124,7 @@ static Internal_SavePos(playerid)
 	WHERE \
 	character_id = '%d'", 
 	x, y, z, a, interior, world,
-	health, armour,
+	Character_GetHealth(playerid), Character_GetArmour(playerid),
 	isSpawned,
 	Character_GetID(playerid));
 	return 1;
@@ -218,11 +208,41 @@ stock Character_HandleFirstSpawn(playerid)
 
 	Character_SetSkin(playerid, Character_GetSkin(playerid));
 	
-	ForceFirstSpawnSelection(playerid);
-	/*Streamer_UpdateEx(playerid, PlayerSpawnData[playerid][StartSpawnX], PlayerSpawnData[playerid][StartSpawnY], PlayerSpawnData[playerid][StartSpawnZ]);
-	SetPlayerPos(playerid, PlayerSpawnData[playerid][StartSpawnX], PlayerSpawnData[playerid][StartSpawnY], PlayerSpawnData[playerid][StartSpawnZ]);
-	SetPlayerInterior(playerid, PlayerSpawnData[playerid][StartSpawnInterior]);
-	Character_SetVirtualWorld(playerid, PlayerSpawnData[playerid][StartSpawnWorld]);*/
+	SetPlayerPos(playerid, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
+	Character_SetVirtualWorld(playerid, 0);
+	SetPlayerInterior(playerid, 0);
+
+	Character_SetVirtualWorld(playerid, 0);
+	SetPlayerInterior(playerid, 0);
+
+	SetCameraBehindPlayer(playerid);
+	
+
+	if(IsFirstSpawn{playerid})
+	{
+		IsFirstSpawn{playerid} = false;
+		if(Account_GetCharactersCount(playerid) <= 2)
+		{
+			new count = Account_GetCharactersCount(playerid);
+			static const characterFirstLoginMoney[] = {30000, 20000, 10000};
+			Character_GiveMoney(playerid, characterFirstLoginMoney[count], "FirstSpawn");
+			SendFormattedMessage(playerid, -1, "(( Hai ricevuto {85bb65}$%d{FFFFFF} per cominciare la tua esperienza. ))", characterFirstLoginMoney[count]);
+			SendClientMessage(playerid, -1, "Utilizza ({85bb65}/inv{FFFFFF})entario per interagire con il tuo inventario.");
+		}
+		
+		SetPlayerHealth(playerid, 100.0);
+
+		new query[128];
+		mysql_format(gMySQL, query, sizeof(query), "UPDATE `character_spawn_data` SET is_first_spawn = '0' WHERE character_id = '%d'", Character_GetID(playerid));
+		mysql_tquery(gMySQL, query);
+
+		Account_AddCharactersCount(playerid, 1);
+
+		mysql_format(gMySQL, query, sizeof(query), "UPDATE `accounts` SET characters_counter = '%d' WHERE id = '%d'", Account_GetCharactersCount(playerid), Account_GetID(playerid));
+		mysql_tquery(gMySQL, query);
+
+		CallLocalFunction(#OnCharacterFirstSpawn, "d", playerid);
+	}
 	return 1;
 }
 
@@ -246,9 +266,10 @@ static Character_Spawn(playerid)
 		}
 	#endif
 	Character_ResetDeathState(playerid);
-	AC_SetPlayerHealth(playerid, 100.0);
-	AC_SetPlayerArmour(playerid, 0.0);
-
+	
+	Character_SetHealth(playerid, Character_GetMaxHealth(playerid));
+	Character_SetArmour(playerid, PlayerSpawnData[playerid][LastArmour]);
+	
 	Character_FreezeForTime(playerid, 3000);
 
 	if(IsFirstSpawn{playerid}) // First Login/Spawn
@@ -263,76 +284,52 @@ static Character_Spawn(playerid)
     else if(IsSpawned{playerid} && PlayerSpawnData[playerid][LastX] != 0.0 && PlayerSpawnData[playerid][LastY] != 0.0 && PlayerSpawnData[playerid][LastZ] != 0.0)
     {
 		IsSpawned{playerid} = false;
-		SetPlayerPos(playerid, PlayerSpawnData[playerid][LastX], PlayerSpawnData[playerid][LastY], PlayerSpawnData[playerid][LastZ]);
-		SetPlayerFacingAngle(playerid, PlayerSpawnData[playerid][LastA]);
-		SetPlayerInterior(playerid, PlayerSpawnData[playerid][LastInterior]);
-		Character_SetVirtualWorld(playerid, PlayerSpawnData[playerid][LastVirtualWorld]);
 
-		SetPlayerHealth(playerid, PlayerSpawnData[playerid][LastHealth]);
-		SetPlayerArmour(playerid, PlayerSpawnData[playerid][LastArmour]);
+		Character_SetHealth(playerid, PlayerSpawnData[playerid][LastHealth]);
+
+		Character_SetSafePosition(playerid, PlayerSpawnData[playerid][LastX], PlayerSpawnData[playerid][LastY], PlayerSpawnData[playerid][LastZ], PlayerSpawnData[playerid][LastInterior], PlayerSpawnData[playerid][LastVirtualWorld]);
+		SetPlayerFacingAngle(playerid, PlayerSpawnData[playerid][LastA]);
     }
     else
     {
+		new bool:isSpawned = false;
 		if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_HOUSE && House_IsValid(Character_GetSpawnPointID(playerid)))
 		{
 			new housekey = Character_GetSpawnPointID(playerid);
-			if(House_GetOwnerID(housekey) != Character_GetID(playerid) && Character_GetHouseKey(playerid) != housekey)
-			{
-				SendClientMessage(playerid, COLOR_ERROR, "Non possiedi più la casa. Il tuo spawn-point è stato resettato alla posizione scelta all'inizio.");
-				
-				Character_SetSpawnPointType(playerid, SPAWN_POINT_TYPE_NONE);
-				Character_SetSpawnPointID(playerid, 0);
-
-				Character_ForceStartSpawnPos(playerid);
-			}
-			else
+			if(House_GetOwnerID(housekey) == Character_GetID(playerid) || Character_GetHouseKey(playerid) == housekey)
 			{
 				new Float:x, Float:y, Float:z;
 				House_GetExitPosition(housekey, x, y, z);
 				Character_SetSafePosition(playerid, x, y, z, House_GetExitInterior(housekey), House_GetExitWorld(housekey));
+				isSpawned = true;
 			}
 		}
 		else if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_BUSINESS)
 		{
 			new Building:building = Building_Find(Character_GetSpawnPointID(playerid));
-			if(!Building_IsValid(building))
-			{
-				Character_SetSpawnPointType(playerid, SPAWN_POINT_TYPE_NONE);
-				Character_SetSpawnPointID(playerid, 0);
-
-				Character_ForceStartSpawnPos(playerid);
-			}
-			else
+			if(Building_IsValid(building) && Building_GetOwnerID(building) == Character_GetID(playerid))
 			{
 				new Float:x, Float:y, Float:z;
 				Building_GetEnterPos(building, x, y, z);
-
 				Character_SetSafePosition(playerid, x, y, z, Building_GetEnterInterior(building), Building_GetEnterWorld(building));
+				isSpawned = true;
 			}
 		}
 		else if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_FACTION && Faction_IsValid(Character_GetFaction(playerid)))
 		{
 			new factionid = Character_GetFaction(playerid);
-
-			if(!Faction_IsValidSpawnPosition(factionid))
-			{
-				SendClientMessage(playerid, COLOR_ERROR, "La tua fazione non ha uno spawn settato. Il tuo spawn è stato resettato.");
-				Character_SetSpawnPointID(playerid, SPAWN_POINT_TYPE_NONE);
-				Character_ForceStartSpawnPos(playerid);
-			}
-			else
+			if(Faction_IsValidSpawnPosition(factionid))
 			{
 				new Float:x, Float:y, Float:z;
 				Faction_GetSpawnPos(factionid, x, y, z);
 				Character_SetSafePosition(playerid, x, y, z, Faction_GetSpawnInterior(factionid), Faction_GetSpawnWorld(factionid));
+				isSpawned = true;
 			}
 		}
-		else
+		if(!isSpawned)
 		{
 			Character_ForceStartSpawnPos(playerid);
 		}
-		AC_SetPlayerHealth(playerid, 100.0);
-		AC_SetPlayerArmour(playerid, 0.0);
     }
 	CallLocalFunction(#OnCharacterSpawn, "d", playerid);
 	return 1;
@@ -341,14 +338,7 @@ static Character_Spawn(playerid)
 // Sets player pos to StartSpawn position.
 static Character_ForceStartSpawnPos(playerid)
 {
-	if(PlayerSpawnData[playerid][StartSpawnX] == 0.0 && PlayerSpawnData[playerid][StartSpawnY] == 0.0 && PlayerSpawnData[playerid][StartSpawnZ] == 0.0)
-	{
-		return ForceFirstSpawnSelection(playerid);
-	}
-	Streamer_UpdateEx(playerid, PlayerSpawnData[playerid][StartSpawnX], PlayerSpawnData[playerid][StartSpawnY], PlayerSpawnData[playerid][StartSpawnZ], 0, 0);
-	SetPlayerPos(playerid, PlayerSpawnData[playerid][StartSpawnX], PlayerSpawnData[playerid][StartSpawnY], PlayerSpawnData[playerid][StartSpawnZ]);
-	SetPlayerInterior(playerid, PlayerSpawnData[playerid][StartSpawnInterior]);
-	Character_SetVirtualWorld(playerid, PlayerSpawnData[playerid][StartSpawnWorld]);
+	Character_SetSafePosition(playerid, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z, 0, 0);
 	return 1;
 }
 
@@ -388,32 +378,14 @@ static Character_LoadSpawnData(playerid)
 	inline OnLoad()
 	{
 		new 
-			rows = cache_num_rows(),
 			temp = 0
 		;
-
-		if(rows <= 0)
-		{
-			mysql_tquery_f(gMySQL, "INSERT INTO `character_spawn_data` (character_id, is_first_spawn, spawn_type, spawn_id, spawn_x, spawn_y, spawn_z, spawn_a, spawn_interior, spawn_world) VALUES('%d', 1, '0', '0', '%f', '%f', '%f', '0.0', '0', '0')", Character_GetID(playerid), DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
-			PlayerSpawnData[playerid][StartSpawnX] = DEFAULT_SPAWN_X;
-			PlayerSpawnData[playerid][StartSpawnY] = DEFAULT_SPAWN_Y;
-			PlayerSpawnData[playerid][StartSpawnZ] = DEFAULT_SPAWN_Z;
-			PlayerSpawnData[playerid][StartSpawnInterior] = 0;
-			PlayerSpawnData[playerid][StartSpawnWorld] = 0;
-			return 1;
-		}
 
 		cache_get_value_name_int(0, "is_first_spawn", temp);
 		IsFirstSpawn{playerid} = temp ? true : false;
 
 		cache_get_value_name_int(0, "is_spawned", temp);
 		IsSpawned{playerid} = temp ? true : false;
-
-		cache_get_value_name_float(0, "first_spawn_x", PlayerSpawnData[playerid][StartSpawnX]);
-		cache_get_value_name_float(0, "first_spawn_y", PlayerSpawnData[playerid][StartSpawnY]);
-		cache_get_value_name_float(0, "first_spawn_z", PlayerSpawnData[playerid][StartSpawnZ]);
-		cache_get_value_name_int(0, "first_spawn_interior", PlayerSpawnData[playerid][StartSpawnInterior]);
-		cache_get_value_name_int(0, "first_spawn_world", PlayerSpawnData[playerid][StartSpawnWorld]);
 
 		cache_get_value_name_float(0, "last_x", PlayerSpawnData[playerid][LastX]);
 		cache_get_value_name_float(0, "last_y", PlayerSpawnData[playerid][LastY]);
@@ -448,85 +420,4 @@ timer LoadCharacterDataAfterTime[1000](playerid)
 {
 	CallLocalFunction("OnCharacterLateLoad", "d", playerid);
 	SetCameraBehindPlayer(playerid);
-}
-
-/*Dialog:Dialog_SelectFirstSpawn(playerid, response, listitem, inputtext[])
-{
-	if(listitem == 0)
-	{
-		Dialog_Show(playerid, Dialog_CanSpawnNow, DIALOG_STYLE_MSGBOX, "Spawn Selezionato", "Hai selezionato lo spawn iniziale del tuo personaggio.\nScelta: Zona Governativa", "Continua", "");
-		mysql_tquery_f(gMySQL, "UPDATE `character_spawn_data` SET first_spawn_x = '%f', first_spawn_y = '%f', first_spawn_z = '%f' WHERE character_id = '%d'", 1529.9480, -2317.9268, 13.5469, Character_GetID(playerid));
-		PlayerSpawnData[playerid][StartSpawnX] = 1529.9480;
-		PlayerSpawnData[playerid][StartSpawnY] = -2317.9268;
-		PlayerSpawnData[playerid][StartSpawnZ] = 13.5469;
-	}
-	else
-	{
-		Dialog_Show(playerid, Dialog_DangerousZone, DIALOG_STYLE_MSGBOX, "Zona Pericolosa", "Sei sicuro di voler selezionare la zona pericolosa come spawn iniziale?\nRicorda che non potrà essere cambiato in seguito.", "Continua", "Indietro");
-	}
-	return 1;
-}
-
-Dialog:Dialog_DangerousZone(playerid, response, listitem, inputtext[])
-{
-	if(!response)
-	{
-		Dialog_Show(playerid, Dialog_SelectFirstSpawn, DIALOG_STYLE_TABLIST_HEADERS, "Primo Spawn", "Zona\tLivello Rischio\nZona Governativa\t{00FF00}Sicura{FFFFFF}\nZona a rischio\t{FF0000}Pericolosa{FFFFFF}", "Seleziona", "");
-		return 1;
-	}
-	mysql_tquery_f(gMySQL, "UPDATE `character_spawn_data` SET first_spawn_x = '%f', first_spawn_y = '%f', first_spawn_z = '%f' WHERE character_id = '%d'", 1351.7399, -1777.2339, 13.4653, Character_GetID(playerid));
-	PlayerSpawnData[playerid][StartSpawnX] = 1351.7399;
-	PlayerSpawnData[playerid][StartSpawnY] = -1777.2339;
-	PlayerSpawnData[playerid][StartSpawnZ] = 13.4653;
-	Dialog_Show(playerid, Dialog_CanSpawnNow, DIALOG_STYLE_MSGBOX, "Spawn Selezionato", "Hai selezionato lo spawn iniziale del tuo personaggio.\nScelta: Zona a rischio.\nBuona fortuna.", "Continua", "");
-	return 1;
-}
-
-Dialog:Dialog_CanSpawnNow(playerid, response, listitem, inputtext[])
-{
-	
-	return 1;
-}*/
-
-static ForceFirstSpawnSelection(playerid)
-{
-	//SetPlayerCameraPos(playerid, 1467.0076, -2285.8083, 84.5440);
-	//SetPlayerCameraLookAt(playerid, 1471.9390,-2287.5544,13.2591);
-	//Dialog_Show(playerid, Dialog_SelectFirstSpawn, DIALOG_STYLE_TABLIST_HEADERS, "Primo Spawn", "Zona\tLivello Rischio\nZona Governativa\t{00FF00}Sicura{FFFFFF}\nZona a rischio\t{FF0000}Pericolosa{FFFFFF}", "Seleziona", "");
-	PlayerSpawnData[playerid][StartSpawnX] = DEFAULT_SPAWN_X;
-	PlayerSpawnData[playerid][StartSpawnY] = DEFAULT_SPAWN_Y;
-	PlayerSpawnData[playerid][StartSpawnZ] = DEFAULT_SPAWN_Z;
-	SetPlayerPos(playerid, PlayerSpawnData[playerid][StartSpawnX], PlayerSpawnData[playerid][StartSpawnY], PlayerSpawnData[playerid][StartSpawnZ]);
-	Character_SetVirtualWorld(playerid, 0);
-	SetPlayerInterior(playerid, 0);
-
-	SetCameraBehindPlayer(playerid);
-
-	if(IsFirstSpawn{playerid})
-	{
-		IsFirstSpawn{playerid} = false;
-		if(Account_GetCharactersCount(playerid) <= 2)
-		{
-			new count = Account_GetCharactersCount(playerid);
-			static const characterFirstLoginMoney[] = {30000, 20000, 10000};
-			Character_GiveMoney(playerid, characterFirstLoginMoney[count], "FirstSpawn");
-			SendFormattedMessage(playerid, -1, "(( Hai ricevuto {85bb65}$%d{FFFFFF} per cominciare la tua esperienza. ))", characterFirstLoginMoney[count]);
-			SendClientMessage(playerid, -1, "Utilizza ({85bb65}/inv{FFFFFF})entario per interagire con il tuo inventario.");
-		}
-		
-		SetPlayerHealth(playerid, 100.0);
-		//Character_SetHunger(playerid, 100);
-
-		new query[128];
-		mysql_format(gMySQL, query, sizeof(query), "UPDATE `character_spawn_data` SET is_first_spawn = '0' WHERE character_id = '%d'", Character_GetID(playerid));
-		mysql_tquery(gMySQL, query);
-
-		Account_AddCharactersCount(playerid, 1);
-
-		mysql_format(gMySQL, query, sizeof(query), "UPDATE `accounts` SET characters_counter = '%d' WHERE id = '%d'", Account_GetCharactersCount(playerid), Account_GetID(playerid));
-		mysql_tquery(gMySQL, query);
-
-		CallLocalFunction(#OnCharacterFirstSpawn, "d", playerid);
-	}
-	return 1;
 }

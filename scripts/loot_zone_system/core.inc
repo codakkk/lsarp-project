@@ -63,7 +63,7 @@ hook OnGameModeInit()
 	return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	if(LootZone_IsLootingBy(Character_GetLootZone(playerid), playerid))
 	{

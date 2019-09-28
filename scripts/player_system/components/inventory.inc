@@ -48,7 +48,7 @@ hook OnCharacterLoad(playerid)
 	return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	SelectedListItem[playerid] = -1;
 	Character_ResetInventory(playerid);

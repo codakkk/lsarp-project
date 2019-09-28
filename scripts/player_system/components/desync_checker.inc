@@ -19,7 +19,7 @@ hook OnCharacterSpawn(playerid)
     return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     PlayerUpdateTick[playerid] = 0;
     PlayerSynced{playerid} = true;

@@ -11,7 +11,7 @@ static
 	List:CharacterBuildings[MAX_PLAYERS],
 	List:CharacterHouses[MAX_PLAYERS];
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	if(list_valid(CharacterBuildings[playerid]))
 		list_delete_deep(CharacterBuildings[playerid]);
@@ -86,88 +86,24 @@ stock Character_SetHouseKey(playerid, houseid)
 
 hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
-	if(Player_HasHotKeysEnabled(playerid) && Character_IsAlive(playerid))
+	if(Player_HasHotKeysEnabled(playerid) && Character_IsAlive(playerid) && !IsPlayerInAnyVehicle(playerid))
 	{
-		new elementId, E_ELEMENT_TYPE:type;
-		if(Character_GetNearestPickup(playerid, elementId, type) && !IsPlayerInAnyVehicle(playerid))
+		if(PRESSED(KEY_YES))
 		{
-			if(PRESSED(KEY_YES))
-			{
-				// Should I write an "OnInteract" callback?
-				if(type == ELEMENT_TYPE_BUILDING_ENTRANCE || type == ELEMENT_TYPE_HOUSE_ENTRANCE)
-				{
-					Character_Enter(playerid);
-				}
-				else if(type == ELEMENT_TYPE_BUILDING_EXIT || type == ELEMENT_TYPE_HOUSE_EXIT)
-				{
-					Character_Exit(playerid, elementId, type);
-				}
-			}
-			else if(PRESSED(KEY_WALK))
-			{
-				if(type == ELEMENT_TYPE_HOUSE_ENTRANCE || type == ELEMENT_TYPE_HOUSE_EXIT)
-				{
-					Character_ShowHouseDialog(playerid);
-				}
-				else if(type == ELEMENT_TYPE_BUILDING_ENTRANCE || type == ELEMENT_TYPE_BUILDING_EXIT)
-				{
-					Character_ShowBizDialog(playerid);
-				}
-			}
+			// Should I write an "OnInteract" callback?
+			Character_Enter(playerid);
 		}
 	}
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-stock Character_Exit(playerid, elementId, E_ELEMENT_TYPE:type)
+stock Character_Exit(playerid, building, E_ELEMENT_TYPE:type)
 {
-    if((type != ELEMENT_TYPE_BUILDING_EXIT && type != ELEMENT_TYPE_HOUSE_EXIT))
-	   return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'uscita di un edificio."), 0;
-	new Building:building = Building_Find(elementId);
-    if(Building_IsValid(building) && type == ELEMENT_TYPE_BUILDING_EXIT)
+    if(type == ELEMENT_TYPE_HOUSE_EXIT)
     {
-		if(Building_GetType(building) == BUILDING_TYPE_GARAGE)
-			return Internal_ExitGarage(playerid, building);
-	   	return Internal_ExitBuilding(playerid, building);
-    }
-    else if(type == ELEMENT_TYPE_HOUSE_EXIT)
-    {
-	   return Internal_ExitHouse(playerid, elementId);
+	   return Internal_ExitHouse(playerid, _:building);
     }
     return 1;
-}
-
-
-static Internal_ExitGarage(playerid, Building:building)
-{
-	if(Building_IsLocked(building))
-		return GameTextForPlayer(playerid, "~r~Chiuso", 8000, 1), 0;
-	new 
-	   Float:x = 0.0, 
-	   Float:y = 0.0, 
-	   Float:z = 0.0,
-	   interiorId = Building_GetEnterInterior(building),
-	   world = Building_GetEnterWorld(building)
-	;
-	Building_GetEnterPos(building, x, y, z);
-
-	new vehicleid = GetPlayerVehicleID(playerid);
-	
-	
-	SetPlayerInterior(playerid, interiorId);
-	Character_SetVirtualWorld(playerid, world);
-	
-	if(vehicleid > 0 && GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
-	{
-		LinkVehicleToInterior(vehicleid, interiorId);
-		SetVehicleVirtualWorld(vehicleid, world);
-		SetVehiclePos(vehicleid, x, y, z);
-	}
-	else
-	{
-		Character_SetSafePosition(playerid, x, y, z, interiorId, world);
-	}
-	return 1;
 }
 
 static Internal_ExitHouse(playerid, houseid)
@@ -190,31 +126,6 @@ static Internal_ExitHouse(playerid, houseid)
     Character_SetVirtualWorld(playerid, world);
 	
 	House_GetEnterPosition(houseid, x, y, z);
-    Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
-    Character_SetSafePosition(playerid, x, y, z, interiorId, world);
-	return 1;
-}
-
-static Internal_ExitBuilding(playerid, Building:building)
-{
-	if(IsPlayerInAnyVehicle(playerid))
-		return 0;
-	if(Building_IsLocked(building))
-		return GameTextForPlayer(playerid, "~r~Chiuso", 4000, 1), 0;
-	new 
-	   Float:x = 0.0, 
-	   Float:y = 0.0, 
-	   Float:z = 0.0,
-	   interiorId = Building_GetEnterInterior(building),
-	   world = Building_GetEnterWorld(building)
-	;
-	
-	Character_AMe(playerid, "apre la porta ed esce.");
-	
-    SetPlayerInterior(playerid, interiorId);
-    Character_SetVirtualWorld(playerid, world);
-	
-	Building_GetEnterPos(building, x, y, z);
     Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
     Character_SetSafePosition(playerid, x, y, z, interiorId, world);
 	return 1;

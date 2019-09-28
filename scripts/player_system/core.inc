@@ -39,6 +39,7 @@
 #include <player_system\components\damage_system>
 #include <player_system\components\customanims>
 #include <player_system\components\drugs>
+#include <player_system\components\upgrade>
 //#include <player_system\components\hunger>
 #include <player_system\components\desync_checker>
 #include <player_system\components\wear_objects>
@@ -70,7 +71,7 @@
 forward OnCharacterLoad(playerid); // Called when a Player select a character.
 forward OnCharacterLateLoad(playerid);
 
-forward OnPlayerClearData(playerid); // Callbacks called when character's data (or account data) must/can be cleared.
+forward OnCharacterClearData(playerid); // Callbacks called when character's data (or account data) must/can be cleared.
 
 forward OnCharacterDisconnected(playerid);
 
@@ -98,7 +99,7 @@ static
 
 forward OnPlayerVirtualWorldChange(playerid, oldWorld, newWorld);
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	Character_EnableSomeAntiCheats(playerid, 1);
     Character_Clear(playerid);
@@ -146,14 +147,11 @@ stock Character_ShowStats(playerid, targetid)
 {
 	if(!Character_IsLogged(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
-	new
-		Float:hp, Float:armour;
-	
-    AC_GetPlayerHealth(playerid, hp);
-    AC_GetPlayerArmour(playerid, armour);
 
-	new year, month, day, hours, minutes, seconds;
+	new year, month, day, hours, minutes, seconds,
+		Float:x, Float:y, Float:z;
 
+	GetPlayerPos(playerid, x, y, z);
 	getdate(year, month, day);
 	gettime(hours, minutes, seconds);
 	
@@ -164,46 +162,19 @@ stock Character_ShowStats(playerid, targetid)
 		Faction_GetRankName(Character_GetFaction(playerid), Character_GetRank(playerid), rankName);
 	}
 
-    SendFormattedMessage(targetid, 0x33AA33FF, "_____________________[Stats Help - %d/%d/%d @ %d:%d:%d]_____________________", day, month, year, hours, minutes, seconds);
+    SendFormattedMessage(targetid, 0x33AA33FF, "_____________________[Stats Help - %02d/%02d/%02d @ %02d:%02d:%02d]_____________________", day, month, year, hours, minutes, seconds);
 	SendFormattedMessage(targetid, 0xCCE6E6FF, "[Account] %s | Admin Level: [%d] | Premium Level: [%d] | E-Mail: %s", Account_GetName(playerid), Account_GetAdminLevel(playerid), Account_GetPremiumLevel(playerid), Account_GetEMail(playerid));
 	SendFormattedMessage(playerid, 0xCCE6E6FF, "[Personaggio] Livello: [%d] | Esperienza: [%d] | Fazione: [%s] | Rank: [%s]", Character_GetLevel(playerid), Character_GetExperience(playerid), factionName, rankName);
-    SendFormattedMessage(targetid, 0xCCE6E6FF, "[Personaggio] HP: [%.2f] | Armatura: [%.2f] | Ore di gioco: [%d]", hp, armour, 0);
+    SendFormattedMessage(targetid, 0xCCE6E6FF, "[Personaggio] HP: [%.2f] | Armatura: [%.2f] | Max HP: [%.2f] | Max AP: [%.2f] | Ore di gioco: [%d]", Character_GetHealth(playerid), Character_GetArmour(playerid), Character_GetMaxHealth(playerid), Character_GetMaxArmour(playerid), 0);
 	SendFormattedMessage(targetid, 0xCCE6E6FF, "[Personaggio] Soldi: [$%s] | Banca: [$%s] | Stipendio: [$%s]", FormatNumber(Character_GetMoney(playerid)), FormatNumber(Character_GetBank(playerid)), FormatNumber(Character_GetPayCheck(playerid)));
-    SendFormattedMessage(playerid, 0xCCE6E6FF, "[Altro] Interior: [%d] | VW: [%d]", GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
-    SendClientMessage(targetid, 0x33AA33FF, "_______________________________________________________");
-	
-	/*if(list_valid(Character_GetOwnedBuildingsList(playerid)))
-	{
-		for_list(i : Character_GetOwnedBuildingsList(playerid))
-		{
-			SendFormattedMessage(playerid, -1, "[Proprietà] Business: %d", iter_get(i));
-		}
-	}*/
-
-	//if(Character_HasHouseKey(playerid))
-	   //SendFormattedMessage(targetid, -1, "[Proprietà] Casa: %d", Character_GetHouseKey(playerid));
-	
-	//SendFormattedMessage(targetid, -1, "[Altro] Soldi: $%d - Banca: $%d - Stipendio: $%d - Interior: %d - VW: %d", Character_GetMoney(playerid), Character_GetBank(playerid), Character_GetPayCheck(playerid), GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
-	
-	/*if(Account_GetPremiumLevel(playerid) > 0 && Account_GetPremiumExpiry(playerid) > gettime())
-	{
-		static premiumNames[][16] = {"Nerone", "Caligola", "Giulio Cesare"};
-		TimestampToDate(Account_GetPremiumExpiry(playerid), year, month, day, hours, minutes, seconds, 1);
-
-		SendFormattedMessage(targetid, -1, "Premium %s - Scadenza: %d/%d/%d - %d:%d", premiumNames[Account_GetPremiumLevel(playerid)-1], day, month, year, hours, minutes);
-	}
-	
-	if(Account_GetAdminLevel(playerid) > 0)
-		SendFormattedMessage(targetid, -1, "[Staff] %s", GetAdminLevelName(Account_GetAdminLevel(playerid)));*/
-
-	//SendFormattedMessage(targetid, -1, "Ti mancano %d/%d punti esperienza per salire di livello.", Character_GetExp(playerid), expForNewLevel);
-    //SendFormattedMessage(targetid, -1, "Tempo rimanente al PayDay: %d minuti", 60 - Account_GetPayDay(playerid));
+    SendFormattedMessage(playerid, 0xCCE6E6FF, "[Altro] X: [%.2f] | Y: [%.2f] | Z: [%.2f] | Interior: [%d] | VW: [%d]", x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
+    SendClientMessage(targetid, 0x33AA33FF,    "________________________________________________________________________________________");
     return 1;
 }
 
 stock Character_GetOOCName(playerid)
 {
-    new name[24];
+    new name[MAX_PLAYER_NAME];
     FixName(CharacterName[playerid], name);
     return CharacterName[playerid];
 }
@@ -236,7 +207,7 @@ stock Character_GetRolePlayName(playerid)
 
 stock Character_GetID(playerid)
 {
-	if(!( 0 <= playerid < INVALID_PLAYER_ID))
+	if(!IsPlayerConnected(playerid))
 		return 0;
     return PlayerInfo[playerid][ID];
 }
@@ -261,20 +232,6 @@ stock Character_SetRank(playerid, rank)
 {
 	PlayerInfo[playerid][Rank] = rank;
 	mysql_tquery_f(gMySQL, "UPDATE `characters` SET faction_rank = '%d' WHERE id = '%d'", rank, Character_GetID(playerid));
-}
-
-// Returns a PP List with all house ids owned (not affittate) by playerid.
-// Remember to delete List with list_delete/list_delete_deep
-stock List:Character_GetOwnedHouses(playerid)
-{
-	new List:list = list_new();
-	for_map(i : GetHousesMap())
-	{
-		new houseid = iter_get_key(i);
-		if(House_GetOwnerID(houseid) == Character_GetID(playerid))
-			list_add(list, houseid);
-	}
-	return list;
 }
 
 stock Character_GetHouse(playerid, bool:inside = false)
@@ -412,14 +369,11 @@ stock Character_LoadData(playerid)
 
 		CancelSelectTextDraw(playerid);
 
-		TogglePlayerSpectating(playerid, 0);
-
-		SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
-		SpawnPlayer(playerid);
-
 		SetPlayerName(playerid, CharacterName[playerid]);
-
+		
 		CallLocalFunction(#OnCharacterLoad, "i", playerid);
+		
+		TogglePlayerSpectating(playerid, 0);
 	}
 	else return KickEx(playerid);
 	return 1;
@@ -553,4 +507,30 @@ stock Character_AddExperience(playerid, amount)
 stock Character_GetExperience(playerid)
 {
 	return PlayerInfo[playerid][Experience];
+}
+
+stock Character_SetHealth(playerid, Float:health)
+{
+	SetPlayerHealth(playerid, health);
+	return 1;
+}
+
+stock Float:Character_GetHealth(playerid)
+{
+	new Float:health;
+	GetPlayerHealth(playerid, health);
+	return health;
+}
+
+stock Character_SetArmour(playerid, Float:armour)
+{
+	SetPlayerArmour(playerid, armour);
+	return 1;
+}
+
+stock Float:Character_GetArmour(playerid)
+{
+	new Float:armour;
+	GetPlayerArmour(playerid, armour);
+	return armour;
 }

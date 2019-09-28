@@ -41,7 +41,7 @@ static
 	CleanAccountData[E_ACCOUNT_DATA]
 ;
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 
 	AccountName[playerid] = "";
@@ -136,7 +136,7 @@ hook OnPlayerRequestClass(playerid, classid)
 
 	if(Character_IsLogged(playerid))
 	{
-		SpawnPlayer(playerid);
+		//SpawnPlayer(playerid);
 		return 1;
 	}
 

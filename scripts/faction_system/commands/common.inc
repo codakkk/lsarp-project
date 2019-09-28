@@ -42,7 +42,7 @@ CMD:servizio(playerid, params[])
 			Character_SetFactionDuty(playerid, true);
 			Character_ResetWeapons(playerid);
 
-			AC_SetPlayerHealth(playerid, 100.0);
+			Character_SetHealth(playerid, 100.0);
 
 			SetPlayerColor(playerid, COLOR_SLATEBLUE);
 			//Character_SetSelectingUniform(playerid, true);
@@ -345,6 +345,6 @@ static Faction_GiveWeapons(playerid)
 		Character_GiveWeapon(playerid, WEAPON_NITESTICK, 1);
 		Character_GiveWeapon(playerid, WEAPON_SPRAYCAN, 1000);
 		Character_GiveWeapon(playerid, WEAPON_DEAGLE, 100);
-		AC_SetPlayerArmour(playerid, 100.0);
+		Character_SetArmour(playerid, 100.0);
 	}
 }

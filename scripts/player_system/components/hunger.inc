@@ -42,7 +42,7 @@ CMD:sethunger(playerid, params[])
 	return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	pLastHungerAlert[playerid] = 0;
 	PlayerHungerTime{playerid} = 0;
@@ -104,8 +104,7 @@ hook OnCharacterUseItem(playerid, slotid, itemid)
 	
 	if(healthValue > 0)
 	{
-		new Float:health;
-		AC_GetPlayerHealth(playerid, health);
+		new Float:health = Character_GetHealth(playerid);
 
 		// Prevents removing health-cap (example: drugs assumptions).
 		if(health < 100.0)
@@ -113,7 +112,7 @@ hook OnCharacterUseItem(playerid, slotid, itemid)
 			health = health + healthValue;
 			if(health > 100.0)
 				health = 100.0;
-			AC_SetPlayerHealth(playerid, health);
+			Character_SetHealth(playerid, health);
 		}
 
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai %s %s. Hai recuperato %d punti alimentazione e %d punti salute.", ServerItem_IsFood(itemid) ? ("mangiato") : ("bevuto"), ServerItem_GetName(itemid), foodValue, healthValue);

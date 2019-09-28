@@ -56,7 +56,7 @@ hook OnGameModeInit()
     return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     FurniturePage{playerid} = 0;
     SelectedFurniture[playerid] = -1;

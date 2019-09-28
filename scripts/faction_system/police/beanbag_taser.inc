@@ -10,7 +10,7 @@ static
     TempAmmo[MAX_PLAYERS][2]
 ;
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     BeanBag{playerid} = false;
     Taser{playerid} = false;

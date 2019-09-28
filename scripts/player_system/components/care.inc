@@ -4,7 +4,7 @@ static
 	CareTicks[MAX_PLAYERS char]
 ;
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	CareTicks{playerid} = 0;
 	return Y_HOOKS_CONTINUE_RETURN_1;

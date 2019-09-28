@@ -50,7 +50,7 @@ hook OnGameModeInit()
     return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     DriveLicense{playerid} = BoatLicense{playerid} = FlyLicense{playerid} = WeaponLicense{playerid} = false;
     return 1;

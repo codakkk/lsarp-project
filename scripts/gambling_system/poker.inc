@@ -24,7 +24,7 @@ static
     PlayerActionOptions[MAX_PLAYERS]
 ;
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     Poker_LeaveTable(playerid);
     return 1;

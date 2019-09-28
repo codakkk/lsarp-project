@@ -4,7 +4,7 @@ static
 	PlayerChatStyle[MAX_PLAYERS char],
 	Timer:pChatTimer[MAX_PLAYERS];
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	PlayerChatStyle{playerid} = 0;
 	stop pChatTimer[playerid];

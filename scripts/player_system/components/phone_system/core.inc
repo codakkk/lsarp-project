@@ -63,7 +63,7 @@ hook OnCharacterDisconnected(playerid)
     return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     UsingPhone{playerid} = false;
     UsingPhoneSlotID[playerid] = -1;

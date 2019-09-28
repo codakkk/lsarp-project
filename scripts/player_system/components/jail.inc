@@ -5,7 +5,7 @@ static
 	bool:IsJailIC[MAX_PLAYERS char]
 ;
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	PlayerJailTime[playerid] = 0;
 	IsJailIC{playerid} = false;

@@ -12,7 +12,7 @@ hook OnGameModeInit()
 	return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     CurrentVehicleInventory[playerid] = 0;
 	SelectedListItem[playerid] = -1;

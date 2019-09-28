@@ -3,7 +3,7 @@
 
 static PlayerPayCheck[MAX_PLAYERS];
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     PlayerPayCheck[playerid] = 0;
     return 1;

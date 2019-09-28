@@ -11,7 +11,7 @@ static
     List:MessagesList[MAX_PLAYERS]
 ;
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     SelectedMessage[playerid] = 0;
     if(list_valid(MessagesList[playerid]))

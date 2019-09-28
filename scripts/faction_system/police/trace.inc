@@ -8,7 +8,7 @@ static
     bool:Tracing[MAX_PLAYERS char]
 ;
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     GangZoneDestroy(GangZone[playerid]);
     Tracing{playerid} = false;

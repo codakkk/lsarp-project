@@ -19,7 +19,7 @@ enum
     EDIT_TYPE_ATM
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     CancelEdit(playerid);
     EditMode_Type{playerid} = 0;

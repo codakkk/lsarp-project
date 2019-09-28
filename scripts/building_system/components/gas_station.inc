@@ -11,7 +11,7 @@ static
     Litres[MAX_PLAYERS char],
     Timer:Timer[MAX_PLAYERS];
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     pc_cmd_stoprifornimento(playerid, "");
     /*stop Timer[playerid];

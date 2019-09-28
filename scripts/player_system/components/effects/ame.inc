@@ -5,7 +5,7 @@ static
     Text3D:PlayerAMe3DText[MAX_PLAYERS]
 ;
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     DestroyDynamic3DTextLabelEx(PlayerAMe3DText[playerid]);
 	PlayerAMeExpiry{playerid} = 0;

@@ -93,8 +93,8 @@ CMD:aduty(playerid, params[])
 	{
 		Player_SetAdminDuty(playerid, false);
 		SetPlayerName(playerid, Character_GetOOCName(playerid));
-		AC_SetPlayerHealth(playerid, 100);
-		AC_SetPlayerArmour(playerid, 0);
+		Character_SetHealth(playerid, 100);
+		Character_SetArmour(playerid, 0);
 		SendMessageToAdmins(0, 0xFF6347FF, "AdmCmd: %s (%d) non è più in servizio.", Account_GetName(playerid), playerid);
 		
 		SetPlayerColor(playerid, LastColor[playerid]);
@@ -110,8 +110,8 @@ CMD:aduty(playerid, params[])
 		
 		Player_SetAdminDuty(playerid, true);
 		SetPlayerName(playerid, Account_GetName(playerid));
-		AC_SetPlayerHealth(playerid, 99999.0);
-		AC_SetPlayerArmour(playerid, 99999.0);
+		Character_SetHealth(playerid, 99999.0);
+		Character_SetArmour(playerid, 99999.0);
 		//pc_cmd_jetpack(playerid, NULL);
 		SendMessageToAdmins(0, 0xFF6347FF, "AdmCmd: %s (%d) è in servizio.", Account_GetName(playerid), playerid);
 		
@@ -301,7 +301,7 @@ CMD:sethp(playerid, params[])
 	if(Character_IsDead(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su un giocatore in sistema morte.");
 
-    AC_SetPlayerHealth(id, hp);
+    Character_SetHealth(id, hp);
     SendMessageToAdmins(0, COLOR_ADMINCMD, "AdmCmd: %s (%s) ha settato gli HP di %s (%d) a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), Character_GetOOCName(id), id, hp);
     SendFormattedMessage(playerid, COLOR_GREEN, "[ADMIN] %s (%s) ti ha settato gli HP a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
     Log(Account_GetName(playerid), Character_GetOOCName(id), "/sethp", hp);
@@ -322,7 +322,7 @@ CMD:setarmour(playerid, params[])
     if(hp < 0 || hp > 200)
 	   return SendClientMessage(playerid, COLOR_ERROR, "Valore Armatura non valido.");
 
-    AC_SetPlayerArmour(id, hp);
+    Character_SetArmour(id, hp);
     SendMessageToAdmins(0, COLOR_ADMINCMD, "AdmCmd: %s (%s) ha settato l'armatura di %s (%d) a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), Character_GetOOCName(id), id, hp);
     SendFormattedMessage(playerid, COLOR_GREEN, "[ADMIN] %s (%s) ti ha settato l'armatura a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
     Log(Account_GetName(playerid), Character_GetOOCName(id), "/setarmour", hp);
@@ -614,7 +614,7 @@ CMD:goto(playerid, params[])
 {
     new id;
     if(sscanf(params, "k<u>", id))
-	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /goto <playerid/partofname>");
+	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /goto [playerid/partofname]");
     
     if(id < 0 || id >= MAX_PLAYERS  || !Character_IsLogged(id))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
@@ -650,7 +650,7 @@ CMD:gethere(playerid, params[])
 {
     new id;
     if(sscanf(params, "k<u>", id))
-	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gethere <playerid/partofname>");
+	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gethere [playerid/partofname]");
     
     if(id < 0 || id >= MAX_PLAYERS  || !Character_IsLogged(id))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
@@ -701,7 +701,7 @@ CMD:check(playerid, params[])
 {
     new id;
     if(sscanf(params, "k<u>", id))
-	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /check <playerid/partofname>");
+	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /check [playerid/partofname]");
     if(id < 0 || id >= MAX_PLAYERS  || !Character_IsLogged(id))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
     Character_ShowStats(id, playerid);
@@ -720,7 +720,7 @@ CMD:check(playerid, params[])
 	new ip[16];
 	GetPlayerIp(id, ip, sizeof(ip));
 	SendFormattedMessage(playerid, COLOR_GREEN, "L'IP del giocatore è %s", ip);
-	SendClientMessage(playerid, COLOR_GREEN, "Per l'inventario, digita /invcheck <playerid/partofname>");
+	SendClientMessage(playerid, COLOR_GREEN, "Per l'inventario, digita /invcheck [playerid/partofname]");
     return 1;
 }
 
@@ -729,7 +729,7 @@ CMD:invcheck(playerid, params[])
 {
     new id;
     if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /invcheck <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /invcheck [playerid/partofname]");
     if(id < 0 || id >= MAX_PLAYERS  || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
 	new str[64], Inventory:inv = Character_GetInventory(id);
@@ -745,7 +745,7 @@ CMD:giveitem(playerid, params[])
 {
 	new id, itemid, quantity;
 	if(sscanf(params, "k<u>k<item>d", id, itemid, quantity))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /giveitem <playerid/partofname> <itemid/item_name> <quantità>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /giveitem [playerid/partofname] <itemid/item_name> <quantità>");
 
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
@@ -793,7 +793,7 @@ CMD:resetinv(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /resetinv <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /resetinv [playerid/partofname]");
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
 	Inventory_Reset(Character_GetInventory(id));
@@ -807,7 +807,7 @@ CMD:giveweapon(playerid, params[])
 {
 	new id, wid, ammo;
 	if(sscanf(params, "k<u>k<weapon>i", id, wid, ammo))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /giveweapon <playerid/partofname> <weaponid/weapon name> <ammo>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /giveweapon [playerid/partofname] <weaponid/weapon name> <ammo>");
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
 	if(ammo < 0 || ammo > 1000)
@@ -829,7 +829,7 @@ CMD:vowner(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un veicolo.");
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /vowner <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /vowner [playerid/partofname]");
 	if(!Vehicle_IsOwnable(vehicleid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo veicolo.");
 	if(Vehicle_IsTemporary(vehicleid))
@@ -915,7 +915,7 @@ CMD:ajail(playerid, params[])
 {
 	new id, time, reason[64];
 	if(sscanf(params, "k<u>ds[64]", id, time, reason))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /ajail <playerid/partofname> <minuti> <motivo>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /ajail [playerid/partofname] <minuti> <motivo>");
 	if(!Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 	
@@ -934,8 +934,8 @@ CMD:ajail(playerid, params[])
 
 	Character_ResetWeapons(id);
 
-	AC_SetPlayerHealth(id, 100.0);
-	AC_SetPlayerArmour(id, 0.0);
+	Character_SetHealth(id, 100.0);
+	Character_SetArmour(id, 0.0);
 
 	SendFormattedMessage(id, COLOR_ERROR, "Sei stato jailato da %s (%d) per %d minuti. Motivo: %s", Account_GetName(playerid), playerid, time, reason);
 
@@ -949,7 +949,7 @@ CMD:unjail(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /unjail <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /unjail [playerid/partofname]");
 	if(!Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 	if(!Character_IsJailed(id))
@@ -968,7 +968,7 @@ CMD:freeze(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /freeze <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /freeze [playerid/partofname]");
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 	Character_SetFreezed(id, true);
@@ -982,7 +982,7 @@ CMD:unfreeze(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /unfreeze <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /unfreeze [playerid/partofname]");
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 	Character_SetFreezed(id, false);
@@ -1052,7 +1052,7 @@ CMD:aslap(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /aslap <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /aslap [playerid/partofname]");
 	
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
@@ -1093,7 +1093,7 @@ CMD:kick(playerid, params[])
 {
 	new id, reason[128];
 	if(sscanf(params, "k<u>s[128]", id, reason) || strlen(reason) < 0 || strlen(reason) > 128)
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /kick <playerid/partofname> <motivo (max 127 caratteri)>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /kick [playerid/partofname] <motivo (max 127 caratteri)>");
 	
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
@@ -1113,7 +1113,7 @@ CMD:serialban(playerid, params[])
 {
 	new id, reason[128];
 	if(sscanf(params, "k<u>s[128]", id, reason))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /serialban <playerid/partofname> <motivo>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /serialban [playerid/partofname] <motivo>");
 
 	if(!IsPlayerConnected(id) || IsPlayerNPC(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
@@ -1137,7 +1137,7 @@ CMD:banip(playerid, params[])
 {
 	new id, reason[128];
 	if(sscanf(params, "k<u>s[128]", id, reason))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /banip <playerid/partofname> <motivo>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /banip [playerid/partofname] <motivo>");
 	if(!IsPlayerConnected(id) || IsPlayerNPC(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 	
@@ -1186,7 +1186,7 @@ CMD:banaccount(playerid, params[])
 {
 	new id, reason[128];
 	if(sscanf(params, "k<u>s[128]", id, reason))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /banaccount <playerid/partofname> <motivo>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /banaccount [playerid/partofname] <motivo>");
 	if(!IsPlayerConnected(id) || IsPlayerNPC(id) || !Account_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 	
@@ -1255,7 +1255,7 @@ CMD:bancharacter(playerid, params[])
 {
 	new id, days, reason[128];
 	if(sscanf(params, "k<u>ds[128]", id, days, reason))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /bancharacter <playerid/partofname> <giorni> <motivo>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /bancharacter [playerid/partofname] <giorni> <motivo>");
 	if(!IsPlayerConnected(id) || IsPlayerNPC(id) || !Account_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
 	if(days < 0)
@@ -1346,7 +1346,7 @@ CMD:setchopshop(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setchopshop <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setchopshop [playerid/partofname]");
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Giocatore non connesso.");
 	SendFormattedMessage(id, COLOR_ORANGE, "L'admin %s (%d) ti ha garantito i permessi per il Chop Shop.", Account_GetName(playerid), playerid);
@@ -1362,7 +1362,7 @@ CMD:removechopshop(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /removechopshop <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /removechopshop [playerid/partofname]");
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Giocatore non connesso.");
 	SendFormattedMessage(id, COLOR_ORANGE, "L'admin %s (%d) ti ha rimosso i permessi per il Chop Shop.", Account_GetName(playerid), playerid);
@@ -1378,7 +1378,7 @@ CMD:getprivileges(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /getprivileges <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /getprivileges [playerid/partofname]");
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Giocatore non connesso.");
 	SendFormattedMessage(playerid, COLOR_ORANGE, "- Privilegi di %s -", Character_GetOOCName(id));

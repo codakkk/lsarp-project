@@ -38,7 +38,7 @@ hook OnGameModeInit()
     return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     CurrentRequestPage{playerid} = 0;
     RequestCounter{playerid} = 0;

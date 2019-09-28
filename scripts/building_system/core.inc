@@ -131,6 +131,8 @@ hook OnCharacterChangeName(playerid, newCharacterName[])
 
 stock Building:Building_Find(buildingid)
 {
+	if(!map_has_key(Buildings, buildingid))
+		return INVALID_BUILDING;
 	return Building:map_get(Buildings, buildingid);
 }
 
@@ -226,11 +228,11 @@ stock Building_LoadAll()
 			var_set_cell(Variant:building, EnterZ, _:data[EnterZ]);
 			var_set_cell(Variant:building, EnterInterior, data[EnterInterior]);
 			var_set_cell(Variant:building, EnterWorld, data[EnterWorld]);
-			var_set_cell(Variant:building, ExitX, _:data[EnterX]);
-			var_set_cell(Variant:building, ExitY, _:data[EnterY]);
-			var_set_cell(Variant:building, ExitZ, _:data[EnterZ]);
-			var_set_cell(Variant:building, ExitInterior, data[EnterInterior]);
-			var_set_cell(Variant:building, ExitWorld, data[EnterWorld]);
+			var_set_cell(Variant:building, ExitX, _:data[ExitX]);
+			var_set_cell(Variant:building, ExitY, _:data[ExitY]);
+			var_set_cell(Variant:building, ExitZ, _:data[ExitZ]);
+			var_set_cell(Variant:building, ExitInterior, data[ExitInterior]);
+			var_set_cell(Variant:building, ExitWorld, data[ExitWorld]);
 			var_set_cell(Variant:building, Ownable, data[Ownable]);
 			var_set_cell(Variant:building, OwnerID, data[OwnerID]);
 			var_set_cell(Variant:building, Price, data[Price]);
@@ -694,7 +696,7 @@ CMD:biz(playerid, params[])
 {
 	return Character_ShowBizDialog(playerid);
 }
-alias:biz("edificio", "building");
+alias:biz("cmenu");
 
 Dialog:Dialog_Building(playerid, response, listitem, inputtext[])
 {
@@ -852,38 +854,44 @@ Dialog:Dialog_BuildingSellToPlayer(playerid, response, listitem, inputtext[])
 
 hook function Character_Enter(playerid)
 {   
+	if(IsPlayerInAnyVehicle(playerid))
+		return continue(playerid);
 	new Building:building, E_ELEMENT_TYPE:type;
-    if(Character_GetNearestPickup(playerid, building, type) && Building_IsValid(building) && type == ELEMENT_TYPE_BUILDING_ENTRANCE)
+    if(Character_GetNearestPickup(playerid, building, type) && Building_IsValid(building))
     {
-
-		if(IsPlayerInAnyVehicle(playerid))
-			return 0;
-		
 		if(Building_IsLocked(building))
 			return GameTextForPlayer(playerid, "~r~Porta Chiusa", 5000, 1), 0;
 		new 
 			Float:x = 0.0, 
 			Float:y = 0.0, 
 			Float:z = 0.0,
-			interiorId = Building_GetExitInterior(building),
-			world = Building_GetExitWorld(building)
+			interiorId,
+			world
 		;
 
-		new String:str = Building_GetWelcomeTextStr(building);
-		if(str_len(str) > 0)
-			SendClientMessageStr(playerid, COLOR_GREEN, str);
-		
-		Building_GetExitPos(building, x, y, z);
+		if(type == ELEMENT_TYPE_BUILDING_ENTRANCE)
+		{
+			new String:str = Building_GetWelcomeTextStr(building);
+			if(str_len(str) > 0)
+				SendClientMessageStr(playerid, COLOR_GREEN, str);
+			Building_GetExitPos(building, x, y, z);
+			interiorId = Building_GetExitInterior(building);
+			world = Building_GetExitWorld(building);
+			
+			CallLocalFunction(#OnPlayerEnterBuilding, "dd", playerid, _:building);
+		}
+		else if(type == ELEMENT_TYPE_BUILDING_EXIT)
+		{
+			Building_GetEnterPos(building, x, y, z);
+			interiorId = Building_GetEnterInterior(building);
+			world = Building_GetEnterWorld(building);
 
-		Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
-
-		SetPlayerInterior(playerid, interiorId);
-		Character_SetVirtualWorld(playerid, world);
+			CallLocalFunction(#OnPlayerExitBuilding, "dd", playerid, _:building);
+		}
 		// Should I use Fading?
 		Character_SetSafePosition(playerid, x, y, z, interiorId, world);
-
-		CallLocalFunction(#OnPlayerEnterBuilding, "dd", playerid, _:building);
 		return 1;
     }
-    return 0;
+    return continue(playerid);
 }
+

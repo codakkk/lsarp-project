@@ -270,71 +270,78 @@ stock bool:Character_CanUseGarage(playerid)
     return false;
 }
 
+// MUST UNIFY CHARACTER_ENTER WITH BOTH EXIT AND ENTRANCES
 hook function Character_Enter(playerid)
 {
-    new Building:building, E_ELEMENT_TYPE:type;
-    Character_GetNearestPickup(playerid, building, type);
-    
-    if(type != ELEMENT_TYPE_BUILDING_ENTRANCE)
-        return continue(playerid);
-    
     new vehicleid = GetPlayerVehicleID(playerid);
     new Float:range = Vehicle_IsValid(vehicleid) ? 7.0 : 1.5;
+    new Building:building = Character_GetCurrentBuilding(playerid);
     
-    if(!Building_IsValid(building))
+    new Float:x, Float:y, Float:z, interiorid, worldid;
+    if(!Building_IsValid(building) || Building_GetType(building) != BUILDING_TYPE_GARAGE)
     {
-        new
-            Float:x, Float:y, Float:z;
         for_building(b)
         {
+            if(Building_GetType(b) != BUILDING_TYPE_GARAGE)
+                continue;
             Building_GetEnterPos(b, x, y, z);
-            if(IsPlayerInRangeOfPoint(playerid, range, x, y, z))
+            if(IsPlayerInRangeOfPoint(playerid, range, x, y, z) && Character_GetVirtualWorld(playerid) == Building_GetEnterWorld(b))
             {
                 building = b;
+                interiorid = Building_GetExitInterior(b);
+                worldid = Building_GetExitWorld(b);
+                break;
+            }
+            Building_GetExitPos(b, x, y, z);
+            if(IsPlayerInRangeOfPoint(playerid, range, x, y, z) && Character_GetVirtualWorld(playerid) == Building_GetExitWorld(b))
+            {
+                building = b;
+                interiorid = Building_GetEnterInterior(b);
+                worldid = Building_GetEnterWorld(b);
                 break;
             }
         }
     }
 
-    if(!Building_IsValid(building) || Building_GetType(building) != BUILDING_TYPE_GARAGE)
+
+    if(!Building_IsValid(building))
         return continue(playerid);
 
-    if(Building_IsValid(building))
-    {
-        if(vehicleid > 0 && GetPlayerVehicleSeat(playerid) != 0)
-            return SendClientMessage(playerid, COLOR_ERROR, "Devi essere il guidatore per poter entrare all'interno dell'edificio.");
-        
-        if(Building_IsLocked(building))
-		    return GameTextForPlayer(playerid, "~r~Chiuso", 5000, 1);
-        
-        new interiorid = Building_GetExitInterior(building);
-        new worldid = Building_GetExitWorld(building);
-        new Float:x, Float:y, Float:z;
-        Building_GetExitPos(building, x, y, z);
-        if(vehicleid > 0)
-        {
-            LinkVehicleToInterior(vehicleid, interiorid);
-            SetVehicleVirtualWorld(vehicleid, worldid);
-            SetVehiclePos(vehicleid, x, y, z);
-            foreach(new p : Player)
-            {
-                if(p == playerid || GetPlayerVehicleID(p) != vehicleid) 
-                    continue;
-                
-                Character_SetVirtualWorld(p, worldid);
-                SetPlayerInterior(p, interiorid);
-            }
-        }
-        else
-        {
-            printf("Garage Building Enter");
-            Character_SetSafePosition(playerid, x, y, z, interiorid, worldid);
-        }
-        SetPlayerInterior(playerid, interiorid);
-        Character_SetVirtualWorld(playerid, worldid);
+    if(vehicleid > 0 && GetPlayerVehicleSeat(playerid) != 0)
+        return SendClientMessage(playerid, COLOR_ERROR, "Devi essere il guidatore per poter entrare all'interno dell'edificio.");
+    
+    if(Building_IsLocked(building))
+        return GameTextForPlayer(playerid, "~r~Chiuso", 5000, 1);
 
-        //CallLocalFunction(#OnPlayerEnterBuilding, "dd", playerid, building);
-        return 1;
+    if(vehicleid > 0)
+    {
+        LinkVehicleToInterior(vehicleid, interiorid);
+        SetVehicleVirtualWorld(vehicleid, worldid);
+        SetVehiclePos(vehicleid, x, y, z);
+        foreach(new p : Player)
+        {
+            if(p == playerid || GetPlayerVehicleID(p) != vehicleid) 
+                continue;
+
+            defer SetPlayerInSeatAfterTime(p, GetPlayerVehicleID(p), GetPlayerVehicleSeat(p));
+        
+            Character_SetVirtualWorld(p, worldid);
+            SetPlayerInterior(p, interiorid);
+        }
     }
-    return continue(playerid);
+    else
+    {
+        Character_SetSafePosition(playerid, x, y, z, interiorid, worldid);
+    }
+    SetPlayerInterior(playerid, interiorid);
+    Character_SetVirtualWorld(playerid, worldid);
+    return 1;
+}
+
+timer SetPlayerInSeatAfterTime[100](playerid, vehicleid, seatid)
+{
+    if(!Character_IsLogged(playerid))
+        return 0;
+    PutPlayerInVehicle(playerid, vehicleid, seatid);
+    return 1;
 }

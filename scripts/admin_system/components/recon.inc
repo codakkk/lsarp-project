@@ -25,7 +25,7 @@ hook OnPlayerConnect(playerid)
     return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     foreach(new i : Player)
     {
@@ -115,7 +115,7 @@ CMD:recon(playerid, params[])
 	    PlayerSpectateVehicle(playerid, INVALID_VEHICLE_ID);
 		TogglePlayerSpectating(playerid, false);
         SpectatingPlayer[playerid] = INVALID_PLAYER_ID;
-        SpawnPlayer(playerid);
+        //SpawnPlayer(playerid);
         return 1;
     }
     new id;

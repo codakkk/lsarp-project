@@ -54,7 +54,7 @@ CMD:resetdrugstats(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /resetdrugstats <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /resetdrugstats [playerid/partofname]");
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Giocatore non collegato.");
 	SendMessageToAdmins(false, COLOR_ADMINCMD, "AdmAlert: %s ha resettato le stats della droga a %s.", Account_GetName(playerid), Character_GetOOCName(id));
@@ -91,7 +91,7 @@ stock Character_ShowDrugStats(playerid, targetid)
 	return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	new data[e_PlayerDrugAddictionInfo];
 	for(new i = 0; i < MAX_PLAYER_DRUGS; ++i)
@@ -202,7 +202,7 @@ static stock Character_HandleDrugSideEffects(playerid, drugid)
 		Float:currentHealth = 0.0, Float:nextHealth = 0.0, Float:minHealth = 20.0,
 		effectTime = 3; // Each n seconds, decrease hp
 
-	AC_GetPlayerHealth(playerid, currentHealth);
+	currentHealth = Character_GetHealth(playerid);
 
 	nextHealth = currentHealth - GetDrugHealthLose(drugid);
 
@@ -214,7 +214,7 @@ static stock Character_HandleDrugSideEffects(playerid, drugid)
 	PlayerDrugAddictionInfo[playerid][drugIndex][EffectTime] = effectTime;
 
 	if(nextHealth > 0.0)
-		AC_SetPlayerHealth(playerid, nextHealth);
+		Character_SetHealth(playerid, nextHealth);
 	return 1;
 }
 
@@ -226,7 +226,8 @@ static stock Character_HandleDrugEffect(playerid, drugid, bool:firstUsage = fals
 		Float:currentHealth, 
 		Float:nextHealth = 0,
 		Float:maxDrugHealth, effectTime = 0;
-	AC_GetPlayerHealth(playerid, currentHealth);
+	
+	currentHealth = Character_GetHealth(playerid);
 
 	maxDrugHealth = DrugItem_GetMaxHealth(drugid);
 	nextHealth = currentHealth + DrugItem_GetHealthGain(drugid);
@@ -248,7 +249,7 @@ static stock Character_HandleDrugEffect(playerid, drugid, bool:firstUsage = fals
 	}
 
 	if(nextHealth > 0.0)
-		AC_SetPlayerHealth(playerid, nextHealth);
+		Character_SetHealth(playerid, nextHealth);
 	return 1;
 }
 

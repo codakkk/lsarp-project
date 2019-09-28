@@ -3,7 +3,7 @@
 static 
     Stunned[MAX_PLAYERS char] = {0, ...};
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     Stunned{playerid} = 0;
     return 1;

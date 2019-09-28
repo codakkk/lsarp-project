@@ -10,7 +10,7 @@ static enum e_LOST_ITEMS
 
 static List:LostItems[MAX_PLAYERS] = {List:0, ...};
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     if(list_valid(LostItems[playerid]))
         list_delete_deep(LostItems[playerid]);

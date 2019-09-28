@@ -305,7 +305,7 @@ hook OnGameModeInit()
     return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     for(new i = 0; i < MAX_PLAYER_OBJECTS; ++i)
         PlayerCustomObject[playerid][i] = DefaultCustomObject;

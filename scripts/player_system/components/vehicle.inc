@@ -436,7 +436,7 @@ hook OnCharacterLoad(playerid)
 	return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	TextDraw_ShowFuel(playerid, false);
 	return Y_HOOKS_CONTINUE_RETURN_1;

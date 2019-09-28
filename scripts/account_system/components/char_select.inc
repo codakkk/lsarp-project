@@ -119,7 +119,7 @@ hook OnPlayerConnect(playerid)
 	return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     if(list_valid(Characters[playerid]))
 	{

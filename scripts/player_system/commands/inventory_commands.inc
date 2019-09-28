@@ -51,7 +51,7 @@ CMD:passa(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'oggetto attiva.");
 	new slotid, id, amount;
 	if(sscanf(params, "k<u>dD(1)", id, slotid, amount))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /passa <playerid/partofname> <slotid> <quantità (default 1)>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /passa [playerid/partofname] <slotid> <quantità (default 1)>");
 
 	Character_SendItemRequest(playerid, id, slotid, amount);
 	return 1;

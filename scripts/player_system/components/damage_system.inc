@@ -11,7 +11,7 @@ static enum e_CharacterDamageInfo
 static 
 	CharacterDamageInfo[MAX_PLAYERS][MAX_DAMAGES_PER_PLAYER][e_CharacterDamageInfo];
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	Character_ResetDamages(playerid);
 	return Y_HOOKS_CONTINUE_RETURN_1;
@@ -60,7 +60,7 @@ CMD:danni(playerid, params[])
 		valstr(s, playerid);
 		pc_cmd_danni(playerid, s);
 		return 1;
-		//return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /danni <playerid/partofname>");
+		//return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /danni [playerid/partofname]");
 	}
 	
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))

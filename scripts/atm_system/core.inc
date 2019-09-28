@@ -47,7 +47,7 @@ hook OnGameModeInit()
     return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     if(map_valid(AtmLabelMap[playerid]))
     {

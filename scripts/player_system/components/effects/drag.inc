@@ -6,7 +6,7 @@ static
 	Timer:DragTimer[MAX_PLAYERS]
 ;
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	Character_SetDraggedBy(playerid, INVALID_PLAYER_ID);
 	stop DragTimer[playerid];

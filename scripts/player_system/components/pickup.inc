@@ -23,10 +23,7 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, Building:building, E_ELEMENT_TY
 				string += str_format("~y~%s~n~~w~Proprietario: ~y~%s~w~.~n~", bname, Character_GetNameFromDatabase(Building_GetOwnerID(building), true));
 				if(Building_GetOwnerID(building) == Character_GetID(playerid))
 				{
-					if(Player_HasHotKeysEnabled(playerid))
-						string += @("Premi ~b~~k~~SNEAK_ABOUT~~w~ (/biz) per il menu.~n~");
-					else
-						string += @("Digita ~b~/biz~w~ per il menu.~n~");
+					string += @("Digita ~b~/biz~w~ per il menu.~n~");
 				}
 			}
 			else

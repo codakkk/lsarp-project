@@ -75,7 +75,7 @@ stock Character_PayDay(playerid)
 
 	for_list(i : Character_GetOwnedBuildingsList(playerid))
 	{
-		new Building:building = iter_get(i);
+		new Building:building = Building:iter_get(i);
 		if(Building_IsValid(building))
 		{
 			new price = Building_GetPrice(building)/100;
@@ -111,6 +111,9 @@ stock Character_PayDay(playerid)
 		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s per il tuo premium.", FormatNumber(premiumMoney));
 	if(newPlayerMoney > 0)
 		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s perché sei un nuovo arrivato.", FormatNumber(newPlayerMoney));
+
+	Character_AddUpgradePoints(playerid, 1);
+	
     GameTextForPlayer(playerid, "~y~PayDay", 5000, 1);
 	return 1;
 }

@@ -33,7 +33,7 @@ hook OnGameModeInit()
     return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     IsPlayingBlackJack{playerid} = false;
 	PlayerTurn[playerid] = INVALID_PLAYER_ID;

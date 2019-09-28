@@ -9,7 +9,7 @@ static
 	InspectedBy[MAX_PLAYERS] = {-1, ...},
 	InspectingPlayer[MAX_PLAYERS] = {-1, ...};
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	new inspecting = InspectingPlayer[playerid];
 	if(inspecting != -1 && InspectedBy[inspecting] == playerid)
@@ -38,7 +38,7 @@ CMD:manette(playerid, params[])
 		
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /manette <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /manette [playerid/partofname]");
 	
 	if(!Character_IsLogged(id) || id == playerid || Player_IsAdminDuty(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
@@ -46,6 +46,9 @@ CMD:manette(playerid, params[])
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 2.5))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore");
 	
+	if(IsPlayerInAnyVehicle(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
+
 	Character_SetCuffed(id, !Character_IsCuffed(id));
 	if(Character_IsCuffed(id))
 	{
@@ -66,7 +69,7 @@ CMD:arresta(playerid, params[])
 		
 	new id, time;
 	if(sscanf(params, "k<u>d", id, time))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /arresta <playerid/partofname> <minuti>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /arresta [playerid/partofname] <minuti>");
 
 	if(id == playerid || !Character_IsLogged(id) || IsPlayerNPC(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
@@ -122,7 +125,7 @@ CMD:trascina(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /trascina <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /trascina [playerid/partofname]");
 
 	if(playerid == id || !Character_IsLogged(id) || IsPlayerNPC(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
@@ -130,9 +133,12 @@ CMD:trascina(playerid, params[])
 	if(!Character_IsAlive(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi trascinare questo giocatore.");
 
-	if(Character_IsJailed(playerid))
+	if(IsPlayerInAnyVehicle(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi trascinare questo giocatore.");
+
+	if(Character_IsJailed(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi trascinare un giocatore incarcerato.");
-	
+
 	if(Character_IsDragging(playerid) && Character_IsDragged(id) && Character_GetDraggedBy(id) == playerid)
 	{
 		Character_StopDragTimer(playerid);
@@ -176,7 +182,7 @@ CMD:cura(playerid, params[])
 	}
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /cura <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /cura [playerid/partofname]");
 	
 	if( (!Player_IsAdminDuty(playerid) && id == playerid) || !IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido.");
@@ -212,7 +218,7 @@ CMD:perquisisci(playerid, params[])
 	if(id == playerid)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso.");
 
-	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
+	if(!Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
 
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 5.0))
@@ -224,6 +230,9 @@ CMD:perquisisci(playerid, params[])
 	if(Request_IsPending(id, REQUEST_TYPE_SEARCH))
 		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore ha già una richiesta di perquisizione attiva.");
 	
+	if(IsPlayerInAnyVehicle(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi perquisire questo giocatore.");
+
 	SendFormattedMessage(id, COLOR_RECEIVE_REQUEST, "%s (%d) vuole perquisirti. Digita \"/accetta perquisizione\" per accettare o \"/rifiuta perquisizione\" per rifiutare.", Character_GetRolePlayName(playerid), playerid);
 	SendFormattedMessage(playerid, COLOR_SEND_REQUEST, "Richiesta di perquisizione inviata a %s (%d).", Character_GetRolePlayName(id), id);
 
@@ -318,8 +327,8 @@ stock Character_OffDuty(playerid)
 	
 	Character_ResetWeapons(playerid);
 
-	AC_SetPlayerHealth(playerid, 100.0);
-	AC_SetPlayerArmour(playerid, 0.0);
+	Character_SetHealth(playerid, 100.0);
+	Character_SetArmour(playerid, 0.0);
 
 	Character_SetSelectingUniform(playerid, false);
 	

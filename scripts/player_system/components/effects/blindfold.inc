@@ -16,7 +16,7 @@ hook OnGameModeInit()
     return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     BlindFold{playerid} = false;
     TextDrawHideForPlayer(playerid, BlindFoldText);

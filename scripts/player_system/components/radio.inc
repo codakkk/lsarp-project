@@ -54,7 +54,7 @@ stock Character_DestroyRadioGZ(playerid)
 	return 1;
 }
 
-hook OnPlayerClearData(playerid) 
+hook OnCharacterClearData(playerid) 
 {
 	RadioFrequency[playerid] = 0;
 	RadioTraceFrequency[playerid] = 0;

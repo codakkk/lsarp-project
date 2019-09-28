@@ -18,7 +18,7 @@ hook OnGameModeInit()
     return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	PlayerLastChopShopTime[playerid] = 0;
 	return 1;

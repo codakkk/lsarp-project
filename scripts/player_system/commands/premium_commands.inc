@@ -19,7 +19,7 @@ CMD:givezpoints(playerid, params[])
 {
 	new id, points;
 	if(sscanf(params, "k<u>d", id, points))	
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /givezpoints <playerid/partofname> <points>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /givezpoints [playerid/partofname] <points>");
 	
 	Account_AddPoints(id, points);
 
@@ -108,7 +108,7 @@ CMD:setpremium(playerid, params[])
 {
 	new id, premiumid, time;
 	if(sscanf(params, "k<u>dd", id, premiumid, time))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setpremium <playerid/partofname> <premium (0 - 3)> <giorni>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setpremium [playerid/partofname] <premium (0 - 3)> <giorni>");
 	if(!IsPlayerConnected(id) || IsPlayerNPC(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido");
 	if(premiumid < 0 || premiumid > 3)

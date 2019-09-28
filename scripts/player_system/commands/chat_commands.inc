@@ -31,7 +31,7 @@ CMD:pm(playerid, params[])
 	}*/
     new id, s[128];
     if(sscanf(params, "k<u>s[128]", id, s) || isnull(s) || strlen(s) > 128)
-        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /pm <playerid/partofname> <testo>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /pm [playerid/partofname] <testo>");
     if(id < 0 || id >= MAX_PLAYERS  || !Character_IsLogged(id))
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
 	if(playerid == id)
@@ -179,7 +179,7 @@ CMD:whisper(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
     new id, text[128];
     if(sscanf(params, "k<u>s[128]", id, text) || strlen(text) > 128)
-        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /w(hisper) <playerid/partofname> <testo>");
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /w(hisper) [playerid/partofname] <testo>");
     if(!IsPlayerConnected(id) || !Character_IsLogged(id))
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
     if(playerid == id)

@@ -38,7 +38,7 @@ hook OnGameModeInit()
     return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     if(list_valid(Registry[playerid]))
         list_delete_deep(Registry[playerid]);

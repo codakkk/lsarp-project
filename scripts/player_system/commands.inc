@@ -9,7 +9,7 @@ static
 	LastAdminQuestionTime[MAX_PLAYERS],
 	LoginAttempts[MAX_PLAYERS char];
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	LastAdminQuestionTime[playerid] = 0;
 	return 1;
@@ -164,7 +164,7 @@ CMD:afk(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /afk <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /afk [playerid/partofname]");
 	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID Non valido.");
 	if(Account_GetAdminLevel(playerid) < 1 && Account_GetAdminLevel(id) > 1)
@@ -233,7 +233,6 @@ CMD:hotkeys(playerid, params[])
 		SendClientMessage(playerid, -1, "{00FF00}N{FFFFFF}: apri/chiudi un veicolo.");
 		SendClientMessage(playerid, -1, "{00FF00}2{FFFFFF}: accendi/spegni fari.");
 		SendClientMessage(playerid, -1, "{00FF00}C{FFFFFF}: raccogli un oggetto da terra.");
-		SendClientMessage(playerid, -1, "{00FF00}LALT{FFFFFF}: per interagire con case/biz/concessionarie.");
 		SendClientMessage(playerid, COLOR_GREEN, "N.B: I comandi sono relativi al mapping default di GTA.");
 		SendClientMessage(playerid, COLOR_GREEN, "Se hai cambiato il mapping default, i tasti potrebbero essere diversi.");
 	}
@@ -253,7 +252,7 @@ CMD:id(playerid, params[])
 {
 	new id;
 	if(isnull(params))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /id <playerid/partofname>");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /id [playerid/partofname]");
 	if(IsNumeric(params))
 	{
 		id = strval(params);

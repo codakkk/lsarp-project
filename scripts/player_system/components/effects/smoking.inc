@@ -23,7 +23,7 @@ static
     DrugEffectTime[MAX_PLAYERS char]
 ;
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     Character_StopSmoking(playerid);
     return 1;

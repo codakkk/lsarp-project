@@ -46,7 +46,7 @@ hook OnCharacterDisconnected(playerid)
 	return 1;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     if(Character_IsBuyingVehicle(playerid) && IsValidVehicle(SelectedVehicle[playerid]))
     {

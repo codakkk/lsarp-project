@@ -29,8 +29,8 @@ CMD:dai(playerid, params[])
         text[128];
     if(sscanf(params, "k<u>s[128]", id, text))
     {
-        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /dai <playerid/partofname> <oggetto>");
-        SendClientMessage(playerid, COLOR_ERROR, "Oggetti: arma");
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /dai [playerid/partofname] [oggetto]");
+        SendClientMessage(playerid, COLOR_GREY, "Oggetti: arma");
         return 1;
     }
     
@@ -207,7 +207,7 @@ CMD:accetta(playerid, params[])
 	}
 	else
 	{
-		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /accetta <oggetto>");
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /accetta [oggetto]");
 		SendClientMessage(playerid, COLOR_GREY, "Oggetti: arma, oggetto, morte, cure,  veicolo, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
 		SendClientMessage(playerid, COLOR_GREY, "... (edi)ficio (biz), (faz)ione, blackjack");
 	}
@@ -394,7 +394,7 @@ CMD:rimuovi(playerid, params[])
         text[128];
     if(sscanf(params, "s[128]", text))
     {
-        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /rimuovi <oggetto>");
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /rimuovi [oggetto]");
         SendClientMessage(playerid, COLOR_ERROR, "Oggetti: zaino");
         return 1;
     }

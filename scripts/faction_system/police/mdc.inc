@@ -4,7 +4,7 @@
 static
     TargetID[MAX_PLAYERS];
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     ClearMDCData(playerid);
     return 1;

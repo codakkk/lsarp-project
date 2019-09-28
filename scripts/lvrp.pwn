@@ -542,7 +542,7 @@ hook OnPlayerDisconnect(playerid, reason)
 	if(Character_IsLogged(playerid))
 	{
 		CallLocalFunction(#OnCharacterDisconnected, "i", playerid);
-		CallLocalFunction(#OnPlayerClearData, "i", playerid);
+		CallLocalFunction(#OnCharacterClearData, "i", playerid);
 	}
 	
 	Account_SetLogged(playerid, false);
@@ -561,7 +561,7 @@ hook OnPlayerConnect(playerid)
 	Account_SetLogged(playerid, false);
 	Character_SetLogged(playerid, false);
 	
-	CallLocalFunction(#OnPlayerClearData, "d", playerid);
+	CallLocalFunction(#OnCharacterClearData, "d", playerid);
 
 	for(new i = 0; i < 100; ++i)
 	{

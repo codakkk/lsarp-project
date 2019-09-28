@@ -3,7 +3,7 @@
 
 static InvincibleTime[MAX_PLAYERS char];
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
     InvincibleTime{playerid} = 0;
     return 1;

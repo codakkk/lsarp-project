@@ -49,7 +49,7 @@ stock Request_Reset(playerid, type)
 	PendingRequestInfo[playerid][type][Slot] = 0;
 }
 
-hook OnPlayerClearData(playerid)
+hook OnCharacterClearData(playerid)
 {
 	for(new i = 0; i < REQUEST_TYPE_LAST; ++i)
 	{
