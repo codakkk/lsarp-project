@@ -142,7 +142,7 @@ stock Building_Create(Float:x, Float:y, Float:z, interior, world)
     {
 		new id = cache_insert_id();
 		
-		new Building:building = Building:var_new_buf(E_BUILDING_INFO);//Building:MEM_new(E_BUILDING_INFO);
+		new Building:building = Building:var_new_buf(E_BUILDING_INFO);
 		var_acquire(Variant:building);
 		var_set_cell(Variant:building, ID, id);
 		var_set_cells(Variant:building, Name, "SET NAME");
@@ -158,21 +158,6 @@ stock Building_Create(Float:x, Float:y, Float:z, interior, world)
 		var_set_cell(Variant:building, Price, 0);
 		var_set_cell(Variant:building, ExitWorld, BUILDING_START_WORLD + id);
 		var_set_cell(Variant:building, Locked, 1);
-		/*MEM_set_val(building, ID, id);
-		MEM_set_val(building, Name, MEM_new_arr("SET NAME", strlen("SET NAME") + 1));
-		MEM_set_val(building, WelcomeName, MEM_NULLPTR);
-		MEM_set_val(building, OwnerName, MEM_NULLPTR);
-		MEM_set_val(building, EnterX, _:x);
-		MEM_set_val(building, EnterY, _:y);
-		MEM_set_val(building, EnterZ, _:z);
-		MEM_set_val(building, EnterInterior, interior);
-		MEM_set_val(building, EnterWorld, world);
-		MEM_set_val(building, Ownable, 0);
-		MEM_set_val(building, OwnerID, 0);
-		MEM_set_val(building, Price, 0);
-		MEM_set_val(building, ExitWorld, BUILDING_START_WORLD + id);
-		MEM_set_val(building, Locked, 1);*/
-
 		map_add(Buildings, id, _:building);
 
 		Building_CreateElements(building);
@@ -411,6 +396,9 @@ stock Building_Delete(Building:building)
 	
 	// UPDATE OWNERID -> BUILDING_ID TO 0.
     CallLocalFunction(#OnBuildingDeleted, "d", _:building);
+	
+	var_release(Variant:building);
+	var_delete(Variant:building);
 
 	map_remove_deep(Buildings, Building_GetID(building));
     return 1;
@@ -436,7 +424,6 @@ stock Building_CreateElements(Building:building)
 
 	new Text3D:exitText = CreateDynamic3DTextLabel("Uscita", COLOR_LIGHTBLUE/*2*/, exitX, exitY, exitZ + 0.55, 20, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, Building_GetExitWorld(building), Building_GetExitInterior(building));
 	var_set_cell(Variant:building, Exit3DText, exitText);
-
 }
 
 stock Building_DestroyElements(Building:building)
@@ -483,7 +470,7 @@ stock Building_GetOwnerName(Building:building, name[MAX_PLAYER_NAME])
 
 stock Building_IsLocked(Building:building)
 {
-    return var_get(Variant:building, Locked);// || Building_GetType(a) == BUILDING_TYPE_GAS_STATION;
+    return var_get(Variant:building, Locked);
 }
 
 stock Building_GetPrice(Building:building)
@@ -747,9 +734,16 @@ Dialog:Dialog_Building(playerid, response, listitem, inputtext[])
 		}
 		case 6:
 		{
+			Character_ShowBuildingTypeMenu(playerid, building);
 			return Character_EditSellableItems(playerid);
 		}
 	}
+	return 1;
+}
+
+stock Character_ShowBuildingTypeMenu(playerid, Building:building)
+{
+	SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare quest'opzione su questo tipo di biz.");
 	return 1;
 }
 
