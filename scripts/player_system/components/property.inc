@@ -139,7 +139,7 @@ stock Character_Enter(playerid)
 
 stock Character_BuyBuilding(playerid, Building:building)
 {
-    if(!Building_IsOwned(building))
+    if(!Building_IsOwnable(building))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
 
     if(Character_GetMoney(playerid) < Building_GetPrice(building))
@@ -149,7 +149,7 @@ stock Character_BuyBuilding(playerid, Building:building)
     
     Building_SetOwner(building, playerid);
 
-	Character_AddOwnedBuilding(playerid, building);
+	//Character_AddOwnedBuilding(playerid, building);
 
 	new name[MAX_BUILDING_NAME];
 	Building_GetName(building, name);
@@ -203,6 +203,9 @@ stock bool:Character_AddOwnedBuilding(playerid, Building:building)
 	if(!list_valid(CharacterBuildings[playerid]))
 		CharacterBuildings[playerid] = list_new();
 	
+	if(Character_DoesOwnBuilding(playerid, building))
+		return true;
+
 	list_add(CharacterBuildings[playerid], _:building);
 	return true;
 }

@@ -16,7 +16,7 @@ static ServerInfo[E_SERVER_INFO];
 
 hook OnGameModeInit()
 {
-	Server_SetExcisesOnFuel(1);
+	Server_SetExcisesOnFuel(5);
 	Server_SetTaxOnAds(1);
 	Server_SetTaxOnVehicles(1);
 	Server_SetGovernamentBank(0);

@@ -73,14 +73,19 @@ stock Character_PayDay(playerid)
 	   	Character_SetExperience(playerid, 0);
 	}
 
-	for_list(i : Character_GetOwnedBuildingsList(playerid))
+	new List:refToList = Character_GetOwnedBuildingsList(playerid);
+	if(list_valid(refToList))
 	{
-		new Building:building = Building:iter_get(i);
-		if(Building_IsValid(building))
+		for_list(i : refToList)
 		{
-			new price = Building_GetPrice(building)/100;
-			businessMoney = price;
-			paycheck += price;
+			new Building:building = Building:iter_get(i);
+			printf("Building: %d", Building_GetID(building));
+			if(Building_IsValid(building))
+			{
+				new price = Building_GetPrice(building)/100;
+				businessMoney = price;
+				paycheck += price;
+			}
 		}
 	}
 

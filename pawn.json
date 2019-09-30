@@ -17,7 +17,9 @@
 		"AGraber/pawn-plus-mysql",
 		"NexiusTailer/Nex-AC",
 		"BigETI/pawn-memory",
-		"maddinat0r/samp-discord-connector:v0.3"
+		"maddinat0r/samp-discord-connector:v0.3",
+		"Southclaws/pawn-requests",
+		"lassir/bcrypt-samp"
 	],
 	"local": true,
 	"builds": [

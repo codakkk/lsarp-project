@@ -50,7 +50,6 @@ forward OnFactionDeleted(factionid);
 static enum _:E_FACTION_DATA
 {
 	ID,
-	Created,
 	Name[MAX_FACTION_NAME],
 	ShortName[MAX_FACTION_SHORT_NAME],
 	Type,
@@ -201,7 +200,6 @@ stock Faction_LoadAll()
 		
 		for(new i = 0; i < rows; ++i)
 		{
-			data[Created] = 1;
 			cache_get_value_name_int(i, "id", data[ID]);
 			cache_get_value_name(i, "name", data[Name]);
 			cache_get_value_name(i, "short_name", data[ShortName]);
@@ -243,13 +241,6 @@ stock Faction_SendMessageStr(factionid, String:string)
 stock Faction_IsValid(factionid)
 {
 	return map_has_key(Factions, factionid);
-}
-
-stock Faction_IsCreated(factionid)
-{
-	if(!Faction_IsValid(factionid))
-		return 0;
-	return map_get(Factions, factionid, Created);
 }
 
 stock Faction_GetID(factionid)

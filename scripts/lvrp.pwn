@@ -53,7 +53,7 @@
 
 #include <a_samp>
 #include <formatnumber>
-#include <memory.inc>
+#include <requests>
 #include <sampmailjs>
 
 // Define this for some bugs related to MySQL_TQueryInline
