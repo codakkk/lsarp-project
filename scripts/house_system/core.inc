@@ -210,27 +210,26 @@ stock House_Create(Float:x, Float:y, Float:z, int, world, interiorType)
         id = cache_insert_id(),
         data[E_HOUSE_DATA]
     ;
-    // we
-    data[ID] = id;
-    data[OwnerID] = 0;
-    data[OwnerName] = "";
-    data[Price] = 0;
+    new House:house = House:var_new_buf(E_HOUSE_INFO);
+    var_set_cell(Variant:house, ID, id);
+    var_set_cell(Variant:house, OwnerID, 0);
+    var_set_cells(Variant:house, OwnerName, "");
 
-    data[EnterX] = x;
-    data[EnterY] = y;
-    data[EnterZ] = z;
-    data[EnterInterior] = int;
-    data[EnterWorld] = world;
+    var_set_cell(Variant:house, Price, 0);
+    var_set_cell(Variant:house, EnterX, _:x);
+    var_set_cell(Variant:house, EnterY, _:y);
+    var_set_cell(Variant:house, EnterZ, _:z);
+    var_set_cell(Variant:house, EnterInterior, int);
+    var_set_cell(Variant:house, EnterWorld, world);
 
-    data[ExitX] = 0.0;
-    data[ExitY] = 0.0;
-    data[ExitZ] = 0.0;
-    data[ExitInterior] = 0;
-
-    data[ExitWorld] = HOUSE_START_WORLD + id;
-
-    data[IsLocked] = 1;
-
+    var_set_cell(Variant:house, ExitX, 0.0);
+    var_set_cell(Variant:house, ExitY, 0.0);
+    var_set_cell(Variant:house, ExitZ, 0.0);
+    var_set_cell(Variant:house, ExitInterior, 0);
+    var_set_cell(Variant:house, ExitWorld, HOUSE_START_WORLD + id);
+    
+    var_set_cell(Variant:house, IsLocked, 1);
+    
     map_add_arr(Houses, id, data);
 
     House_SetInterior(id, interiorType, 0);
