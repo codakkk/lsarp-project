@@ -705,6 +705,9 @@ stock Character_AcceptBuilding(playerid)
 		return 0;
 	}
 
+	if(!Character_CanOwnBuilding(playerid, building))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi acquistare altri business."), 0;
+
     Character_GiveMoney(playerid, -price, "accept_building");
     Character_GiveMoney(senderid, price, "sell_building_to_player");
     
@@ -916,8 +919,8 @@ Dialog:Dialog_BuildingSellToPlayer(playerid, response, listitem, inputtext[])
 	if(!response)
 		return Character_ShowBizDialog(playerid);
 	
-	new Building:building = Character_GetCurrentBuilding(playerid);
-	if(!Building_IsValid(building) || !Character_CanUseBuildingMenu(playerid, building))
+	new Building:building = Character_GetBusinessMenu(playerid);
+	if(!Building_IsValid(building))
 		return 0;
 	
 	new id, money;
@@ -937,6 +940,8 @@ Dialog:Dialog_BuildingSellToPlayer(playerid, response, listitem, inputtext[])
 	if(id == playerid)
 		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Non puoi vendere l'edificio a te stesso.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
 
+	if(!Character_CanOwnBuilding(id, building))
+		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il giocatore possiede già il limite massimo di business.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
 	//if(Character_HasBuildingKey(id))
 		//return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il giocatore possiede già un edificio.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
 
