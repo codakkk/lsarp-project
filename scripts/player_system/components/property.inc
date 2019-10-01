@@ -64,7 +64,27 @@ hook OnCharacterTryBuy(playerid)
 
 CMD:myhouses(playerid, params[])
 {
+	if(Character_GetOwnedHouseCount(playerid) == 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi case.");
 	SendClientMessage(playerid, 0xFF6347FF, "Le case che possiedi sono:");
+	for_list(i : CharactersHouses[playerid])
+	{
+		
+	}
+	return 1;
+}
+
+CMD:mybiz(playerid, params[])
+{
+	if(Character_GetOwnedHouseCount(playerid) == 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi businesses.");
+	SendClientMessage(playerid, 0xFF6347FF, "I business che possiedi sono:");
+	new address[]
+	for_list(i : CharactersBuildings[playerid])
+	{
+		new Building:building = iter_get(i);
+		SendClientMessage(playerid, 0xFF6347FF, Building_GetAddress(building));
+	}
 	return 1;
 }
 
