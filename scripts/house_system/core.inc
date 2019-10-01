@@ -24,12 +24,10 @@ static enum _:E_HOUSE_DATA
 {
     ID,
 
-	Created,
-
     OwnerID,
     OwnerName[MAX_PLAYER_NAME],
     Price,
-    Locked,
+    IsLocked,
 	Money,
 
     Float:EnterX,
@@ -213,7 +211,6 @@ stock House_Create(Float:x, Float:y, Float:z, int, world, interiorType)
         data[E_HOUSE_DATA]
     ;
     // we
-    data[Created] = 1;
     data[ID] = id;
     data[OwnerID] = 0;
     data[OwnerName] = "";
@@ -232,7 +229,7 @@ stock House_Create(Float:x, Float:y, Float:z, int, world, interiorType)
 
     data[ExitWorld] = HOUSE_START_WORLD + id;
 
-    data[Locked] = 1;
+    data[IsLocked] = 1;
 
     map_add_arr(Houses, id, data);
 
@@ -319,23 +316,6 @@ stock House_DestroyObjects(houseid)
 stock House_IsValid(houseid)
 {
     return map_has_key(Houses, houseid);
-}
-
-stock House_IsCreated(houseid)
-{
-    if(!House_IsValid(houseid))
-        return 0;
-    return map_get(Houses, houseid, Created);
-}
-
-stock House_SetCreated(houseid, created)
-{
-    if(!House_IsValid(houseid))
-        return 0;
-    map_set_cell(Houses, houseid, Created, created);
-
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET created = '%d' WHERE id = '%d'", created, House_GetID(houseid));
-    return 1;
 }
 
 stock House_GetData(houseid, data[E_HOUSE_DATA])
@@ -585,7 +565,7 @@ stock House_SetLocked(houseid, lock)
 {
     if(!House_IsValid(houseid))
         return 0;
-    map_set_cell(Houses, houseid, Locked, lock);
+    map_set_cell(Houses, houseid, IsLocked, lock);
     mysql_tquery_f(gMySQL, "UPDATE `houses` SET locked = '%d' WHERE id = '%d'", lock, House_GetID(houseid));
     return 1;
 }
@@ -594,7 +574,7 @@ stock House_IsLocked(houseid)
 {
     if(!House_IsValid(houseid))
         return 0;
-    return map_get(Houses, houseid, Locked);
+    return map_get(Houses, houseid, IsLocked);
 }
 
 stock House_GetMoney(houseid)
@@ -644,16 +624,13 @@ stock House_LoadAll()
             //cache_get_value_name_int(i, 12, data[ExitWorld]);
 
             cache_get_value_name_int(i, "price", data[Price]);
-            cache_get_value_name_int(i, "locked", data[Locked]);
+            cache_get_value_name_int(i, "locked", data[IsLocked]);
             cache_get_value_name_int(i, "money", data[Money]);
 
             cache_get_value_name_int(i, "interior_id", data[InteriorID]);
             cache_get_value_name_int(i, "interior_type", data[InteriorType]);
 
-            cache_get_value_name_int(i, "created", data[Created]);
-
             data[ExitWorld] = HOUSE_START_WORLD + data[ID];
-            data[Created] = 1;
 
             printf("House id: %d", data[ID]);
             map_add_arr(Houses, data[ID], data);

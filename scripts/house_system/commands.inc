@@ -5,7 +5,7 @@ CMD:gotohouse(playerid, params[])
 	new houseid;
     if(sscanf(params, "d", houseid))
 	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gotohouse <houseid>");
-	if(!House_IsValid(houseid) || !House_IsCreated(houseid))
+	if(!House_IsValid(houseid))
 		return SendClientMessage(playerid, COLOR_ERROR, "La casa inserita non esiste.");
 	new Float:x, Float:y, Float:z;
 	House_GetEnterPosition(houseid, x, y, z);
@@ -98,8 +98,6 @@ CMD:hresetowner(playerid, params[])
 	if(!House_IsValid(houseid))
 	   return SendClientMessage(playerid, COLOR_ERROR, "L'id della casa inserita non è valido.");
 
-	if(!House_IsCreated(houseid))
-		return SendClientMessage(playerid, COLOR_ERROR, "La casa non è stata creata.");
 
 	if(House_ResetOwner(houseid))
 	{
@@ -118,9 +116,6 @@ CMD:hedit(playerid, params[])
     
     if(!House_IsValid(houseid))
 	   return SendClientMessage(playerid, COLOR_ERROR, "L'id della casa inserita non è valido.");
-
-	if(!House_IsCreated(houseid))
-		return SendClientMessage(playerid, COLOR_ERROR, "La casa non è stata creata.");
 
     if(!strcmp(command, "pos", true))
     {

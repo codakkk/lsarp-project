@@ -5,7 +5,6 @@
 
 static enum _:E_DROP_INFO // _: for tag mismatch thing
 {
-	Created,
     Float:X,
     Float:Y,
     Float:Z,
@@ -104,7 +103,6 @@ stock Drop_Create(String:createdBy, Float:x, Float:y, Float:z, world, interior, 
 	   return -1;
 	
 	new data[E_DROP_INFO];
-	data[Created] = 1;
     data[X] = x;
     data[Y] = y;
     data[Z] = z;

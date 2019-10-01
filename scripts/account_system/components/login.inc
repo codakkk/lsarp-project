@@ -1,3 +1,4 @@
+#include <bcrypt>
 
 #include <YSI_Coding\y_hooks>
 
@@ -5,6 +6,7 @@
 
 
 static 
+	PlayerHash[MAX_PLAYERS][BCRYPT_HASH_LENGTH],
 	LoginAttempts[MAX_PLAYERS char],
     AccountEMailCode[MAX_PLAYERS],
 	TempMail[MAX_PLAYERS][255];
@@ -16,6 +18,19 @@ hook OnPlayerDisconnect(playerid, reason)
 {
 	LoginTimer[playerid] = Timer:0;
 	LoginAttempts{playerid} = 0;
+	return 1;
+}
+
+hook OnPlayerConnect(playerid)
+{
+	inline OnLoadHash()
+	{
+		if(cache_num_rows() > 0)
+			cache_get_value_name(0, "password", PlayerHash[playerid]);
+	}
+	new name[MAX_PLAYER_NAME];
+	GetPlayerName(playerid, name, sizeof(name));
+	MySQL_TQueryInline(gMySQL, using inline OnLoadHash, "SELECT password FROM `accounts` WHERE LOWER(name) = LOWER('%e')", name);
 	return 1;
 }
 
@@ -38,7 +53,6 @@ Dialog:Dialog_LoginOptions(playerid, response, listitem, inputtext[])
 	}
 	if(listitem == 0)
 	{
-
 	}
 	else
 		KickEx(playerid);
@@ -107,6 +121,7 @@ Dialog:Dialog_Login(playerid, response, listitem, inputtext[])
 			Dialog_Show(playerid, Dialog_Login, DIALOG_STYLE_PASSWORD, "Login", "{FF0000}Password errata.\n{FFFFFF}Inserisci la tua password per effettuare il login.\nTentativo: {FF0000}%d/%d{FFFFFF}", "Login", "Esci", LoginAttempts{playerid}, MAX_LOGIN_ATTEMPTS);
 		}
 	}
+	//bcrypt_check(inputtext, hash, "OnPasswordChecked", "d", playerid);
 	new 
 		psw[WHIRLPOOL_LEN], 
 		name[24];
@@ -118,7 +133,7 @@ Dialog:Dialog_Login(playerid, response, listitem, inputtext[])
 	return 1;
 }
 
-Dialog:Dialog_EMail(playerid, response, listitem, inputtext[])
+/*Dialog:Dialog_EMail(playerid, response, listitem, inputtext[])
 {
 	if(!response)
 		return Kick(playerid);
@@ -167,7 +182,7 @@ Dialog:Dialog_EMailConfirm(playerid, response, listitem, inputtext[])
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnUpdate, "UPDATE `accounts` SET email = '%e' WHERE id = '%d'", TempMail[playerid], Account_GetID(playerid));
 	return 1;
-}
+}*/
 
 stock ExecuteLogin(playerid)
 {

@@ -2,8 +2,10 @@
 #include <building_system\core>
 #include <YSI_Coding\y_hooks>
 
+static const FuelPriceKey[] = "fuel_price";
+static const FuelStateKey[] = "fuel_state";
+
 #define GAS_STATION_MAX_RANGE       (15.0)
-#define PETROL_PRICE_PER_LITRE      (10)
 #define PETROL_LITRE_DEF            (5.0) // 1 litre is equals to 10.0 of vehicle fuel.
 
 static 
@@ -32,6 +34,30 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
     return 1;
 }
 
+CMD:setbfuel(playerid, params[])
+{
+    new buildingid, value;
+    if(sscanf(params, "dd", buildingid, value))
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setbfuel <buildingid> <fuel quantity>");
+    new Building:building = Building_Find(buildingid);
+    if(!Building_IsValid(building))
+        return SendClientMessage(playerid, COLOR_ERROR, "Il buildingid inserito non esiste.");
+    GasStation_SetFuelState(building, float(value));
+    return 1;
+}
+
+CMD:setfuelprice(playerid, params[])
+{
+    new buildingid, value;
+    if(sscanf(params, "dd", buildingid, value))
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setfuelprice <buildingid> <price>");
+    new Building:building = Building_Find(buildingid);
+    if(!Building_IsValid(building))
+        return SendClientMessage(playerid, COLOR_ERROR, "Il buildingid inserito non esiste.");
+    GasStation_SetFuelPrice(building, value);
+    return 1;
+}
+
 flags:rifornisci(CMD_ALIVE_USER);
 CMD:rifornisci(playerid, params[])
 {
@@ -50,7 +76,10 @@ CMD:rifornisci(playerid, params[])
     if(Vehicle_GetFuel(vehicleid) > 100.0 - PETROL_LITRE_DEF)
         return SendClientMessage(playerid, COLOR_ERROR, "Il veicolo ha già il massimo di benzina.");
 
-    SendFormattedMessage(playerid, COLOR_GREEN, "Stai rifornendo il tuo veicolo. Il prezzo al litro è $%d (compreso di accise).", PETROL_PRICE_PER_LITRE);
+    if(GasStation_GetFuelState(building) < PETROL_LITRE_DEF)
+        return SendClientMessage(playerid, COLOR_ERROR, "La stazione di benzina non puo' rifornirti il veicolo poiché ha finito le risorse.");
+
+    SendFormattedMessage(playerid, COLOR_GREEN, "Stai rifornendo il tuo veicolo. Il prezzo al litro è $%d (compreso di accise).", GasStation_GetFuelPrice(building));
     SendClientMessage(playerid, COLOR_GREEN, "Digita \"/stoprifornimento\" per fermarti.");
 
     IsDoingGas[playerid] = building;
@@ -64,7 +93,7 @@ CMD:stoprifornimento(playerid, params[])
 {
     if(!Building_IsValid(IsDoingGas[playerid]))
         return SendClientMessage(playerid, COLOR_ERROR, "Non stai facendo rifornimento.");
-    SendFormattedMessage(playerid, -1, "Hai finito di fare rifornimento. Hai messo %d litri per $%d.", Litres{playerid}, Litres{playerid} * PETROL_PRICE_PER_LITRE);
+    SendFormattedMessage(playerid, -1, "Hai finito di fare rifornimento. Hai messo %d litri per $%d.", Litres{playerid}, Litres{playerid} * GasStation_GetFuelPrice(IsDoingGas[playerid]));
     IsDoingGas[playerid] = INVALID_BUILDING;
     Litres{playerid} = 0;
     stop Timer[playerid];
@@ -80,8 +109,14 @@ timer GetVehicleLitre[1000](playerid, vehicleid)
         pc_cmd_stoprifornimento(playerid, "");
         return 1;
     }
-
-    new Float:x, Float:y, Float:z, Building:building = IsDoingGas[playerid];
+    new Building:building = IsDoingGas[playerid];
+    if(GasStation_GetFuelState(building) <= PETROL_LITRE_DEF)
+    {
+        SendClientMessage(playerid, COLOR_ERROR, "La stazione di benzina ha finito le proprie risorse.");
+        pc_cmd_stoprifornimento(playerid, "");
+        return 1;
+    }
+    new Float:x, Float:y, Float:z;
     Building_GetEnterPos(building, x, y, z);
 
     if(GetPlayerDistanceFromPoint(playerid, x, y, z) > GAS_STATION_MAX_RANGE)
@@ -91,8 +126,10 @@ timer GetVehicleLitre[1000](playerid, vehicleid)
         return 1;
     }
 
-    new moneyToGovernament = (PETROL_PRICE_PER_LITRE * Server_GetExcisesOnFuel())/100;
-    new moneyToBuilding = PETROL_PRICE_PER_LITRE - moneyToGovernament;
+    new fuelPrice = GasStation_GetFuelPrice(building);
+    new taxedPrice = GasStation_GetTaxedFuelPrice(building);
+    new moneyToGovernament = taxedPrice - fuelPrice;
+    new moneyToBuilding = fuelPrice - moneyToGovernament;
 
     Server_GiveGovernamentBank(moneyToGovernament);
     Building_GiveMoney(building, moneyToBuilding);
@@ -101,7 +138,7 @@ timer GetVehicleLitre[1000](playerid, vehicleid)
     
     Litres{playerid}++;
 
-    Character_GiveMoney(playerid, -PETROL_PRICE_PER_LITRE, "/rifornisci");
+    Character_GiveMoney(playerid, -taxedPrice, "/rifornisci");
 
     if(Vehicle_GetFuel(vehicleid) >= 100.0)
     {
@@ -133,6 +170,46 @@ stock Character_IsDoingGas(playerid)
     return IsPlayerInAnyVehicle(playerid) && IsDoingGas[playerid] != INVALID_BUILDING;
 }
 
+stock bool:GasStation_SetFuelPrice(Building:building, newPrice)
+{
+    Building_SetIntData(building, FuelPriceKey, newPrice);
+    return true;
+}
+
+stock GasStation_GetFuelPrice(Building:building)
+{
+    new v = 0;
+    Building_GetIntData(building, FuelPriceKey, v);
+    return v;
+}
+
+stock GasStation_GetTaxedFuelPrice(Building:building)
+{
+    new withoutTaxes = GasStation_GetFuelPrice(building);
+    return withoutTaxes + floatround(float(withoutTaxes * Server_GetExcisesOnFuel())/100.0, floatround_ceil);
+}
+
+stock bool:GasStation_GiveFuelState(Building:building, Float:giveValue)
+{
+    new Float:f = 0.0;
+    Building_GetFloatData(building, FuelStateKey, f);
+    Building_SetFloatData(building, FuelStateKey, f + giveValue);
+    return true;
+}
+
+stock bool:GasStation_SetFuelState(Building:building, Float:newState)
+{
+    Building_SetFloatData(building, FuelStateKey, newState);
+    return true;
+}
+
+stock Float:GasStation_GetFuelState(Building:building)
+{
+    new Float:f = 0.0;
+    Building_GetFloatData(building, FuelStateKey, f);
+    return f;
+}
+
 hook function Character_Enter(playerid)
 {
     new Building:building, E_ELEMENT_TYPE:type;
@@ -140,4 +217,33 @@ hook function Character_Enter(playerid)
     if(type == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_IsValid(building) && Building_GetType(building) == BUILDING_TYPE_GAS_STATION)
         return 0;
     return continue(playerid);
+}
+
+hook function Building_ShowTypeMenu(Building:building, playerid)
+{
+    if(Building_GetType(building) != BUILDING_TYPE_GAS_STATION)
+        return continue(playerid);
+    new fuelPrice = GasStation_GetFuelPrice(building);
+    new taxedPrice = GasStation_GetTaxedFuelPrice(building);
+    Dialog_Show(playerid, Dialog_EditGasStationPrice, DIALOG_STYLE_INPUT, "Modifica prezzo benzina", "Inserisci il nuovo prezzo al litro per la benzina.\nPrezzo Attuale: $%d\nPrezzo Finale (compreso di accise): $%d", "Modifica", "Chiudi", fuelPrice, taxedPrice);
+    return 1;
+}
+
+Dialog:Dialog_EditGasStationPrice(playerid, response, listitem, inputtext[])
+{
+    new Building:building = Character_GetBusinessMenu(playerid);
+    if(!Building_IsValid(building))
+        return 0;
+    
+    if(!response)
+        return Character_ShowBizDialog(playerid);
+    
+    new newPrice = strval(inputtext);
+    if(newPrice <= 0)
+        return Dialog_Show(playerid, Dialog_EditGasStationPrice, DIALOG_STYLE_INPUT, "Modifica prezzo benzina", "{FF0000}Il nuovo prezzo inserito non è valido.{FFFFFF}\nInserisci il nuovo prezzo al litro per la benzina.\nPrezzo Attuale: $%d\nPrezzo Finale (compreso di accise): $%d", "Modifica", "Chiudi");
+    GasStation_SetFuelPrice(building, newPrice);
+    SendFormattedMessage(playerid, COLOR_GREEN, "Hai modificato il prezzo della benzina del tuo business. Nuovo prezzo: $%s.", FormatNumber(newPrice));
+    SendFormattedMessage(playerid, COLOR_ORANGE, "Prezzo: $%s", FormatNumber(newPrice));
+    SendFormattedMessage(playerid, COLOR_ORANGE, "Prezzo finale (compreso di tasse governative): $%s", FormatNumber(GasStation_GetTaxedFuelPrice(building)));
+    return 1;
 }

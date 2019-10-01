@@ -67,10 +67,12 @@ static enum _:E_BUILDING_INFO
     OwnerID,
     OwnerName[MAX_PLAYER_NAME],
     Price,
-    Locked,
+    IsLocked,
 	Faction,
 	Type,
 	Money,
+	Map:Data,
+
     // Volatile
     EnterPickupID,
     Text3D:Enter3DText,
@@ -79,6 +81,8 @@ static enum _:E_BUILDING_INFO
 };
 
 static Map:Buildings;
+
+static Building:CurrentEditing[MAX_PLAYERS] = {INVALID_BUILDING, ...};
 
 stock Map:GetBuildingsMap()
 {
@@ -142,7 +146,7 @@ stock Building_Create(Float:x, Float:y, Float:z, interior, world)
     {
 		new id = cache_insert_id();
 		
-		new Building:building = Building:var_new_buf(E_BUILDING_INFO);//Building:MEM_new(E_BUILDING_INFO);
+		new Building:building = Building:var_new_buf(E_BUILDING_INFO);
 		var_acquire(Variant:building);
 		var_set_cell(Variant:building, ID, id);
 		var_set_cells(Variant:building, Name, "SET NAME");
@@ -157,22 +161,8 @@ stock Building_Create(Float:x, Float:y, Float:z, interior, world)
 		var_set_cell(Variant:building, OwnerID, 0);
 		var_set_cell(Variant:building, Price, 0);
 		var_set_cell(Variant:building, ExitWorld, BUILDING_START_WORLD + id);
-		var_set_cell(Variant:building, Locked, 1);
-		/*MEM_set_val(building, ID, id);
-		MEM_set_val(building, Name, MEM_new_arr("SET NAME", strlen("SET NAME") + 1));
-		MEM_set_val(building, WelcomeName, MEM_NULLPTR);
-		MEM_set_val(building, OwnerName, MEM_NULLPTR);
-		MEM_set_val(building, EnterX, _:x);
-		MEM_set_val(building, EnterY, _:y);
-		MEM_set_val(building, EnterZ, _:z);
-		MEM_set_val(building, EnterInterior, interior);
-		MEM_set_val(building, EnterWorld, world);
-		MEM_set_val(building, Ownable, 0);
-		MEM_set_val(building, OwnerID, 0);
-		MEM_set_val(building, Price, 0);
-		MEM_set_val(building, ExitWorld, BUILDING_START_WORLD + id);
-		MEM_set_val(building, Locked, 1);*/
-
+		var_set_cell(Variant:building, IsLocked, 1);
+		var_set_cell(Variant:building, Data, map_new());
 		map_add(Buildings, id, _:building);
 
 		Building_CreateElements(building);
@@ -192,6 +182,7 @@ stock Building_LoadAll()
 		new count = 0;
 		cache_get_row_count(count);
 		new data[E_BUILDING_INFO];
+		new jsonDataStr[256];
 		for(new i = 0; i < count; ++i)
 		{
 			cache_get_value_name_int(i, "id", data[ID]);
@@ -209,11 +200,13 @@ stock Building_LoadAll()
 			cache_get_value_name_int(i, "ownable", data[Ownable]);
 			cache_get_value_name_int(i, "owner_id", data[OwnerID]);
 			cache_get_value_name_int(i, "price", data[Price]);
-			cache_get_value_name_int(i, "locked", data[Locked]);
+			cache_get_value_name_int(i, "locked", data[IsLocked]);
 			cache_get_value_name_int(i, "faction", data[Faction]);
 			cache_get_value_name_int(i, "type", data[Type]);
 
 			cache_get_value_name_int(i, "money", data[Money]);
+
+			cache_get_value_name(i, "data", jsonDataStr);
 
 			data[ExitWorld] = BUILDING_START_WORLD + data[ID];
 
@@ -236,13 +229,41 @@ stock Building_LoadAll()
 			var_set_cell(Variant:building, Ownable, data[Ownable]);
 			var_set_cell(Variant:building, OwnerID, data[OwnerID]);
 			var_set_cell(Variant:building, Price, data[Price]);
-			var_set_cell(Variant:building, Locked, data[Locked]);
+			var_set_cell(Variant:building, IsLocked, data[IsLocked]);
 			var_set_cell(Variant:building, Faction, data[Faction]);
 			var_set_cell(Variant:building, Type, data[Type]);
+			
+			new Map:map = map_new(), Node:node, length;
+			JsonParse(jsonDataStr, node);
+			new ret = JsonArrayLength(node, length);
+			if(ret) 
+			{
+				printf("failed to get array length, error: %d", ret);
+				return 1;
+			}
+
+			new entryName[32], entryIntValue, Float:entryFloatValue;
+			for(new x = 0; x < length; ++x) 
+			{
+				new Node:item;
+				
+				if(JsonArrayObject(node, x, item) || JsonGetString(item, "name", entryName)) 
+					continue;
+
+				if(JsonGetInt(item, "value", entryIntValue)) 
+				{
+					JsonGetFloat(item, "value", entryFloatValue);
+					map_str_add(map, entryName, entryFloatValue);
+				}
+				else
+				{
+					map_str_add(map, entryName, entryIntValue);
+				}
+			}
+
+			var_set_cell(Variant:building, Data, map);
 
 			map_add(Buildings, data[ID], building);
-
-			printf("Building ID: %d", Building_GetID(building));
 
 			Building_CreateElements(building);
 			CallLocalFunction(#OnBuildingLoaded, "d", _:building);
@@ -256,16 +277,6 @@ stock Building_LoadAll()
 			ownerid = Building_GetOwnerID(building);
 			if(ownerid > 0)
 			{
-				/*iter_acquire(Iter:building);
-				inline OnLoadOwnerName()
-				{
-					if(cache_num_rows() <= 0)
-						return 0;
-					new name[MAX_PLAYER_NAME];
-					cache_get_value_name(0, "name", name);
-					var_set_cells(Variant:building, OwnerName, name);
-				}
-				MySQL_TQueryInline(gMySQL, using inline OnLoadOwnerName, "SELECT name FROM `characters` WHERE id = '%d'", ownerid);*/
 				new Cache:cache = mysql_query_f(gMySQL, true, "SELECT name FROM `characters` WHERE id = '%d'", ownerid);
 				if(cache_num_rows() <= 0)
 					continue;
@@ -281,6 +292,74 @@ stock Building_LoadAll()
 	return 1;
 }
 
+stock Map:Building_GetDataMap(Building:building)
+{
+	return Map:var_get(Variant:building, Data);
+}
+
+stock bool:Building_GetFloatData(Building:building, const key[], &Float:ret)
+{
+	new Map:data = Map:var_get(Variant:building, Data);
+	if(map_has_str_key(data, key))
+	{
+		ret = Float:map_str_get(data, key);
+		return true;
+	}
+	return false;
+}
+
+stock bool:Building_SetFloatData(Building:building, const key[], Float:value)
+{
+	new Map:data = Map:var_get(Variant:building, Data);
+	if(map_has_str_key(data, key))
+	{
+		map_str_set(data, key, value);
+		Building_SaveData(building);
+		return true;
+	}
+	map_str_add(data, key, value);
+	return true;
+}
+
+stock bool:Building_SetIntData(Building:building, const key[], value)
+{
+	new Map:data = Map:var_get(Variant:building, Data);
+	if(map_has_str_key(data, key))
+	{
+		map_str_set(data, key, value);
+		Building_SaveData(building);
+		return true;
+	}
+	map_str_add(data, key, value);
+	return true;
+}
+
+stock bool:Building_GetIntData(Building:building, const key[], &ret)
+{
+	new Map:data = Map:var_get(Variant:building, Data);
+	if(map_has_str_key(data, key))
+	{
+		ret = map_str_get(data, key);
+		return true;
+	}
+	return false;
+}
+
+static Building_SaveData(Building:building)
+{
+	new Node:root = JsonArray(), Node:temp, n[32];
+	for_map(i : Building_GetDataMap(building))
+	{
+		iter_get_key_str(i, n);
+        new v = iter_get(i);
+
+        temp = JsonObject("name", JsonString(n), "value", JsonInt(v));
+        root = JsonAppend(root, JsonArray(temp));
+	}
+    new s[255];
+    JsonStringify(root, s, sizeof(s));
+	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET data = '%e' WHERE id = '%d'", s, Building_GetID(building));
+}
 
 stock Building_SetPosition(Building:building, Float:x, Float:y, Float:z, vw, int)
 {
@@ -384,18 +463,17 @@ stock Building_SetOwner(Building:building, playerid)
 
 stock Building_ResetOwner(Building:building)
 {
-    var_set_cell(Variant:building, OwnerID, 0);
-	var_set_cells(Variant:building, OwnerName, "");
-
 	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET owner_id = '0' WHERE id = '%d'", Building_GetID(building));
 	
-
 	foreach(new i : Player)
 	{
 		if(!Character_DoesOwnBuilding(i, building))
 			continue;
 		Character_RemoveOwnedBuilding(i, building);
 	}
+
+    var_set_cell(Variant:building, OwnerID, 0);
+	var_set_cells(Variant:building, OwnerName, "");
 
     Log("", "", "Building_ResetOwner", Building_GetID(building));
     return 1;
@@ -411,6 +489,9 @@ stock Building_Delete(Building:building)
 	
 	// UPDATE OWNERID -> BUILDING_ID TO 0.
     CallLocalFunction(#OnBuildingDeleted, "d", _:building);
+	
+	var_release(Variant:building);
+	var_delete(Variant:building);
 
 	map_remove_deep(Buildings, Building_GetID(building));
     return 1;
@@ -436,7 +517,6 @@ stock Building_CreateElements(Building:building)
 
 	new Text3D:exitText = CreateDynamic3DTextLabel("Uscita", COLOR_LIGHTBLUE/*2*/, exitX, exitY, exitZ + 0.55, 20, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, Building_GetExitWorld(building), Building_GetExitInterior(building));
 	var_set_cell(Variant:building, Exit3DText, exitText);
-
 }
 
 stock Building_DestroyElements(Building:building)
@@ -460,9 +540,9 @@ stock Building_GetName(Building:building, name[MAX_BUILDING_NAME])
     return 1;
 }
 
-stock Building_IsOwnable(Building:building)
+stock bool:Building_IsOwnable(Building:building)
 {
-    return var_get(Variant:building, Ownable);
+    return var_get(Variant:building, Ownable) && Building_GetOwnerID(building) <= 0;
 }
 
 stock bool:Building_IsOwned(Building:building)
@@ -483,7 +563,7 @@ stock Building_GetOwnerName(Building:building, name[MAX_PLAYER_NAME])
 
 stock Building_IsLocked(Building:building)
 {
-    return var_get(Variant:building, Locked);// || Building_GetType(a) == BUILDING_TYPE_GAS_STATION;
+    return var_get(Variant:building, IsLocked);
 }
 
 stock Building_GetPrice(Building:building)
@@ -562,7 +642,7 @@ stock Building_GetID(Building:building)
 
 stock Building_SetLocked(Building:building, locked)
 {
-	var_set_cell(Variant:building, Locked, locked);
+	var_set_cell(Variant:building, IsLocked, locked);
 
 	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET locked = '%d' WHERE id = '%d'", 
 					locked, Building_GetID(building));
@@ -625,6 +705,9 @@ stock Character_AcceptBuilding(playerid)
 		return 0;
 	}
 
+	if(!Character_CanOwnBuilding(playerid, building))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi acquistare altri business."), 0;
+
     Character_GiveMoney(playerid, -price, "accept_building");
     Character_GiveMoney(senderid, price, "sell_building_to_player");
     
@@ -681,6 +764,14 @@ stock bool:Character_CanUseBuildingMenu(playerid, Building:building, minRank = 3
 	return false;
 }
 
+stock Building:Character_GetBusinessMenu(playerid)
+{
+	new Building:building = Character_GetCurrentBuilding(playerid);
+	if(Character_CanUseBuildingMenu(playerid, building))
+		return building;
+	return INVALID_BUILDING;
+}
+
 stock Character_ShowBizDialog(playerid)
 {
 	new Building:building = Character_GetCurrentBuilding(playerid);
@@ -696,7 +787,7 @@ CMD:biz(playerid, params[])
 {
 	return Character_ShowBizDialog(playerid);
 }
-alias:biz("cmenu");
+alias:biz("bmenu");
 
 Dialog:Dialog_Building(playerid, response, listitem, inputtext[])
 {
@@ -720,36 +811,42 @@ Dialog:Dialog_Building(playerid, response, listitem, inputtext[])
 				SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso il tuo edificio.");
 			else
 				SendClientMessage(playerid, COLOR_GREEN, "Hai aperto il tuo edificio.");
-			return 1;
 		}
 		case 1:
 		{
-			return Building_ShowInventory(building, playerid);
+			Building_ShowInventory(building, playerid);
 		}
 		case 2:
 		{
-			return Dialog_Show(playerid, Dialog_BuildingDepositMoney, DIALOG_STYLE_INPUT, "Deposita Denaro", "Inserisci l'ammontare di denaro che vuoi depositare all'interno del tuo edificio.\nAttualmente ci sono $%d nella cassa dell'edificio.", "Deposita", "Indietro", Building_GetMoney(building));
+			Dialog_Show(playerid, Dialog_BuildingDepositMoney, DIALOG_STYLE_INPUT, "Deposita Denaro", "Inserisci l'ammontare di denaro che vuoi depositare all'interno del tuo edificio.\nAttualmente ci sono $%d nella cassa dell'edificio.", "Deposita", "Indietro", Building_GetMoney(building));
 		}
 		case 3:
 		{
-			return Dialog_Show(playerid, DialogBuildingWithdrawMoney, DIALOG_STYLE_INPUT, "Ritira Denaro", "Inserisci l'ammontare di denaro che vuoi ritirare dall'interno del tuo edificio.\nAttualmente ci sono $%d nella cassa dell'edificio.", "Ritira", "Indietro", Building_GetMoney(building));
+			Dialog_Show(playerid, DialogBuildingWithdrawMoney, DIALOG_STYLE_INPUT, "Ritira Denaro", "Inserisci l'ammontare di denaro che vuoi ritirare dall'interno del tuo edificio.\nAttualmente ci sono $%d nella cassa dell'edificio.", "Ritira", "Indietro", Building_GetMoney(building));
 		}
 		case 4:
 		{
 			new money = Building_GetPrice(building)/2;
 			new name[MAX_BUILDING_NAME];
 			Building_GetName(building, name);
-			return Dialog_Show(playerid, Dialog_BuildingSell, DIALOG_STYLE_MSGBOX, "Vendita Edificio", "Sei sicuro di voler vendere questo edificio (%s) per $%d?", "Vendi", "Indietro", name, money);
+			Dialog_Show(playerid, Dialog_BuildingSell, DIALOG_STYLE_MSGBOX, "Vendita Edificio", "Sei sicuro di voler vendere questo edificio (%s) per $%d?", "Vendi", "Indietro", name, money);
 		}
 		case 5:
 		{
-			return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "Inserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
+			Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "Inserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
 		}
 		case 6:
 		{
-			return Character_EditSellableItems(playerid);
+			Building_ShowTypeMenu(building, playerid);
 		}
 	}
+	return 1;
+}
+
+stock Building_ShowTypeMenu(Building:building, playerid)
+{
+	#pragma unused building
+	SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare quest'opzione su questo tipo di biz.");
 	return 1;
 }
 
@@ -811,7 +908,7 @@ Dialog:Dialog_BuildingSell(playerid, response, listitem, inputtext[])
 
 	Character_GiveMoney(playerid, price, "building_sell");
 
-	SendFormattedMessage(playerid, -1, "Hai venduto il tuo edificio (%s) per $%d.", name, price);
+	SendFormattedMessage(playerid, -1, "Hai venduto il tuo business (%s) per $%d.", name, price);
 
 	Building_ResetOwner(building);
 	return 1;
@@ -822,8 +919,8 @@ Dialog:Dialog_BuildingSellToPlayer(playerid, response, listitem, inputtext[])
 	if(!response)
 		return Character_ShowBizDialog(playerid);
 	
-	new Building:building = Character_GetCurrentBuilding(playerid);
-	if(!Building_IsValid(building) || !Character_CanUseBuildingMenu(playerid, building))
+	new Building:building = Character_GetBusinessMenu(playerid);
+	if(!Building_IsValid(building))
 		return 0;
 	
 	new id, money;
@@ -843,6 +940,8 @@ Dialog:Dialog_BuildingSellToPlayer(playerid, response, listitem, inputtext[])
 	if(id == playerid)
 		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Non puoi vendere l'edificio a te stesso.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
 
+	if(!Character_CanOwnBuilding(id, building))
+		return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il giocatore possiede già il limite massimo di business.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
 	//if(Character_HasBuildingKey(id))
 		//return Dialog_Show(playerid, Dialog_BuildingSellToPlayer, DIALOG_STYLE_INPUT, "Vendita Edificio a Giocatore", "{FF0000}Il giocatore possiede già un edificio.\nInserisci l'id, il nome o il codice (#XXXXX) del giocatore a cui vuoi vendere l'edificio, seguito dal prezzo.\nEsempi:\n> 1 50010\n> Pinco_Pallino 50000\n> #0001 50000", "Vendi", "Indietro");
 
@@ -895,3 +994,13 @@ hook function Character_Enter(playerid)
     return continue(playerid);
 }
 
+stock Character_SetEditingBuilding(playerid, Building:building)
+{
+	CurrentEditing[playerid] = building;
+	return 1;
+}
+
+stock Building:Character_GetEditingBuilding(playerid)
+{
+	return CurrentEditing[playerid];
+}

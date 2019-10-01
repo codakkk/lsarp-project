@@ -162,15 +162,19 @@ CMD:abedit(playerid, p[])
             return 0;
         }
 
-        if(!Faction_IsValid(factionid))
-		    return SendClientMessage(playerid, COLOR_ERROR, "La fazione inserita non è valida. Usa /afactionslist per una lista.");	
-	
-        Building_SetFaction(building, factionid);
-
         if(factionid == INVALID_FACTION_ID)
+        {
+            Building_SetFaction(building, factionid);
             SendFormattedMessage(playerid, COLOR_GREEN, "L'edificio %d non appartiene più alla fazione ID %d.", id, factionid);
+        }
         else
+        {
+            if(!Faction_IsValid(factionid))
+                return SendClientMessage(playerid, COLOR_ERROR, "La fazione inserita non è valida. Usa /afactionslist per una lista.");	
+
             SendClientMessageStr(playerid, COLOR_GREEN, str_format("Hai settato l'edificio %d appartenente alla fazione %S (%d).", id, Faction_GetNameStr(factionid), factionid));
+            Building_SetFaction(building, factionid);
+        }
         Log(Account_GetName(playerid), "", "/abedit faction", id);
     }
     else if(!strcmp(command, "exit", true))

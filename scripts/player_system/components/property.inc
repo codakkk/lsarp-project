@@ -139,17 +139,20 @@ stock Character_Enter(playerid)
 
 stock Character_BuyBuilding(playerid, Building:building)
 {
-    if(!Building_IsOwned(building))
+    if(!Building_IsOwnable(building))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
 
     if(Character_GetMoney(playerid) < Building_GetPrice(building))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi per acquistare questa proprietà.");
     
-    Character_GiveMoney(playerid, -Building_GetPrice(building));
+	if(!Character_CanOwnBuilding(playerid, building))
+		return SendClientMessage(playerid, COLOR_ERROR, "Hai raggiunto il limite massimo di business. Acquista un pacchetto premium per incrementarlo.");
+    
+	Character_GiveMoney(playerid, -Building_GetPrice(building));
     
     Building_SetOwner(building, playerid);
 
-	Character_AddOwnedBuilding(playerid, building);
+	//Character_AddOwnedBuilding(playerid, building);
 
 	new name[MAX_BUILDING_NAME];
 	Building_GetName(building, name);
@@ -181,7 +184,7 @@ stock Character_BuyHouse(playerid, houseid)
 
 	new zone[64];
 	House_GetAddress(houseid, zone);
-    SendFormattedMessage(playerid, 0x33AA33FF, "Hai acquistato l'immobile situato a %s, Las Venturas, San Andreas.", zone);
+    SendFormattedMessage(playerid, 0x33AA33FF, "Hai acquistato l'immobile situato a %s.", zone);
     return 1;
 }
 
@@ -203,6 +206,9 @@ stock bool:Character_AddOwnedBuilding(playerid, Building:building)
 	if(!list_valid(CharacterBuildings[playerid]))
 		CharacterBuildings[playerid] = list_new();
 	
+	if(Character_DoesOwnBuilding(playerid, building))
+		return true;
+
 	list_add(CharacterBuildings[playerid], _:building);
 	return true;
 }
@@ -237,6 +243,22 @@ stock List:Character_GetOwnedBuildingsList(playerid)
 	if(!list_valid(CharacterBuildings[playerid]))
 		return List:0;
 	return CharacterBuildings[playerid];
+}
+
+stock Character_GetOwnedBuildingCount(playerid)
+{
+	if(!list_valid(CharacterBuildings[playerid]))
+		return 0;
+	return list_size(CharacterBuildings[playerid]);
+}
+
+stock bool:Character_CanOwnBuilding(playerid, Building:building)
+{
+	static const maxBuildings[] = {1, 2, 3, 4};
+	new max = maxBuildings[Account_GetPremiumLevel(playerid)];
+	if(Character_GetOwnedBuildingCount(playerid) >= max)
+		return false;
+	return true;
 }
 
 stock bool:Character_DoesOwnBuilding(playerid, Building:building)
@@ -311,6 +333,22 @@ stock List:Character_GetOwnedHousesList(playerid)
 	if(!list_valid(CharacterHouses[playerid]))
 		return List:0;
 	return CharacterHouses[playerid];
+}
+
+stock Character_GetOwnedHouseCount(playerid)
+{
+	if(!list_valid(CharacterHouses[playerid]))
+		return 0;
+	return list_size(CharacterHouses[playerid]);
+}
+
+stock bool:Character_CanOwnHouse(playerid, houseid)
+{
+	static const maxBuildings[] = {2, 3, 4, 5};
+	new max = maxBuildings[Account_GetPremiumLevel(playerid)];
+	if(Character_GetOwnedHouseCount(playerid) >= max)
+		return false;
+	return true;
 }
 
 stock bool:Character_DoesOwnHouse(playerid, houseid)
