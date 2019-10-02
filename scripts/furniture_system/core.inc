@@ -129,7 +129,7 @@ static stock Internal_ValidateObjectPos(objectid, Float:newX, Float:newY, Float:
     }
     else if(linked >= HOUSE_START_WORLD)
     {
-        House_GetEnterPosition(linked - HOUSE_START_WORLD, x, y, z);
+        House_GetEnterPosition(House_Find(linked - HOUSE_START_WORLD), x, y, z);
     }
     new Float:dist = (x - newX) * (x - newX) + (y - newY) * (y - newY) + (z - newZ) * (z - newZ);
     if(dist > MAX_EXTERIOR_DISTANCE * MAX_EXTERIOR_DISTANCE) //avoid floatsqrt call. So multiply MAX_EXTERIOR_DISTANCE by itself
@@ -700,26 +700,24 @@ stock Furniture_UpdateInfoList(playerid)
 }
 
 // Returns furning house
-stock Character_CanFurnish(playerid, bool:outsideCheck = false)
+stock House:Character_CanFurnish(playerid, bool:outsideCheck = false)
 {
-    new currentHouse = Character_GetHouseID(playerid);
+    new House:currentHouse = Character_GetHouse(playerid, true);
     if(outsideCheck && !House_IsValid(currentHouse))
     {
         new Float:x, Float:y, Float:z;
-        for_map(i : GetHousesMap())
-        {
-            new houseid = iter_get_key(i);
-            
+        for_house(house)
+        {   
             // Can't build inside houses with enter world != 0 (houses in complex, example)
-            if(House_GetEnterWorld(houseid) != 0)
+            if(House_GetEnterWorld(house) != 0)
                 continue;
             
-            if( (House_GetOwnerID(houseid) == Character_GetID(playerid) || Player_IsAdminDuty(playerid)) && Character_GetVirtualWorld(playerid) == House_GetEnterWorld(houseid) && GetPlayerInterior(playerid) == House_GetEnterInterior(houseid))
+            if( (House_GetOwnerID(house) == Character_GetID(playerid) || Player_IsAdminDuty(playerid)) && Character_GetVirtualWorld(playerid) == House_GetEnterWorld(house) && GetPlayerInterior(playerid) == House_GetEnterInterior(house))
             {
-                House_GetEnterPosition(houseid, x, y, z);
+                House_GetEnterPosition(house, x, y, z);
                 if(GetPlayerDistanceFromPoint(playerid, x, y, z) >= 15.0)
                     continue;
-                return houseid;
+                return house;
             }
         }
     }
@@ -727,7 +725,7 @@ stock Character_CanFurnish(playerid, bool:outsideCheck = false)
     {
         return currentHouse;
     }
-    return INVALID_HOUSE_ID;
+    return INVALID_HOUSE;
 }
 
 stock Character_GetFurnitureSlot(playerid)
@@ -957,19 +955,18 @@ stock Internal_GetNearbyFurnableWorld(playerid)
         Float:nearest = MAX_EXTERIOR_DISTANCE, 
         Float:dist = 0.0,
         linked_to = -1;
-    for_map(i : GetHousesMap())
+    for_house(house)
     {
-        new houseid = iter_get_key(i);
-        if(House_GetOwnerID(houseid) != Character_GetID(playerid) || House_GetEnterWorld(houseid) != Character_GetVirtualWorld(playerid))
+        if(House_GetOwnerID(house) != Character_GetID(playerid) || House_GetEnterWorld(house) != Character_GetVirtualWorld(playerid))
             continue;
-        House_GetEnterPosition(houseid, x, y, z);
+        House_GetEnterPosition(house, x, y, z);
         dist = GetPlayerDistanceFromPoint(playerid, x, y, z);
         if(dist > MAX_EXTERIOR_DISTANCE)
             continue;
         if(dist < nearest)
         {
             nearest = dist;
-            linked_to = House_GetExitWorld(houseid);
+            linked_to = House_GetExitWorld(house);
         }
     }
     return linked_to;
@@ -1072,12 +1069,12 @@ stock Furniture_IsExterior(objectid)
     return FurnitureCustomData[FURNITURE_LINKED_TO] != Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_WORLD_ID);
 }
 
-stock House_RemoveExteriorFurnitures(houseid)
+stock House_RemoveExteriorFurnitures(House:house)
 {
-    if(!House_IsValid(houseid))
+    if(!House_IsValid(house))
         return 0;
     new 
-        worldid = HOUSE_START_WORLD + houseid,
+        worldid = House_GetExitWorld(house),
         Pool:furnituresInWorld = Pool:map_get(Furnitures, 0),
         objectid = 0
     ;
@@ -1095,13 +1092,13 @@ stock House_RemoveExteriorFurnitures(houseid)
 }
 
 // Should I delete Pool when removing all furnitures?
-stock House_RemoveAllfurnitures(houseid)
+stock House_RemoveAllfurnitures(House:house)
 {
-    if(!House_IsValid(houseid))
+    if(!House_IsValid(house))
         return 0;
-    House_RemoveExteriorFurnitures(houseid);
+    House_RemoveExteriorFurnitures(house);
     new 
-        worldid = HOUSE_START_WORLD + houseid;
+        worldid = House_GetExitWorld(house);
     if(!map_has_key(Furnitures, worldid))
         return 1;
     new

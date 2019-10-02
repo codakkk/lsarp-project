@@ -41,7 +41,7 @@
 	#warning LSARP_DEBUG is enabled. Care!!
 #endif
 
-#define CUSTOM_TAG_TYPES Building
+#define CUSTOM_TAG_TYPES Building, House
 
 #define CreateDynamicObjectWithHighDD CreateDynamicObject
 
@@ -88,7 +88,7 @@
 #include <streamer>
 #define PP_SYNTAX 1
 //#define PP_SYNTAX_GENERIC 1
-#define PP_ADDITIONAL_TAGS E_ITEM_DATA, Text3D, Pool, Inventory, Building
+#define PP_ADDITIONAL_TAGS Text3D,Pool,Inventory,Building,House
 #include <PawnPlus>
 // #include <pp-mysql> // Must update pp first
 #include <OPA>

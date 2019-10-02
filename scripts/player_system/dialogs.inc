@@ -4,24 +4,24 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
     if(!response)
 	   return 0;
     
-	new houseid = Character_GetHouseMenu(playerid);
+	new House:house = Character_GetHouseMenu(playerid);
 
-	if(!House_IsValid(houseid))
+	if(!House_IsValid(house))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno della tua casa.");
 
 	switch(listitem)
 	{
 		case 0: // Apri/Chiudi Porta
 		{
-			House_SetLocked(houseid, !House_IsLocked(houseid));
-			if(House_IsLocked(houseid))
+			House_SetLocked(house, !House_IsLocked(house));
+			if(House_IsLocked(house))
 				SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso la porta della casa.");
 			else
 				SendClientMessage(playerid, COLOR_GREEN, "Hai aperto la porta della casa.");
 		}
 		case 1: // Show Inv
 		{
-			House_ShowInventory(houseid, playerid);
+			House_ShowInventory(house, playerid);
 		}
 		case 2: // Deposita Soldi
 		{
@@ -29,11 +29,11 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
 		}
 		case 3: // Ritira Soldi
 		{
-			return Dialog_Show(playerid, Dialog_HouseWithdraw, DIALOG_STYLE_INPUT, "Ritira soldi", "Inserisci l'ammontare di soldi che vuoi ritirare dalla casa.\n{00FF00}Cassa: $%d{FFFFFF}", "Ritira", "Annulla", House_GetMoney(houseid));
+			return Dialog_Show(playerid, Dialog_HouseWithdraw, DIALOG_STYLE_INPUT, "Ritira soldi", "Inserisci l'ammontare di soldi che vuoi ritirare dalla casa.\n{00FF00}Cassa: $%d{FFFFFF}", "Ritira", "Annulla", House_GetMoney(house));
 		}
 		case 4: // Vendi 
 		{
-			return Dialog_Show(playerid, Dialog_HouseSell, DIALOG_STYLE_MSGBOX, "Vendi", "Sei sicuro di voler vendere la tua casa per {00FF00}$%d{FFFFFF}\nUna volta venduta, tutti i mobili verranno rimossi.", "Vendi", "Annulla", House_GetPrice(houseid)/2);
+			return Dialog_Show(playerid, Dialog_HouseSell, DIALOG_STYLE_MSGBOX, "Vendi", "Sei sicuro di voler vendere la tua casa per {00FF00}$%d{FFFFFF}\nUna volta venduta, tutti i mobili verranno rimossi.", "Vendi", "Annulla", House_GetPrice(house)/2);
 		}
 		case 5: // Vendi a giocatore
 		{
@@ -42,10 +42,10 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
 		}
 		case 6: // Cambia interior
 		{
-			if(House_IsValid(Character_GetHouseID(playerid)))
+			if(Character_GetHouseID(playerid) > 0)
 				return SendClientMessage(playerid, COLOR_ERROR, "Devi essere all'esterno della casa per poter cambiare interior.");
 			
-			new String:string, interiorType = House_GetInteriorType(houseid);
+			new String:string, interiorType = House_GetInteriorType(house);
 			
 			new List:list = HouseInterior_GetListByType(interiorType);
 
@@ -69,16 +69,16 @@ Dialog:Dialog_HouseDeposit(playerid, response, listitem, inputtext[])
 {
     if(!response)
 	   return 0;
-    new houseid = Character_GetHouseMenu(playerid);
-	if(houseid == -1)
+    new House:house = Character_GetHouseMenu(playerid);
+	if(!House_IsValid(house))
 		return 0;
     new amount = strval(inputtext);
     if(amount <= 0 || amount > Character_GetMoney(playerid))
 	   return Dialog_Show(playerid, Dialog_HouseDeposit, DIALOG_STYLE_INPUT, "Deposita soldi", "{FF0000}Ammontare non valido!\n{FFFFFF}Inserisci l'ammontare di soldi che vuoi depositare in casa.", "Deposita", "Annulla");
     Character_GiveMoney(playerid, -amount, "house_deposit");
-	House_GiveMoney(houseid, amount);
+	House_GiveMoney(house, amount);
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai depositato $%d all'interno della tua casa.", amount);
-    SendFormattedMessage(playerid, COLOR_GREEN, "Attuale: $%d", House_GetMoney(houseid));
+    SendFormattedMessage(playerid, COLOR_GREEN, "Attuale: $%d", House_GetMoney(house));
     return 1;
 }
 
@@ -86,16 +86,16 @@ Dialog:Dialog_HouseWithdraw(playerid, response, listitem, inputtext[])
 {
     if(!response)
 	   return 0;
-	new houseid = Character_GetHouseMenu(playerid);
-	if(houseid == -1)
+    new House:house = Character_GetHouseMenu(playerid);
+	if(!House_IsValid(house))
 		return 0;
     new amount = strval(inputtext);
-    if(amount <= 0 || amount > House_GetMoney(houseid))
-	   return Dialog_Show(playerid, Dialog_HouseWithdraw, DIALOG_STYLE_INPUT, "Ritira soldi", "{FF0000}Ammontare non valido!\n{FFFFFF}Inserisci l'ammontare di soldi che vuoi ritirare dalla casa.\n{00FF00}Cassa: $%d{FFFFFF}", "Ritira", "Annulla", House_GetMoney(houseid));
-    House_GiveMoney(houseid, -amount);
+    if(amount <= 0 || amount > House_GetMoney(house))
+	   return Dialog_Show(playerid, Dialog_HouseWithdraw, DIALOG_STYLE_INPUT, "Ritira soldi", "{FF0000}Ammontare non valido!\n{FFFFFF}Inserisci l'ammontare di soldi che vuoi ritirare dalla casa.\n{00FF00}Cassa: $%d{FFFFFF}", "Ritira", "Annulla", House_GetMoney(house));
+    House_GiveMoney(house, -amount);
     Character_GiveMoney(playerid, amount, "Dialog_HouseWithdraw");
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai ritirato $%d dalla tua casa.", amount);
-    SendFormattedMessage(playerid, COLOR_GREEN, "Attuale: $%d", House_GetMoney(houseid));
+    SendFormattedMessage(playerid, COLOR_GREEN, "Attuale: $%d", House_GetMoney(house));
     return 1;
 }
 
@@ -103,28 +103,26 @@ Dialog:Dialog_HouseSell(playerid, response, listitem, inputtext[])
 {
     if(!response)
 	   return Character_ShowHouseDialog(playerid);
-	new houseid = Character_GetHouseMenu(playerid);
-	printf("House ID: %d", houseid);
-	if(houseid == -1)
+    new House:house = Character_GetHouseMenu(playerid);
+	if(!House_IsValid(house))
 		return 0;
-    new sellPrice = House_GetPrice(houseid) / 2;
+    new sellPrice = House_GetPrice(house) / 2;
     Character_GiveMoney(playerid, sellPrice, "Dialog_HouseSell");
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai venduto la tua casa per $%d.", sellPrice);
 
-	House_RemoveAllfurnitures(houseid);
-    House_ResetOwner(houseid);
+	House_RemoveAllfurnitures(house);
+    House_ResetOwner(house);
     return 1;
 }
 
 Dialog:Dialog_HouseInterior(playerid, response, listitem, inputtext[])
 {
-	new houseid = Character_GetHouseMenu(playerid);
-    if(!response || !House_IsValid(houseid))
-	{
+    new House:house = Character_GetHouseMenu(playerid);
+	if(!response || !House_IsValid(house))
 		return 0;
-	}
+	
 
-    if(House_SetInterior(houseid, House_GetInteriorType(houseid), listitem))
+    if(House_SetInterior(house, House_GetInteriorType(house), listitem))
 	{
     	SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato l'interno della tua casa. Nuovo interior: %d.", listitem);
 	}

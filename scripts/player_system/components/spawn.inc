@@ -147,10 +147,11 @@ CMD:spawnpoint(playerid, params[])
 			SendClientMessage(playerid, COLOR_ERROR, "Tipi - 0: Spawn scelto, 1: Casa, 2: Fazione, 3: Business");
 			return 1;
 		}
-		if(!House_IsValid(extraid))
+		new House:house = House_Find(extraid);
+		if(!House_IsValid(house))
 			return SendClientMessage(playerid, COLOR_ERROR, "La casa inserita non esiste.");
 		
-		if(Character_GetHouseKey(playerid) != extraid && House_GetOwnerID(extraid) != Character_GetID(playerid))
+		if(Character_GetHouseKey(playerid) != house && House_GetOwnerID(house) != Character_GetID(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non sei nè il proprietario nè un affittuario di questa casa.");
 		
 		Character_SetSpawnPointType(playerid, SPAWN_POINT_TYPE_HOUSE);
@@ -292,15 +293,14 @@ static Character_Spawn(playerid)
     }
     else
     {
-		new bool:isSpawned = false;
-		if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_HOUSE && House_IsValid(Character_GetSpawnPointID(playerid)))
+		new bool:isSpawned = false, House:house = House_Find(Character_GetSpawnPointID(playerid));
+		if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_HOUSE && House_IsValid(house))
 		{
-			new housekey = Character_GetSpawnPointID(playerid);
-			if(House_GetOwnerID(housekey) == Character_GetID(playerid) || Character_GetHouseKey(playerid) == housekey)
+			if(House_GetOwnerID(house) == Character_GetID(playerid) || Character_GetHouseKey(playerid) == house)
 			{
 				new Float:x, Float:y, Float:z;
-				House_GetExitPosition(housekey, x, y, z);
-				Character_SetSafePosition(playerid, x, y, z, House_GetExitInterior(housekey), House_GetExitWorld(housekey));
+				House_GetExitPosition(house, x, y, z);
+				Character_SetSafePosition(playerid, x, y, z, House_GetExitInterior(house), House_GetExitWorld(house));
 				isSpawned = true;
 			}
 		}

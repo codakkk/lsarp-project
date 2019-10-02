@@ -7,9 +7,10 @@
 
 static 
 	PlayerHash[MAX_PLAYERS][BCRYPT_HASH_LENGTH],
-	LoginAttempts[MAX_PLAYERS char],
-    AccountEMailCode[MAX_PLAYERS],
-	TempMail[MAX_PLAYERS][255];
+	LoginAttempts[MAX_PLAYERS char]
+    //AccountEMailCode[MAX_PLAYERS],
+	//TempMail[MAX_PLAYERS][255]
+;
 
 //
 static Timer:LoginTimer[MAX_PLAYERS];

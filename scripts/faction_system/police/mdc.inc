@@ -98,29 +98,28 @@ Dialog:Dialog_MDCSearchCharacter(playerid, response, listitem, inputtext[])
             if(cache_num_rows() <= 0)
                 return SendClientMessage(playerid, COLOR_ERROR, "Il cittadino non è più presente nel database.");
             
-            new id, address[64], tempName[MAX_PLAYER_NAME], name[MAX_PLAYER_NAME], surname[MAX_PLAYER_NAME], hid = 0, bid = 0;
+            new id, address[64], tempName[MAX_PLAYER_NAME], name[MAX_PLAYER_NAME], surname[MAX_PLAYER_NAME], House:rentHouse = INVALID_HOUSE, temp = 0;
 
             cache_get_value_index_int(0, 0, id);
             cache_get_value_index(0, 1, tempName);
-            cache_get_value_index_int(0, 2, hid);
-            cache_get_value_index_int(0, 3, bid);
+            cache_get_value_index_int(0, 2, temp);
 
             sscanf(tempName, "p<_>s[24]s[24]", name, surname);
 
             new String:end = str_format("{FFFFFF}==== SCHEDA DEL CITTADINO ====\n- Nome: %s\n- Cognome: %s\n\n==== Case ====\n\n", name, surname);
 
-            if(House_IsValid(hid))
+            rentHouse = House_Find(temp);
+            if(House_IsValid(rentHouse))
             {
-                House_GetAddress(hid, address);
-                end += str_format("- %d (%s)\n", hid, address);
+                House_GetAddress(rentHouse, address);
+                end += str_format("- %d (%s)\n", House_GetID(rentHouse), address);
             }
 
-            for_map(i : GetHousesMap())
+            for_house(house)
             {
-                new houseid = iter_get_key(i);
-                if(House_GetOwnerID(houseid) == id && hid != houseid)
+                if(House_GetOwnerID(house) == id && rentHouse != house)
                 {
-                    House_GetAddress(houseid, address);
+                    House_GetAddress(house, address);
                     end += str_format("{33AA33}%s{FFFFFF}\n", address);
                 }
             }
@@ -139,7 +138,7 @@ Dialog:Dialog_MDCSearchCharacter(playerid, response, listitem, inputtext[])
 
             Dialog_Show_s(playerid, DialogNull, DIALOG_STYLE_MSGBOX, @("Scheda"), end, "Chiudi", "");
         }
-        MySQL_TQueryInline(gMySQL, using inline OnSearch, "SELECT id, name, house_key, building_key FROM characters WHERE id = '%d' and banned = 0", TargetID[playerid]);
+        MySQL_TQueryInline(gMySQL, using inline OnSearch, "SELECT id, name, house_key FROM characters WHERE id = '%d' and banned = 0", TargetID[playerid]);
     }
     else if(listitem == 1)
     {

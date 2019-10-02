@@ -5,14 +5,15 @@ CMD:gotohouse(playerid, params[])
 	new houseid;
     if(sscanf(params, "d", houseid))
 	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gotohouse <houseid>");
-	if(!House_IsValid(houseid))
+	new House:house = House_Find(houseid);
+	if(!House_IsValid(house))
 		return SendClientMessage(playerid, COLOR_ERROR, "La casa inserita non esiste.");
 	new Float:x, Float:y, Float:z;
-	House_GetEnterPosition(houseid, x, y, z);
+	House_GetEnterPosition(house, x, y, z);
 	SetPlayerPos(playerid, x, y, z);
-	SetPlayerInterior(playerid, House_GetEnterInterior(houseid));
-	Character_SetVirtualWorld(playerid, House_GetEnterWorld(houseid));
-	SendFormattedMessage(playerid, COLOR_GREEN, "Ti sei gotato alla casa id %d", houseid);
+	SetPlayerInterior(playerid, House_GetEnterInterior(house));
+	Character_SetVirtualWorld(playerid, House_GetEnterWorld(house));
+	SendFormattedMessage(playerid, COLOR_GREEN, "Ti sei gotato alla casa id %d", House_GetID(house));
 	return 1;
 }
 
@@ -76,7 +77,12 @@ CMD:hdelete(playerid, params[])
 	new houseid = strval(params);
 	if(houseid <= 0)
 		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /hdelete <house id>");
-	if(House_Delete(houseid))
+	
+	new House:house = House_Find(houseid);
+	if(!House_IsValid(house))
+		return SendClientMessage(playerid, COLOR_ERROR, "La casa inserita non esiste.");
+
+	if(House_Delete(house))
 	{
 		SendMessageToAdmins(true, COLOR_ORANGE, "AdmCmd: %s (%d) ha rimosso la casa id %d.", Account_GetName(playerid), playerid, houseid);
 	}
@@ -95,11 +101,12 @@ CMD:hresetowner(playerid, params[])
 	if(houseid <= 0)
 		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /hresetowner <houseid>");
 
-	if(!House_IsValid(houseid))
+	new House:house = House_Find(houseid);
+	if(!House_IsValid(house))
 	   return SendClientMessage(playerid, COLOR_ERROR, "L'id della casa inserita non è valido.");
 
 
-	if(House_ResetOwner(houseid))
+	if(House_ResetOwner(house))
 	{
 		SendFormattedMessage(playerid, COLOR_YELLOW, "Hai resettato il proprietario della casa id %d.", houseid);
 		SendMessageToAdmins(1, COLOR_ORANGE, "AdmCmd: %s (%d) ha resettato il proprietario della casa id %d.", Account_GetName(playerid), playerid, houseid);
@@ -114,7 +121,8 @@ CMD:hedit(playerid, params[])
     if(sscanf(params, "ds[16]D(-1)D(-1)", houseid, command, value, value2))
 	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /hedit <houseid> <pos - interior - price - lock>");
     
-    if(!House_IsValid(houseid))
+	new House:house = House_Find(houseid);
+	if(!House_IsValid(house))
 	   return SendClientMessage(playerid, COLOR_ERROR, "L'id della casa inserita non è valido.");
 
     if(!strcmp(command, "pos", true))
@@ -122,10 +130,10 @@ CMD:hedit(playerid, params[])
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai spostato le coordinate d'entrata della casa %d.", houseid);
 	   new Float:x, Float:y, Float:z;
 	   GetPlayerPos(playerid, x, y, z);
-	   House_SetEnterPosition(houseid, x, y, z);
-	   House_SetEnterInterior(houseid, GetPlayerInterior(playerid));
-	   House_SetEnterWorld(houseid, Character_GetVirtualWorld(playerid));
-	   House_CreateObjects(houseid);
+	   House_SetEnterPosition(house, x, y, z);
+	   House_SetEnterInterior(house, GetPlayerInterior(playerid));
+	   House_SetEnterWorld(house, Character_GetVirtualWorld(playerid));
+	   House_CreateObjects(house);
     }
     else if(!strcmp(command, "interior", true))
     {
@@ -138,7 +146,7 @@ CMD:hedit(playerid, params[])
 	   	if(!HouseInterior_IsValidType(value))
 			return SendClientMessage(playerid, COLOR_ERROR, "Tipo interior non valido");
 		
-	   	if(House_SetInterior(houseid, value, value2))
+	   	if(House_SetInterior(house, value, value2))
 		{
 	   		SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato l'interior della casa %d. Tipo: %s - ID: %d", houseid, GetInteriorTypeName(value), value2);
 		}
@@ -152,7 +160,7 @@ CMD:hedit(playerid, params[])
 	   if(value <= 0)
 		  return SendClientMessage(playerid, COLOR_ERROR, "Il prezzo della casa deve essere maggiore di 0.");
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato il prezzo di vendita della casa %d. Nuovo prezzo: %d", houseid, value);
-	   House_SetPrice(houseid, value);
+	   House_SetPrice(house, value);
     }
     else if(!strcmp(command, "lock", true))
     {
@@ -164,7 +172,7 @@ CMD:hedit(playerid, params[])
 	   else 
 		  s = "Aperta";
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato lo stato della porta della casa %d. Stato: %s", houseid, s);
-	   House_SetLocked(houseid, value);
+	   House_SetLocked(house, value);
     }
     else return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /hedit <houseid> <pos - interior - price - lock>");
     return 1;
@@ -193,13 +201,13 @@ alias:casa("cmenu");
 flags:bussa(CMD_ALIVE_USER);
 CMD:bussa(playerid, params[])
 {
-	new houseid = Character_GetHouse(playerid, false);
+	new House:house = Character_GetHouse(playerid, false);
 	new Building:building = Character_GetBuilding(playerid, false);
 
-	if(!House_IsValid(houseid) && !Building_IsValid(building))
+	if(!House_IsValid(house) && !Building_IsValid(building))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata di un biz o di una casa.");
 
-	new world = House_IsValid(houseid) ? House_GetExitWorld(houseid) : Building_GetExitWorld(building);
+	new world = House_IsValid(house) ? House_GetExitWorld(house) : Building_GetExitWorld(building);
 
 	foreach(new p : Player)
 	{
@@ -216,12 +224,12 @@ CMD:dshout(playerid, params[])
 	if(isnull(params) || strlen(params) <= 0)
 		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: (/ds)hout [testo]");
 	
-	new houseid = Character_GetHouse(playerid, false);
+	new House:house = Character_GetHouse(playerid, false);
 	new Building:building = Character_GetBuilding(playerid, false);
 
-	if(House_IsValid(houseid) || Building_IsValid(building))
+	if(House_IsValid(house) || Building_IsValid(building))
 	{
-		new world = House_IsValid(houseid) ? House_GetExitWorld(houseid) : Building_GetExitWorld(building);
+		new world = House_IsValid(house) ? House_GetExitWorld(house) : Building_GetExitWorld(building);
 		foreach(new p : Player)
 		{
 			if(Character_GetVirtualWorld(p) == world)
@@ -231,18 +239,18 @@ CMD:dshout(playerid, params[])
 	}
 	else
 	{
-		houseid = Character_GetHouse(playerid, true);
+		house = Character_GetHouse(playerid, true);
 		building = Character_GetBuilding(playerid, true);
 
-		if(!House_IsValid(houseid) && !Building_IsValid(building))
+		if(!House_IsValid(house) && !Building_IsValid(building))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita di un biz o di una casa.");
 		
 		new Float:x, Float:y, Float:z, world, interior;
-		if(House_IsValid(houseid))
+		if(House_IsValid(house))
 		{
-			House_GetEnterPosition(houseid, x, y, z);
-			world = House_GetEnterWorld(houseid);
-			interior = House_GetEnterInterior(houseid);
+			House_GetEnterPosition(house, x, y, z);
+			world = House_GetEnterWorld(house);
+			interior = House_GetEnterInterior(house);
 		}
 		else
 		{
@@ -263,12 +271,12 @@ CMD:ddo(playerid, params[])
 	if(isnull(params) || strlen(params) <= 0)
 		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /ddo [testo]");
 	
-	new houseid = Character_GetHouse(playerid, false);
+	new House:house = Character_GetHouse(playerid, false);
 	new Building:building = Character_GetBuilding(playerid, false);
 
-	if(House_IsValid(houseid) || Building_IsValid(building))
+	if(House_IsValid(house) || Building_IsValid(building))
 	{
-		new world = House_IsValid(houseid) ? House_GetExitWorld(houseid) : Building_GetExitWorld(building);
+		new world = House_IsValid(house) ? House_GetExitWorld(house) : Building_GetExitWorld(building);
 		foreach(new p : Player)
 		{
 			if(Character_GetVirtualWorld(p) == world)
@@ -278,18 +286,18 @@ CMD:ddo(playerid, params[])
 	}
 	else
 	{
-		houseid = Character_GetHouse(playerid, true);
+		house = Character_GetHouse(playerid, true);
 		building = Character_GetBuilding(playerid, true);
 
-		if(!House_IsValid(houseid) && !Building_IsValid(building))
+		if(!House_IsValid(house) && !Building_IsValid(building))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita di un biz o di una casa.");
 		
 		new Float:x, Float:y, Float:z, world, interior;
-		if(House_IsValid(houseid))
+		if(House_IsValid(house))
 		{
-			House_GetEnterPosition(houseid, x, y, z);
-			world = House_GetEnterWorld(houseid);
-			interior = House_GetEnterInterior(houseid);
+			House_GetEnterPosition(house, x, y, z);
+			world = House_GetEnterWorld(house);
+			interior = House_GetEnterInterior(house);
 		}
 		else
 		{
@@ -311,14 +319,15 @@ CMD:resethousefurnitures(playerid, params[])
     new houseid;
     if(sscanf(params, "d", houseid))
         return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /resethouseexterior <houseid>");
-    if(!House_IsValid(houseid))
+    new House:house = House_Find(houseid);
+	if(!House_IsValid(house))
         return SendClientMessage(playerid, COLOR_ERROR, "La casa inserita non è valida.");
     
 
-    if(House_RemoveAllfurnitures(houseid))
-        SendFormattedMessage(playerid, COLOR_GREEN, "Mobili rimossi dalla casa id %d", houseid);
+    if(House_RemoveAllfurnitures(house))
+        SendFormattedMessage(playerid, COLOR_GREEN, "Mobili rimossi dalla casa id %d", House_GetID(house));
     else
-        SendFormattedMessage(playerid, COLOR_ERROR, "Non è stato possibile rimuovere i mobili dalla casa id %d", houseid);
+        SendFormattedMessage(playerid, COLOR_ERROR, "Non è stato possibile rimuovere i mobili dalla casa id %d", House_GetID(house));
 
     return 1;
 }

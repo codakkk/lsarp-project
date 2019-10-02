@@ -168,11 +168,12 @@ stock Character_GetWorldPosition(playerid, &Float:x, &Float:y, &Float:z)
     }
     else if(world < BUILDING_START_WORLD)
     {
-        new hid = Character_GetHouseID(playerid);
+        new House:house = House_Find(Character_GetHouseID(playerid));
         
-        if(!House_IsValid(hid))
+        if(!House_IsValid(house))
             return 0;
-        House_GetEnterPosition(hid, x, y, z);
+            
+        House_GetEnterPosition(house, x, y, z);
     }
     else if(world >= BUILDING_START_WORLD)
     {
@@ -194,12 +195,11 @@ stock Drop_GetWorldPosition(dropid, &Float:x, &Float:y, &Float:z)
     }
     else if(world < BUILDING_START_WORLD)
     {
-        new hid = Drop_GetVirtualWorld(dropid) - HOUSE_START_WORLD;
-        
-        if(!House_IsValid(hid))
+        new House:house = House_Find(Drop_GetVirtualWorld(dropid) - HOUSE_START_WORLD);
+        if(!House_IsValid(house))
             return 0;
         
-        House_GetEnterPosition(hid, x, y, z);
+        House_GetEnterPosition(house, x, y, z);
     }
     else if(world >= BUILDING_START_WORLD)
     {

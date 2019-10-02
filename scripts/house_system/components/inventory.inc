@@ -2,7 +2,7 @@
 
 static enum _:E_DIALOG_HOUSE_DATA
 {
-    HouseID,
+    House:House,
     Inventory:Inventory,
     SlotID,
 	ItemToDeposit
@@ -30,62 +30,62 @@ hook OnGameModeInit()
 	return 1;
 }
 
-hook OnHouseLoaded(houseid)
+hook OnHouseLoaded(House:house)
 {
-	House_InitializeInventory(houseid);
-	House_LoadInventory(houseid);
+	House_InitializeInventory(house);
+	House_LoadInventory(house);
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-stock Inventory:House_InitializeInventory(houseid)
+stock Inventory:House_InitializeInventory(House:house)
 {
-	if(map_has_key(HouseInventory, houseid))
+	if(map_has_key(HouseInventory, House_GetID(house)))
 		return Inventory:0;
 	new Inventory:inv = Inventory_New(20);
-	map_add(HouseInventory, houseid, List:inv);
+	map_add(HouseInventory, House_GetID(house), List:inv);
 	//printf("House %d List:inventory initialized");
 	return inv;
 }
 
-stock Inventory:House_GetInventory(houseid)
+stock Inventory:House_GetInventory(House:house)
 {
 	new Inventory:inv;
-	if(map_get_safe(HouseInventory, houseid, List:inv))
+	if(map_get_safe(HouseInventory, House_GetID(house), List:inv))
 	{
 		return inv;
 	}
 	return Inventory:0;
 }
 
-stock House_SaveInventory(houseid)
+stock House_SaveInventory(House:house)
 {
-	Inventory_SaveInDatabase(House_GetInventory(houseid), "house_inventory", "house_id", House_GetID(houseid));
+	Inventory_SaveInDatabase(House_GetInventory(house), "house_inventory", "house_id", House_GetID(house));
 	return 1;
 }
 
-stock House_LoadInventory(houseid)
+stock House_LoadInventory(House:house)
 {
-	Inventory_LoadFromDatabase(House_GetInventory(houseid), "house_inventory", "house_id", House_GetID(houseid));
+	Inventory_LoadFromDatabase(House_GetInventory(house), "house_inventory", "house_id", House_GetID(house));
 	return 1;
 }
 
-stock House_ShowInventory(houseid, playerid)
+stock House_ShowInventory(House:house, playerid)
 {
-    if(!House_IsValid(houseid))
+    if(!House_IsValid(house))
         return 0;
     
-    new Inventory:inventory = House_GetInventory(houseid);
+    new Inventory:inventory = House_GetInventory(house);
 	
 	if(map_has_key(PlayerHouseInventory, playerid))
 	{
-		map_set_cell(PlayerHouseInventory, playerid, HouseID, houseid);
+		map_set_cell(PlayerHouseInventory, playerid, House, _:house);
 		map_set_cell(PlayerHouseInventory, playerid, Inventory, List:inventory);
 		map_set_cell(PlayerHouseInventory, playerid, SlotID, -1);
 	}
 	else
 	{
 		new data[E_DIALOG_HOUSE_DATA];
-		data[HouseID] = houseid;
+		data[House] = house;
 		data[Inventory] = inventory;
 		data[SlotID] = -1;
 		map_add_arr(PlayerHouseInventory, playerid, data);
@@ -106,7 +106,7 @@ Dialog:Dialog_HouseInventory(playerid, response, listitem, inputtext[])
 Dialog:HouseInventoryAction(playerid, response, listitem, inputtext[])
 {
     if(!response)
-        return House_ShowInventory(Internal_GetHouseID(playerid), playerid);
+        return House_ShowInventory(Internal_GetHouse(playerid), playerid);
     new 
 		slotid = Internal_GetSlotID(playerid),
 		itemid = Inventory_GetSlotItem(Internal_GetInventory(playerid), slotid),
@@ -144,10 +144,10 @@ Dialog:HouseInventoryAction(playerid, response, listitem, inputtext[])
 			Inventory_DecreaseSlotAmount(invRef, slotid, 1);
 
 			Character_SaveInventory(playerid);
-			House_SaveInventory(Internal_GetHouseID(playerid));
+			House_SaveInventory(Internal_GetHouse(playerid));
 
 			SendFormattedMessage(playerid, COLOR_ORANGE, "Hai ritirato gli oggetti dall'inventario della casa. (Oggetto: %s - Quantità: 1)", ServerItem_GetName(itemid));
-			return House_ShowInventory(Internal_GetHouseID(playerid), playerid);
+			return House_ShowInventory(Internal_GetHouse(playerid), playerid);
 		}
 		else
 		{
@@ -180,9 +180,9 @@ Dialog:HouseInvWithdrawAmount(playerid, response, listitem, inputtext[])
 	Inventory_DecreaseSlotAmount(inventoryRef, slotid, val);
 
 	Character_SaveInventory(playerid);
-	House_SaveInventory(Internal_GetHouseID(playerid));
+	House_SaveInventory(Internal_GetHouse(playerid));
 
-	House_ShowInventory(Internal_GetHouseID(playerid), playerid);
+	House_ShowInventory(Internal_GetHouse(playerid), playerid);
 	return 1;
 }
 
@@ -209,10 +209,10 @@ Dialog:HouseInventoryDepSelectItem(playerid, response, listitem, inputtext[])
 		Character_DecreaseItemAmount(playerid, itemid, amount);
 
 		Character_SaveInventory(playerid);
-		House_SaveInventory(Internal_GetHouseID(playerid));
+		House_SaveInventory(Internal_GetHouse(playerid));
 
 		SendFormattedMessage(playerid, COLOR_ORANGE, "Hai depositato gli oggetti nell'inventario della tua casa. (Oggetto: %s - Quantità: %d)", ServerItem_GetName(itemid), amount);
-		House_ShowInventory(Internal_GetHouseID(playerid), playerid);
+		House_ShowInventory(Internal_GetHouse(playerid), playerid);
 	}
 	else
 	{
@@ -244,11 +244,11 @@ Dialog:HouseInventoryDepositAmount(playerid, response, listitem, inputtext[])
 	Character_DecreaseItemAmount(playerid, itemid, val);
 
 	Character_SaveInventory(playerid);
-	House_SaveInventory(Internal_GetHouseID(playerid));
+	House_SaveInventory(Internal_GetHouse(playerid));
 
 	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai depositato gli oggetti nell'inventario della tua casa. (Oggetto: %s - Quantità: %d)", ServerItem_GetName(itemid), val);
 	
-	House_ShowInventory(Internal_GetHouseID(playerid), playerid);
+	House_ShowInventory(Internal_GetHouse(playerid), playerid);
 	return 1;
 }
 
@@ -272,11 +272,11 @@ static Internal_ShowHouseSlotAction(playerid, slotid)
 	return 1;
 }
 
-static Internal_GetHouseID(playerid)
+static House:Internal_GetHouse(playerid)
 {
 	if(!map_has_key(PlayerHouseInventory, playerid))
-		return 0;
-	return map_get(PlayerHouseInventory, playerid, HouseID);
+		return INVALID_HOUSE;
+	return House:map_get(PlayerHouseInventory, playerid, House);
 }
 
 static Inventory:Internal_GetInventory(playerid)

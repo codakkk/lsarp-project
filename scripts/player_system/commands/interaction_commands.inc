@@ -13,11 +13,7 @@ CMD:entra(playerid, params[])
 flags:esci(CMD_ALIVE_USER);
 CMD:esci(playerid, params[])
 {
-	new id, E_ELEMENT_TYPE:type;
-    if(Character_GetNearestPickup(playerid, id, type))
-    	Character_Exit(playerid, id, type);
-    else
-		SendClientMessage(playerid, COLOR_ERROR, "Non sei all'uscita di un edificio.");
+	pc_cmd_entra(playerid, "");
     return 1;
 }
 

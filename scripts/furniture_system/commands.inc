@@ -13,12 +13,13 @@ CMD:arredamento(playerid, params[])
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
     
-    new houseid = Character_CanFurnish(playerid, true);
-
-    if(!House_IsValid(houseid))
+    new House:house = Character_CanFurnish(playerid, true);
+    
+    if(!House_IsValid(house))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di una casa arredabile.");
     
-    Character_SetFurnitureLinkedTo(playerid, House_GetExitWorld(houseid));
+    Character_SetFurnitureLinkedTo(playerid, House_GetExitWorld(house));
+
     Dialog_Show(playerid, Dialog_Furniture, DIALOG_STYLE_LIST, "Arredamento", "Mobili piazzati\nPiazza", "Avanti", "Chiudi");
     return 1;
 }
@@ -66,12 +67,12 @@ CMD:piazzaobject(playerid, params[])
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
     
-    new houseid = Character_CanFurnish(playerid, true);
+    new House:house = Character_CanFurnish(playerid, true);
 
-    if(!House_IsValid(houseid))
+    if(!House_IsValid(house))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di una casa arredabile.");
     
-    Character_SetFurnitureLinkedTo(playerid, House_GetExitWorld(houseid));
+    Character_SetFurnitureLinkedTo(playerid, House_GetExitWorld(house));
     Furniture_ShowCategoryList(playerid);
     return 1;
 }
@@ -86,9 +87,9 @@ CMD:rinominaobject(playerid, params[])
     if(sscanf(params, "ds[64]", id, name) || strlen(name) < 3)
         return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /rinominaobject <localid> <nome (min 3 caratteri - max 64 caratteri)>");
     
-    new houseid = Character_CanFurnish(playerid, true);
+    new House:house = Character_CanFurnish(playerid, true);
 
-    if(!House_IsValid(houseid))
+    if(!House_IsValid(house))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di una casa arredabile.");
 
     new objectid = Furniture_GetFurnitureObjectID(Character_GetVirtualWorld(playerid), id);
@@ -110,9 +111,9 @@ CMD:spostaoggetto(playerid, params[])
     if(sscanf(params, "d", id))
         return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /spostaoggetto <local id>");
     
-    new houseid = Character_CanFurnish(playerid, true);
+    new House:house = Character_CanFurnish(playerid, true);
 
-    if(!House_IsValid(houseid))
+    if(!House_IsValid(house))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di una casa arredabile.");
 
     new 
@@ -143,9 +144,9 @@ CMD:textureoggetto(playerid, params[])
     if(sscanf(params, "ddds[64]s[64]", id, index, modelid, txd, texture))
         return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /textureoggetto <local id> <index> <modelid> <txd> <texture>");
     
-    new houseid = Character_CanFurnish(playerid, true);
+    new House:house = Character_CanFurnish(playerid, true);
 
-    if(!House_IsValid(houseid))
+    if(!House_IsValid(house))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di una casa arredabile.");
 
     new 

@@ -7,8 +7,10 @@
 #define _included_HOUSE 
 
 #define INVALID_HOUSE_ID	(0)
+#define INVALID_HOUSE	    (House:0)
 #define HOUSE_START_WORLD 	(1000)
 
+#define for_house(%0) for(new Iter:iter=map_iter(GetHousesMap()), House:%0=House:iter_get_value(iter);iter_inside(iter);%0=(iter_move_next(iter) != ITER_NULL ? (House:iter_get_value(iter)) : (House:0)))
 
 #include <building_system\core>
 
@@ -16,6 +18,7 @@
 #include <house_system\components\interiors>
 
 #include <house_system\commands>
+
 
 #include <YSI_Coding\y_hooks>
 
@@ -66,16 +69,25 @@ hook OnGameModeInit()
     return 1;
 }
 
+stock bool:Character_CanUseHouseMenu(playerid, House:house)
+{
+	if(!House_IsValid(house))
+		return false;
+	if(Player_IsAdminDuty(playerid) || Character_DoesOwnHouse(playerid, house))
+		return true;
+	return false;
+}
+
 hook function Character_Enter(playerid)
 {
     if(IsPlayerInAnyVehicle(playerid))
         return continue(playerid);
 
-    new houseid = Character_GetHouse(playerid, false);
-    if(!House_IsValid(houseid))
-        houseid = Character_GetHouse(playerid, true);
+    new House:house = Character_GetHouse(playerid, false);
+    if(!House_IsValid(house))
+        house = Character_GetHouse(playerid, true);
     
-    if(House_IsValid(houseid))
+    if(House_IsValid(house))
     {
         
         new 
@@ -92,16 +104,16 @@ hook function Character_Enter(playerid)
             interiorId = 0,
             world = 0;
         
-        House_GetEnterPosition(houseid, enterX, enterY, enterZ);
-        House_GetExitPosition(houseid, exitX, exitY, exitZ);
+        House_GetEnterPosition(house, enterX, enterY, enterZ);
+        House_GetExitPosition(house, exitX, exitY, exitZ);
 
         if(IsPlayerInRangeOfPoint(playerid, 2.0, enterX, enterY, enterZ))
         {
             x = exitX;
             y = exitY;
             z = exitZ;
-            interiorId = House_GetExitInterior(houseid);
-            world = House_GetExitWorld(houseid);
+            interiorId = House_GetExitInterior(house);
+            world = House_GetExitWorld(house);
             isEnter = true;
         }
         else if(IsPlayerInRangeOfPoint(playerid, 2.0, exitX, exitY, exitZ))
@@ -109,8 +121,8 @@ hook function Character_Enter(playerid)
             x = enterX;
             y = enterY;
             z = enterZ;
-            interiorId = House_GetEnterInterior(houseid);
-            world = House_GetEnterWorld(houseid);
+            interiorId = House_GetEnterInterior(house);
+            world = House_GetEnterWorld(house);
             isEnter = false;
         }
         else
@@ -118,7 +130,7 @@ hook function Character_Enter(playerid)
             return continue(playerid);
         }
         
-        if(House_IsLocked(houseid))
+        if(House_IsLocked(house))
             return GameTextForPlayer(playerid, "~r~Porta Chiusa", 5000, 1);
         
         Character_AMe(playerid, isEnter ? ("apre la porta ed entra.") : ("apre la porta ed esce."));
@@ -132,13 +144,13 @@ hook function Character_Enter(playerid)
 
 hook OnCharacterLoad(playerid)
 {
-	new houseid = Character_GetHouseKey(playerid);
-	if(houseid > 0)
+	new House:house = Character_GetHouseKey(playerid);
+	if(House_IsValid(house))
 	{
-		if(!House_IsValid(houseid))
+		if(!House_IsValid(house))
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "La casa di cui eri affittuario non esiste più.");
-			Character_SetHouseKey(playerid, 0);
+			Character_SetHouseKey(playerid, INVALID_HOUSE);
 		}
 	}
 	return 1;
@@ -146,13 +158,11 @@ hook OnCharacterLoad(playerid)
 
 hook OnCharacterChangeName(playerid, newCharacterName[])
 {
-	for_map(i : Houses)
+	for_house(house)
 	{
-        new houseid = iter_get_key(i);
-		if(House_GetOwnerID(houseid) == Character_GetID(playerid))
+		if(House_GetOwnerID(house) == Character_GetID(playerid))
 		{
-			new Iter:it = map_iter_at(Houses, houseid);
-            iter_set_cells(it, OwnerName, newCharacterName, MAX_PLAYER_NAME);
+            var_set_cells(Variant:house, OwnerName, newCharacterName, MAX_PLAYER_NAME);
 		}
 	}
 	return 1;
@@ -160,33 +170,36 @@ hook OnCharacterChangeName(playerid, newCharacterName[])
 
 hook OnPlayerEnterDynamicCP(playerid, checkpointid)
 {
-    new houseid;
-    if(Checkpoint_GetInfoOfType(checkpointid, CHECKPOINT_TYPE_HOUSE, houseid) && House_IsValid(houseid))
+    new House:house;
+    if(Checkpoint_GetInfoOfType(checkpointid, CHECKPOINT_TYPE_HOUSE, house) && House_IsValid(house))
     {
-        if(!House_IsOwned(houseid))
+        if(!House_IsOwned(house))
         {
             SendClientMessage(playerid, 0x33AA33FF, "Vuoi comprare questo immobile?");
-            SendFormattedMessage(playerid, 0x33AA33FF, "Prezzo: $%s", FormatNumber(House_GetPrice(houseid)));
+            SendFormattedMessage(playerid, 0x33AA33FF, "Prezzo: $%s", FormatNumber(House_GetPrice(house)));
             SendClientMessage(playerid, -1, "/compra");
         }
         new zone[64];
-        House_GetAddress(houseid, zone);
+        House_GetAddress(house, zone);
         SendClientMessage(playerid, 0x33AA33FF, zone);
         SendClientMessage(playerid, -1, "Comandi disponibili: /entra, /ds(hout), /ddo, /bussa");
     }
     return 1;
 }
 
-stock bool:House_GetAddress(houseid, name[])
+stock House:House_Find(houseid)
 {
-    if(!House_IsValid(houseid))
-        return false;
+    return House:map_get(Houses, houseid);
+}
+
+stock bool:House_GetAddress(House:house, name[])
+{
     
     new Float:x, Float:y, Float:z;
         
-    if(House_GetEnterWorld(houseid) > BUILDING_START_WORLD)
+    if(House_GetEnterWorld(house) > BUILDING_START_WORLD)
     {
-        new Building:building = Building_Find(House_GetEnterWorld(houseid) - BUILDING_START_WORLD);
+        new Building:building = Building_Find(House_GetEnterWorld(house) - BUILDING_START_WORLD);
         if(Building_IsValid(building) && Building_GetType(building) == BUILDING_TYPE_COMPLEX)
         {
             Building_GetEnterPos(building, x, y, z);
@@ -194,7 +207,7 @@ stock bool:House_GetAddress(houseid, name[])
     }
     else
     {
-        House_GetEnterPosition(houseid, x, y, z);
+        House_GetEnterPosition(house, x, y, z);
     }
     Get2DZoneName(x, y, z, name, 32);
     return true;
@@ -210,98 +223,94 @@ stock House_Create(Float:x, Float:y, Float:z, int, world, interiorType)
         id = cache_insert_id(),
         data[E_HOUSE_DATA]
     ;
-    new House:house = House:var_new_buf(E_HOUSE_INFO);
+    new House:house = House:var_new_buf(E_HOUSE_DATA);
+    var_acquire(Variant:house);
     var_set_cell(Variant:house, ID, id);
     var_set_cell(Variant:house, OwnerID, 0);
     var_set_cells(Variant:house, OwnerName, "");
-
     var_set_cell(Variant:house, Price, 0);
     var_set_cell(Variant:house, EnterX, _:x);
     var_set_cell(Variant:house, EnterY, _:y);
     var_set_cell(Variant:house, EnterZ, _:z);
     var_set_cell(Variant:house, EnterInterior, int);
     var_set_cell(Variant:house, EnterWorld, world);
-
     var_set_cell(Variant:house, ExitX, 0.0);
     var_set_cell(Variant:house, ExitY, 0.0);
     var_set_cell(Variant:house, ExitZ, 0.0);
     var_set_cell(Variant:house, ExitInterior, 0);
     var_set_cell(Variant:house, ExitWorld, HOUSE_START_WORLD + id);
-    
     var_set_cell(Variant:house, IsLocked, 1);
-    
-    map_add_arr(Houses, id, data);
+    map_add(Houses, id, _:house);
 
-    House_SetInterior(id, interiorType, 0);
-    House_CreateObjects(id); // Already called by House_SetInterior
+    House_SetInterior(house, interiorType, 0);
+    House_CreateObjects(house); // Already called by House_SetInterior
     CallLocalFunction(#OnHouseLoaded, "d", data[ID]);
     cache_delete(result);
     return id;
 }
 
-stock House_Delete(houseid)
+stock House_Delete(House:house)
 {
-    if(!House_IsValid(houseid))
+    if(!House_IsValid(house))
         return 0;
 
     new query[64];
-    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `houses` WHERE id = '%d'", House_GetID(houseid));
+    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `houses` WHERE id = '%d'", House_GetID(house));
     mysql_tquery(gMySQL, query);
 
-    House_DestroyObjects(houseid);
-    map_remove_deep(Houses, House_GetID(houseid));
+    House_DestroyObjects(house);
+
+    var_release(Variant:house);
+
+    map_remove_deep(Houses, House_GetID(house));
     return 1;
 }
 
-stock House_CreateObjects(houseid)
+stock bool:House_CreateObjects(House:house)
 {
-    if(!House_IsValid(houseid))
-	   return 0;
+    if(!House_IsValid(house))
+	   return false;
 
-    House_DestroyObjects(houseid);
+    House_DestroyObjects(house);
     new 
 	   Float:x, Float:y, Float:z,
 	   Float:ex, Float:ey, Float:ez,
-	   interior = House_GetEnterInterior(houseid),
-	   einterior = House_GetExitInterior(houseid),
-	   enterWorld = House_GetEnterWorld(houseid),
-       exitWorld = House_GetExitWorld(houseid);
+	   interior = House_GetEnterInterior(house),
+	   einterior = House_GetExitInterior(house),
+	   enterWorld = House_GetEnterWorld(house),
+       exitWorld = House_GetExitWorld(house);
     
-    House_GetEnterPosition(houseid, x, y, z);
-    House_GetExitPosition(houseid, ex, ey, ez);
+    House_GetEnterPosition(house, x, y, z);
+    House_GetExitPosition(house, ex, ey, ez);
 
     new text[128];
     
-    if(!House_IsOwned(houseid))
+    if(!House_IsOwned(house))
     {
-        format(text, sizeof(text), "Appartamento[%d] In Vendita:\nPrezzo: $%s\nInterior: %d", House_GetID(houseid), FormatNumber(House_GetPrice(houseid)), House_GetInteriorID(houseid));
+        format(text, sizeof(text), "Appartamento[%d] In Vendita:\nPrezzo: $%s\nInterior: %d", House_GetID(house), FormatNumber(House_GetPrice(house)), House_GetInteriorID(house));
 	    new Text3D:label = CreateDynamic3DTextLabel(text, 0xC38A39FF, x, y, z + 0.55, 5.0, .worldid = enterWorld, .interiorid = interior, .testlos = 1);
-        map_set_cell_safe(Houses, houseid, h3DText, _:label);
-    }
-    else
-    {
-        //format(text, sizeof(text), "Appartamento[%d]:\nPrezzo: $%s\nInterior: %d", House_GetPrice(houseid), House_GetInteriorID(houseid));
+        var_set_cell(Variant:house, h3DText, _:label);
     }
 
     new 
-       enterCheckpoint = Checkpoint_Create(CHECKPOINT_TYPE_HOUSE, houseid, x, y, z - 0.3, 2.5, enterWorld, interior, 5.0),
-       exitCheckpoint = Checkpoint_Create(CHECKPOINT_TYPE_HOUSE, houseid, ex, ey, ez - 0.3, 2.2, exitWorld, einterior, 5.0)
-	   //exitPickupid = Pickup_Create(1007, houseid, ex, ey, ez, ELEMENT_TYPE_HOUSE_EXIT, exitWorld, einterior)
+       enterCheckpoint = Checkpoint_Create(CHECKPOINT_TYPE_HOUSE, house, x, y, z - 0.3, 2.5, enterWorld, interior, 5.0),
+       exitCheckpoint = Checkpoint_Create(CHECKPOINT_TYPE_HOUSE, house, ex, ey, ez - 0.3, 2.2, exitWorld, einterior, 5.0)
     ;
 
-    map_set_cell(Houses, houseid, EnterCheckpoint, _:enterCheckpoint);
-    map_set_cell(Houses, houseid, ExitCheckpoint, _:exitCheckpoint);
-    return 1;
+    var_set_cell(Variant:house, EnterCheckpoint, _:enterCheckpoint);
+    var_set_cell(Variant:house, ExitCheckpoint, _:exitCheckpoint);
+    return true;
 }
 
-stock House_DestroyObjects(houseid)
+stock bool:House_DestroyObjects(House:house)
 {
-    if(!House_IsValid(houseid))
-	   return 0;
+    if(!House_IsValid(house))
+	   return false;
+    
     new
-        enterCheckpoint = map_get(Houses, House_GetID(houseid), EnterCheckpoint),
-        exitCheckpoint = map_get(Houses, House_GetID(houseid), ExitCheckpoint),
-	    Text3D:label = House_Get3DText(houseid);
+        enterCheckpoint = var_get(Variant:house, EnterCheckpoint),
+        exitCheckpoint = var_get(Variant:house, ExitCheckpoint),
+	    Text3D:label = House_Get3DText(house);
     
     if(IsValidDynamicCP(enterCheckpoint))
 	   DestroyDynamicCP(enterCheckpoint);
@@ -309,295 +318,236 @@ stock House_DestroyObjects(houseid)
 	   DestroyDynamicCP(exitCheckpoint);
     if(IsValidDynamic3DTextLabel(label))
 	   DestroyDynamic3DTextLabelEx(label);
-    return 1;
-}
-
-stock House_IsValid(houseid)
-{
-    return map_has_key(Houses, houseid);
-}
-
-stock House_GetData(houseid, data[E_HOUSE_DATA])
-{
-    if(!House_IsValid(houseid))
-        return 0;
-    return map_get_arr(Houses, houseid, data);
-}
-
-stock House_GetID(houseid)
-{
-    if(!House_IsValid(houseid))
-        return 0;
-    return map_get(Houses, houseid, ID);
-}
-
-stock House_SetOwner(houseid, playerid)
-{
-    if(!House_IsValid(houseid) || !IsPlayerConnected(playerid) || !Character_IsLogged(playerid) || Character_HasHouseKey(playerid))
-	   return 0;
-    
-    House_ResetOwner(houseid);
-
-    map_set_cell(Houses, houseid, OwnerID, Character_GetID(playerid));
-    new Iter:it = map_iter_at(Houses, houseid);
-    iter_set_cells(it, OwnerName, Character_GetOOCName(playerid));
-
-    Character_AddOwnedHouse(playerid, houseid);
-
-    House_CreateObjects(houseid);
-
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), House_GetID(houseid));
-    return 1;
-}
-
-stock House_ResetOwner(houseid)
-{
-    if(!House_IsValid(houseid))
-        return 0;
-    map_set_cell(Houses, houseid, OwnerID, 0);
-    new Iter:it = map_iter_at(Houses, houseid);
-    iter_set_cells(it, OwnerName, "");
-
-    foreach(new i : Player)
-	{
-		if(!Character_DoesOwnHouse(i, houseid))
-			continue;
-		Character_RemoveOwnedHouse(i, houseid);
-	}
-
-    House_CreateObjects(houseid);
-
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET owner_id = '0' WHERE id = '%d'", House_GetID(houseid));
-    
-    return 1;
-}
-
-stock House_GetOwnerID(houseid)
-{
-    if(!House_IsValid(houseid))
-        return 0;
-    return map_get(Houses, houseid, OwnerID);
-}
-
-stock House_IsOwned(houseid)
-{
-    if(!House_IsValid(houseid))
-        return 0;
-    return House_GetOwnerID(houseid) > 0;
-}
-
-stock bool:House_GetOwnerName(houseid, name[MAX_PLAYER_NAME])
-{
-    if(!House_IsValid(houseid))
-        return false;
-    new Iter:it = map_iter_at(Houses, houseid);
-    iter_get_md_arr(it, {OwnerName}, name);
     return true;
 }
 
-stock String:House_GetOwnerNameStr(houseid)
+stock House_IsValid(House:house)
 {
-    if(!House_IsValid(houseid))
-	   return STRING_NULL;
+    return var_valid(Variant:house);
+}
+
+stock House_GetID(House:house)
+{
+    return var_get(Variant:house, ID);
+}
+
+stock bool:House_SetOwner(House:house, playerid)
+{
+    if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid) || Character_HasHouseKey(playerid))
+	   return false;
+    
+    House_ResetOwner(house);
+
+    var_set_cell(Variant:house, OwnerID, Character_GetID(playerid));
+    var_set_cells(Variant:house, OwnerName, Character_GetOOCName(playerid));
+
+    Character_AddOwnedHouse(playerid, house);
+
+    House_CreateObjects(house);
+
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), House_GetID(house));
+    return true;
+}
+
+stock House_ResetOwner(House:house)
+{
+    var_set_cell(Variant:house, OwnerID, 0);
+    var_set_cells(Variant:house, OwnerName, "");
+
+    foreach(new i : Player)
+	{
+		if(!Character_DoesOwnHouse(i, house))
+			continue;
+		Character_RemoveOwnedHouse(i, house);
+	}
+
+    House_CreateObjects(house);
+
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET owner_id = '0' WHERE id = '%d'", House_GetID(house));
+    
+    return 1;
+}
+
+stock House_GetOwnerID(House:house)
+{
+    return var_get(Variant:house, OwnerID);
+}
+
+stock House_IsOwned(House:house)
+{
+    return House_GetOwnerID(house) > 0;
+}
+
+stock bool:House_GetOwnerName(House:house, name[MAX_PLAYER_NAME])
+{
+    var_get_md_arr(Variant:house, {OwnerName}, name);
+    return true;
+}
+
+stock String:House_GetOwnerNameStr(House:house)
+{
     new name[MAX_PLAYER_NAME];
-    House_GetOwnerName(houseid, name);
+    House_GetOwnerName(house, name);
     return str_new(name);
 }
 
-stock House_SetEnterPosition(houseid, Float:x, Float:y, Float:z)
+stock House_SetEnterPosition(House:house, Float:x, Float:y, Float:z)
 {
-    if(!House_IsValid(houseid))
-        return 0;
-    map_set_cell(Houses, houseid, EnterX, x);
-    map_set_cell(Houses, houseid, EnterY, y);
-    map_set_cell(Houses, houseid, EnterZ, z);
+    var_set_cell(Variant:house, EnterX, x);
+    var_set_cell(Variant:house, EnterY, y);
+    var_set_cell(Variant:house, EnterZ, z);
 
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET enter_x = '%f', enter_y = '%f', enter_z = '%f' WHERE id = '%d'", x, y, z, House_GetID(houseid));
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET enter_x = '%f', enter_y = '%f', enter_z = '%f' WHERE id = '%d'", x, y, z, House_GetID(house));
     return 1;
 }
 
-stock House_GetEnterPosition(houseid, &Float:X, &Float:Y, &Float:Z)
+stock House_GetEnterPosition(House:house, &Float:X, &Float:Y, &Float:Z)
 {
-    if(!House_IsValid(houseid))
-        return 0;
-    X = Float:map_get(Houses, houseid, EnterX);
-    Y = Float:map_get(Houses, houseid, EnterY);
-    Z = Float:map_get(Houses, houseid, EnterZ);
+    X = Float:var_get(Variant:house, EnterX);
+    Y = Float:var_get(Variant:house, EnterY);
+    Z = Float:var_get(Variant:house, EnterZ);
     return 1;
 }
 
-stock House_SetEnterInterior(houseid, interior)
+stock House_SetEnterInterior(House:house, interior)
 {
-    if(!House_IsValid(houseid))
-        return 0;
-    map_set_cell(Houses, houseid, EnterInterior, interior);
+    var_set_cell(Variant:house, EnterInterior, interior);
 
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET enter_interior = '%d' WHERE id = '%d'", interior, House_GetID(houseid));
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET enter_interior = '%d' WHERE id = '%d'", interior, House_GetID(house));
     return 1;
 }
 
-stock House_GetEnterInterior(houseid)
+stock House_GetEnterInterior(House:house)
 {
-    if(!House_IsValid(houseid))
-        return 0;
-    return map_get(Houses, houseid, EnterInterior);
+    return var_get(Variant:house, EnterInterior);
 }
 
-stock House_SetEnterWorld(houseid, world)
+stock House_SetEnterWorld(House:house, world)
 {
-    if(!House_IsValid(houseid))
-        return 0;
-    map_set_cell(Houses, houseid, EnterWorld, world);
+    var_set_cell(Variant:house, EnterWorld, world);
 
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET enter_world = '%d' WHERE id = '%d'", world, House_GetID(houseid));
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET enter_world = '%d' WHERE id = '%d'", world, House_GetID(house));
     return 1;
 }
 
-stock House_GetEnterWorld(houseid)
+stock House_GetEnterWorld(House:house)
 {
-    if(!House_IsValid(houseid))
-        return 0;
-    return map_get(Houses, houseid, EnterWorld);
+    return var_get(Variant:house, EnterWorld);
 }
 
-stock House_GetExitWorld(houseid)
+stock House_GetExitWorld(House:house)
 {
-    if(!House_IsValid(houseid))
-        return 0;
-    return map_get(Houses, houseid, ExitWorld);
+    return var_get(Variant:house, ExitWorld);
 }
 
-stock House_SetExitPosition(houseid, Float:x, Float:y, Float:z)
+stock House_SetExitPosition(House:house, Float:x, Float:y, Float:z)
 {
-    if(!House_IsValid(houseid))
-        return 0;
-    map_set_cell(Houses, houseid, ExitX, x);
-    map_set_cell(Houses, houseid, ExitY, y);
-    map_set_cell(Houses, houseid, ExitZ, z);
+    var_set_cell(Variant:house, ExitX, x);
+    var_set_cell(Variant:house, ExitY, y);
+    var_set_cell(Variant:house, ExitZ, z);
 
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET exit_x = '%f', exit_y = '%f', exit_z = '%f' WHERE id = '%d'", x, y, z, House_GetID(houseid));
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET exit_x = '%f', exit_y = '%f', exit_z = '%f' WHERE id = '%d'", x, y, z, House_GetID(house));
     return 1;
 }
 
-stock House_GetExitPosition(houseid, &Float:X, &Float:Y, &Float:Z)
+stock House_GetExitPosition(House:house, &Float:X, &Float:Y, &Float:Z)
 {
-    if(!House_IsValid(houseid))
-        return 0;
-    X = Float:map_get(Houses, houseid, ExitX);
-    Y = Float:map_get(Houses, houseid, ExitY);
-    Z = Float:map_get(Houses, houseid, ExitZ);
+    X = Float:var_get(Variant:house, ExitX);
+    Y = Float:var_get(Variant:house, ExitY);
+    Z = Float:var_get(Variant:house, ExitZ);
     return 1;
 }
 
-stock House_SetExitInterior(houseid, interior)
+stock House_SetExitInterior(House:house, interior)
 {
-    if(!House_IsValid(houseid))
-        return 0;
-    map_set_cell(Houses, houseid, ExitInterior, interior);
-
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET exit_interior = '%d' WHERE id = '%d'", interior, House_GetID(houseid));
+    var_set_cell(Variant:house, ExitInterior, interior);
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET exit_interior = '%d' WHERE id = '%d'", interior, House_GetID(house));
     return 1;
 }
 
-stock House_GetExitInterior(houseid)
+stock House_GetExitInterior(House:house)
 {
-    if(!House_IsValid(houseid))
-        return 0;
-    return map_get(Houses, houseid, ExitInterior);
+    return var_get(Variant:house, ExitInterior);
 }
 
-stock House_SetInterior(houseid, interiorType, interiorid)
+stock bool:House_SetInterior(House:house, interiorType, interiorid)
 {
-    if(!House_IsValid(houseid) || !HouseInterior_IsValidType(interiorType))
-	   return 0;
+    if(!HouseInterior_IsValidType(interiorType))
+	   return false;
 
     new data[E_INTERIORS_HOUSE];
     if(!HouseInterior_Get(interiorType, interiorid, data))
-        return 0;
+        return false;
 
-    map_set_cell(Houses, houseid, InteriorType, interiorType);
-    map_set_cell(Houses, houseid, InteriorID, interiorid);
+    var_set_cell(Variant:house, InteriorType, interiorType);
+    var_set_cell(Variant:house, InteriorID, interiorid);
 
-    if(House_GetID(houseid) > 0)
-        mysql_tquery_f(gMySQL, "UPDATE `houses` SET interior_id = '%d', interior_type = '%d' WHERE id = '%d'", interiorid, interiorType, House_GetID(houseid));
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET interior_id = '%d', interior_type = '%d' WHERE id = '%d'", interiorid, interiorType, House_GetID(house));
     
-    House_SetExitPosition(houseid, data[iHouseX], data[iHouseY], data[iHouseZ]);
-    House_SetExitInterior(houseid, data[iHouseInt]);
-    House_CreateObjects(houseid);
+    House_SetExitPosition(house, data[iHouseX], data[iHouseY], data[iHouseZ]);
+    House_SetExitInterior(house, data[iHouseInt]);
+    House_CreateObjects(house);
+    return true;
+}
+
+stock House_GetInteriorType(House:house)
+{
+    return var_get(Variant:house, InteriorType);
+}
+
+stock House_GetInteriorID(House:house)
+{
+    return var_get(Variant:house, InteriorID);
+}
+
+stock House_SetPrice(House:house, price)
+{
+    var_set_cell(Variant:house, Price, price);
+
+    House_CreateObjects(house);
+
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET price = '%d' WHERE id = '%d'", price, House_GetID(house));
     return 1;
 }
 
-stock House_GetInteriorType(houseid)
+stock House_GetPrice(House:house)
 {
-    if(!House_IsValid(houseid))
-        return HOUSE_BUGGED;
-    return map_get(Houses, houseid, InteriorType);
+    return var_get(Variant:house, Price);
 }
 
-stock House_GetInteriorID(houseid)
+stock House_SetLocked(House:house, lock)
 {
-    if(!House_IsValid(houseid))
-        return 0;
-    return map_get(Houses, houseid, InteriorID);
-}
-
-stock House_SetPrice(houseid, price)
-{
-    if(!House_IsValid(houseid))
-        return 0;
-    map_set_cell(Houses, houseid, Price, price);
-
-    House_CreateObjects(houseid);
-
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET price = '%d' WHERE id = '%d'", price, House_GetID(houseid));
+    var_set_cell(Variant:house, IsLocked, lock);
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET locked = '%d' WHERE id = '%d'", lock, House_GetID(house));
     return 1;
 }
 
-stock House_GetPrice(houseid)
+stock House_IsLocked(House:house)
 {
-    if(!House_IsValid(houseid))
-        return 0;
-    return map_get(Houses, houseid, Price);
+    return var_get(Variant:house, IsLocked);
 }
 
-stock House_SetLocked(houseid, lock)
+stock House_GetMoney(House:house)
 {
-    if(!House_IsValid(houseid))
-        return 0;
-    map_set_cell(Houses, houseid, IsLocked, lock);
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET locked = '%d' WHERE id = '%d'", lock, House_GetID(houseid));
+    return var_get(Variant:house, Money);
+}
+
+stock House_GiveMoney(House:house, money)
+{
+    House_SetMoney(house, House_GetMoney(house) + money);
     return 1;
 }
 
-stock House_IsLocked(houseid)
+stock House_SetMoney(House:house, amount)
 {
-    if(!House_IsValid(houseid))
-        return 0;
-    return map_get(Houses, houseid, IsLocked);
-}
-
-stock House_GetMoney(houseid)
-{
-    if(!House_IsValid(houseid))
-        return 0;
-    return map_get(Houses, houseid, Money);
-}
-
-stock House_GiveMoney(houseid, money)
-{
-    if(!House_IsValid(houseid))
-        return 0;
-    House_SetMoney(houseid, House_GetMoney(houseid) + money);
+    var_set_cell(Variant:house, Money, amount);
+    mysql_tquery_f(gMySQL, "UPDATE `houses` SET money = '%d' WHERE id = '%d'", amount, House_GetID(house));
     return 1;
 }
 
-stock House_SetMoney(houseid, amount)
+stock Text3D:House_Get3DText(House:house)
 {
-    if(!House_IsValid(houseid))
-        return 0;
-    map_set_cell(Houses, houseid, Money, amount);
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET money = '%d' WHERE id = '%d'", amount, House_GetID(houseid));
-    return 1;
+    return Text3D:var_get(Variant:house, h3DText);
 }
 
 stock House_LoadAll()
@@ -631,25 +581,45 @@ stock House_LoadAll()
 
             data[ExitWorld] = HOUSE_START_WORLD + data[ID];
 
-            printf("House id: %d", data[ID]);
-            map_add_arr(Houses, data[ID], data);
-            House_CreateObjects(data[ID]);
+            new House:house = House:var_new_buf(E_HOUSE_DATA);
+
+            var_acquire(Variant:house);
+            var_set_cell(Variant:house, ID, data[ID]);
+            var_set_cell(Variant:house, OwnerID, data[OwnerID]);
+            var_set_cells(Variant:house, OwnerName, data[OwnerName]);
+            var_set_cell(Variant:house, Price, data[Price]);
+            var_set_cell(Variant:house, EnterX, _:data[EnterX]);
+            var_set_cell(Variant:house, EnterY, _:data[EnterY]);
+            var_set_cell(Variant:house, EnterZ, _:data[EnterZ]);
+            var_set_cell(Variant:house, EnterInterior, data[EnterInterior]);
+            var_set_cell(Variant:house, EnterWorld, data[EnterWorld]);
+            var_set_cell(Variant:house, ExitX, data[ExitX]);
+            var_set_cell(Variant:house, ExitY, data[ExitY]);
+            var_set_cell(Variant:house, ExitZ, data[ExitZ]);
+            var_set_cell(Variant:house, ExitInterior, data[ExitInterior]);
+            var_set_cell(Variant:house, ExitWorld, data[ExitWorld]);
+            var_set_cell(Variant:house, IsLocked, data[IsLocked]);
+            var_set_cell(Variant:house, Money, data[Money]);
+            var_set_cell(Variant:house, InteriorID, data[InteriorID]);
+            var_set_cell(Variant:house, InteriorType, data[InteriorType]);
+
+            map_add(Houses, data[ID], _:house);
+            House_CreateObjects(house);
             
             CallLocalFunction(#OnHouseLoaded, "d", data[ID]);
         }
-        printf("%d houses loaded.", count);
+        
 
-        for_map(i : Houses)
+        for_house(house)
         {
-            new houseid = iter_get_key(i);
-            if(House_GetOwnerID(houseid) > 0)
+            if(House_GetOwnerID(house) > 0)
             {
-                new Cache:cache = mysql_query_f(gMySQL, true, "SELECT name FROM `characters` WHERE id = '%d'", House_GetID(houseid));
+                new Cache:cache = mysql_query_f(gMySQL, true, "SELECT name FROM `characters` WHERE id = '%d'", House_GetID(house));
                 if(cache_num_rows() > 0)
                 {
                     new name[MAX_PLAYER_NAME];
                     cache_get_value_name(0, "name", name);
-                    iter_set_cells(i, OwnerName, name);
+                    var_set_cells(Variant:house, OwnerName, name);
                 }
                 cache_delete(cache);
             }
@@ -659,7 +629,3 @@ stock House_LoadAll()
     MySQL_PQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `houses` ORDER BY id");
 }
 
-stock Text3D:House_Get3DText(houseid)
-{
-    return Text3D:map_get(Houses, houseid, h3DText);
-}

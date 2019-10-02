@@ -234,39 +234,38 @@ stock Character_SetRank(playerid, rank)
 	mysql_tquery_f(gMySQL, "UPDATE `characters` SET faction_rank = '%d' WHERE id = '%d'", rank, Character_GetID(playerid));
 }
 
-stock Character_GetHouse(playerid, bool:inside = false)
+stock House:Character_GetHouse(playerid, bool:inside = false)
 {
-	new houseid = INVALID_HOUSE_ID;
-	new hid = INVALID_HOUSE_ID;
+	new House:house = INVALID_HOUSE, House:temp = INVALID_HOUSE;
 	if(inside)
 	{
-		if(Checkpoint_GetInfoOfType(Character_GetCheckpoint(playerid), CHECKPOINT_TYPE_HOUSE, houseid) && House_IsValid(houseid) && Character_GetVirtualWorld(playerid) == House_GetExitWorld(houseid))
+		if(Checkpoint_GetInfoOfType(Character_GetCheckpoint(playerid), CHECKPOINT_TYPE_HOUSE, temp) && House_IsValid(temp) && Character_GetVirtualWorld(playerid) == House_GetExitWorld(temp))
 		{
-			hid = houseid;
+			house = temp;
 		}
 	}
-	else if(Checkpoint_GetInfoOfType(Character_GetCheckpoint(playerid), CHECKPOINT_TYPE_HOUSE, houseid) && House_IsValid(houseid) && Character_GetVirtualWorld(playerid) == House_GetEnterWorld(houseid))
+	else if(Checkpoint_GetInfoOfType(Character_GetCheckpoint(playerid), CHECKPOINT_TYPE_HOUSE, temp) && House_IsValid(temp) && Character_GetVirtualWorld(playerid) == House_GetEnterWorld(temp))
 	{
-		hid = houseid;
+		house = temp;
 	}
-	return hid;
+	return house;
 }
 
-stock Character_GetHouseMenu(playerid)
+stock House:Character_GetHouseMenu(playerid)
 {
-	new houseid = Character_GetHouse(playerid, true);
-	if(!House_IsValid(houseid))
-		houseid = Character_GetHouse(playerid, false);
-	if(House_IsValid(houseid))
+	new House:house = Character_GetHouse(playerid, true);
+	if(!House_IsValid(house))
+		house = Character_GetHouse(playerid, false);
+	if(House_IsValid(house))
 	{
 		if(Player_IsAdminDuty(playerid))
-			return houseid;
-		if(House_GetOwnerID(houseid) == Character_GetID(playerid))
-			return houseid;
-		if(House_GetID(houseid) == Character_GetHouseKey(playerid))
-			return houseid;
+			return house;
+		if(House_GetOwnerID(house) == Character_GetID(playerid))
+			return house;
+		if(house == Character_GetHouseKey(playerid))
+			return house;
 	}
-	return INVALID_HOUSE_ID;
+	return INVALID_HOUSE;
 }
 
 stock Character_GetHouseID(playerid)
@@ -414,13 +413,12 @@ stock Character_Delete(playerid, character_db_id, character_name[])
 		}
 	}
 
-	for_map(i : GetHousesMap())
+	for_house(house)
 	{
-		new houseid = iter_get_key(i);
-		new ownerid = House_GetOwnerID(houseid);
+		new ownerid = House_GetOwnerID(house);
 		if(character_db_id == ownerid)
 		{
-			House_ResetOwner(houseid);
+			House_ResetOwner(house);
 			break;
 		}
 	}

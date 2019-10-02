@@ -35,19 +35,19 @@ hook OnPlayerLeaveDynamicCP(playerid, checkpointid)
     return 1;
 }
 
-stock Checkpoint_Create(E_CHECKPOINT_TYPE:type, elementid, Float:x, Float:y, Float:z, Float:size, worldid = -1, interiorid = -1, Float:renderDist = 1.0)
+stock Checkpoint_Create(E_CHECKPOINT_TYPE:type, GLOBAL_TAG_TYPES:elementid, Float:x, Float:y, Float:z, Float:size, worldid = -1, interiorid = -1, Float:renderDist = 1.0)
 {
     new 
         checkpointid = CreateDynamicCP(x, y, z, size, worldid, interiorid, -1, renderDist),
         data[e_CHECKPOINT_DATA]
     ;
     data[CHECKPOINT_TYPE] = type;
-    data[CHECKPOINT_ID] = elementid;
+    data[CHECKPOINT_ID] = _:elementid;
     Streamer_SetArrayData(STREAMER_TYPE_CP, checkpointid, E_STREAMER_EXTRA_ID, data);
     return 1;
 }
 
-stock bool:Checkpoint_GetInfoOfType(checkpointid, E_CHECKPOINT_TYPE:requestedType, &id)
+stock bool:Checkpoint_GetInfoOfType(checkpointid, E_CHECKPOINT_TYPE:requestedType, &GLOBAL_TAG_TYPES:id)
 {
     if(!IsValidDynamicCP(checkpointid))
         return false;
