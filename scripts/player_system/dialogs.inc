@@ -61,9 +61,42 @@ Dialog:Dialog_House(playerid, response, listitem, inputtext[])
 			}
 			return Dialog_Show_s(playerid, Dialog_HouseInterior, DIALOG_STYLE_LIST, str_format("Cambio Interior - %s", GetInteriorTypeName(interiorType)), string, "Vendi", "Annulla");
 		}
+		case 7: // Affittuari
+		{
+			House_ShowRentersList(house, playerid);
+		}
+		case 8:
+		{
+			House_SetRentable(house, !House_IsRentable(house));
+			if(House_IsRentable(house))
+				SendFormattedMessage(playerid, COLOR_ORANGE, "Hai messo la tua casa in affitto per $%s.", FormatNumber(House_GetRentPrice(house)));
+			else
+				SendClientMessage(playerid, COLOR_ORANGE, "La tua casa non è più in affitto.");
+		}
+		case 9:
+		{
+			Dialog_Show(playerid, Dialog_HouseSetRentPrice, DIALOG_STYLE_INPUT, "Affitto", "Inserisci il prezzo dell'affito.", "Imposta", "Indietro");
+		}
 	}
     return 1;
 }
+
+Dialog:Dialog_HouseSetRentPrice(playerid, response, listitem, inputtext[])
+{
+	new House:house = Character_GetHouseMenu(playerid);
+	if(!House_IsValid(house))
+		return 0;
+	if(!response)
+		return Character_ShowHouseDialog(playerid);
+	
+	new v = strval(inputtext);
+	if(v < 0)
+		return Dialog_Show(playerid, Dialog_HouseSetRentPrice, DIALOG_STYLE_INPUT, "Affitto", "{FF0000}Il prezzo dell'affitto non è valido.\nInserisci il prezzo dell'affito.", "Imposta", "Indietro");
+	House_SetRentPrice(house, v);
+	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai impostato il prezzo dell'affitto di casa tua a $%s.", FormatNumber(v));
+	return 1;
+}
+
 
 Dialog:Dialog_HouseDeposit(playerid, response, listitem, inputtext[])
 {

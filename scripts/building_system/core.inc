@@ -234,30 +234,34 @@ stock Building_LoadAll()
 			var_set_cell(Variant:building, Type, data[Type]);
 			
 			new Map:map = map_new(), Node:node, length;
-			JsonParse(jsonDataStr, node);
-			new ret = JsonArrayLength(node, length);
-			if(ret) 
+			if(strlen(jsonDataStr) > 0 && strcmp(jsonDataStr, "NULL", true))
 			{
-				printf("failed to get array length, error: %d", ret);
-				return 1;
-			}
-
-			new entryName[32], entryIntValue, Float:entryFloatValue;
-			for(new x = 0; x < length; ++x) 
-			{
-				new Node:item;
-				
-				if(JsonArrayObject(node, x, item) || JsonGetString(item, "name", entryName)) 
-					continue;
-
-				if(JsonGetInt(item, "value", entryIntValue)) 
+				JsonParse(jsonDataStr, node);
+				new ret = JsonArrayLength(node, length);
+				if(ret) 
 				{
-					JsonGetFloat(item, "value", entryFloatValue);
-					map_str_add(map, entryName, entryFloatValue);
+					printf("failed to get array length, error: %d", ret);
 				}
 				else
 				{
-					map_str_add(map, entryName, entryIntValue);
+					new entryName[32], entryIntValue, Float:entryFloatValue;
+					for(new x = 0; x < length; ++x) 
+					{
+						new Node:item;
+						
+						if(JsonArrayObject(node, x, item) || JsonGetString(item, "name", entryName)) 
+							continue;
+
+						if(JsonGetInt(item, "value", entryIntValue)) 
+						{
+							JsonGetFloat(item, "value", entryFloatValue);
+							map_str_add(map, entryName, entryFloatValue);
+						}
+						else
+						{
+							map_str_add(map, entryName, entryIntValue);
+						}
+					}
 				}
 			}
 
@@ -669,9 +673,10 @@ stock Building_SetMoney(Building:building, amount)
 
 stock Building_GetAddress(Building:building)
 {
-    new zone[32], Float:x, Float:y, Float:z;
+    new zone[64], Float:x, Float:y, Float:z;
     Building_GetEnterPos(building, x, y, z);
     Get2DZoneName(x, y, z, zone, sizeof(zone));
+	format(zone, sizeof(zone), "%d %s, Las Venturas, San Andreas", Building_GetID(building), Building_GetID(building));
     return zone;
 }
 

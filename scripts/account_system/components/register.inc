@@ -1,6 +1,6 @@
 #include <YSI_Coding\y_hooks>
 
-Dialog:Dialog_Register(playerid, response, listitem, inputtext[])
+/*Dialog:Dialog_Register(playerid, response, listitem, inputtext[])
 {
 	if(!response)
 		return KickEx(playerid);
@@ -18,7 +18,6 @@ Dialog:Dialog_Register(playerid, response, listitem, inputtext[])
 	}
 
 	new 
-		psw[WHIRLPOOL_LEN],
 		name[24];
 	WP_Hash(psw, sizeof(psw), inputtext);
 
@@ -27,4 +26,4 @@ Dialog:Dialog_Register(playerid, response, listitem, inputtext[])
 	MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO `accounts` (name, password, admin_level, premium, premium_expiry, characters_counter, email) \
 	VALUES('%e', '%e', '0', '0', '0', '0', '')", name, psw);
 	return 1;
-}
+}*/

@@ -23,12 +23,6 @@ hook OnGameModeInit()
 	return 1;
 }
 
-hook OnAccountCreated(playerid, account_db_id)
-{
-	mysql_tquery_f(gMySQL, "INSERT INTO `account_options` (account_id, hotkeys, inv_mode, veh_mode) VALUES('%d', '%d', '%d', '%d')", account_db_id, 0, 0, 0);
-	return 1;
-}
-
 hook OnCharacterLoad(playerid)
 {
 	Player_LoadOptions(playerid);
@@ -39,18 +33,21 @@ stock Player_LoadOptions(playerid)
 {
 	inline OnLoad()
 	{
-		new t;
-		if(cache_num_rows() > 0)
+		if(cache_num_rows() <= 0)
 		{
-			cache_get_value_name_int(0, "hotkeys", t);
-			Player_SetHotKeysEnabled(playerid, t ? true : false);
-
-			cache_get_value_name_int(0, "inv_mode", t);
-			Player_SetInvModeEnabled(playerid, t ? true : false);
-
-			cache_get_value_name_int(0, "veh_mode", t);
-			Player_SetVehModeEnabled(playerid, t ? true : false);
+			mysql_tquery_f(gMySQL, "INSERT INTO `account_options` (account_id, hotkeys, inv_mode, veh_mode) VALUES('%d', '%d', '%d', '%d')", Account_GetID(playerid), 0, 0, 0);
+			return 1;
 		}
+		new t;
+		
+		cache_get_value_name_int(0, "hotkeys", t);
+		Player_SetHotKeysEnabled(playerid, t ? true : false);
+
+		cache_get_value_name_int(0, "inv_mode", t);
+		Player_SetInvModeEnabled(playerid, t ? true : false);
+
+		cache_get_value_name_int(0, "veh_mode", t);
+		Player_SetVehModeEnabled(playerid, t ? true : false);
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `account_options` WHERE account_id = '%d'", Account_GetID(playerid));
 	return 1;

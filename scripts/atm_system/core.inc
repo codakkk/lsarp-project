@@ -36,13 +36,6 @@ hook OnGameModeInit()
                         `world` INT(11) NOT NULL, \
                         PRIMARY KEY (`id`) \
                         ) ENGINE=InnoDB DEFAULT CHARSET=latin1");
-    
-    mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `notifications` ( \
-                        `id` int(11) NOT NULL, \
-                        `character_id` INT(11) NOT NULL, \
-                        `message` VARCHAR(255) NOT NULL, \
-                        PRIMARY KEY (`id`) \
-                        ) ENGINE=InnoDB DEFAULT CHARSET=latin1");
     ATM_LoadAll();
     return 1;
 }
@@ -53,23 +46,6 @@ hook OnCharacterClearData(playerid)
     {
         Character_DebugLabelsForATM(playerid);
     }
-    return 1;
-}
-
-hook OnCharacterLateLoad(playerid)
-{
-    inline OnLoad()
-    {
-        new rows = cache_num_rows();
-        new msg[128];
-        for(new i = 0; i < rows; ++i)
-        {
-            cache_get_value_name(i, "message", msg);
-            SendClientMessage(playerid, COLOR_GREEN, msg);
-        }
-        mysql_tquery_f(gMySQL, "DELETE FROM `notifications` WHERE character_id = '%d'", Character_GetID(playerid));
-    }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `notifications` WHERE character_id = '%d'", Character_GetID(playerid));
     return 1;
 }
 
@@ -199,7 +175,7 @@ CMD:bonifico(playerid, params[])
             else
             {
                 mysql_tquery_f(gMySQL, "UPDATE `characters` SET bank = '%d' WHERE id = '%d'", newBank, id);
-                mysql_tquery_f(gMySQL, "INSERT INTO `notifications` (character_id, message) VALUES('%d', '%e')", id, msg);
+                SendNotification(id, msg);
             }
             SendFormattedMessage(playerid, 0xCBCCCEFF, "Hai effettuato un bonifico a %s di $%s.", name, FormatNumber(money));
             Character_GiveBank(playerid, -money, "bank_bonifico");

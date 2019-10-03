@@ -178,7 +178,7 @@ flags:aiuto(CMD_USER);
 CMD:aiuto(playerid, params[])
 {
 	SendClientMessage(playerid, 0xCCE6E6FF, "_______________www.lv-rp.it_______________");
-	SendClientMessage(playerid, 0xCCE6E6FF, "[ACCOUNT] /stats /inv /oggetto /hotkeys /lostitems /zpoints (/cambiapass)word");
+	SendClientMessage(playerid, 0xCCE6E6FF, "[ACCOUNT] /stats /inv /oggetto /hotkeys /lostitems /zpoints");
     SendClientMessage(playerid, 0xCCE6E6FF, "[GENERALE]: /paga /time /compra /id /cellinfo /chiama /bussa /blindfold /sa /animlist");
     SendClientMessage(playerid, 0xCCE6E6FF, "[GENERALE]: (/pub)blicita /documenti /report /stilechat /stilelotta /stilecamminata");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[CHAT]: (/w)hisper (/o)(OOC) (/s)hout /me /b(OOC) /do /cw /low /pm(OOC) /r /melow /ame /dolow");
@@ -354,7 +354,7 @@ CMD:onduty(playerid, params[])
 }
 
 
-flags:cambiapassword(CMD_USER);
+/*flags:cambiapassword(CMD_USER);
 CMD:cambiapassword(playerid, params[])
 {
 	LoginAttempts{playerid} = 0;
@@ -406,7 +406,7 @@ Dialog:Dialog_SetNewPassword(playerid, response, listitem, inputtext[])
 	WP_Hash(psw, sizeof(psw), inputtext);
 	MySQL_TQueryInline(gMySQL, using inline OnUpdate, "UPDATE `accounts` SET password = '%e' WHERE id = '%d';", psw, Account_GetID(playerid));
 	return 1;
-}
+}*/
 
 
 stock bool:IsValidPassword(const password[])

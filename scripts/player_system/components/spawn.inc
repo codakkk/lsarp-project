@@ -84,12 +84,6 @@ hook OnCharacterDisconnected(playerid)
 	return 1;
 }
 
-hook OnCharacterCreated(playerid, character_db_id)
-{
-	mysql_tquery_f(gMySQL, "INSERT INTO `character_spawn_data` (character_id, is_first_spawn, spawn_type, spawn_id, spawn_x, spawn_y, spawn_z, spawn_a, spawn_interior, spawn_world) VALUES('%d', 1, '0', '0', '%f', '%f', '%f', '0.0', '0', '0')", character_db_id, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
-	return 1;
-}
-
 hook OnCharacterLoad(playerid)
 {
 	Character_LoadSpawnData(playerid);
@@ -151,7 +145,7 @@ CMD:spawnpoint(playerid, params[])
 		if(!House_IsValid(house))
 			return SendClientMessage(playerid, COLOR_ERROR, "La casa inserita non esiste.");
 		
-		if(Character_GetHouseKey(playerid) != house && House_GetOwnerID(house) != Character_GetID(playerid))
+		if(Character_GetRentHouse(playerid) != house && House_GetOwnerID(house) != Character_GetID(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non sei nè il proprietario nè un affittuario di questa casa.");
 		
 		Character_SetSpawnPointType(playerid, SPAWN_POINT_TYPE_HOUSE);
@@ -296,7 +290,7 @@ static Character_Spawn(playerid)
 		new bool:isSpawned = false, House:house = House_Find(Character_GetSpawnPointID(playerid));
 		if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_HOUSE && House_IsValid(house))
 		{
-			if(House_GetOwnerID(house) == Character_GetID(playerid) || Character_GetHouseKey(playerid) == house)
+			if(House_GetOwnerID(house) == Character_GetID(playerid) || Character_GetRentHouse(playerid) == house)
 			{
 				new Float:x, Float:y, Float:z;
 				House_GetExitPosition(house, x, y, z);
@@ -377,6 +371,13 @@ static Character_LoadSpawnData(playerid)
 {
 	inline OnLoad()
 	{
+		if(cache_num_rows() <= 0)
+		{
+			mysql_tquery_f(gMySQL, "INSERT INTO `character_spawn_data` (character_id, is_first_spawn, spawn_type, spawn_id, spawn_x, spawn_y, spawn_z, spawn_a, spawn_interior, spawn_world) VALUES('%d', 1, '0', '0', '%f', '%f', '%f', '0.0', '0', '0')", Character_GetID(playerid), DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
+			IsFirstSpawn{playerid} = true;
+			return 1;
+		}
+
 		new 
 			temp = 0
 		;

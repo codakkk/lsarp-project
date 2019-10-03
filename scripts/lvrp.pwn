@@ -84,7 +84,6 @@
 #undef yield
 #undef @@
 #include <Pawn.CMD>
-#include <whirlpool>
 #include <streamer>
 #define PP_SYNTAX 1
 //#define PP_SYNTAX_GENERIC 1
@@ -536,8 +535,6 @@ hook OnPlayerDisconnect(playerid, reason)
 		format(string,sizeof(string), "* %s è uscito dal server. [%s]", name, reasonName[reason]);
 		ProxDetector(playerid, 15.0, string, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY);
 	}
-
-	//HideClockTextDraw(playerid);
 	
 	if(Character_IsLogged(playerid))
 	{
@@ -618,13 +615,13 @@ hook OnPlayerConnect(playerid)
 
 	cache_delete(cache);
 
-	new name[MAX_PLAYER_NAME];
+	/*new name[MAX_PLAYER_NAME];
 	GetPlayerName(playerid, name, sizeof(name));
 	for(new i = 0, j = strlen(name); i < j;++i)
 	{
 		if(name[i] == '_')
 			return SendClientMessage(playerid, COLOR_ERROR, "Il tuo nome account contiene caratteri non consentiti."), KickEx(playerid), 0;
-	}
+	}*/
 	return 1;
 }
 

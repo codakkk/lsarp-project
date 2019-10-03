@@ -28,10 +28,25 @@ stock Character_PayDay(playerid)
 		interests = 0,
 		paycheck = 0,
 		experiencePerLevel = (Character_GetLevel(playerid)+1) * 2,
-		currentPremiumLevel = Account_GetPremiumLevel(playerid)
+		currentPremiumLevel = Account_GetPremiumLevel(playerid),
+		rentPrice = 0,
+		bool:kickedFromHouse = false
 	;
 
-	// interests = ...
+	new House:rentHouse = Character_GetRentHouse(playerid);
+	if(House_IsValid(rentHouse))
+	{
+		rentPrice = Character_GetHouseRentPrice(playerid);
+		if(rentPrice > Character_GetBank(playerid))
+		{
+			kickedFromHouse = true;
+			rentPrice = 0;
+			Character_SetRentHouse(playerid, INVALID_HOUSE);
+			Character_SetHouseRentPrice(playerid, 0);
+		}
+		Character_GiveBank(playerid, -rentPrice, "rent_house_rent");
+		House_GiveMoney(rentHouse, rentPrice);
+	}
 
 	if(currentPremiumLevel > 0)
 	{
@@ -98,10 +113,10 @@ stock Character_PayDay(playerid)
     SendClientMessage(playerid, -1, "|__CONTO BANCARIO__|");
 	SendFormattedMessage(playerid, 0xB4B5B7FF, "Bilancio: $%s", FormatNumber(startBankMoney));
 	SendFormattedMessage(playerid, 0xB4B5B7FF, "Tasso di interesse: %f", 0.1);
-	SendFormattedMessage(playerid, 0xB4B5B7FF, "Interessi guadagnati: $%d", interests);
+	SendFormattedMessage(playerid, 0xB4B5B7FF, "Interessi guadagnati: $%s", FormatNumber(interests));
 	SendFormattedMessage(playerid, 0xB4B5B7FF, "Tasse pagate: -$%d", 0);
-	SendFormattedMessage(playerid, 0xB4B5B7FF, "Affitto: -$%d", 0);
-	SendFormattedMessage(playerid, 0xB4B5B7FF, "Stipendio:  $%d", paycheck);
+	SendFormattedMessage(playerid, 0xB4B5B7FF, "Affitto: -$%s", FormatNumber(rentPrice));
+	SendFormattedMessage(playerid, 0xB4B5B7FF, "Stipendio:  $%s", FormatNumber(paycheck));
 	SendClientMessage(playerid, -1, "|__________________|");
 	SendFormattedMessage(playerid, -1, "Nuovo Bilancio: $%s", FormatNumber(Character_GetBank(playerid)));
 	if(factionMoney > 0)
@@ -116,6 +131,9 @@ stock Character_PayDay(playerid)
 		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s per il tuo premium.", FormatNumber(premiumMoney));
 	if(newPlayerMoney > 0)
 		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s perché sei un nuovo arrivato.", FormatNumber(newPlayerMoney));
+
+	if(kickedFromHouse)
+		SendClientMessage(playerid, COLOR_ORANGE, "La casa di cui eri affittuario ti ha cacciato perché non hai pagato in tempo.");
 
 	Character_AddUpgradePoints(playerid, 1);
 	

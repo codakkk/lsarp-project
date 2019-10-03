@@ -34,7 +34,6 @@ hook OnPlayerClickPlayerTD(playerid, PlayerText:playertextid)
         if(playertextid == CharacterModelTextdraw[playerid][i])
         {
 			new characterid = list_get(Characters[playerid], i);
-			printf("Slot: %d - Character ID: %d", i, characterid);
             Account_LoadCharacter(playerid, characterid);
 			for(new x = 0; x < 9; ++x)
 			{
@@ -139,10 +138,49 @@ hook OnPlayerUpdate(playerid)
 stock Account_ShowCharactersList(playerid)
 {
     if(!Account_IsLogged(playerid))
-	   return 0;
-	new f[128];
-	mysql_format(gMySQL, f, sizeof(f), "SELECT id, name, skin FROM `characters` WHERE account_id = '%d'", Account_GetID(playerid));
-	mysql_tquery(gMySQL, f, #OnLoadCharactersList, "d", playerid);
+	   return KickEx(playerid);
+	inline OnCharactersLoad()
+	{
+		new count = cache_num_rows();
+		if(count <= 0)
+		{
+			//Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Crea nuovo personaggio", "Attualmente non risultano personaggi creati.\nPer poter giocare, devi disporre di un personaggio.\nInserisci il nome del nuovo personaggio.\nEsempio: Mario Rossi", "Ok", "");
+			SendClientMessage(playerid, COLOR_ORANGE, "SERVER: Il tuo account non risulta completato e/o convalidato.");
+			SendClientMessage(playerid, COLOR_ORANGE, "SERVER: Effettua il log-in nel tuo account su ucp.lv-rp.it/ e riprova.");
+			return KickEx(playerid), 0;
+		}
+		
+		list_clear(Characters[playerid]);
+
+		new String:content, nameTemp[24], character_id = 0, skinid = 0, level = 1;
+
+		if(count > 9)
+			count = 9;
+
+		for(new i = 0; i < count; ++i)
+		{
+			cache_get_value_name_int(i, "id", character_id);
+			cache_get_value_name(i, "name", nameTemp, sizeof(nameTemp));
+			cache_get_value_name_int(i, "skin", skinid);
+			cache_get_value_name_int(i, "level", level);
+			
+			content += str_format("%s\n", nameTemp);
+
+			PlayerTextDrawSetPreviewModel(playerid, CharacterModelTextdraw[playerid][i], skinid);
+			PlayerTextDrawSetString(playerid, CharacterNameTextdraw[playerid][i], nameTemp);
+
+			format(nameTemp, sizeof(nameTemp), "Livello %d", level);
+			PlayerTextDrawSetString(playerid, CharacterLevelTextdraw[playerid][i], nameTemp);
+		
+			PlayerTextDrawShow(playerid, CharacterModelTextdraw[playerid][i]);
+			PlayerTextDrawShow(playerid, CharacterNameTextdraw[playerid][i]);
+			PlayerTextDrawShow(playerid, CharacterLevelTextdraw[playerid][i]);
+			
+			list_add(Characters[playerid], character_id);
+		}
+		SelectTextDraw(playerid, 0xFFFFFFAA);
+	}
+	MySQL_TQueryInline(gMySQL, using inline OnCharactersLoad, "SELECT id, name, skin, level FROM `characters` WHERE account_id = '%d'", Account_GetID(playerid));
     return 1;
 }
 
@@ -150,71 +188,21 @@ stock Account_LoadCharacter(playerid, characterid)
 {
 	if(characterid <= 0)
 		return KickEx(playerid);
-
-	new f[128];
-	mysql_format(gMySQL, f, sizeof(f), "SELECT * FROM `characters` WHERE id = '%d'", characterid);
-	mysql_tquery(gMySQL, f, #OnLoadCharacter, "d", playerid);
-	return 1;
-}
-
-forward OnLoadCharacter(playerid);
-public OnLoadCharacter(playerid)
-{
-	if(cache_num_rows() > 0)
+	inline OnLoadCharacter()
 	{
+		if(cache_num_rows() <= 0)
+			return KickEx(playerid);
+	
 		Character_LoadData(playerid);
 
 		SendFormattedMessage(playerid, -1, "SERVER: Benvenuto %s", Character_GetOOCName(playerid));
-		GameTextForPlayerStr(playerid, str_format("Benvenuto~n~~y~~h~%s", Character_GetOOCName(playerid)), 2500, 1);
+		GameTextForPlayerStr(playerid, str_format("Benvenuto~n~~y~~h~%s", Character_GetOOCName(playerid)), 2000, 1);
 	}
-	else KickEx(playerid);
+	MySQL_TQueryInline(gMySQL, using inline OnLoadCharacter, "SELECT * FROM `characters` WHERE id = '%d'", characterid);
 	return 1;
 }
 
-forward OnLoadCharactersList(playerid);
-public OnLoadCharactersList(playerid)
-{
-	new count = cache_num_rows();
-	if(count == 0)
-	{
-		Dialog_Show(playerid, Dialog_CreateNewChar, DIALOG_STYLE_INPUT, "Crea nuovo personaggio", "Attualmente non risultano personaggi creati.\nPer poter giocare, devi disporre di un personaggio.\nInserisci il nome del nuovo personaggio.\nEsempio: Mario Rossi", "Ok", "");
-		return 1;
-	}
-	
-	list_clear(Characters[playerid]);
-
-	new
-		String:content,
-		nameTemp[24], 
-		character_id = 0,
-		skinid = 0;
-	if(count > 9)
-		count = 9;
-
-	for(new i = 0; i < count; ++i)
-	{
-		cache_get_value_name_int(i, "id", character_id);
-		cache_get_value_name(i, "name", nameTemp, sizeof(nameTemp));
-		cache_get_value_name_int(i, "skin", skinid);
-		
-		content += str_format("%s\n", nameTemp);
-
-		PlayerTextDrawSetPreviewModel(playerid, CharacterModelTextdraw[playerid][i], skinid);
-		PlayerTextDrawSetString(playerid, CharacterNameTextdraw[playerid][i], nameTemp);
-		PlayerTextDrawSetString(playerid, CharacterLevelTextdraw[playerid][i], "Livello 1");
-	
-		PlayerTextDrawShow(playerid, CharacterModelTextdraw[playerid][i]);
-		PlayerTextDrawShow(playerid, CharacterNameTextdraw[playerid][i]);
-		PlayerTextDrawShow(playerid, CharacterLevelTextdraw[playerid][i]);
-
-		printf("Character id: %d", character_id);
-		list_add(Characters[playerid], character_id);
-	}
-	SelectTextDraw(playerid, 0xFFFFFFAA);
-	return 1;//Dialog_Show_s(playerid, Dialog_CharacterSelect, DIALOG_STYLE_LIST, @("Gestione Personaggi"), content, "Seleziona", "Altro");
-}
-
-Dialog:Dialog_CharacterSelect(playerid, response, listitem, inputtext[])
+/*Dialog:Dialog_CharacterSelect(playerid, response, listitem, inputtext[])
 {
 	SelectedCharacter[playerid] = list_get(Characters[playerid], listitem);
 	
@@ -226,7 +214,6 @@ Dialog:Dialog_CharacterSelect(playerid, response, listitem, inputtext[])
 		TempCharacterName[playerid] = Character_GetNameFromDatabase(SelectedCharacter[playerid], false);
 		return Dialog_Show(playerid, Dialog_CharCreateOrDel, DIALOG_STYLE_LIST, "Personaggi", "Crea nuovo personaggio\nCancella personaggio", "Avanti", "Indietro");
 	}
-	printf("Character id: %d", SelectedCharacter[playerid]);
 	Account_LoadCharacter(playerid, SelectedCharacter[playerid]);
 	return 1;
 }
@@ -371,3 +358,4 @@ Dialog:Dialog_ChooseSkin(playerid, response, listitem, inputtext[])
 	return 1;
 }
 
+*/

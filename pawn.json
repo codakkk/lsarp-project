@@ -19,7 +19,8 @@
 		"BigETI/pawn-memory",
 		"maddinat0r/samp-discord-connector:v0.3",
 		"Southclaws/pawn-requests",
-		"lassir/bcrypt-samp"
+		"lassir/bcrypt-samp",
+		"Sreyas-Sreelal/samp-bcrypt"
 	],
 	"local": true,
 	"builds": [

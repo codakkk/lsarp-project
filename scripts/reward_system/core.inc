@@ -37,12 +37,6 @@ hook OnCharacterClearData(playerid)
     return 1;
 }
 
-hook OnAccountCreated(playerid, account_db_id)
-{
-	mysql_tquery_f(gMySQL, "INSERT INTO `account_rewards` (account_id) VALUES('%d')", account_db_id);
-	return 1;
-}
-
 hook OnAccountLogin(playerid)
 {
 	Account_LoadRewards(playerid);

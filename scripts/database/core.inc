@@ -36,7 +36,8 @@ hook OnGameModeInit()
 						`armour` float DEFAULT '0', \
 						`skin` int(11) DEFAULT '1', \
 						`building_key` int(11) NOT NULL DEFAULT '0', \
-						`house_key` int(11) NOT NULL DEFAULT '0', \
+						`house_rent` int(11) NOT NULL DEFAULT '0', \
+						`house_rent_price` int(11) NOT NULL DEFAULT '0', \
 						`faction` int(11) NOT NULL DEFAULT '0', \
 						`faction_rank` int(11) NOT NULL DEFAULT '-1', \
 						`jail_time` int(11) NOT NULL DEFAULT '0', \

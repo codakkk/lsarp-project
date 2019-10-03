@@ -4,7 +4,8 @@
 #include <YSI_Coding\y_hooks>
 
 static
-	House:PlayerHouseKey[MAX_PLAYERS]
+	House:PlayerHouseRent[MAX_PLAYERS],
+	PlayerHouseRentPrice[MAX_PLAYERS]
 ;
 
 static 
@@ -19,7 +20,7 @@ hook OnCharacterClearData(playerid)
 	if(list_valid(CharacterHouses[playerid]))
 		list_delete_deep(CharacterHouses[playerid]);
 
-	PlayerHouseKey[playerid] = INVALID_HOUSE;
+	PlayerHouseRent[playerid] = INVALID_HOUSE;
 	return 1;
 }
 
@@ -28,10 +29,11 @@ hook OnCharacterLoad(playerid)
 	inline OnLoad()
 	{
 		new hid = 0;
-		cache_get_value_index_int(0, 0, hid);
-		PlayerHouseKey[playerid] = House_Find(hid);
+		cache_get_value_name_int(0, "house_rent", hid);
+		cache_get_value_name_int(0, "house_rent_price", PlayerHouseRentPrice[playerid]);
+		PlayerHouseRent[playerid] = House_Find(hid);
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT house_key FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT house_rent, house_rent_price FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
 
 	for_building(building)
 	{
@@ -51,6 +53,28 @@ hook OnCharacterLoad(playerid)
 	return 1;
 }
 
+flags:affittacasa(CMD_ALIVE_USER);
+CMD:affittacasa(playerid, params[])
+{
+	if(Character_HasRentHouse(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Sei già affittuario di una casa.");
+	new House:house = Character_GetCurrentHouse(playerid);
+	if(House_IsValid(house))
+	{
+		if(!House_IsRentable(house))
+			return SendClientMessage(playerid, COLOR_ERROR, "Questa casa non è in affitto.");		
+		
+		SendFormattedMessage(playerid, COLOR_ORANGE, "Hai affittato questa casa per $%s per PayDay.", FormatNumber(House_GetRentPrice(house)));
+		SendFormattedMessage(playerid, COLOR_ORANGE, "Indirizzo: %s", House_GetAddress(house));
+
+		Character_SetHouseRentPrice(playerid, House_GetRentPrice(house));
+		Character_SetRentHouse(playerid, house);
+	}
+	else
+		SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino ad una casa in affitto.");
+	return 1;
+}
+
 hook OnCharacterTryBuy(playerid)
 {
 	new House:house = Character_GetHouse(playerid, false);
@@ -65,41 +89,64 @@ hook OnCharacterTryBuy(playerid)
 
 CMD:myhouses(playerid, params[])
 {
-	if(Character_GetOwnedHouseCount(playerid) == 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi case.");
+	new House:rent = Character_GetRentHouse(playerid);
+	if(Character_GetOwnedHouseCount(playerid) == 0 && !House_IsValid(rent))
+		return SendClientMessage(playerid, 0xFF6347FF, "Non possiedi una o più case.");
+	
 	SendClientMessage(playerid, 0xFF6347FF, "Le case che possiedi sono:");
 
+	if(House_IsValid(rent))
+		SendFormattedMessage(playerid, 0xFF6347FF, "In Affitto: %s", House_GetAddress(rent));
+	
+	if(list_valid(CharacterHouses[playerid]))
+	{
+		for_list(i : CharacterHouses[playerid])
+		{
+			SendFormattedMessage(playerid, 0xFF6347FF, "- %s", House_GetAddress(House:iter_get(i)));
+		}
+	}
 	return 1;
 }
 
 CMD:mybiz(playerid, params[])
 {
 	if(Character_GetOwnedHouseCount(playerid) == 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi businesses.");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi uno o più businesses.");
 	SendClientMessage(playerid, 0xFF6347FF, "I business che possiedi sono:");
 	for_list(i : CharacterBuildings[playerid])
 	{
-		new Building:building = Building:iter_get(i);
-		SendClientMessage(playerid, 0xFF6347FF, Building_GetAddress(building));
+		SendFormattedMessage(playerid, 0xFF6347FF, "- %s", Building_GetAddress(Building:iter_get(i)));
 	}
 	return 1;
 }
 
-stock Character_HasHouseKey(playerid)
+stock Character_HasRentHouse(playerid)
 {
-    return House_IsValid(PlayerHouseKey[playerid]);
+    return House_IsValid(PlayerHouseRent[playerid]);
 }
 
-stock House:Character_GetHouseKey(playerid)
+stock House:Character_GetRentHouse(playerid)
 {
-    return PlayerHouseKey[playerid];
+    return PlayerHouseRent[playerid];
 }
 
-stock Character_SetHouseKey(playerid, House:house)
+stock Character_SetRentHouse(playerid, House:house)
 {
-    PlayerHouseKey[playerid] = house;
+    PlayerHouseRent[playerid] = house;
 	new hid = House_IsValid(house) ? House_GetID(house) : INVALID_HOUSE_ID;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET house_key = '%d' WHERE id = '%d'", hid, Character_GetID(playerid));
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET house_rent = '%d' WHERE id = '%d'", hid, Character_GetID(playerid));
+}
+
+stock bool:Character_SetHouseRentPrice(playerid, price)
+{
+	PlayerHouseRentPrice[playerid] = price;
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET house_rent_price = '%d' WHERE id = '%d'", price, Character_GetID(playerid));
+	return true;
+}
+
+stock Character_GetHouseRentPrice(playerid)
+{
+	return PlayerHouseRentPrice[playerid];
 }
 
 hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
@@ -155,7 +202,7 @@ stock Character_BuyHouse(playerid, House:house)
     if(House_GetOwnerID(house) != 0)
 	   return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
 
-    //if(Character_HasHouseKey(playerid))
+    //if(Character_HasRentHouse(playerid))
 	   //return SendClientMessage(playerid, COLOR_ERROR, "Sei già proprietario di una casa.");
 
     new price = House_GetPrice(house);
@@ -166,9 +213,7 @@ stock Character_BuyHouse(playerid, House:house)
 
     Character_GiveMoney(playerid, -price, "Character_BuyHouse");
 
-	new zone[64];
-	House_GetAddress(house, zone);
-    SendFormattedMessage(playerid, 0x33AA33FF, "Hai acquistato l'immobile situato a %s.", zone);
+    SendFormattedMessage(playerid, 0x33AA33FF, "Hai acquistato l'immobile situato a %s.", House_GetAddress(house));
     return 1;
 }
 
@@ -177,7 +222,7 @@ stock Character_ShowHouseDialog(playerid)
 	new House:house = Character_GetHouseMenu(playerid);
 	if(House_IsValid(house))
 	{
-		return Dialog_Show(playerid, Dialog_House, DIALOG_STYLE_LIST, "Casa", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nCambia Interior", "Continua", "Chiudi");
+		return Dialog_Show(playerid, Dialog_House, DIALOG_STYLE_LIST, "Casa", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nCambia Interior\nLista Affittuari\nAttiva/Disattiva Affitto\nPrezzo Affitto", "Continua", "Chiudi");
 	}
 	return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno di casa tua."), 0;
 }

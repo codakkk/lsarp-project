@@ -104,7 +104,7 @@ stock Float:Character_GetMaxArmour(playerid)
 
 stock Character_AddUpgradePoints(playerid, points)
 {
-    UpgradePoints[playerid] -= points;
+    UpgradePoints[playerid] += points;
     mysql_tquery_f(gMySQL, "UPDATE `characters` SET upgrade_points = '%d' WHERE id = '%d'", UpgradePoints[playerid], Character_GetID(playerid));
     return 1;
 }

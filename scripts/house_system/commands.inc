@@ -172,7 +172,7 @@ CMD:hedit(playerid, params[])
 	   else 
 		  s = "Aperta";
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai cambiato lo stato della porta della casa %d. Stato: %s", houseid, s);
-	   House_SetLocked(house, value);
+	   House_SetLocked(house, value?true:false);
     }
     else return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /hedit <houseid> <pos - interior - price - lock>");
     return 1;

@@ -40,6 +40,7 @@
 #include <player_system\components\customanims>
 #include <player_system\components\drugs>
 #include <player_system\components\upgrade>
+#include <player_system\components\notifications>
 //#include <player_system\components\hunger>
 #include <player_system\components\desync_checker>
 #include <player_system\components\wear_objects>
@@ -234,6 +235,14 @@ stock Character_SetRank(playerid, rank)
 	mysql_tquery_f(gMySQL, "UPDATE `characters` SET faction_rank = '%d' WHERE id = '%d'", rank, Character_GetID(playerid));
 }
 
+stock House:Character_GetCurrentHouse(playerid)
+{
+	new House:house = Character_GetHouse(playerid, false);
+	if(!House_IsValid(house))
+		house = Character_GetHouse(playerid, true);
+	return house;
+}
+
 stock House:Character_GetHouse(playerid, bool:inside = false)
 {
 	new House:house = INVALID_HOUSE, House:temp = INVALID_HOUSE;
@@ -253,16 +262,14 @@ stock House:Character_GetHouse(playerid, bool:inside = false)
 
 stock House:Character_GetHouseMenu(playerid)
 {
-	new House:house = Character_GetHouse(playerid, true);
-	if(!House_IsValid(house))
-		house = Character_GetHouse(playerid, false);
+	new House:house = Character_GetCurrentHouse(playerid);
 	if(House_IsValid(house))
 	{
 		if(Player_IsAdminDuty(playerid))
 			return house;
 		if(House_GetOwnerID(house) == Character_GetID(playerid))
 			return house;
-		if(house == Character_GetHouseKey(playerid))
+		if(house == Character_GetRentHouse(playerid))
 			return house;
 	}
 	return INVALID_HOUSE;

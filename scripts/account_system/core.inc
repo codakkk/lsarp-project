@@ -6,8 +6,6 @@
 #include <YSI_Coding\y_hooks>
 
 forward OnAccountLogin(playerid);
-forward OnAccountCreated(playerid, account_db_id);
-forward OnCharacterCreated(playerid, character_db_id);
 
 static enum E_ACCOUNT_DATA
 {
@@ -100,7 +98,12 @@ stock CheckAccount(playerid)
 		}
 		else
 		{
-			new bool:isValid = true;
+			//Dialog_Show_s(playerid, Dialog_Login, DIALOG_STYLE_PASSWORD, @("Login"), @("Questo account non risulta registrato.\nPer poter giocare su questo server, devi possederne uno.\nVisita http://ucp.lv-rp.it/ per crearne uno."), "Esci", "");
+			SendClientMessage(playerid, COLOR_YELLOW, "SERVER: Devi avere un account registrato per poter giocare su questo server!");
+			SendClientMessage(playerid, COLOR_YELLOW, "Puoi registrarne uno qui: ucp.lv-rp.it");
+			KickEx(playerid);
+			return 1;
+			/*new bool:isValid = true;
 			for(new i = 0, j = strlen(p_name); i < j; ++i)
 			{
 				if(p_name[i] == '_')
@@ -122,7 +125,7 @@ stock CheckAccount(playerid)
 				Dialog_Show_s(playerid, Dialog_Register, DIALOG_STYLE_PASSWORD, @("Account non registrato"), @("Benvenuto.\nQuesto account non risulta registrato.\nAttualmente non è possibile effettuare l'accesso.\nSe fai parte del team dei tester, contatta Coda.\nBYE"), "Oh shit", "");
 				KickEx(playerid);
 			#endif
-			printf("Dialog_Register ");
+			printf("Dialog_Register ");*/
 		}
     }
     MySQL_TQueryInline(gMySQL, using inline AccountCheckCallback, "SELECT id FROM accounts WHERE LOWER(name) = LOWER('%e')", name);

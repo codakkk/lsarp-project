@@ -1,5 +1,11 @@
 #include <YSI_Coding\y_hooks>
 
+hook OnCharacterClearData(playerid)
+{
+	ResetPlayerWeapons(playerid);
+	return 1;
+}
+
 hook OnCharacterDisconnected(playerid)
 {
 	Character_SaveWeapons(playerid);
@@ -8,21 +14,22 @@ hook OnCharacterDisconnected(playerid)
 
 hook OnCharacterLateLoad(playerid)
 {
-	ResetPlayerWeapons(playerid);
 	Character_LoadWeapons(playerid);
 	return 1;
 }
 
-ptask SavePlayerWeaponsTask[1000](playerid) 
+/*ptask SavePlayerWeaponsTask[1000](playerid) 
 {
 	if(!Character_IsLogged(playerid))
 		return 0;
 	Character_SaveWeapons(playerid);
 	return 1;
-}
+}*/
 
 stock Character_SaveWeapons(playerid)
 {
+	if(!Character_IsLogged(playerid))
+		return 0;
 	mysql_tquery(gMySQL, "START TRANSACTION;");
 	//Character_DeleteAllWeapons(playerid);
 	new query[255];
@@ -32,7 +39,6 @@ stock Character_SaveWeapons(playerid)
 
 		Character_GetWeaponData(playerid, i, weaponid, ammo);
 		
-
 		if(weaponid <= 0)
 			continue;
 		
@@ -56,21 +62,28 @@ stock Character_SaveWeapons(playerid)
 		else
 		{
 			format(query, sizeof(query), "INSERT INTO `character_weapons` (character_id, weapon_id, ammo) VALUES('%d', '%d', '%d') ON DUPLICATE KEY UPDATE ammo = VALUES(ammo);", Character_GetID(playerid), weaponid, ammo);
+			printf("Saving weapon id %d with %d ammo for character id %d.", weaponid, ammo, Character_GetID(playerid));
 		}
 		mysql_pquery(gMySQL, query);
 	}
 	mysql_tquery(gMySQL, "COMMIT;");
+	return 1;
 }
 
 stock Character_LoadWeapons(playerid)
 {
 	inline OnLoad()
 	{
-		new rows = cache_num_rows(), w, a;
+		new rows = cache_num_rows(), cid, w, a;
 		for(new i = 0; i < rows; ++i)
 		{
-			cache_get_value_index_int(i, 0, w);
-			cache_get_value_index_int(i, 1, a);
+			cache_get_value_name_int(i, "character_id", cid);
+			
+			if(cid != Character_GetID(playerid))
+				continue;
+			
+			cache_get_value_name_int(i, "weapon_id", w);
+			cache_get_value_name_int(i, "ammo", a);
 			if(! (0 <= w <= 46))
 			{
 				printf("Character_LoadWeapons(%d) failed. invalid weapon id (id %d)", playerid, w);
@@ -81,7 +94,7 @@ stock Character_LoadWeapons(playerid)
 		}
 		printf("%d weapons loaded for player %d (DBID: %d).", rows, playerid, Character_GetID(playerid));
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT weapon_id, ammo FROM `character_weapons` WHERE character_id = '%d'", Character_GetID(playerid));
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT character_id, weapon_id, ammo FROM `character_weapons` WHERE character_id = '%d'", Character_GetID(playerid));
 }
 
 stock Character_HasWeaponInSlot(playerid, slotid)
