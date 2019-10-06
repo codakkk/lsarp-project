@@ -1,7 +1,7 @@
 
 #include <YSI_Coding\y_hooks>
 
-static 
+static stock
     SelectedCharacter[MAX_PLAYERS],
     TempCharacterName[MAX_PLAYERS][MAX_PLAYER_NAME],
     List:Characters[MAX_PLAYERS],
@@ -10,7 +10,8 @@ static
 static
 	PlayerText:CharacterModelTextdraw[MAX_PLAYERS][9],
     PlayerText:CharacterNameTextdraw[MAX_PLAYERS][9],
-    PlayerText:CharacterLevelTextdraw[MAX_PLAYERS][9]
+    PlayerText:CharacterLevelTextdraw[MAX_PLAYERS][9],
+	PlayerText:CharacterStateTextdraw[MAX_PLAYERS][9]
 ;
 
 hook OnAccountLogin(playerid)
@@ -40,6 +41,7 @@ hook OnPlayerClickPlayerTD(playerid, PlayerText:playertextid)
 				PlayerTextDrawHide(playerid, CharacterModelTextdraw[playerid][x]);
 				PlayerTextDrawHide(playerid, CharacterNameTextdraw[playerid][x]);
 				PlayerTextDrawHide(playerid, CharacterLevelTextdraw[playerid][x]);
+				PlayerTextDrawHide(playerid, CharacterStateTextdraw[playerid][x]);
 			}
             CancelSelectTextDraw(playerid);
             return 1;
@@ -88,7 +90,7 @@ hook OnPlayerConnect(playerid)
             PlayerTextDrawTextSize(playerid, CharacterModelTextdraw[playerid][i], 100.0000, 100.0000);
             PlayerTextDrawSetPreviewModel(playerid, CharacterModelTextdraw[playerid][i], 46);
             PlayerTextDrawSetPreviewRot(playerid, CharacterModelTextdraw[playerid][i], 0.0000, 0.0000, 0.0000, 1.0000);
-            PlayerTextDrawSetSelectable(playerid, CharacterModelTextdraw[playerid][i], 1);
+            PlayerTextDrawSetSelectable(playerid, CharacterModelTextdraw[playerid][i], 0);
 
             CharacterNameTextdraw[playerid][i] = CreatePlayerTextDraw(playerid, textStartX + x * gapX, textStartY + y * gapY, "Peppe Musicco");
             PlayerTextDrawFont(playerid, CharacterNameTextdraw[playerid][i], 1);
@@ -113,6 +115,18 @@ hook OnPlayerConnect(playerid)
             PlayerTextDrawUseBox(playerid, CharacterLevelTextdraw[playerid][i], 0);
             PlayerTextDrawBoxColor(playerid, CharacterLevelTextdraw[playerid][i], 0);
             PlayerTextDrawTextSize(playerid, CharacterLevelTextdraw[playerid][i], (201.5000 + (i * gapX)), 0.0000);
+
+			CharacterStateTextdraw[playerid][i] = CreatePlayerTextDraw(playerid, textStartX + x * gapX, textStartY + y * gapY + 20.0, "");
+            PlayerTextDrawFont(playerid, CharacterStateTextdraw[playerid][i], 1);
+            PlayerTextDrawLetterSize(playerid, CharacterStateTextdraw[playerid][i], 0.1399, 0.8999);
+            PlayerTextDrawColor(playerid, CharacterStateTextdraw[playerid][i], -1);
+            PlayerTextDrawSetShadow(playerid, CharacterStateTextdraw[playerid][i], 0);
+            PlayerTextDrawSetOutline(playerid, CharacterStateTextdraw[playerid][i], 0);
+            PlayerTextDrawBackgroundColor(playerid, CharacterStateTextdraw[playerid][i], 255);
+            PlayerTextDrawSetProportional(playerid, CharacterStateTextdraw[playerid][i], 1);
+            PlayerTextDrawUseBox(playerid, CharacterStateTextdraw[playerid][i], 0);
+            PlayerTextDrawBoxColor(playerid, CharacterStateTextdraw[playerid][i], 0);
+            PlayerTextDrawTextSize(playerid, CharacterStateTextdraw[playerid][i], (201.5000 + (i * gapX)), 0.0000);
         }
     }
 	return 1;
@@ -152,7 +166,9 @@ stock Account_ShowCharactersList(playerid)
 		
 		list_clear(Characters[playerid]);
 
-		new String:content, nameTemp[24], character_id = 0, skinid = 0, level = 1;
+		new 
+			String:content, nameTemp[24], character_id = 0, skinid = 0, level = 1,
+			bool:isValidated = false, isBanned, banExpiry;
 
 		if(count > 9)
 			count = 9;
@@ -163,7 +179,11 @@ stock Account_ShowCharactersList(playerid)
 			cache_get_value_name(i, "name", nameTemp, sizeof(nameTemp));
 			cache_get_value_name_int(i, "skin", skinid);
 			cache_get_value_name_int(i, "level", level);
+			cache_is_value_name_null(i, "validated_at", isValidated);
+			cache_get_value_name_int(i, "banned", isBanned);
+			cache_get_value_name_int(i, "ban_expiry", banExpiry);
 			
+			isValidated = !isValidated;
 			content += str_format("%s\n", nameTemp);
 
 			PlayerTextDrawSetPreviewModel(playerid, CharacterModelTextdraw[playerid][i], skinid);
@@ -172,15 +192,43 @@ stock Account_ShowCharactersList(playerid)
 			format(nameTemp, sizeof(nameTemp), "Livello %d", level);
 			PlayerTextDrawSetString(playerid, CharacterLevelTextdraw[playerid][i], nameTemp);
 		
+			
+			
+			if(!isValidated)
+			{
+				PlayerTextDrawColor(playerid, CharacterModelTextdraw[playerid][i], 0x55555599);
+				PlayerTextDrawSetString(playerid, CharacterStateTextdraw[playerid][i], "~h~~h~~h~~p~Non Convalidato~w~");
+				PlayerTextDrawSetSelectable(playerid, CharacterModelTextdraw[playerid][i], 0);
+			}
+			else if(isBanned == 1 && gettime() < banExpiry)
+			{
+				PlayerTextDrawColor(playerid, CharacterModelTextdraw[playerid][i], 0x55555599);
+				PlayerTextDrawSetStringStr(playerid, CharacterStateTextdraw[playerid][i], str_format("~r~Bannato~w~~n~Fine: %s", date(banExpiry)));
+				PlayerTextDrawSetSelectable(playerid, CharacterModelTextdraw[playerid][i], 0);
+			}
+			else if(isBanned == 2)
+			{
+				PlayerTextDrawColor(playerid, CharacterModelTextdraw[playerid][i], 0x55555599);
+				PlayerTextDrawSetString(playerid, CharacterStateTextdraw[playerid][i], "~p~Freezato~w~");
+				PlayerTextDrawSetSelectable(playerid, CharacterModelTextdraw[playerid][i], 0);
+			}
+			else
+			{
+				PlayerTextDrawColor(playerid, CharacterModelTextdraw[playerid][i], -1);
+				PlayerTextDrawSetString(playerid, CharacterStateTextdraw[playerid][i], "~g~Attivo~w~");
+				PlayerTextDrawSetSelectable(playerid, CharacterModelTextdraw[playerid][i], 1);
+			}
+
 			PlayerTextDrawShow(playerid, CharacterModelTextdraw[playerid][i]);
 			PlayerTextDrawShow(playerid, CharacterNameTextdraw[playerid][i]);
 			PlayerTextDrawShow(playerid, CharacterLevelTextdraw[playerid][i]);
-			
+			PlayerTextDrawShow(playerid, CharacterStateTextdraw[playerid][i]);
+
 			list_add(Characters[playerid], character_id);
 		}
 		SelectTextDraw(playerid, 0xFFFFFFAA);
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnCharactersLoad, "SELECT id, name, skin, level FROM `characters` WHERE account_id = '%d'", Account_GetID(playerid));
+	MySQL_TQueryInline(gMySQL, using inline OnCharactersLoad, "SELECT id, name, skin, level, banned, ban_expiry, validated_at FROM `characters` WHERE account_id = '%d'", Account_GetID(playerid));
     return 1;
 }
 

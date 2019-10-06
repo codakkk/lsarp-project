@@ -5,7 +5,7 @@
 #include <player_system\commands\interaction_commands>
 #include <YSI_Coding\y_hooks>
 
-static 
+static stock
 	LastAdminQuestionTime[MAX_PLAYERS],
 	LoginAttempts[MAX_PLAYERS char];
 
@@ -41,14 +41,14 @@ CMD:time(playerid, params[])
 {
 	new h, m, s;
 	gettime(h, m, s);
-	new String:str = str_format("~g~°~w~%d:%d:%d~g~°~w~~n~", h, m, s);
+	new String:str = str_format("~g~~w~%d:%d:%d~g~~w~~n~", h, m, s);
 	if(Character_GetJailTime(playerid) > 0)
 		str += str_format("Tempo jail rimanente: %d sec.", Character_GetJailTime(playerid));
 	GameTextForPlayerStr(playerid, str, 2000, 1);
 	Character_AMe(playerid, "controlla l'orario.");
 	return 1;
 }
-
+alias:time("orario");
 
 
 flags:tog(CMD_USER);
@@ -183,7 +183,7 @@ CMD:aiuto(playerid, params[])
     SendClientMessage(playerid, 0xCCE6E6FF, "[GENERALE]: (/pub)blicita /documenti /report /stilechat /stilelotta /stilecamminata");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[CHAT]: (/w)hisper (/o)(OOC) (/s)hout /me /b(OOC) /do /cw /low /pm(OOC) /r /melow /ame /dolow");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[BANCA]: /bilancio /ritira /deposita /bonifico /ritirastipendio");
-	SendClientMessage(playerid, 0xCCE6E6FF, "[HELP]: /cellcmds /housecmds (/v)ehicle /furniturecmds /invcmds /fcmds");
+	SendClientMessage(playerid, 0xCCE6E6FF, "[HELP]: /cellcmds /casacmds (/v)ehicle /furniturecmds /invcmds /fcmds");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[HELP]: /radiocmds /businesscmds (/dom)anda /aiutami /aiuto");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[TOG/BLOCK]: /tog /tog (f)(hud)(pm)(ooc) /tog all /noads /blockb /blockpm /clearchat");
 	if(Account_GetAdminLevel(playerid) > 0)

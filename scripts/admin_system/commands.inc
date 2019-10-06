@@ -303,7 +303,7 @@ CMD:sethp(playerid, params[])
 
     Character_SetHealth(id, hp);
     SendMessageToAdmins(0, COLOR_ADMINCMD, "AdmCmd: %s (%s) ha settato gli HP di %s (%d) a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), Character_GetOOCName(id), id, hp);
-    SendFormattedMessage(playerid, COLOR_GREEN, "[ADMIN] %s (%s) ti ha settato gli HP a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
+    SendFormattedMessage(id, COLOR_GREEN, "[ADMIN] %s (%s) ti ha settato gli HP a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
     Log(Account_GetName(playerid), Character_GetOOCName(id), "/sethp", hp);
     return 1;
 }
@@ -940,6 +940,7 @@ CMD:ajail(playerid, params[])
 	SendFormattedMessage(id, COLOR_ERROR, "Sei stato jailato da %s (%d) per %d minuti. Motivo: %s", Account_GetName(playerid), playerid, time, reason);
 
 	SendMessageToAdmins(false, COLOR_ADMINCMD, "AdmCmd: %s (%d) ha jailato %s (%d) per %d minuti. Motivo: %s", Account_GetName(playerid), playerid, Character_GetOOCName(id), id, time, reason);
+	LogCharacter(id, playerid, LOG_TYPE_JAIL, reason, time);
 	Log(Character_GetOOCName(playerid), Character_GetOOCName(id), "/ajail", time);
 	return 1;
 }
@@ -959,6 +960,7 @@ CMD:unjail(playerid, params[])
 	SendFormattedMessage(id, COLOR_ERROR, "Sei stato unjailato da %s", Account_GetName(playerid));
 
 	SendMessageToAdmins(false, COLOR_ADMINCMD, "AdmCmd: %s (%d) ha unjailato %s (%d).", Account_GetName(playerid), playerid, Character_GetOOCName(id), id);
+	LogCharacter(id, playerid, LOG_TYPE_UNJAIL, "", 0);
 	Log(Character_GetOOCName(playerid), Character_GetOOCName(id), "/unjail");
 	return 1;
 }
@@ -1104,6 +1106,7 @@ CMD:kick(playerid, params[])
 	SendMessageToAdmins(false, COLOR_ADMINCMD, "[ADMIN-CMD]: %s ha kickato %s. Motivo: %s", Account_GetName(playerid), Character_GetOOCName(id), reason);
 	KickEx(id);
 
+	LogCharacter(id, playerid, LOG_TYPE_KICK, reason, 0);
 	Discord_SendKickMessage("L'admin **%s** ha _kickato_ **%s** (**%s**). Motivo: __**%s**.", Account_GetName(playerid), Character_GetOOCName(id), Account_GetName(id), reason);
 	return 1;
 }
@@ -1152,7 +1155,7 @@ CMD:banip(playerid, params[])
 	mysql_tquery_f(gMySQL, "INSERT INTO `bans` (ip, serial) VALUES('%e', '%e')", ip, serial);
 
 	KickEx(id);
-
+	
 	Discord_SendBanMessage("L'admin **%s** ha _bannato_ **%s** (**%s**) per **IP**. Motivo: __**%s**.", Account_GetName(playerid), Character_GetOOCName(id), Account_GetName(id), reason);
 	return 1;
 }
@@ -1327,6 +1330,8 @@ stock BanAccount(playerid, adminid, reason[])
 
 	Log(Account_GetName(adminid), Account_GetName(playerid), "BanAccount");
 
+	LogCharacter(playerid, adminid, LOG_TYPE_BAN, reason, 0);
+
 	KickEx(playerid);
 
 	Discord_SendBanMessage("L'admin **%s** ha _bannato_ l'account **%s**. Motivo: __**%s**.", Account_GetName(adminid), Account_GetName(playerid), reason);
@@ -1354,6 +1359,8 @@ CMD:setchopshop(playerid, params[])
 	SendMessageToAdmins(true, COLOR_ADMINCMD, "[ADMIN-CMD]: %s (%d) ha garantito i permessi per il Chop Shop a %s (%d).", Account_GetName(playerid), playerid, Character_GetOOCName(id), id);
 	Character_SetChopShopPrivileges(id, true);
 	Character_SavePrivileges(id);
+
+	LogCharacter(id, playerid, LOG_TYPE_PRIVILEGE, "ChopShop", 1);
 	return 1;
 }
 
@@ -1370,6 +1377,8 @@ CMD:removechopshop(playerid, params[])
 	SendMessageToAdmins(true, COLOR_ADMINCMD, "[ADMIN-CMD]: %s (%d) ha rimosso i permessi per il Chop Shop a %s (%d).", Account_GetName(playerid), playerid, Character_GetOOCName(id), id);
 	Character_SetChopShopPrivileges(id, false);
 	Character_SavePrivileges(id);
+
+	LogCharacter(id, playerid, LOG_TYPE_PRIVILEGE, "ChopShop", 0);
 	return 1;
 }
 

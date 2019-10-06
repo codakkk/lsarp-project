@@ -28,19 +28,19 @@ stock Discord_SendMessage(DCC_Channel:channel, const msg[], GLOBAL_TAG_TYPES:...
 
 stock Discord_SendBanMessage(const msg[], GLOBAL_TAG_TYPES:...)
 {
-    Discord_SendMessage(BanLogsChannel, msg, ___(1));
+    Discord_SendMessage(BanLogsChannel, msg, ___(2));
     return 1;
 }
 
 stock Discord_SendKickMessage(const msg[], GLOBAL_TAG_TYPES:...)
 {
-    Discord_SendMessage(KickLogsChannel, msg, ___(1));
+    Discord_SendMessage(KickLogsChannel, msg, ___(2));
     return 1;
 }
 
 stock Discord_SendMoneyMessage(const msg[], GLOBAL_TAG_TYPES:...)
 {
-    Discord_SendMessage(MoneyLogsChannel, msg, ___(1));
+    Discord_SendMessage(MoneyLogsChannel, msg, ___(2));
     return 1;
 }
 
@@ -54,6 +54,6 @@ stock Discord_SendPlayerMoneyMessage(playerid, giveid, money, const extra[] = ""
 
 stock Discord_SendAdminMessage(const msg[], GLOBAL_TAG_TYPES:...)
 {
-    Discord_SendMessage(AdminLogsChannel, msg, ___(1));
+    Discord_SendMessage(AdminLogsChannel, msg, ___(2));
     return 1;
 }

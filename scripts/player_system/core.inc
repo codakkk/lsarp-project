@@ -100,12 +100,36 @@ static
 
 forward OnPlayerVirtualWorldChange(playerid, oldWorld, newWorld);
 
+hook OnGameModeInit()
+{
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET is_online = '0' WHERE 1");
+	return 1;
+}
+
+hook OnGameModeExit()
+{
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET is_online = '0' WHERE 1");
+	return 1;
+}
+
 hook OnCharacterClearData(playerid)
 {
 	Character_EnableSomeAntiCheats(playerid, 1);
     Character_Clear(playerid);
 	Character_ResetBitState(playerid);
     return 1;
+}
+
+hook OnCharacterDisconnected(playerid)
+{
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET is_online = '0' WHERE id = '%d'", Character_GetID(playerid));
+	return 1;
+}
+
+hook OnCharacterLoad(playerid)
+{
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET is_online = '1' WHERE id = '%d'", Character_GetID(playerid));
+	return 1;
 }
 
 // Needed for anti-tp bug that makes player being kicked random.
@@ -141,6 +165,8 @@ stock Character_CanInteract(playerid)
 		return 0;
 	if(Character_IsDead(playerid))
 		return 0;
+	if(Character_IsFreezed(playerid))
+		return 0;
 	return 1;
 }
 
@@ -165,10 +191,10 @@ stock Character_ShowStats(playerid, targetid)
 
     SendFormattedMessage(targetid, 0x33AA33FF, "_____________________[Stats Help - %02d/%02d/%02d @ %02d:%02d:%02d]_____________________", day, month, year, hours, minutes, seconds);
 	SendFormattedMessage(targetid, 0xCCE6E6FF, "[Account] %s | Admin Level: [%d] | Premium Level: [%d] | E-Mail: %s", Account_GetName(playerid), Account_GetAdminLevel(playerid), Account_GetPremiumLevel(playerid), Account_GetEMail(playerid));
-	SendFormattedMessage(playerid, 0xCCE6E6FF, "[Personaggio] Livello: [%d] | Esperienza: [%d] | Fazione: [%s] | Rank: [%s]", Character_GetLevel(playerid), Character_GetExperience(playerid), factionName, rankName);
+	SendFormattedMessage(targetid, 0xCCE6E6FF, "[Personaggio] Livello: [%d] | Esperienza: [%d] | Fazione: [%s] | Rank: [%s]", Character_GetLevel(playerid), Character_GetExperience(playerid), factionName, rankName);
     SendFormattedMessage(targetid, 0xCCE6E6FF, "[Personaggio] HP: [%.2f] | Armatura: [%.2f] | Max HP: [%.2f] | Max AP: [%.2f] | Ore di gioco: [%d]", Character_GetHealth(playerid), Character_GetArmour(playerid), Character_GetMaxHealth(playerid), Character_GetMaxArmour(playerid), 0);
 	SendFormattedMessage(targetid, 0xCCE6E6FF, "[Personaggio] Soldi: [$%s] | Banca: [$%s] | Stipendio: [$%s]", FormatNumber(Character_GetMoney(playerid)), FormatNumber(Character_GetBank(playerid)), FormatNumber(Character_GetPayCheck(playerid)));
-    SendFormattedMessage(playerid, 0xCCE6E6FF, "[Altro] X: [%.2f] | Y: [%.2f] | Z: [%.2f] | Interior: [%d] | VW: [%d]", x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
+    SendFormattedMessage(targetid, 0xCCE6E6FF, "[Altro] X: [%.2f] | Y: [%.2f] | Z: [%.2f] | Interior: [%d] | VW: [%d]", x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
     SendClientMessage(targetid, 0x33AA33FF,    "________________________________________________________________________________________");
     return 1;
 }
@@ -325,11 +351,18 @@ stock LoadCharacterResult(playerid)
 		cache_get_value_name_int(0, "experience", PlayerInfo[playerid][Experience]);
 
 		SetPlayerScore(playerid, Character_GetLevel(playerid));
-		if(isBanned)
+		if(isBanned == 2) // Is Freezed?
+		{
+			SendClientMessage(playerid, COLOR_ORANGE, "SERVER: Questo personaggio risulta freezato. Visita l'UCP per sfreezarlo.");
+			KickEx(playerid);
+			return 0;
+		}
+		else if(isBanned == 1)
 		{
 			if(gettime() < banTime)
 			{
-				Dialog_Show(playerid, DialogNull, DIALOG_STYLE_MSGBOX, "Personaggio Bannato", "Questo personaggio risulta bannato.\nData di scadenza: %s.\nSe pensi sia stato un errore, visita www.lsarp.it", "Ok", "", date(banTime));
+				SendFormattedMessage(playerid, COLOR_ORANGE, "SERVER: QUesto personaggio risulta bannato fino al %s.", date(banTime));
+				SendClientMessage(playerid, COLOR_ORANGE, "SERVER: Se pensi sia stato un errore, visita www.lv-rp.it/.");
 				KickEx(playerid);
 				return 0;
 			}
@@ -337,6 +370,16 @@ stock LoadCharacterResult(playerid)
 			{
 				mysql_tquery_f(gMySQL, "UPDATE `characters` SET banned = '0', ban_expiry = '0' WHERE id = '%d'", Character_GetID(playerid));
 			}
+		}
+
+		new bool:isValidated = false;
+		cache_is_value_name_null(0, "validated_at", isValidated);
+		isValidated = !isValidated;
+		if(!isValidated)
+		{
+			SendClientMessage(playerid, COLOR_ORANGE, "SERVER: Questo personaggio non è stato ancora convalidato da un amministratore.");
+			KickEx(playerid);
+			return 0;
 		}
 		return 1;
     }
@@ -353,11 +396,11 @@ stock Character_SetSafePosition(playerid, Float:x, Float:y, Float:z, interior = 
 	if(world == -1)
 		world = Character_GetVirtualWorld(playerid);
 	
-	Streamer_UpdateEx(playerid, x, y, z, world, interior);
-	SetPlayerPos(playerid, x, y, z);
+	Streamer_UpdateEx(playerid, x, y, z, world, interior, 2000, 1);
+	/*SetPlayerPos(playerid, x, y, z);
 	SetPlayerInterior(playerid, interior);
 	Character_SetVirtualWorld(playerid, world);
-	Character_FreezeForTime(playerid, 2000);
+	Character_FreezeForTime(playerid, 2000);*/
 	return 1;
 }
 

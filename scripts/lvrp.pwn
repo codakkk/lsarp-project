@@ -531,6 +531,11 @@ hook OnPlayerDisconnect(playerid, reason)
 	
 	if(Player_GetSpectatingPlayer(playerid) == INVALID_PLAYER_ID)
 	{
+		for(new i = 0, j = strlen(name); i < j; ++i)
+		{
+			if(name[i] == '_')
+				name[i] = ' ';
+		}
 		new string[128];
 		format(string,sizeof(string), "* %s è uscito dal server. [%s]", name, reasonName[reason]);
 		ProxDetector(playerid, 15.0, string, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY);

@@ -34,7 +34,7 @@ hook OnFactionDeleted(factionid)
 	return 1;
 }
 
-flags:afactionskin(CMD_RCON);
+flags:afactionskin(CMD_DEVELOPER);
 CMD:afactionskin(playerid, params[])
 {
 	new factionid, command[32], skinid;

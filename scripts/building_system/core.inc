@@ -233,8 +233,9 @@ stock Building_LoadAll()
 			var_set_cell(Variant:building, Faction, data[Faction]);
 			var_set_cell(Variant:building, Type, data[Type]);
 			
-			new Map:map = map_new(), Node:node, length;
-			if(strlen(jsonDataStr) > 0 && strcmp(jsonDataStr, "NULL", true))
+			new Map:map = map_new(), Node:node, length, bool:isNull = false;
+			cache_is_value_name_null(i, "data", isNull);
+			if(!isNull)//if(strlen(jsonDataStr) > 0 && strcmp(jsonDataStr, "NULL", true))
 			{
 				JsonParse(jsonDataStr, node);
 				new ret = JsonArrayLength(node, length);
@@ -786,6 +787,13 @@ stock Character_ShowBizDialog(playerid)
 	}
 	return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno di un tuo edificio."), 0;
 }
+
+flags:businesscmds(CMD_ALIVE_USER);
+CMD:businesscmds(playerid, params[])
+{
+	SendClientMessage(playerid, -1, "[Business] /biz o /bmenu"); 
+}
+alias:businesscmds("bizcmds");
 
 flags:biz(CMD_ALIVE_USER);
 CMD:biz(playerid, params[])

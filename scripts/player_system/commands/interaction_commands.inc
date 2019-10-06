@@ -1,3 +1,4 @@
+#include <log_system\core>
 #include <YSI_Coding\y_hooks>
 
 
@@ -97,7 +98,11 @@ CMD:paga(playerid, params[])
 	SendFormattedMessage(playerid, -1, "{cbccce}Hai dato {8fbc8f}$%s{cbccce} a %s.", FormatNumber(amount), Character_GetRolePlayName(id));
 
 	if(amount >= 10000)
+	{
 		SendMessageToAdmins(1, COLOR_ORANGE, "AdmAlert: %s ha pagato $%d a %s.", Character_GetOOCName(playerid), amount, Character_GetOOCName(id));
+		LogCharacter(playerid, id, LOG_TYPE_GIVE_MONEY, "/paga", amount);
+		LogCharacter(id, playerid, LOG_TYPE_RECEIVE_MONEY, "/paga", amount);
+	}
 	return 1;
 }
 

@@ -185,9 +185,9 @@ CMD:ahousecmds(playerid, params[])
     return 1;
 }
 
-CMD:housecmds(playerid, params[])
+CMD:casacmds(playerid, params[])
 {
-	SendClientMessage(playerid, -1, "[Casa] /casa ");
+	SendClientMessage(playerid, -1, "[Casa] /casa o /cmenu");
 	return 1;
 }
 
