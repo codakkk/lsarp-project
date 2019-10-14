@@ -34,7 +34,7 @@ CMD:manette(playerid, params[])
 {
 	// MUST CHECK IT BETTER
 	if( (!Faction_IsValid(Character_GetFaction(playerid)) || Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE) && !Player_IsAdminDuty(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro della Guardia Nazionale.");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro del Las Venturas Metropolitan Police Department in servizio.");
 		
 	new id;
 	if(sscanf(params, "k<u>", id))
@@ -327,7 +327,7 @@ stock Character_OffDuty(playerid)
 	
 	Character_ResetWeapons(playerid);
 
-	Character_SetHealth(playerid, 100.0);
+	//Character_SetHealth(playerid, 100.0);
 	Character_SetArmour(playerid, 0.0);
 
 	Character_SetSelectingUniform(playerid, false);

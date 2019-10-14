@@ -138,11 +138,10 @@ hook function Character_Enter(playerid)
         }
         
         if(House_IsLocked(house))
-            return GameTextForPlayer(playerid, "~r~Porta Chiusa", 5000, 1);
+            return GameTextForPlayer(playerid, "~r~Porta Chiusa", 5000, 1), 0;
         
         Character_AMe(playerid, isEnter ? ("apre la porta ed entra.") : ("apre la porta ed esce."));
         
-        Streamer_UpdateEx(playerid, x, y, z, world, interiorId);
         Character_SetSafePosition(playerid, x, y, z, interiorId, world);
         return 1;
     }

@@ -12,6 +12,8 @@ static
 
 hook OnGameModeInit()
 {
+	Weapon_InitializeType(WEAPON_SPRAYCAN, gItem_Empty, 0.0, false, false);
+
 	Weapon_InitializeType(WEAPON_COLT45, gItem_LightAmmo, 25.0, true);
 	Weapon_InitializeType(WEAPON_SILENCED, gItem_LightAmmo, 30.0, true);
 	Weapon_InitializeType(WEAPON_DEAGLE, gItem_LightAmmo, 45.0, true);

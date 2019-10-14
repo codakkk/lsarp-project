@@ -95,6 +95,12 @@ public OnCheatDetected(playerid, ip_address[], type, code)
 
             SendCheatAlertToAdmins(COLOR_ANTICHEAT, "AntiCheat: %s (%d) è sospetto di %s.", Character_GetOOCName(playerid), playerid, GetCheatName(code));
 
+            if(code == 15 || code == 16 || code == 17) // Weapon and Ammo (infite too) hack.
+            {
+                AntiCheatKickWithDesync(playerid, code);
+                return 1;
+            }
+
             if(Server_GetOnlineStaffCount() <= 0)
             {
                 AntiCheatKickWithDesync(playerid, code);

@@ -189,7 +189,7 @@ stock Character_SetSlotExtra(playerid, slotid, index, value)
 
 stock Character_ShowInventory(playerid, targetid)
 {
-	if(!Character_IsLogged(playerid))
+	if(!Character_IsLogged(playerid) || (Character_IsJailed(playerid) && !Character_IsICJailed(playerid)))
 		return 0;
 
 	new Inventory:playerInventory = Character_GetInventory(playerid);

@@ -349,7 +349,7 @@ CMD:onduty(playerid, params[])
 	if(count == 0)
 		SendClientMessage(playerid, COLOR_ERROR, "Non ci sono membri della polizia in servizio.");
 	else 
-		SendFormattedMessage(playerid, COLOR_ERROR, "Attualmente ci sono %d membri in servizio della Guardia Nazionale.", count);
+		SendFormattedMessage(playerid, COLOR_ERROR, "Attualmente ci sono %d membri in servizio del Las Venturas Metropolitan Police Department.", count);
 	return 1;
 }
 

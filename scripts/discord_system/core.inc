@@ -21,26 +21,26 @@ hook OnGameModeInit()
 stock Discord_SendMessage(DCC_Channel:channel, const msg[], GLOBAL_TAG_TYPES:...)
 {
     format(YSI_UNSAFE_HUGE_STRING, YSI_UNSAFE_HUGE_LENGTH, msg, ___(2));
-    utf8encode(YSI_UNSAFE_HUGE_STRING, msg, YSI_UNSAFE_HUGE_LENGTH);
+    utf8encode(YSI_UNSAFE_HUGE_STRING, YSI_UNSAFE_HUGE_STRING, YSI_UNSAFE_HUGE_LENGTH);
     DCC_SendChannelMessage(channel, YSI_UNSAFE_HUGE_STRING);
     return 1;
 }
 
 stock Discord_SendBanMessage(const msg[], GLOBAL_TAG_TYPES:...)
 {
-    Discord_SendMessage(BanLogsChannel, msg, ___(2));
+    Discord_SendMessage(BanLogsChannel, msg, ___(1));
     return 1;
 }
 
 stock Discord_SendKickMessage(const msg[], GLOBAL_TAG_TYPES:...)
 {
-    Discord_SendMessage(KickLogsChannel, msg, ___(2));
+    Discord_SendMessage(KickLogsChannel, msg, ___(1));
     return 1;
 }
 
 stock Discord_SendMoneyMessage(const msg[], GLOBAL_TAG_TYPES:...)
 {
-    Discord_SendMessage(MoneyLogsChannel, msg, ___(2));
+    Discord_SendMessage(MoneyLogsChannel, msg, ___(1));
     return 1;
 }
 
@@ -54,6 +54,6 @@ stock Discord_SendPlayerMoneyMessage(playerid, giveid, money, const extra[] = ""
 
 stock Discord_SendAdminMessage(const msg[], GLOBAL_TAG_TYPES:...)
 {
-    Discord_SendMessage(AdminLogsChannel, msg, ___(2));
+    Discord_SendMessage(AdminLogsChannel, msg, ___(1));
     return 1;
 }

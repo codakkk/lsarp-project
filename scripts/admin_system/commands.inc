@@ -232,6 +232,8 @@ CMD:setadmin(playerid, params[])
 	{
 		if(Player_IsAdminDuty(id))
 			pc_cmd_aduty(id, "");
+		if(Player_IsSupporterDuty(id))
+			pc_cmd_tduty(id, "");
 		SendFormattedMessage(id, COLOR_ERROR, "AdmCmd: %s (%d) ti ha rimosso dallo staff.", Account_GetName(playerid), playerid);
 		SendFormattedMessage(playerid, COLOR_ERROR, "Hai rimosso %s (%d) dallo staff.", Account_GetName(id), id);
 		SendMessageToAdmins(true, COLOR_ADMINCMD, "AdmAlert: %s (%d) ha rimosso %s (%d) dallo staff.", Account_GetName(playerid), playerid, Account_GetName(id), id);
@@ -689,10 +691,7 @@ CMD:gotopos(playerid, params[])
     
     Character_SetVirtualWorld(playerid, vw);
     
-	Streamer_UpdateEx(playerid, x, y, z, vw, int);
-
-	SetPlayerInterior(playerid, int);
-    SetPlayerPos(playerid, x, y, z);
+	Character_SetSafePosition(playerid, x, y, z, int, vw);
     return 1;
 }
 
@@ -1040,6 +1039,15 @@ CMD:n(playerid, params[])
 	return 1;
 }
 
+flags:an(CMD_JR_MODERATOR);
+CMD:an(playerid, params[])
+{
+	if(isnull(params) || strlen(params) > 250)
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /an <testo>");
+	SendMessageToAdmins(1, 0x6A5ACDFF, "[ANNUNCIO STAFF] %s: %s", Account_GetName(playerid), params);
+	return 1;
+}
+
 Dialog:Dialog_AdminAnnounce(playerid, response, listitem, inputtext[])
 {
 	if(!response)
@@ -1107,7 +1115,7 @@ CMD:kick(playerid, params[])
 	KickEx(id);
 
 	LogCharacter(id, playerid, LOG_TYPE_KICK, reason, 0);
-	Discord_SendKickMessage("L'admin **%s** ha _kickato_ **%s** (**%s**). Motivo: __**%s**.", Account_GetName(playerid), Character_GetOOCName(id), Account_GetName(id), reason);
+	Discord_SendKickMessage("L'admin **%s** ha _kickato_ **%s** (**%s**). Motivo: **%s**.", Account_GetName(playerid), Character_GetOOCName(id), Account_GetName(id), reason);
 	return 1;
 }
 
@@ -1312,7 +1320,7 @@ stock BanCharacter(playerid, adminid, days, reason[])
 	}
 
 	Log(Account_GetName(adminid), Account_GetName(playerid), "BanCharacter", days);
-
+	LogCharacter(playerid, adminid, LOG_TYPE_BAN, reason, days);
 	mysql_tquery_f(gMySQL, "UPDATE `characters` SET banned = '1', ban_expiry = '%d' WHERE id = '%d'", banTime, Character_GetID(playerid));
 
 	KickEx(playerid);
@@ -1329,8 +1337,6 @@ stock BanAccount(playerid, adminid, reason[])
 	Account_GetName(adminid), Account_GetName(playerid), Character_GetOOCName(playerid), reason);
 
 	Log(Account_GetName(adminid), Account_GetName(playerid), "BanAccount");
-
-	LogCharacter(playerid, adminid, LOG_TYPE_BAN, reason, 0);
 
 	KickEx(playerid);
 
@@ -1401,7 +1407,12 @@ CMD:staff(playerid, params[])
 	foreach(new i : Player)
 	{
 		if(Account_GetAdminLevel(i) > 0)
-			SendFormattedMessage(playerid, 0xa52a2aff, "(%s) %s [ID: %d]", Account_GetName(i), Character_GetOOCName(i), i);
+		{
+			new level = Account_GetAdminLevel(i);
+			if(level > 5)
+				level = 5;
+			SendFormattedMessage(playerid, 0xa52a2aff, "(%s) %s [ID: %d] - %s", Account_GetName(i), Character_GetOOCName(i), i, GetAdminLevelName(level));
+		}
 	}	
 	return 1;
 }

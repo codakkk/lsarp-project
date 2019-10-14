@@ -139,6 +139,19 @@ Dialog:Dialog_HouseSell(playerid, response, listitem, inputtext[])
     new House:house = Character_GetHouseMenu(playerid);
 	if(!House_IsValid(house))
 		return 0;
+
+	if(!House_IsOwned(house))
+	{
+		SendClientMessage(playerid, COLOR_ERROR, "La casa non è acquistata, per tanto non puoi venderla.");
+		return Character_ShowHouseDialog(playerid);
+	}
+
+	if(!Player_IsAdminDuty(playerid) && !Character_DoesOwnHouse(playerid, house))
+	{
+		SendClientMessage(playerid, COLOR_ERROR, "Solo il proprietario puo' utilizzare questo comando.");
+		return Character_ShowHouseDialog(playerid);
+	}
+
     new sellPrice = House_GetPrice(house) / 2;
     Character_GiveMoney(playerid, sellPrice, "Dialog_HouseSell");
     SendFormattedMessage(playerid, COLOR_GREEN, "Hai venduto la tua casa per $%d.", sellPrice);

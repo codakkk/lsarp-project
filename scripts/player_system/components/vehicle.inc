@@ -44,7 +44,8 @@ CMD:vehicle(playerid, params[])
 		SendClientMessage(playerid, 0xFFEC8BFF, "[Elimina] rottama (attenzione: il tuo veicolo verrà venduto definitivamente)");
 		return 0;
 	}
-	if(!strcmp(command, "sicura", true))
+	new commandHash = YHash(command, false);
+	if(commandHash == _I<sicura>)
 	{
 		if(id != -1)
 			vehicleid = id;
@@ -72,9 +73,9 @@ CMD:vehicle(playerid, params[])
 			return 1;
 		}
 	}
-	else if(!strcmp(command, "motore", true))
+	else if(commandHash == _I<motore>)
 	{
-    	if(vehicleid == 0 || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)	
+    	if(vehicleid == 0 || GetPlayerState(playerid) != PLAYER_STATE_DRIVER || IsABike(vehicleid))	
         	return 0;
 		
 		if(!Vehicle_IsOwner(vehicleid, playerid, false))
@@ -94,7 +95,7 @@ CMD:vehicle(playerid, params[])
 		Vehicle_SetLightState(vehicleid, Vehicle_IsEngineOn(vehicleid) ? Vehicle_GetLightState(vehicleid) : VEHICLE_PARAMS_OFF);
 		Character_AMe(playerid, Vehicle_IsEngineOn(vehicleid) ? ("accende il veicolo.") : ("spegne il veicolo."));
 	}
-	else if(!strcmp(command, "parcheggia", true))
+	else if(commandHash == _I<parcheggia> || commandHash == _I<park>)
 	{
 		
 		if(vehicleid <= 0 || !Vehicle_IsOwner(vehicleid, playerid, true))
@@ -106,13 +107,13 @@ CMD:vehicle(playerid, params[])
 		Vehicle_Park(vehicleid, x, y, z, a);
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai parcheggiato qui la tua %s.", Vehicle_GetName(vehicleid));
 	}
-	else if(!strcmp(command, "luci", true))
+	else if(commandHash == _I<luci>)
 	{
 		if(IsABike(vehicleid) || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
 			return 0;
 		Vehicle_SetLightState(vehicleid, !Vehicle_GetLightState(vehicleid));
 	}
-	else if(!strcmp(command, "bagagliaio", true))
+	else if(commandHash == _I<bagagliaio>)
 	{
 		if(id <= 0)
 			vehicleid = Character_GetClosestVehicle(playerid, 5.0);
@@ -122,7 +123,7 @@ CMD:vehicle(playerid, params[])
 		else
 			Vehicle_OpenTrunk(vehicleid);
 	}
-	else if(!strcmp(command, "inventario", true) || !strcmp(command, "inv", true))
+	else if(commandHash == _I<inventario> || commandHash == _I<inv>)
 	{
 		if(id <= 0)
 			vehicleid = Character_GetClosestVehicle(playerid, 5.0);
@@ -131,11 +132,11 @@ CMD:vehicle(playerid, params[])
 	
 		Vehicle_ShowInventory(vehicleid, playerid);
 	}
-	else if(!strcmp(command, "lista", true) || !strcmp(command, "list", true))
+	else if(commandHash == _I<lista>)
 	{
 		return Character_ShowVehicleList(playerid, playerid);
 	}
-	else if(!strcmp(command, "spawn", true))
+	else if(commandHash == _I<spawn>)
 	{
 		if(id <= 0)
 			return SendClientMessage(playerid, COLOR_ERROR, "(/v)eicolo spawn <slot>");
@@ -150,7 +151,7 @@ CMD:vehicle(playerid, params[])
 		
 		Character_SpawnVehicle(playerid, id);
 	}
-	else if(!strcmp(command, "despawn", true))
+	else if(commandHash == _I<despawn>)
 	{
 		if(id > 0 && Character_IsNearVehicle(playerid, id)) vehicleid = id;
 		
@@ -164,7 +165,7 @@ CMD:vehicle(playerid, params[])
 		
 		Vehicle_Despawn(vehicleid);
 	}
-	else if(!strcmp(command, "respawn", true))
+	else if(commandHash == _I<respawn>)
 	{
 		if(id > 0 && Character_IsNearVehicle(playerid, id)) vehicleid = id;
 		
@@ -188,7 +189,7 @@ CMD:vehicle(playerid, params[])
 
 		SendFormattedMessage(playerid, COLOR_LIGHTBLUE, "Hai respawnato il veicolo (%s) [%d].", Vehicle_GetNameFromModel(Vehicle_GetModel(vehicleid)), vehicleid);
 	}
-	else if(!strcmp(command, "vendi", true))
+	else if(commandHash == _I<vendi>)
 	{
 		if(id > 0 && Character_IsNearVehicle(playerid, id)) vehicleid = id;
 		
@@ -202,7 +203,7 @@ CMD:vehicle(playerid, params[])
 
 		Dialog_Show(playerid, Dialog_SellVehicleToPlayer, DIALOG_STYLE_INPUT, "Vendi a giocatore", "Inserisci il nome o l'id del giocatore a cui vuoi vendere il veicolo, seguito dal prezzo.\n-- Esempi: --\n\n- Pino_Peppe 10000.\n- 1 10000.", "Invia", "Chiudi");
 	}
-	else if(!strcmp(command, "rottama", true))
+	else if(commandHash == _I<rottama>)
 	{
 		if(id > 0 && Character_IsNearVehicle(playerid, id)) vehicleid = id;
 		
@@ -575,7 +576,6 @@ stock Character_AddOwnedVehicle(playerid, vehicleid)
 	if(!Vehicle_IsValid(vehicleid) || Character_GetOwnedVehicleCount(playerid) == MAX_VEHICLES_PER_PLAYER)
 		return 0;
 	
-
 	// If vehicle is temporary
 	Vehicle_SetOwner(vehicleid, playerid);
 	

@@ -263,8 +263,6 @@ stock Vehicle_InsertInDatabase(vehicleid)
 	{
 		VehicleInfo[vehicleid][ID] = cache_insert_id();
 		VehicleInfo[vehicleid][Model] = GetVehicleModel(vehicleid);
-		VehicleInfo[vehicleid][Color1] = Vehicle_GetColor1(vehicleid);
-		VehicleInfo[vehicleid][Color2] = Vehicle_GetColor2(vehicleid);
 		VehicleInfo[vehicleid][X] = x;
 		VehicleInfo[vehicleid][Y] = y;
 		VehicleInfo[vehicleid][Z] = z;
@@ -642,11 +640,23 @@ CMD:avplate(playerid, params[])
 	if(!Vehicle_IsValid(vehicleid))
 		return SendClientMessage(playerid, COLOR_ERROR, "L'id del veicolo inserito non è valido.");
 	
-	Vehicle_SetPlate(vehicleid, plate);
-	Vehicle_Respawn(vehicleid);
+	inline OnLoad()
+	{
+		if(cache_num_rows() > 0)
+		{
+			new id;
+			cache_get_value_name_int(0, "id", id);
+			SendFormattedMessage(playerid, COLOR_ERROR, "Esiste già un veicolo (ID database: %d) con questa targa.", id);
+			return 0;
+		}
+		Vehicle_SetPlate(vehicleid, plate);
+		Vehicle_Respawn(vehicleid);
 
-	SendFormattedMessage(playerid, -1, "Hai settato la targa del veicolo id %d ed è stato respawnato. Testo: %s", vehicleid, plate);
-	Log(Account_GetName(playerid), plate, "/avplate", vehicleid);
+		SendFormattedMessage(playerid, -1, "Hai settato la targa del veicolo id %d ed è stato respawnato. Testo: %s", vehicleid, plate);
+		Log(Account_GetName(playerid), plate, "/avplate", vehicleid);
+	}
+	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT id FROM `vehicles` WHERE plate = '%e'", plate);
+
 	return 1;
 }
 

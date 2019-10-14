@@ -83,16 +83,14 @@ stock CheckAccount(playerid)
 	inline AccountCheckCallback()
     {
 		new 
-			String:string,
-			p_name[MAX_PLAYER_NAME];
-			
-		GetPlayerName(playerid, p_name, sizeof(p_name));
+			String:string;
+		
 		printf("AccountCheckCallback");
 		if(cache_num_rows() > 0)
 		{
 			new id;
 			cache_get_value_index_int(0, 0, id);
-			string = str_format("Ciao %s!\nIl tuo account risulta registrato.\nInserisci la password per effettuare il login.", p_name);
+			string = str_format("Ciao %s!\nIl tuo account risulta registrato.\nInserisci la password per effettuare il login.", name);
 			Dialog_Show_s(playerid, Dialog_Login, DIALOG_STYLE_PASSWORD, @("Login"), string, "Login", "Esci");
 			printf("Dialog_Login");
 		}
@@ -103,32 +101,9 @@ stock CheckAccount(playerid)
 			SendClientMessage(playerid, COLOR_YELLOW, "Puoi registrarne uno qui: ucp.lv-rp.it");
 			KickEx(playerid);
 			return 1;
-			/*new bool:isValid = true;
-			for(new i = 0, j = strlen(p_name); i < j; ++i)
-			{
-				if(p_name[i] == '_')
-				{
-					isValid = false;
-					break;
-				}
-			}
-			if(!isValid)
-			{
-				Dialog_Show(playerid, DialogNull, DIALOG_STYLE_MSGBOX, "Account non valido", "Il tuo nome contiene caratteri non validi (_).\nRilogga con un account valido.", "Ok", "");
-				KickEx(playerid);
-				return 1;
-			}
-			#if ALLOW_NEW_USERS
-				string = str_format("Benvenuto %s.\nQuesto account non risulta registrato.\nInserisci una password per registrarti!\nN.B: Minimo 6 caratteri. Massimo 16.\n\nRicorda che la password deve contenere almeno:\n- 8 caratteri.\n- Almeno una lettera maiuscola.\n- Almeno un numero.\n- Almeno un carattere speciale.\nLa password non puo':\n- Cominciare o finire con uno spazio\n- Contenere come caratteri speciali: %%, \\, ', `, \".", p_name);
-				Dialog_Show_s(playerid, Dialog_Register, DIALOG_STYLE_PASSWORD, @("Account non registrato"), string, "Ok", "");
-			#else
-				Dialog_Show_s(playerid, Dialog_Register, DIALOG_STYLE_PASSWORD, @("Account non registrato"), @("Benvenuto.\nQuesto account non risulta registrato.\nAttualmente non è possibile effettuare l'accesso.\nSe fai parte del team dei tester, contatta Coda.\nBYE"), "Oh shit", "");
-				KickEx(playerid);
-			#endif
-			printf("Dialog_Register ");*/
 		}
     }
-    MySQL_TQueryInline(gMySQL, using inline AccountCheckCallback, "SELECT id FROM accounts WHERE LOWER(name) = LOWER('%e')", name);
+    MySQL_PQueryInline(gMySQL, using inline AccountCheckCallback, "SELECT id FROM accounts WHERE LOWER(name) = LOWER('%e')", name);
 	return 1;
 }
 
@@ -149,7 +124,7 @@ hook OnPlayerRequestClass(playerid, classid)
 		return 1;
 	}
 
-	CheckAccount(playerid);
+	//CheckAccount(playerid);
 	return 1;
 }
 

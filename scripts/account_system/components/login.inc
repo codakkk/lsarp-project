@@ -23,12 +23,21 @@ hook OnPlayerDisconnect(playerid, reason)
 	return 1;
 }
 
+timer ShowLogin[200](playerid)
+{
+	CheckAccount(playerid);
+	return 1;
+}
+
 hook OnPlayerConnect(playerid)
 {
 	inline OnLoadHash()
 	{
 		if(cache_num_rows() > 0)
+		{
 			cache_get_value_name(0, "password", PlayerHash[playerid]);
+			defer ShowLogin(playerid);
+		}
 	}
 	new name[MAX_PLAYER_NAME];
 	GetPlayerName(playerid, name, sizeof(name));
@@ -69,7 +78,7 @@ Dialog:Dialog_Login(playerid, response, listitem, inputtext[])
 	   //Dialog_Show(playerid, Dialog_LoginOptions, DIALOG_STYLE_LIST, "Altro", "Resetta Password\nEsci", "Seleziona", "Indietro"); 
 	   return KickEx(playerid);
     }
-
+	printf("Input: %s - Password: %s", inputtext, PlayerHash[playerid]);
 	bcrypt_verify(playerid, #OnPasswordChecked, inputtext, PlayerHash[playerid]);
 	return 1;
 }

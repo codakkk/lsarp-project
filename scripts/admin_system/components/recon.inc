@@ -13,7 +13,7 @@ static
 
 hook OnPlayerConnect(playerid)
 {
-    ReconPlayerText[playerid] = CreatePlayerTextDraw(playerid, 320.000000, 380.000000, "_");
+    ReconPlayerText[playerid] = CreatePlayerTextDraw(playerid, 320.000000, 340.000000, "_");
 	PlayerTextDrawBackgroundColor(playerid, ReconPlayerText[playerid], 255);
 	PlayerTextDrawAlignment(playerid, ReconPlayerText[playerid], 2); // 2 Means centered.
 	PlayerTextDrawFont(playerid, ReconPlayerText[playerid], 1);

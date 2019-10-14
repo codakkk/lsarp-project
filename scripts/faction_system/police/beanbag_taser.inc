@@ -21,7 +21,7 @@ hook OnCharacterClearData(playerid)
     return 1;
 }
 
-hook OnCharacterDisconnected(playerid)
+hook OnCharacterDisconnected(playerid, reason)
 {
     /*if(Character_HasBeanBag(playerid))
         pc_cmd_beanbag(playerid, "");

@@ -32,11 +32,11 @@ ptask OnPlayerDealershipTimer[500](playerid)
 	{
 		VehicleColorNum2{playerid}++;
 	}
-	ChangeVehicleColor(SelectedVehicle[playerid], Dealership_GetColorByIndex(VehicleColorNum1{playerid}), Dealership_GetColorByIndex(VehicleColorNum2{playerid}));
+	Vehicle_SetColors(SelectedVehicle[playerid], Dealership_GetColorByIndex(VehicleColorNum1{playerid}), Dealership_GetColorByIndex(VehicleColorNum2{playerid}));
     return 1;
 }
 
-hook OnCharacterDisconnected(playerid)
+hook OnCharacterDisconnected(playerid, reason)
 {
 	if(Character_IsBuyingVehicle(playerid))
 	{
@@ -238,16 +238,20 @@ stock Dealership_PlayerConfirmBuy(playerid)
 	}
 	else
 	{
-		SendFormattedMessage(playerid, -1, "Congratulazioni. Hai acquistato questo veicolo ({00AA00}%s{FFFFFF}) per {00FF00}$%d{FFFFFF}.", Vehicle_GetName(SelectedVehicle[playerid]), SelectedVehiclePrice[playerid]);
-		Character_GiveMoney(playerid, -SelectedVehiclePrice[playerid], "Concessionaria");
-		SetVehicleVirtualWorld(SelectedVehicle[playerid], 0);
-		Character_SetVirtualWorld(playerid, 0);
-		PutPlayerInVehicle(playerid, SelectedVehicle[playerid], 0);
-		
-		Vehicle_SetPrice(SelectedVehicle[playerid], SelectedVehiclePrice[playerid]);
+		if(Character_AddOwnedVehicle(playerid, SelectedVehicle[playerid]))
+		{
+			SendFormattedMessage(playerid, -1, "Congratulazioni. Hai acquistato questo veicolo ({00AA00}%s{FFFFFF}) per {00FF00}$%d{FFFFFF}.", Vehicle_GetName(SelectedVehicle[playerid]), SelectedVehiclePrice[playerid]);
+			Character_GiveMoney(playerid, -SelectedVehiclePrice[playerid], "Concessionaria");
+			SetVehicleVirtualWorld(SelectedVehicle[playerid], 0);
+			Character_SetVirtualWorld(playerid, 0);
+			PutPlayerInVehicle(playerid, SelectedVehicle[playerid], 0);
+			
+			Vehicle_SetPrice(SelectedVehicle[playerid], SelectedVehiclePrice[playerid]);
 
-		Character_AddOwnedVehicle(playerid, SelectedVehicle[playerid]);
-		Vehicle_SetEngineStatus(SelectedVehicle[playerid], false);
+			Vehicle_SetEngineStatus(SelectedVehicle[playerid], false);
+		}
+		else
+			SendClientMessage(playerid, COLOR_ORANGE, "Hai raggiunto il limite massimo di veicoli acquistabili.");
 	}
 	SelectedVehicle[playerid] = 0;
 	SelectedVehiclePrice[playerid] = 0;

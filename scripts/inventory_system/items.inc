@@ -1,5 +1,6 @@
 // GLOBAL ITEMS ID
 new stock
+	gItem_Empty = 0,
 	gItem_Hamburger,
 	gItem_Beans,
 	gItem_EnergyBar,

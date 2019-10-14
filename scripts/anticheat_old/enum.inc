@@ -35,7 +35,7 @@ enum AC_INFO
 }
 new ACInfo[MAX_PLAYERS][AC_INFO];
 
-hook OnCharacterDisconnected(playerid)
+hook OnCharacterDisconnected(playerid, reason)
 {
 	new Data[AC_INFO];
 	ACInfo[playerid] = Data;

@@ -998,6 +998,8 @@ hook function Character_Enter(playerid)
 			interiorId = Building_GetEnterInterior(building);
 			world = Building_GetEnterWorld(building);
 
+			printf("Character_Enter -> Building -> Pos: %f - %f - %f", x, y, z);
+
 			CallLocalFunction(#OnPlayerExitBuilding, "dd", playerid, _:building);
 		}
 		// Should I use Fading?

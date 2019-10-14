@@ -640,6 +640,7 @@ stock Teleport_LoadAll()
             
             cache_get_value_name_int(i, "faction_id", data[Faction]);
             cache_get_value_name_int(i, "character_id", data[Character]);
+            cache_get_value_name_int(i, "allow_vehicles", data[AllowVehicles]);
 
             map_add_arr(TeleportsMap, data[ID], data);
 

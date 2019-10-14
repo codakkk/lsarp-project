@@ -7,6 +7,9 @@ stock const RESET[E_THING] = {1, 2, 0, 0, 0, "hi" };
 MyVar[d] = RESET;
 
 */
+//#define for_playerobjects(%0:%1) for(new Iter:iter=list_iter(Character_GetObjectsList(%1)), PlayerObject:%0=PlayerObject:iter_get(iter);iter_inside(iter);%0=(iter_move_next(iter) != ITER_NULL ? (PlayerObject:iter_get(iter)) : (PlayerObject:0)))
+#define for_playerobjects(%0:%1) for(new Iter:iter=list_iter(Character_GetObjectsList(%1)), PlayerObject:%0=(iter_inside(iter) ? (PlayerObject:iter_get(iter)) : (PlayerObject:0));iter_inside(iter);%0=(iter_move_next(iter) != ITER_NULL ? (PlayerObject:iter_get(iter)) : (PlayerObject:0)))
+#define MAX_OBJECTS_PER_PLAYER      (20)
 
 #include <YSI_Coding\y_hooks>
 
@@ -33,7 +36,7 @@ MyVar[d] = RESET;
 static enum E_OBJECTSLIST
 {
 	Object,
-	Name[32],
+	oName[32],
 	Type,
 	DefaultBone
 };
@@ -252,9 +255,10 @@ static const PlayerObjectsList[][E_OBJECTSLIST] =
 	{11747, "Bandana", 	OBJECT_FIRE, BONE_RHAND}
 };
 
-static enum E_PLAYER_CUSTOM_OBJECT_DATA
+static enum _:E_PLAYER_CUSTOM_OBJECT_DATA
 {
-    Used,
+    ID,
+    PlayerID,
     Name[32],
     Index,
     Bone,
@@ -272,18 +276,17 @@ static enum E_PLAYER_CUSTOM_OBJECT_DATA
     MaterialColor2
 }
 static 
-    PlayerCustomObject[MAX_PLAYERS][MAX_PLAYER_OBJECTS][E_PLAYER_CUSTOM_OBJECT_DATA],
-    DefaultCustomObject[E_PLAYER_CUSTOM_OBJECT_DATA] = {0, "", -1, 0, -1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0},
+    List:PlayerObjects[MAX_PLAYERS],
     SelectedCategory[MAX_PLAYERS char],
-    SelectedIndex[MAX_PLAYERS char],
+    PlayerObject:SelectedPlayerObject[MAX_PLAYERS],
     List:CategoryIndex[MAX_PLAYERS]
 ;
 
 hook OnGameModeInit()
 {
     mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS character_wear_objects \
-						(`character_id` INT(11) NOT NULL, \
-                         `slot_id` INT(4) NOT NULL, \
+						(`id` INT(11) NOT NULL AUTO_INCREMENT, \
+                         `character_id` INT(11) NOT NULL, \
                          `name` VARCHAR(64) NOT NULL, \
                          `model_id` INT(11) NOT NULL, \
                          `bone` INT(4) NOT NULL, \
@@ -307,9 +310,7 @@ hook OnGameModeInit()
 
 hook OnCharacterClearData(playerid)
 {
-    for(new i = 0; i < MAX_PLAYER_OBJECTS; ++i)
-        PlayerCustomObject[playerid][i] = DefaultCustomObject;
-    SelectedIndex{playerid} = SelectedCategory{playerid} = -1;
+    SelectedCategory{playerid} = -1;
     if(list_valid(CategoryIndex[playerid]))
         list_delete_deep(CategoryIndex[playerid]);
     for(new i = 0; i < 10; ++i)
@@ -323,49 +324,25 @@ hook OnCharacterLateLoad(playerid)
     return 1;
 }
 
-hook OnCharacterSpawn(playerid)
-{
-    for(new i = 0; i < MAX_PLAYER_OBJECTS; ++i)
-    {
-        if(WearObject_IsWearing(playerid, i))
-            Internal_WearObjectUse(playerid, i);
-    }
-    return 1;
-}
-
 hook OnPlayerEditAttachedObj(playerid, response, index, modelid, boneid, Float:fOffsetX, Float:fOffsetY, Float:fOffsetZ, Float:fRotX, Float:fRotY, Float:fRotZ, Float:fScaleX, Float:fScaleY, Float:fScaleZ)
 {
-    new selected = SelectedIndex{playerid};
+    new PlayerObject:selected = SelectedPlayerObject[playerid];
     if(!response)
     {
         // Discard changes
-        Internal_UpdateWearObject(playerid, index);
-        /*SetPlayerAttachedObject(playerid, index, modelid, boneid, 
-        PlayerCustomObject[playerid][selected][X], PlayerCustomObject[playerid][selected][Y], PlayerCustomObject[playerid][selected][Z],
-        PlayerCustomObject[playerid][selected][RotX], PlayerCustomObject[playerid][selected][RotY], PlayerCustomObject[playerid][selected][RotZ],
-        PlayerCustomObject[playerid][selected][ScaleX], PlayerCustomObject[playerid][selected][ScaleY], PlayerCustomObject[playerid][selected][ScaleZ],
-        PlayerCustomObject[playerid][selected][MaterialColor1], PlayerCustomObject[playerid][selected][MaterialColor2]);*/
+        WearObject_Update(playerid, selected);
     }
-    else if(selected != -1)
+    else
     {
         if(fScaleX < 0.1 || fScaleY < 0.1 || fScaleZ < 0.1)
-            return Internal_UpdateWearObject(playerid, index), SendClientMessage(playerid, COLOR_ERROR, "La grandezza minima è 0.1.");
+            return WearObject_Update(playerid, selected), SendClientMessage(playerid, COLOR_ERROR, "La grandezza minima è 0.1.");
         
         if(fScaleX > 2.0 || fScaleY > 2.0 || fScaleZ > 2.0)
-            return Internal_UpdateWearObject(playerid, index), SendClientMessage(playerid, COLOR_ERROR, "La grandezza massima è 2.0.");
+            return WearObject_Update(playerid, selected), SendClientMessage(playerid, COLOR_ERROR, "La grandezza massima è 2.0.");
 
-        PlayerCustomObject[playerid][selected][X] = fOffsetX;
-        PlayerCustomObject[playerid][selected][Y] = fOffsetY;
-        PlayerCustomObject[playerid][selected][Z] = fOffsetZ;
-
-        PlayerCustomObject[playerid][selected][RotX] = fRotX;
-        PlayerCustomObject[playerid][selected][RotY] = fRotY;
-        PlayerCustomObject[playerid][selected][RotZ] = fRotZ;
-
-        PlayerCustomObject[playerid][selected][ScaleX] = fScaleX;
-        PlayerCustomObject[playerid][selected][ScaleY] = fScaleY;
-        PlayerCustomObject[playerid][selected][ScaleZ] = fScaleZ;
-        WearObject_Save(playerid, selected);
+        WearObject_SetOffset(selected, fOffsetX, fOffsetY, fOffsetZ);
+        WearObject_SetRot(selected, fRotX, fRotY, fRotZ);
+        WearObject_SetScale(selected, fScaleX, fScaleY, fScaleZ);
     }
     return 1;
 }
@@ -384,19 +361,16 @@ CMD:oggetto(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
         EditObject_End(playerid);
-    new String:str = @("Oggetto\tStato\tSlot\n");
-    for(new i = 0; i < MAX_PLAYER_OBJECTS; ++i)
+    new String:str = @("Oggetto\tStato\tSlot\nAggiungi Nuovo Oggetto\t \t \n"), count = 1;
+    for_playerobjects(i : playerid)
     {
-        //if(WearingObjectID[playerid][i] == -1)
-        if(WearObject_IsUsed(playerid, i))
-        {
-            str += str_format("%s\t%s\t%d", PlayerCustomObject[playerid][i][Name], (IsPlayerAttachedObjectSlotUsed(playerid, WearObject_GetAttachedIndex(playerid, i)) ? ("{00FF00}Indossato{FFFFFF}") : ("{FF0000}Non Indossato{FFFFFF}")), i+1);
-        }
+        str += str_format("%d\t%s\t", count, WearObject_GetName(i));
+        if(Character_IsWearing(playerid, i))
+            str += @("{00FF00}Indossato{FFFFFF}");
         else
-        {
-            str += str_format("Slot Libero\t--\t%d", i+1);
-        }
+            str += @("{FF0000}Non Indossato{FFFFFF}");
         str += @("\n");
+        count++;
     }
     Dialog_Show_s(playerid, Dialog_WearObjectList, DIALOG_STYLE_TABLIST_HEADERS, @("Lista oggetti"), str, "Avanti", "Chiudi");
     //Dialog_Show(playerid, DialogPObjectsCategory, DIALOG_STYLE_LIST, "Categorie", "Oggetti vari\nBandane\nCappelli\nCappelli 2\nOrologi\nOcchiali\nElmetti\nMaschere\nExtra\nLSPD\nLSFD", "Avanti", "Annulla");
@@ -409,8 +383,15 @@ Dialog:Dialog_WearObjectList(playerid, response, listitem, inputtext[])
 {
     if(!response) 
         return 0;
-    SelectedIndex{playerid} = listitem;
-    Internal_ShowWearObjectOptions(playerid, listitem);
+    if(listitem == 0)
+    {
+        if(list_size(Character_GetObjectsList(playerid)) >= MAX_OBJECTS_PER_PLAYER)
+            return SendFormattedMessage(playerid, COLOR_ERROR, "Hai già raggiunto il limite massimo di oggetti indossabili (%d).", MAX_OBJECTS_PER_PLAYER);
+        return Internal_ShowCategories(playerid);
+    }
+    listitem--;
+    SelectedPlayerObject[playerid] = WearObject_Find(playerid, listitem);
+    WearObject_Edit(playerid, SelectedPlayerObject[playerid]);
     return 1;
 }
 
@@ -419,27 +400,28 @@ Dialog:Dialog_WearObjectEdit(playerid, response, listitem, inputtext[])
     if(!response)
         return pc_cmd_oggetto(playerid, "");
     new 
-        index = SelectedIndex{playerid},
-        slotid = PlayerCustomObject[playerid][index][Index];
+        PlayerObject:selected = SelectedPlayerObject[playerid],
+        index = WearObject_GetIndex(selected);
     switch(listitem)
     {
         case 0:
         {
-            if(IsPlayerAttachedObjectSlotUsed(playerid, slotid))
+            if(Character_IsWearing(playerid, selected))
             {
-                WearObject_Remove(playerid, index);
-                SendFormattedMessage(playerid, COLOR_GREEN, "Hai rimosso l'oggetto (%s) dallo slot %d.", PlayerCustomObject[playerid][index][Name], index+1);
+                WearObject_Remove(playerid, selected);
+                SendFormattedMessage(playerid, COLOR_GREEN, "Hai rimosso l'oggetto (%s) dallo slot %d.", WearObject_GetName(selected), index+1);
             }
             else
             {
-                if(!WearObject_IsUsed(playerid, index))
-                    return SendClientMessage(playerid, COLOR_ERROR, "Non hai inizializzato l'oggetto.");
-                WearObject_Use(playerid, index);
+                if(WearObject_Use(playerid, selected))
+                {
+                    SendClientMessage(playerid, COLOR_ORANGE, "Oggetto indossato.");
+                }
             }
         }
         case 1:
         {
-            if(slotid != -1 && IsPlayerAttachedObjectSlotUsed(playerid, slotid))
+            if(Character_IsWearing(playerid, selected))
                 return SendClientMessage(playerid, COLOR_ERROR, "Non puoi modificare il modello se lo stai indossando.");
             return Internal_ShowCategories(playerid);
         }
@@ -449,9 +431,9 @@ Dialog:Dialog_WearObjectEdit(playerid, response, listitem, inputtext[])
         }
         case 3:
         {
-            if(slotid == -1 || !IsPlayerAttachedObjectSlotUsed(playerid, slotid))
+            if(!Character_IsWearing(playerid, selected))
                 return SendClientMessage(playerid, COLOR_ERROR, "Devi indossare l'oggetto per poterlo modificare.");
-            EditObject_Start(playerid, EDIT_TYPE_PLAYER_OBJECT, slotid, 0);
+            EditObject_Start(playerid, EDIT_TYPE_PLAYER_OBJECT, index, 0);
         }
         case 4:
         {
@@ -459,8 +441,8 @@ Dialog:Dialog_WearObjectEdit(playerid, response, listitem, inputtext[])
         }
         case 5:
         {
-            Internal_DeleteWearObject(playerid, index);
-            SendFormattedMessage(playerid, -1, "Hai cancellato l'oggetto %d.", index);
+            SendClientMessage(playerid, -1, "Hai cancellato definitivamente l'oggetto.");
+            WearObject_Delete(playerid, selected);
         }
     }
     return 1;
@@ -470,13 +452,11 @@ Dialog:Dialog_WearObjectBone(playerid, response, listitem, inputtext[])
 {
     if(!response)
         return pc_cmd_oggetto(playerid, "");
-    mysql_tquery_f(gMySQL, "UPDATE character_wear_objects SET bone = '%d' WHERE character_id = '%d' AND slot_id = '%d';", listitem+1, Character_GetID(playerid), SelectedIndex{playerid});
     SendClientMessage(playerid, COLOR_GREEN, "Hai modificato l'osso dell'oggetto.");
-    PlayerCustomObject[playerid][SelectedIndex{playerid}][Bone] = listitem+1;
-    Internal_UpdateWearObject(playerid, SelectedIndex{playerid});
+    WearObject_SetBone(SelectedPlayerObject[playerid], listitem+1);
+    WearObject_Update(playerid, SelectedPlayerObject[playerid]);
     return 1;
 }
-
 
 Dialog:Dialog_WearObjectCategories(playerid, response, listitem, inputtext[])
 {
@@ -495,12 +475,10 @@ Dialog:Dialog_WearObjectSelect(playerid, response, listitem, inputtext[])
         return Internal_ShowCategories(playerid);
     }
  
-    new 
-        objectid = list_get(CategoryIndex[playerid], listitem);
-    SendFormattedMessage(playerid, -1, "Hai modificato l'oggetto %d. Stai ora indossando: %s.", SelectedIndex{playerid} +1, PlayerObjectsList[objectid][Name]);
+    new objectid = list_get(CategoryIndex[playerid], listitem);
+    SendFormattedMessage(playerid, -1, "Hai modificato l'oggetto. Stai ora indossando: %s.", PlayerObjectsList[objectid][oName]);
 
-    Internal_AddWearObject(playerid, SelectedIndex{playerid}, PlayerObjectsList[objectid][Name], PlayerObjectsList[objectid][Object], PlayerObjectsList[objectid][DefaultBone], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0, 0);
-    WearObject_Save(playerid, SelectedIndex{playerid});
+    new PlayerObject:playerObject = CreateWearObject(playerid, PlayerObjectsList[objectid][oName], PlayerObjectsList[objectid][Object], PlayerObjectsList[objectid][DefaultBone]);
     return 1;
 }
 
@@ -513,44 +491,49 @@ OnResponse:Dialog_WearObjectSelect(playerid, response, listitem, inputtext[])
 Dialog:Dialog_WearObjectColor1(playerid, response, listitem, inputtext[])
 {
     if(!response)
-        return Internal_ShowWearObjectOptions(playerid, SelectedIndex{playerid});
+        return WearObject_Edit(playerid, SelectedPlayerObject[playerid]);
+    new color = HexToInt("FFFFFFFF");
     switch(listitem)
     {
-        case 1: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor1] = HexToInt("0000ccff");
-		case 2: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor1] = HexToInt("4d4dffff");
-		case 3: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor1] = HexToInt("ff0000ff");
-		case 4: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor1] = HexToInt("ffccffff");
-		case 5: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor1] = HexToInt("990099ff");
-		case 6: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor1] = HexToInt("009933ff");
-		case 7: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor1] = HexToInt("33ff77ff");
-		case 8: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor1] = HexToInt("ff6600ff");
-		case 9: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor1] = HexToInt("ffffffff");
-		case 10: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor1] = HexToInt("000000ff");
-		case 11: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor1] = HexToInt("ffff00ff");
+
+        case 1: color = HexToInt("0000ccff");
+		case 2: color = HexToInt("4d4dffff");
+		case 3: color = HexToInt("ff0000ff");
+		case 4: color = HexToInt("ffccffff");
+		case 5: color = HexToInt("990099ff");
+		case 6: color = HexToInt("009933ff");
+		case 7: color = HexToInt("33ff77ff");
+		case 8: color = HexToInt("ff6600ff");
+		case 9: color = HexToInt("ffffffff");
+		case 10: color = HexToInt("000000ff");
+		case 11: color = HexToInt("ffff00ff");
     }
+    WearObject_SetMaterialColor1(SelectedPlayerObject[playerid], color);
+    WearObject_Update(playerid, SelectedPlayerObject[playerid]);
     return Dialog_Show(playerid, Dialog_WearObjectColor2, DIALOG_STYLE_LIST, "Colore secondario", "Colore corrente\nBlu\nBlu chiaro\nRosso\nRosa\nViola\nVerde\nVerde chiaro\nArancione\nBianco\nNero\nGiallo", "Avanti", "Annulla");
 }
 
 Dialog:Dialog_WearObjectColor2(playerid, response, listitem, inputtext[])
 {
     if(!response)
-        return Internal_ShowWearObjectOptions(playerid, SelectedIndex{playerid});
+        return WearObject_Edit(playerid, SelectedPlayerObject[playerid]);
+    new color = HexToInt("FFFFFFFF");
     switch(listitem)
     {
-        case 1: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor2] = HexToInt("0000ccff");
-		case 2: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor2] = HexToInt("4d4dffff");
-		case 3: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor2] = HexToInt("ff0000ff");
-		case 4: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor2] = HexToInt("ffccffff");
-		case 5: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor2] = HexToInt("990099ff");
-		case 6: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor2] = HexToInt("009933ff");
-		case 7: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor2] = HexToInt("33ff77ff");
-		case 8: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor2] = HexToInt("ff6600ff");
-		case 9: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor2] = HexToInt("ffffffff");
-		case 10: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor2] = HexToInt("000000ff");
-		case 11: PlayerCustomObject[playerid][SelectedIndex{playerid}][MaterialColor2] = HexToInt("ffff00ff");
+        case 1: color = HexToInt("0000ccff");
+		case 2: color = HexToInt("4d4dffff");
+		case 3: color = HexToInt("ff0000ff");
+		case 4: color = HexToInt("ffccffff");
+		case 5: color = HexToInt("990099ff");
+		case 6: color = HexToInt("009933ff");
+		case 7: color = HexToInt("33ff77ff");
+		case 8: color = HexToInt("ff6600ff");
+		case 9: color = HexToInt("ffffffff");
+		case 10: color = HexToInt("000000ff");
+		case 11: color = HexToInt("ffff00ff");
     }
-    WearObject_Save(playerid, SelectedIndex{playerid});
-    Internal_UpdateWearObject(playerid, SelectedIndex{playerid});
+    WearObject_SetMaterialColor2(SelectedPlayerObject[playerid], color);
+    WearObject_Update(playerid, SelectedPlayerObject[playerid]);
     return 1;
 }
 
@@ -568,93 +551,32 @@ stock WearObject_ShowCategory(playerid, category)
     {
         if(PlayerObjectsList[i][Type] != category)
             continue;
-        str += str_format("%s\n", PlayerObjectsList[i][Name]);
+        str += str_format("%s\n", PlayerObjectsList[i][oName]);
         list_add(CategoryIndex[playerid], i);
     }
     return Dialog_Show_s(playerid, Dialog_WearObjectSelect, DIALOG_STYLE_LIST, @("Oggetti"), str, "Seleziona", "Chiudi");
 }
 
-stock WearObject_Use(playerid, slotid)
+stock bool:WearObject_Remove(playerid, PlayerObject:playerObject)
 {
-    if(slotid < 0 || slotid >= MAX_PLAYER_OBJECTS)
-        return 0;
-    if(!Internal_WearObjectUse(playerid, slotid))
-        SendClientMessage(playerid, COLOR_ERROR, "Stai già indossando il numero massimo di oggetti (9).");
-    SendFormattedMessage(playerid, -1, "Oggetto (%s) indossato.", PlayerCustomObject[playerid][slotid][Name]);
-    return 1;
-}
-
-stock WearObject_Remove(playerid, slotid)
-{
-    if(slotid < 0 || slotid >= MAX_PLAYER_OBJECTS)
-        return 0;
-    new index = PlayerCustomObject[playerid][slotid][Index];
-    if(index == -1)
-        return 0;
-    RemovePlayerAttachedObject(playerid, index);
-    PlayerCustomObject[playerid][slotid][Index] = -1;
-    return 1;
-}
-
-stock WearObject_Save(playerid, slotid)
-{
-    if(slotid < 0 || slotid >= MAX_PLAYER_OBJECTS)
-        return 0;
-    if(WearObject_IsUsed(playerid, slotid))
+    new index = WearObject_GetIndex(playerObject);
+    if(index != -1)
     {
-        mysql_tquery_f(gMySQL, "INSERT INTO character_wear_objects\
-        (character_id, slot_id, name, model_id, bone, offset_x, offset_y, offset_z, rot_x, rot_y, rot_z, scale_x, scale_y, scale_z, mat_color_1, mat_color_2, wearing) \
-        VALUES('%d', '%d', '%e', '%d', '%d', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%d', '%d', '%d') \
-        ON DUPLICATE KEY UPDATE \
-        name = VALUES(name), \
-        model_id = VALUES(model_id), \
-        bone = VALUES(bone), \
-        offset_x = VALUES(offset_x), \
-        offset_y = VALUES(offset_y), \
-        offset_z = VALUES(offset_z), \
-        rot_x = VALUES(rot_x), \
-        rot_y = VALUES(rot_y), \
-        rot_z = VALUES(rot_z), \
-        scale_x = VALUES(scale_x), \
-        scale_y = VALUES(scale_y), \
-        scale_z = VALUES(scale_z), \
-        mat_color_1 = VALUES(mat_color_1), \
-        mat_color_2 = VALUES(mat_color_2), \
-        wearing = VALUES(wearing);",
-        Character_GetID(playerid), slotid, PlayerCustomObject[playerid][slotid][Name], 
-        PlayerCustomObject[playerid][slotid][ModelId], PlayerCustomObject[playerid][slotid][Bone], 
-        PlayerCustomObject[playerid][slotid][X], PlayerCustomObject[playerid][slotid][Y], PlayerCustomObject[playerid][slotid][Z],
-        PlayerCustomObject[playerid][slotid][RotX], PlayerCustomObject[playerid][slotid][RotY], PlayerCustomObject[playerid][slotid][RotZ], 
-        PlayerCustomObject[playerid][slotid][ScaleX], PlayerCustomObject[playerid][slotid][ScaleY], PlayerCustomObject[playerid][slotid][ScaleZ],
-        PlayerCustomObject[playerid][slotid][MaterialColor1], PlayerCustomObject[playerid][slotid][MaterialColor2],
-        WearObject_GetAttachedIndex(playerid, slotid) != -1 ? 1 : 0
-        );
+        RemovePlayerAttachedObject(playerid, index);
+        mysql_pquery_f(gMySQL, "UPDATE `character_wear_objects` SET wearing = '0' WHERE id = '%d'", WearObject_GetID(playerObject));
+        return true;
     }
-    return 1;
-}
-
-stock WearObject_SaveAll(playerid)
-{
-    mysql_tquery(gMySQL, "START TRANSACTION;");
-    for(new i = 0; i < MAX_PLAYER_OBJECTS; ++i)
-    {
-        WearObject_Save(playerid, i);
-    }
-    mysql_tquery(gMySQL, "COMMIT;");
+    return false;
 }
 
 stock Character_LoadWearObjects(playerid)
 {
+    PlayerObjects[playerid] = list_new();
     inline OnLoad()
     {
         new 
             rows = cache_num_rows(),
-            slotid = 0,
-            name[32], modelid, bone,
-            Float:x = 0.0, Float:y = 0.0, Float:z = 0.0,
-            Float:rotx = 0.0, Float:roty = 0.0, Float:rotz = 0.0,
-            Float:scalex = 0.0, Float:scaley = 0.0, Float:scalez = 0.0,
-            color1 = 0, color2 = 0;
+            data[E_PLAYER_CUSTOM_OBJECT_DATA];
         printf("Player %d loaded %d wear objects.", playerid, rows);
         for(new i = 0; i < rows; ++i)
         {
@@ -663,103 +585,242 @@ stock Character_LoadWearObjects(playerid)
                 printf("Bug occurred. i >= MAX_PLAYER_OBJECTS when loading Wearable objects.");
                 break;
             }
-            cache_get_value_index_int(i, 1, slotid);
-            cache_get_value_index(i, 2, name);
-            cache_get_value_index_int(i, 3, modelid);
-            cache_get_value_index_int(i, 4, bone);
+            cache_get_value_name_int(i, "id", data[ID]);
+            cache_get_value_name_int(i, "slot_id", data[Index]);
+            cache_get_value_name(i, "name", data[Name]);
+            cache_get_value_name_int(i, "model_id", data[ModelId]);
+            cache_get_value_name_int(i, "bone", data[Bone]);
             
-            cache_get_value_index_float(i, 5, x);
-            cache_get_value_index_float(i, 6, y);
-            cache_get_value_index_float(i, 7, z);
+            cache_get_value_name_float(i, "offset_x", data[X]);
+            cache_get_value_name_float(i, "offset_y", data[Y]);
+            cache_get_value_name_float(i, "offset_z", data[Z]);
             
-            cache_get_value_index_float(i, 8, rotx);
-            cache_get_value_index_float(i, 9, roty);
-            cache_get_value_index_float(i, 10, rotz);
+            cache_get_value_name_float(i, "rot_x", data[RotX]);
+            cache_get_value_name_float(i, "rot_y", data[RotY]);
+            cache_get_value_name_float(i, "rot_z", data[RotZ]);
 
-            cache_get_value_index_float(i, 11, scalex);
-            cache_get_value_index_float(i, 12, scaley);
-            cache_get_value_index_float(i, 13, scalez);
+            cache_get_value_name_float(i, "scale_x", data[ScaleX]);
+            cache_get_value_name_float(i, "scale_y", data[ScaleY]);
+            cache_get_value_name_float(i, "scale_z", data[ScaleZ]);
 
-            cache_get_value_index_int(i, 14, color1);
-            cache_get_value_index_int(i, 15, color2);
+            cache_get_value_name_int(i, "mat_color_1", data[MaterialColor1]);
+            cache_get_value_name_int(i, "mat_color_2", data[MaterialColor2]);
 
             new equipped = 0;
-            cache_get_value_index_int(i, 16, equipped);
+            cache_get_value_name_int(i, "wearing", equipped);
 
-            Internal_AddWearObject(playerid, slotid, name, modelid, bone, x, y, z, rotx, roty, rotz, scalex, scaley, scalez, color1, color2);
+            data[PlayerID] = playerid;
+            
+            new PlayerObject:playerObject = PlayerObject:var_new_buf(E_PLAYER_CUSTOM_OBJECT_DATA);
+            var_acquire(Variant:playerObject);
+            
+            var_set_cell(Variant:playerObject, ID, data[ID]);
+
+            var_set_cell(Variant:playerObject, PlayerID, playerid);
+            var_set_cell(Variant:playerObject, Index, -1);
+            var_set_cells(Variant:playerObject, Name, data[Name]);
+            var_set_cell(Variant:playerObject, Bone, data[Bone]);
+            var_set_cell(Variant:playerObject, ModelId, data[ModelId]);
+
+            var_set_cell(Variant:playerObject, X, data[X]);
+            var_set_cell(Variant:playerObject, Y, data[Y]);
+            var_set_cell(Variant:playerObject, Z, data[Z]);
+
+            var_set_cell(Variant:playerObject, RotX, data[RotX]);
+            var_set_cell(Variant:playerObject, RotY, data[RotY]);
+            var_set_cell(Variant:playerObject, RotZ, data[RotZ]);
+
+            var_set_cell(Variant:playerObject, ScaleX, data[ScaleX]);
+            var_set_cell(Variant:playerObject, ScaleY, data[ScaleY]);
+            var_set_cell(Variant:playerObject, ScaleZ, data[ScaleZ]);
+
+            var_set_cell(Variant:playerObject, MaterialColor1, data[MaterialColor1]);
+            var_set_cell(Variant:playerObject, MaterialColor2, data[MaterialColor2]);
+
+            list_add(PlayerObjects[playerid], playerObject);
 
             if(equipped == 1)
-                Internal_WearObjectUse(playerid, slotid);
+            {
+                WearObject_Use(playerid, playerObject);
+            }
         }
     }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM character_wear_objects WHERE character_id = '%d' AND slot_id != '-1'", Character_GetID(playerid));
+    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM character_wear_objects WHERE character_id = '%d'", Character_GetID(playerid));
 }
 
 
 // ================================================= accessors ==========================================================
-stock WearObject_IsUsed(playerid, slotid)
+
+stock WearObject_GetName(PlayerObject:playerObject)
 {
-    return PlayerCustomObject[playerid][slotid][Used];
+    new name[32];
+    var_get_md_arr(Variant:playerObject, {Name}, name);
+    return name;
 }
 
-stock WearObject_GetAttachedIndex(playerid, slotid)
+stock WearObject_GetID(PlayerObject:playerObject)
 {
-    return PlayerCustomObject[playerid][slotid][Index];
+    return var_get(Variant:playerObject, ID);
 }
 
-stock WearObject_GetModelId(playerid, slotid)
+stock WearObject_SetIndex(PlayerObject:playerObject, index)
 {
-    return PlayerCustomObject[playerid][slotid][ModelId];
+    var_set_cell(Variant:playerObject, Index, index);
 }
 
-stock WearObject_GetBone(playerid, index)
+stock WearObject_GetIndex(PlayerObject:playerObject)
 {
-    return PlayerCustomObject[playerid][index][Bone];
+    return var_get(Variant:playerObject, Index);
 }
 
-stock WearObject_IsWearing(playerid, index)
+stock WearObject_GetModelId(PlayerObject:playerObject)
 {
-    return WearObject_GetAttachedIndex(playerid, index) != -1;
+    return var_get(Variant:playerObject, ModelId);
+}
+
+stock WearObject_SetBone(PlayerObject:playerObject, boneid)
+{
+    var_set_cell(Variant:playerObject, Bone, boneid);
+    mysql_tquery_f(gMySQL, "UPDATE character_wear_objects SET bone = '%d' WHERE id = '%d';", boneid, WearObject_GetID(playerObject));
+}
+
+stock WearObject_GetBone(PlayerObject:playerObject)
+{
+    return var_get(Variant:playerObject, Bone);
+}
+
+stock bool:WearObject_SetOffset(PlayerObject:playerObject, Float:x, Float:y, Float:z)
+{
+    var_set_cell(Variant:playerObject, X, x);
+    var_set_cell(Variant:playerObject, Y, y);
+    var_set_cell(Variant:playerObject, Z, z);
+    mysql_pquery_f(gMySQL, "UPDATE `character_wear_objects` SET offset_x = '%f', offset_y = '%f', offset_z = '%f' WHERE id = '%d'", x, y, z, WearObject_GetID(playerObject));
+    return true;
+}
+
+stock bool:WearObject_GetOffset(PlayerObject:playerObject, &Float:x, &Float:y, &Float:z)
+{
+    x = Float:var_get(Variant:playerObject, X);
+    y = Float:var_get(Variant:playerObject, Y);
+    z = Float:var_get(Variant:playerObject, Z);
+    return true;
+}
+
+stock bool:WearObject_SetRot(PlayerObject:playerObject, Float:x, Float:y, Float:z)
+{
+    var_set_cell(Variant:playerObject, RotX, x);
+    var_set_cell(Variant:playerObject, RotY, y);
+    var_set_cell(Variant:playerObject, RotZ, z);
+    mysql_pquery_f(gMySQL, "UPDATE `character_wear_objects` SET rot_x = '%f', rot_y = '%f', rot_z = '%f' WHERE id = '%d'", x, y, z, WearObject_GetID(playerObject));
+    return true;
+}
+
+stock bool:WearObject_GetRot(PlayerObject:playerObject, &Float:x, &Float:y, &Float:z)
+{
+    x = Float:var_get(Variant:playerObject, RotX);
+    y = Float:var_get(Variant:playerObject, RotY);
+    z = Float:var_get(Variant:playerObject, RotZ);
+    return true;
+}
+
+stock bool:WearObject_SetScale(PlayerObject:playerObject, Float:x, Float:y, Float:z)
+{
+    var_set_cell(Variant:playerObject, ScaleX, x);
+    var_set_cell(Variant:playerObject, ScaleY, y);
+    var_set_cell(Variant:playerObject, ScaleZ, z);
+    mysql_pquery_f(gMySQL, "UPDATE `character_wear_objects` SET scale_x = '%f', scale_y = '%f', scale_z = '%f' WHERE id = '%d'", x, y, z, WearObject_GetID(playerObject));
+    return true;
+}
+
+stock bool:WearObject_GetScale(PlayerObject:playerObject, &Float:x, &Float:y, &Float:z)
+{
+    x = Float:var_get(Variant:playerObject, ScaleX);
+    y = Float:var_get(Variant:playerObject, ScaleY);
+    z = Float:var_get(Variant:playerObject, ScaleZ);
+    return true;
+}
+
+stock Character_IsWearing(playerid, PlayerObject:playerObject)
+{
+    new index = WearObject_GetIndex(playerObject);
+    return index != -1 && var_get(Variant:playerObject, PlayerID) == playerid && IsPlayerAttachedObjectSlotUsed(playerid, index);
+}
+
+stock WearObject_SetMaterialColor1(PlayerObject:playerObject, color)
+{
+    var_set_cell(Variant:playerObject, MaterialColor1, color);
+    mysql_tquery_f(gMySQL, "UPDATE character_wear_objects SET mat_color_1 = '%d' WHERE id = '%d';", color, WearObject_GetID(playerObject));
+}
+
+stock WearObject_GetMaterialColor1(PlayerObject:playerObject)
+{
+    return var_get(Variant:playerObject, MaterialColor1);
+}
+
+stock WearObject_SetMaterialColor2(PlayerObject:playerObject, color)
+{
+    var_set_cell(Variant:playerObject, MaterialColor2, color);
+    mysql_tquery_f(gMySQL, "UPDATE character_wear_objects SET mat_color_2 = '%d' WHERE id = '%d';", color, WearObject_GetID(playerObject));
+}
+
+stock WearObject_GetMaterialColor2(PlayerObject:playerObject)
+{
+    return var_get(Variant:playerObject, MaterialColor2);
 }
 
 //========================================= INTERNALS =====================================================
 
-static Internal_UpdateWearObject(playerid, slotid)
+static bool:WearObject_Update(playerid, PlayerObject:playerObject)
 {
-    if(IsPlayerAttachedObjectSlotUsed(playerid, PlayerCustomObject[playerid][slotid][Index]))
-        RemovePlayerAttachedObject(playerid, PlayerCustomObject[playerid][slotid][Index]);
-    SetPlayerAttachedObject(playerid, PlayerCustomObject[playerid][slotid][Index], PlayerCustomObject[playerid][slotid][ModelId], PlayerCustomObject[playerid][slotid][Bone], 
-    PlayerCustomObject[playerid][slotid][X], PlayerCustomObject[playerid][slotid][Y], PlayerCustomObject[playerid][slotid][Z], 
-    PlayerCustomObject[playerid][slotid][RotX], PlayerCustomObject[playerid][slotid][RotY], PlayerCustomObject[playerid][slotid][RotZ], 
-    PlayerCustomObject[playerid][slotid][ScaleX], PlayerCustomObject[playerid][slotid][ScaleY], PlayerCustomObject[playerid][slotid][ScaleZ], 
-    PlayerCustomObject[playerid][slotid][MaterialColor1], PlayerCustomObject[playerid][slotid][MaterialColor2]);
-    return 1;
+    new 
+        index = WearObject_GetIndex(playerObject)
+    ;
+    if(index <= -1)
+        return false;
+    if(IsPlayerAttachedObjectSlotUsed(playerid, index))
+        RemovePlayerAttachedObject(playerid, index);
+    
+    new Float:x, Float:y, Float:z,
+        Float:rotX, Float:rotY, Float:rotZ,
+        Float:scaleX, Float:scaleY, Float:scaleZ;
+    WearObject_GetOffset(playerObject, x, y, z);
+    WearObject_GetRot(playerObject, rotX, rotY, rotZ);
+    WearObject_GetScale(playerObject, scaleX, scaleY, scaleZ);
+    SetPlayerAttachedObject(playerid, index, WearObject_GetModelId(playerObject), WearObject_GetBone(playerObject), 
+    x, y, z, rotX, rotY, rotZ, scaleX, scaleY, scaleZ,
+    WearObject_GetMaterialColor1(playerObject), WearObject_GetMaterialColor2(playerObject));
+    return true;
 }
 
-static Internal_ShowWearObjectOptions(playerid, slotid)
+static WearObject_Edit(playerid, PlayerObject:playerObject)
 {
-    if(WearObject_IsUsed(playerid, slotid))
-    {
-        if(WearObject_GetAttachedIndex(playerid, slotid) == -1)
-            Dialog_Show(playerid, Dialog_WearObjectEdit, DIALOG_STYLE_LIST, "Modifica oggetto", "{00FF00}Indossa{FFFFFF}\nCambia oggetto\nCambia osso\nCambia posizione\nCambia colori\nCancella", "Avanti", "Indietro");
-        else
-            Dialog_Show(playerid, Dialog_WearObjectEdit, DIALOG_STYLE_LIST, "Modifica oggetto", "{FF0000}Rimuovi{FFFFFF}\nCambia oggetto\nCambia osso\nCambia posizione\nCambia colori\nCancella", "Avanti", "Indietro");
-    }
+    if(Character_IsWearing(playerid, playerObject))
+        Dialog_Show(playerid, Dialog_WearObjectEdit, DIALOG_STYLE_LIST, "Modifica oggetto", "{FF0000}Rimuovi{FFFFFF}\nCambia oggetto\nCambia osso\nCambia posizione\nCambia colori\nCancella", "Avanti", "Indietro");
     else
-    {
-        return Internal_ShowCategories(playerid);
-    }
+        Dialog_Show(playerid, Dialog_WearObjectEdit, DIALOG_STYLE_LIST, "Modifica oggetto", "{00FF00}Indossa{FFFFFF}\nCambia oggetto\nCambia osso\nCambia posizione\nCambia colori\nCancella", "Avanti", "Indietro");
     return 1;
 }
 
-static Internal_DeleteWearObject(playerid, slotid)
+static bool:WearObject_Delete(playerid, PlayerObject:playerObject)
 {
-    if(slotid < 0 || slotid >= MAX_PLAYER_OBJECTS)
-        return 0;
-    PlayerCustomObject[playerid][slotid] = DefaultCustomObject;
-    mysql_tquery_f(gMySQL, "DELETE FROM character_wear_objects WHERE character_id = '%d' AND slot_id = '%d'", Character_GetID(playerid), slotid);
-    WearObject_Save(playerid, slotid);
-    return 1;
+    if(!var_valid(Variant:playerObject))
+        return false;
+    new List:list = Character_GetObjectsList(playerid), slotid = -1;
+    for(new i = 0, j = list_size(list); i < j; ++i)
+    {
+        if(list_get(list, i) == _:playerObject)
+        {
+            slotid = i;
+            break;
+        }
+    }
+    if(slotid != -1)
+    {
+        mysql_tquery_f(gMySQL, "DELETE FROM character_wear_objects WHERE id = '%d'", WearObject_GetID(playerObject));
+        var_release(Variant:playerObject);
+        list_remove(list, slotid);
+    }
+    return true;
 }
 
 static Internal_ShowCategories(playerid)
@@ -767,40 +828,45 @@ static Internal_ShowCategories(playerid)
     return Dialog_Show(playerid, Dialog_WearObjectCategories, DIALOG_STYLE_LIST, "Categorie", "Oggetti vari\nBandane\nCappelli\nCappelli 2\nOrologi\nOcchiali\nElmetti\nMaschere\nExtra\nLSPD\nLSFD", "Avanti", "Indietro");
 }
 
-static Internal_AddWearObject(playerid, slotid, const name[], modelid, bone, Float:x = 0.0, Float:y = 0.0, Float:z = 0.0, Float:rotx = 0.0, Float:roty = 0.0, Float:rotz = 0.0, Float:scalex = 1.0, Float:scaley = 1.0, Float:scalez = 1.0, matcolor1 = 0, matcolor2 = 0)
+stock static PlayerObject:CreateWearObject(playerid, name[], modelid, bone, Float:x = 0.0, Float:y = 0.0, Float:z = 0.0, Float:rotx = 0.0, Float:roty = 0.0, Float:rotz = 0.0, Float:scalex = 1.0, Float:scaley = 1.0, Float:scalez = 1.0, matcolor1 = 0, matcolor2 = 0)
 {
-    PlayerCustomObject[playerid][slotid][Used] = 1;
-    PlayerCustomObject[playerid][slotid][Index] = -1;
-    set(PlayerCustomObject[playerid][slotid][Name], name);
-    PlayerCustomObject[playerid][slotid][Bone] = bone;
-    PlayerCustomObject[playerid][slotid][ModelId] = modelid;
+    new PlayerObject:playerObject = PlayerObject:var_new_buf(E_PLAYER_CUSTOM_OBJECT_DATA);
+    var_acquire(Variant:playerObject);
+    var_set_cell(Variant:playerObject, PlayerID, playerid);
+    var_set_cell(Variant:playerObject, Index, -1);
+    var_set_cells(Variant:playerObject, Name, name, 32);
+    var_set_cell(Variant:playerObject, Bone, bone);
+    var_set_cell(Variant:playerObject, ModelId, modelid);
 
-    PlayerCustomObject[playerid][slotid][X] = x;
-    PlayerCustomObject[playerid][slotid][Y] = y;
-    PlayerCustomObject[playerid][slotid][Z] = z;
+    var_set_cell(Variant:playerObject, X, x);
+    var_set_cell(Variant:playerObject, Y, y);
+    var_set_cell(Variant:playerObject, Z, z);
 
-    PlayerCustomObject[playerid][slotid][RotX] = rotx;
-    PlayerCustomObject[playerid][slotid][RotY] = roty;
-    PlayerCustomObject[playerid][slotid][RotZ] = rotz;
+    var_set_cell(Variant:playerObject, RotX, rotx);
+    var_set_cell(Variant:playerObject, RotY, roty);
+    var_set_cell(Variant:playerObject, RotZ, rotz);
 
-    PlayerCustomObject[playerid][slotid][ScaleX] = scalex;
-    PlayerCustomObject[playerid][slotid][ScaleY] = scaley;
-    PlayerCustomObject[playerid][slotid][ScaleZ] = scalez;
+    var_set_cell(Variant:playerObject, ScaleX, scalex);
+    var_set_cell(Variant:playerObject, ScaleY, scaley);
+    var_set_cell(Variant:playerObject, ScaleZ, scalez);
 
-    PlayerCustomObject[playerid][slotid][MaterialColor1] = matcolor1;
-    PlayerCustomObject[playerid][slotid][MaterialColor2] = matcolor2;
+    var_set_cell(Variant:playerObject, MaterialColor1, matcolor1);
+    var_set_cell(Variant:playerObject, MaterialColor2, matcolor2);
 
-    /*printf("Custom object debug: %d - %d - %d - X: %f - Y: %f - Z: %f - RX: %f - RY: %f - RZ: %f - SX: %f - SY: %f - SZ: %f - MatCol1: %d - MatCol2: %d", 
-            PlayerCustomObject[playerid][slotid][Used], PlayerCustomObject[playerid][slotid][Bone], PlayerCustomObject[playerid][slotid][ModelId],
-            PlayerCustomObject[playerid][slotid][X], PlayerCustomObject[playerid][slotid][Y], PlayerCustomObject[playerid][slotid][Z],
-            PlayerCustomObject[playerid][slotid][RotX], PlayerCustomObject[playerid][slotid][RotY], PlayerCustomObject[playerid][slotid][RotZ],
-            PlayerCustomObject[playerid][slotid][ScaleX], PlayerCustomObject[playerid][slotid][ScaleY], PlayerCustomObject[playerid][slotid][ScaleZ],
-            PlayerCustomObject[playerid][slotid][MaterialColor1], PlayerCustomObject[playerid][slotid][MaterialColor2]);
-    */
-    return 1;
+    list_add(Character_GetObjectsList(playerid), playerObject);
+    inline OnInsert()
+    {
+        var_set_cell(Variant:playerObject, ID, cache_insert_id());
+
+        WearObject_Use(playerid, playerObject);
+    }
+    MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO `character_wear_objects` (character_id, name, model_id, bone, offset_x, offset_y, offset_z, rot_x, rot_y, rot_z, scale_x, scale_y, scale_z, mat_color_1, mat_color_2) \
+                                                        VALUES('%d', '%e', '%d', '%d', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%d', '%d')", 
+                                                        Character_GetID(playerid), name, modelid, bone, x, y, z, rotx, roty, rotz, scalex, scaley, scalez, matcolor1, matcolor2);
+    return playerObject;
 }
 
-static Internal_GetFreeAttachIndex(playerid)
+static GetUnusedAttachedObjectSlot(playerid)
 {
     new slot = -1;
     for(new i = 0; i < 10; ++i)
@@ -813,20 +879,31 @@ static Internal_GetFreeAttachIndex(playerid)
     return slot;
 }
 
-static Internal_WearObjectUse(playerid, slotid)
+static bool:WearObject_Use(playerid, PlayerObject:playerObject)
 {
-    if(slotid < 0 || slotid >= MAX_PLAYER_OBJECTS)
-        return 0;
-    new index = Internal_GetFreeAttachIndex(playerid);
+    new index = WearObject_GetIndex(playerObject);
+    if(index == -1)
+    {
+        index = GetUnusedAttachedObjectSlot(playerid);
+    }
+
     if(index == -1) 
-        return 0;
-    SetPlayerAttachedObject(playerid, index, WearObject_GetModelId(playerid, slotid), WearObject_GetBone(playerid, slotid), 
-    PlayerCustomObject[playerid][slotid][X], PlayerCustomObject[playerid][slotid][Y], PlayerCustomObject[playerid][slotid][Z], 
-    PlayerCustomObject[playerid][slotid][RotX], PlayerCustomObject[playerid][slotid][RotY], PlayerCustomObject[playerid][slotid][RotZ], 
-    PlayerCustomObject[playerid][slotid][ScaleX], PlayerCustomObject[playerid][slotid][ScaleY], PlayerCustomObject[playerid][slotid][ScaleZ], 
-    PlayerCustomObject[playerid][slotid][MaterialColor1], PlayerCustomObject[playerid][slotid][MaterialColor2]);
-    PlayerCustomObject[playerid][slotid][Index] = index;
-    return 1;
+        return false;
+    
+    new Float:x, Float:y, Float:z,
+        Float:rotX, Float:rotY, Float:rotZ,
+        Float:scaleX, Float:scaleY, Float:scaleZ;
+    WearObject_GetOffset(playerObject, x, y, z);
+    WearObject_GetRot(playerObject, rotX, rotY, rotZ);
+    WearObject_GetScale(playerObject, scaleX, scaleY, scaleZ);
+    
+    SetPlayerAttachedObject(playerid, index, WearObject_GetModelId(playerObject), WearObject_GetBone(playerObject), x, y, z, rotX, rotY, rotZ, scaleX, scaleY, scaleZ,
+                            WearObject_GetMaterialColor1(playerObject), WearObject_GetMaterialColor2(playerObject));
+
+    mysql_pquery_f(gMySQL, "UPDATE `character_wear_objects` SET wearing = '1' WHERE id = '%d'", WearObject_GetID(playerObject));
+
+    WearObject_SetIndex(playerObject, index);
+    return true;
 }
 
 static HexToInt(string[])
@@ -839,4 +916,16 @@ static HexToInt(string[])
         cur = cur * 16;
     }
     return res;
+}
+
+stock PlayerObject:WearObject_Find(playerid, slotid)
+{
+    return PlayerObject:list_get(Character_GetObjectsList(playerid), slotid);
+}
+
+stock List:Character_GetObjectsList(playerid)
+{
+    if(!list_valid(PlayerObjects[playerid]))
+        PlayerObjects[playerid] = list_new();
+    return PlayerObjects[playerid];
 }

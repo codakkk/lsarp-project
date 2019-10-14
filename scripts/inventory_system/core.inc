@@ -58,6 +58,7 @@ static enum _:E_ITEM_DATA
 
 stock List:operator=(Inventory:l) return List:l;
 
+
 stock Inventory:Inventory_New(space)
 {
     new Inventory:inventory = Inventory:list_new();
@@ -697,6 +698,8 @@ stock bool:Inventory_RemoveSlotTempExtra(Inventory:inventory, slotid, key[])
 	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
 		return false;
 	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	if(!map_valid(map))
+		return false;
 	if(!map_has_key(map, key))
 		return false;
 	map_str_remove_deep(map, key);
@@ -708,6 +711,8 @@ stock bool:Inventory_SetSlotTempExtra(Inventory:inventory, slotid, key[], data)
 	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
 		return false;
 	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	if(!map_valid(map))
+		return false;
 	if(map_has_str_key(map, key))
 		map_str_set(map, key, data);
 	else
@@ -720,6 +725,8 @@ stock bool:Inventory_SetSlotTempExtraArr(Inventory:inventory, slotid, key[], dat
 	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
 		return 0;
 	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	if(!map_valid(map))
+		return false;
 	if(map_has_str_key(map, key))
 		map_set_arr(map, key, data);
 	else
@@ -732,7 +739,7 @@ stock Inventory_GetSlotTempExtra(Inventory:inventory, slotid, key[])
 	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
 		return 0;
 	new Map:map = Map:list_get(inventory, slotid, TempExtra);
-	if(!map_has_str_key(map, key))
+	if(!map_valid(map) || !map_has_str_key(map, key))
 		return 0;
 	return map_str_get(map, key);
 }
@@ -742,7 +749,7 @@ stock bool:Inventory_GetSlotTempExtraArr(Inventory:inventory, slotid, key[], dat
 	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
 		return false;
 	new Map:map = Map:list_get(inventory, slotid, TempExtra);
-	if(!map_has_str_key(map, key))
+	if(!map_valid(map) || !map_has_str_key(map, key))
 		return false;
 	map_get_arr(map, key, data)
 	return true;
@@ -753,5 +760,7 @@ stock bool:Inventory_HasSlotTempExtra(Inventory:inventory, slotid, key[])
 	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
 		return false;
 	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	if(!map_valid(map))
+		return false;
 	return map_has_str_key(map, key);
 }

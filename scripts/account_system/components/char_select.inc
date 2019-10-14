@@ -54,7 +54,6 @@ timer PositionCamera[100](playerid)
 {
 	SetPlayerCameraPos(playerid, 2115.4441,2131.3276,32.3443);
     SetPlayerCameraLookAt(playerid, 2174.6531,2141.4639,16.6471);
-	CheckAccount(playerid);
 	return 1;
 }
 

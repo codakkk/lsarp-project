@@ -1283,6 +1283,7 @@ ac_fpublic ac_TogglePlayerSpectating(playerid, toggle)
 		ACInfo[playerid][acNOPCount][8] = 0;
 		ACInfo[playerid][acGtc][12] = GetTickCount() + 2650;
 	}
+	ac_SetPlayerPos(playerid, 0.0, 0.0, 0.0);
 	return 1;
 }
 

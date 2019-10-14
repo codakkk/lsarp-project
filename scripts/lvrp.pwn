@@ -87,7 +87,7 @@
 #include <streamer>
 #define PP_SYNTAX 1
 //#define PP_SYNTAX_GENERIC 1
-#define PP_ADDITIONAL_TAGS Text3D,Pool,Inventory,Building,House
+#define PP_ALL_TAGS _,bool,Float,VariantTags,StringTags,List,Map,IterTags,Text3D,Pool,PlayerObject,Inventory,Building,House,PlayerObject
 #include <PawnPlus>
 // #include <pp-mysql> // Must update pp first
 #include <OPA>
@@ -543,7 +543,9 @@ hook OnPlayerDisconnect(playerid, reason)
 	
 	if(Character_IsLogged(playerid))
 	{
-		CallLocalFunction(#OnCharacterDisconnected, "i", playerid);
+		if(reason == 0)
+
+		CallLocalFunction(#OnCharacterDisconnected, "ii", playerid, reason);
 		CallLocalFunction(#OnCharacterClearData, "i", playerid);
 	}
 	

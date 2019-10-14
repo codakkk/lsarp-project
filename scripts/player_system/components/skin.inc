@@ -1,11 +1,32 @@
 
 #include <YSI_Coding\y_hooks>
 
-static PlayerSkin[MAX_PLAYERS] = {0, ...};
+static 
+    PlayerSkin[MAX_PLAYERS] = {0, ...},
+    PlayerLastSkin[MAX_PLAYERS] = {0, ...};
+hook OnCharacterClearData(playerid)
+
+{
+    PlayerSkin[playerid] = PlayerLastSkin[playerid] = 0;
+    return 1;
+}
+
+hook OnCharacterDisconnected(playerid, reason)
+{
+    mysql_tquery_f(gMySQL, "UPDATE `characters` SET last_skin = '%d' WHERE id = '%d'", GetPlayerSkin(playerid), Character_GetID(playerid));
+    return 1;
+}
 
 hook OnCharacterSpawn(playerid)
 {
-    SetPlayerSkin(playerid, Character_GetSkin(playerid));
+    new skinid = PlayerLastSkin[playerid] > 0 ? PlayerLastSkin[playerid] : Character_GetSkin(playerid);
+    if(skinid == 0)
+    {
+        skinid = 1;
+        printf("No skin found for player id %d. Set skin id 1.");
+    }
+    mysql_pquery_f(gMySQL, "UPDATE `characters` SET last_skin = '%d' WHERE id = '%d'", 0, Character_GetID(playerid));
+    SetPlayerSkin(playerid, skinid);
     return 1;
 }
 
@@ -13,9 +34,10 @@ hook OnCharacterLoad(playerid)
 {
     inline OnLoad()
     {
-        cache_get_value_index_int(0, 0, PlayerSkin[playerid]);
+        cache_get_value_name_int(0, "skin", PlayerSkin[playerid]);
+        cache_get_value_name_int(0, "last_skin", PlayerLastSkin[playerid]);
     }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT skin FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
+    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT skin, last_skin FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
     return 1;
 }
 

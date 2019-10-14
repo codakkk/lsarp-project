@@ -151,7 +151,7 @@ hook OnGameModeInit()
 						`account_id` int(11) NOT NULL, \
 						`ip` VARCHAR(24) NOT NULL, \
 						`gpci` VARCHAR(44) NOT NULL, \
-						PRIMARY KEY (`id`) \
+						PRIMARY KEY (`id`), \
 						CONSTRAINT `connections_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT \
 						) ENGINE=InnoDB DEFAULT CHARSET=latin1");
 

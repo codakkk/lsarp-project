@@ -74,7 +74,7 @@ forward OnCharacterLateLoad(playerid);
 
 forward OnCharacterClearData(playerid); // Callbacks called when character's data (or account data) must/can be cleared.
 
-forward OnCharacterDisconnected(playerid);
+forward OnCharacterDisconnected(playerid, reason);
 
 forward OnCharacterSelected(playerid); // Called when a player select a character during login.
 forward OnCharacterSpawn(playerid); // Called when Character_Spawn is called.
@@ -120,7 +120,7 @@ hook OnCharacterClearData(playerid)
     return 1;
 }
 
-hook OnCharacterDisconnected(playerid)
+hook OnCharacterDisconnected(playerid, reason)
 {
 	mysql_tquery_f(gMySQL, "UPDATE `characters` SET is_online = '0' WHERE id = '%d'", Character_GetID(playerid));
 	return 1;
@@ -135,7 +135,7 @@ hook OnCharacterLoad(playerid)
 // Needed for anti-tp bug that makes player being kicked random.
 hook OnPlayerRequestClass(playerid, classid)
 {
-	SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
+	//SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
 	return 1;
 }
 
@@ -396,6 +396,13 @@ stock Character_SetSafePosition(playerid, Float:x, Float:y, Float:z, interior = 
 	if(world == -1)
 		world = Character_GetVirtualWorld(playerid);
 	
+	// Just a workaround for teleport hack
+	SetSpawnInfo(playerid, 0, GetPlayerSkin(playerid), x, y, z, 0.0, 0, 0, 0, 0, 0, 0);
+
+	TogglePlayerSpectating(playerid, false);
+
+	SetPlayerInterior(playerid, interior);
+	Character_SetVirtualWorld(playerid, world);
 	Streamer_UpdateEx(playerid, x, y, z, world, interior, 2000, 1);
 	/*SetPlayerPos(playerid, x, y, z);
 	SetPlayerInterior(playerid, interior);
@@ -421,8 +428,7 @@ stock Character_LoadData(playerid)
 		SetPlayerName(playerid, CharacterName[playerid]);
 		
 		CallLocalFunction(#OnCharacterLoad, "i", playerid);
-		
-		TogglePlayerSpectating(playerid, 0);
+		//TogglePlayerSpectating(playerid, 0);
 	}
 	else return KickEx(playerid);
 	return 1;

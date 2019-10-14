@@ -78,9 +78,9 @@ hook OnCharacterClearData(playerid)
 	return 1;
 }
 
-hook OnCharacterDisconnected(playerid)
+hook OnCharacterDisconnected(playerid, reason)
 {
-	Internal_SavePos(playerid);
+	Internal_SavePos(playerid, reason == 0);
 	return 1;
 }
 
@@ -90,7 +90,6 @@ hook OnCharacterLoad(playerid)
 	return 1;
 }
 
-
 ptask SavePlayerPositionTime[30000](playerid)
 {
     if(!Character_IsLogged(playerid))
@@ -99,14 +98,15 @@ ptask SavePlayerPositionTime[30000](playerid)
     return 1;
 }
 
-static Internal_SavePos(playerid)
+static Internal_SavePos(playerid, bool:isCrashed = false)
 {
 	new 
 		Float:x, Float:y, Float:z, Float:a,
 		interior = GetPlayerInterior(playerid),
-		world = Character_GetVirtualWorld(playerid),
-		isSpawned = Character_IsAlive(playerid) ? 1 : 0
+		world = Character_GetVirtualWorld(playerid)
 	;
+
+	new bool:isSpawned = Character_IsAlive(playerid) && (isCrashed || SpawnPointType{playerid} == SPAWN_POINT_TYPE_NONE);
 
 	GetPlayerPos(playerid, x, y, z);
 	GetPlayerFacingAngle(playerid, a);
@@ -191,7 +191,7 @@ CMD:spawnpoint(playerid, params[])
 		SpawnPointType{playerid} = spawnType;
 		SpawnPointID[playerid] = 0;
 		if(spawnType == SPAWN_POINT_TYPE_NONE)
-			SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo spawn point. La prossima volta respawnerai al punto scelto la prima volta.");
+			SendClientMessage(playerid, COLOR_GREEN, "Hai cambiato il tuo spawn point. Respawnerai nel posto in cui esegui il log-out.");
 	}
 	return 1;
 }
@@ -279,8 +279,10 @@ static Character_Spawn(playerid)
     else if(IsSpawned{playerid} && PlayerSpawnData[playerid][LastX] != 0.0 && PlayerSpawnData[playerid][LastY] != 0.0 && PlayerSpawnData[playerid][LastZ] != 0.0)
     {
 		IsSpawned{playerid} = false;
-
+		PlayerSpawnData[playerid][LastX] = PlayerSpawnData[playerid][LastY] = PlayerSpawnData[playerid][LastZ] = 0.0;
 		Character_SetHealth(playerid, PlayerSpawnData[playerid][LastHealth]);
+		
+		mysql_tquery_f(gMySQL, "UPDATE `character_spawn_data` SET last_x = '0.0', last_y = '0.0', last_z = '0.0' WHERE character_id = '%d'", Character_GetID(playerid));
 
 		Character_SetSafePosition(playerid, PlayerSpawnData[playerid][LastX], PlayerSpawnData[playerid][LastY], PlayerSpawnData[playerid][LastZ], PlayerSpawnData[playerid][LastInterior], PlayerSpawnData[playerid][LastVirtualWorld]);
 		SetPlayerFacingAngle(playerid, PlayerSpawnData[playerid][LastA]);
@@ -293,8 +295,8 @@ static Character_Spawn(playerid)
 			if(House_GetOwnerID(house) == Character_GetID(playerid) || Character_GetRentHouse(playerid) == house)
 			{
 				new Float:x, Float:y, Float:z;
-				House_GetExitPosition(house, x, y, z);
-				Character_SetSafePosition(playerid, x, y, z, House_GetExitInterior(house), House_GetExitWorld(house));
+				House_GetEnterPosition(house, x, y, z);
+				Character_SetSafePosition(playerid, x, y, z, House_GetEnterInterior(house), House_GetEnterWorld(house));
 				isSpawned = true;
 			}
 		}
@@ -411,7 +413,7 @@ static Character_LoadSpawnData(playerid)
 		cache_get_value_name_int(0, "spawn_interior", PlayerSpawnData[playerid][SpawnInterior]);
 		cache_get_value_name_int(0, "spawn_world", PlayerSpawnData[playerid][SpawnVirtualWorld]);
 
-		SetSpawnInfo(playerid, NO_TEAM, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0);
+		Character_Spawn(playerid);
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `character_spawn_data` WHERE character_id = '%d'", Character_GetID(playerid));
 	return 1;

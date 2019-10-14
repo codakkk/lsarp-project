@@ -6,7 +6,7 @@ hook OnCharacterClearData(playerid)
 	return 1;
 }
 
-hook OnCharacterDisconnected(playerid)
+hook OnCharacterDisconnected(playerid, reason)
 {
 	Character_SaveWeapons(playerid);
 	return Y_HOOKS_CONTINUE_RETURN_1;
@@ -45,23 +45,19 @@ stock Character_SaveWeapons(playerid)
 		if(i == 2 && Character_HasTaser(playerid))
 		{
 			Character_GetCachedWeaponTaser(playerid, weaponid, ammo);
-			//printf("Cached taser: %d - %d", weaponid, ammo);
 		}
 		else if(i == 3 && Character_HasBeanBag(playerid))
 		{
 			Character_GetCachedWeaponBean(playerid, weaponid, ammo);
-			//printf("Cached bean: %d - %d", weaponid, ammo);
 		}
-
-		//printf("Saving: %d - Ammo: %d", weaponid, ammo);
 		
 		if(i > 1 && i != 10 && ammo <= 0)
 		{
-			format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE character_id = '%d' AND weapon_id = '%d';", Character_GetID(playerid), weaponid);
+			format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE character_id = '%d' AND slot_id = '%d';", Character_GetID(playerid), i);
 		}
 		else
 		{
-			format(query, sizeof(query), "INSERT INTO `character_weapons` (character_id, weapon_id, ammo) VALUES('%d', '%d', '%d') ON DUPLICATE KEY UPDATE ammo = VALUES(ammo);", Character_GetID(playerid), weaponid, ammo);
+			format(query, sizeof(query), "INSERT INTO `character_weapons` (character_id, slot_id, weapon_id, ammo) VALUES('%d', '%d', '%d', '%d') ON DUPLICATE KEY UPDATE weapon_id = VALUES(weapon_id), ammo = VALUES(ammo);", Character_GetID(playerid), i, weaponid, ammo);
 			printf("Saving weapon id %d with %d ammo for character id %d.", weaponid, ammo, Character_GetID(playerid));
 		}
 		mysql_pquery(gMySQL, query);
