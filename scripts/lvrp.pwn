@@ -41,7 +41,7 @@
 	#warning LSARP_DEBUG is enabled. Care!!
 #endif
 
-#define CUSTOM_TAG_TYPES Building, House
+#define CUSTOM_TAG_TYPES Building,House,JobType
 
 #define CreateDynamicObjectWithHighDD CreateDynamicObject
 
@@ -166,6 +166,7 @@ enum (<<= 1)
 #include <discord_system\core>
 #include <teleport_system\core>
 #include <gambling_system\core>
+#include <jobs\core>
 
 // ========== [ DIALOGS ] ==========
 #include <player_system\dialogs>

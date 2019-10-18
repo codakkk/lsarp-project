@@ -533,28 +533,25 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
 
 hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
-	if(!Character_IsAlive(playerid))
+	if(!Character_IsAlive(playerid) || Character_IsBuyingVehicle(playerid))
 		return Y_HOOKS_CONTINUE_RETURN_0;
 	if(Player_HasHotKeysEnabled(playerid))
 	{
-		if(!Character_IsBuyingVehicle(playerid))
+		if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
 		{
-			if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
+			new vehicleid = GetPlayerVehicleID(playerid);
+			if( (PRESSED(KEY_YES) ) )
 			{
-				new vehicleid = GetPlayerVehicleID(playerid);
-				if( (PRESSED(KEY_YES) ) )
-				{
-					pc_cmd_motore(playerid, "");
-				}
-				else if( (PRESSED(KEY_LOOK_BEHIND)) && Vehicle_IsEngineOn(vehicleid))
-				{
-					Vehicle_SetLightState(vehicleid, !Vehicle_IsLightOn(vehicleid));
-				}
+				pc_cmd_motore(playerid, "");
 			}
-			if(PRESSED(KEY_NO))
+			else if( (PRESSED(KEY_LOOK_BEHIND)) && Vehicle_IsEngineOn(vehicleid))
 			{
-				pc_cmd_vehicle(playerid, "sicura");
+				Vehicle_SetLightState(vehicleid, !Vehicle_IsLightOn(vehicleid));
 			}
+		}
+		if(PRESSED(KEY_NO))
+		{
+			pc_cmd_vehicle(playerid, "sicura");
 		}
 	}
 	return Y_HOOKS_CONTINUE_RETURN_1;

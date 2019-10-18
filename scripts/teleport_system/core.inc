@@ -37,26 +37,6 @@ hook OnGameModeInit()
     return 1;
 }
 
-hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
-{
-    if(Player_HasHotKeysEnabled(playerid) && Character_IsAlive(playerid))
-	{
-		new elementId, E_ELEMENT_TYPE:type;
-		if(Character_GetNearestPickup(playerid, elementId, type))
-		{
-			if(PRESSED(KEY_YES))
-			{
-				// Should I write an "OnInteract" callback?
-				if(type == ELEMENT_TYPE_TELEPORT)
-				{
-					Character_Enter(playerid);
-				}
-            }
-        }
-    }
-    return 1;
-}
-
 hook OnPlayerPickUpElmPickup(playerid, pickupid, elementId, E_ELEMENT_TYPE:type)
 {
     if(type != ELEMENT_TYPE_TELEPORT)
@@ -264,36 +244,60 @@ CMD:teleportedit(playerid, p[])
 }
 alias:teleportedit("tedit");
 
+stock bool:GetTeleportRightPosByPlayer(playerid, teleportid, &Float:finalX, &Float:finalY, &Float:finalZ, &finalInterior, &finalWorld)
+{
+    static Float:x, Float:y, Float:z, Float:ex, Float:ey, Float:ez;
+    new Float:range = IsPlayerInAnyVehicle(playerid) ? 7.0 : 1.5;
+    Teleport_GetEnterPosition(teleportid, x, y, z);
+    Teleport_GetExitPosition(teleportid, ex, ey, ez);
+    if(IsPlayerInRangeOfPoint(playerid, range, x, y, z) && Character_GetVirtualWorld(playerid) == Teleport_GetEnterWorld(teleportid))
+    {
+        finalX = ex;
+        finalY = ey;
+        finalZ = ez;
+        finalInterior = Teleport_GetExitInterior(teleportid);
+        finalWorld = Teleport_GetExitWorld(teleportid);
+        return true;
+    }
+    if(IsPlayerInRangeOfPoint(playerid, range, ex, ey, ez) && Character_GetVirtualWorld(playerid) == Teleport_GetExitWorld(teleportid))
+    {
+        finalX = x;
+        finalY = y;
+        finalZ = z;
+        finalInterior = Teleport_GetEnterInterior(teleportid);
+        finalWorld = Teleport_GetEnterWorld(teleportid);
+        return true;
+    }
+    return false;
+}
+
 hook function Character_Enter(playerid)
 {
-    new elementid, E_ELEMENT_TYPE:type;
-    Character_GetNearestPickup(playerid, elementid, type);
+    printf("[Character_Enter]: Teleport");
     
-    new Float:range = IsPlayerInAnyVehicle(playerid) ? 7.0 : 1.5;
+    new Float:finalX, Float:finalY, Float:finalZ, finalInterior, finalWorld;
 
-    if(type != ELEMENT_TYPE_TELEPORT)
+    new teleport = Character_GetCurrentTeleport(playerid);
+
+    if(Teleport_IsValid(teleport))
     {
-        new teleportid;
-        new Float:x, Float:y, Float:z, Float:ex, Float:ey, Float:ez;
+        GetTeleportRightPosByPlayer(playerid, teleport, finalX, finalY, finalZ, finalInterior, finalWorld);
+    }
+    else if(!Teleport_IsValid(teleport) && IsPlayerInAnyVehicle(playerid))
+    {
+        new tempTeleport = 0;
         for_map(i : TeleportsMap)
         {
-            teleportid = iter_get_key(i);
-            Teleport_GetEnterPosition(teleportid, x, y, z);
-            Teleport_GetExitPosition(teleportid, ex, ey, ez);
-            if(IsPlayerInRangeOfPoint(playerid, range, x, y, z))
+            tempTeleport = iter_get_key(i);
+            if(GetTeleportRightPosByPlayer(playerid, teleport, finalX, finalY, finalZ, finalInterior, finalWorld))
             {
-                elementid = teleportid;
-                break;
-            }
-            else if(IsPlayerInRangeOfPoint(playerid, range, ex, ey, ez))
-            {
-                elementid = teleportid;
+                teleport = tempTeleport;
                 break;
             }
         }
     }
 
-    if(Teleport_IsValid(elementid))
+    if(Teleport_IsValid(teleport))
     {
         new vehicleid = GetPlayerVehicleID(playerid);
         if(vehicleid > 0)
@@ -301,72 +305,59 @@ hook function Character_Enter(playerid)
             if(GetPlayerVehicleSeat(playerid) != 0)
                 return SendClientMessage(playerid, COLOR_ERROR, "Devi essere il guidatore per poter entrare all'interno dell'edificio.");
             
-            if(!Teleport_DoesAllowVehicles(elementid))
+            if(!Teleport_DoesAllowVehicles(teleport))
                 return SendClientMessage(playerid, COLOR_ERROR, "Non puoi entrare con un veicolo.");
         }
         
         if(!Player_IsAdminDuty(playerid))
         {
-            new tfactionid = Teleport_GetFaction(elementid);
-            if(Faction_IsValid(tfactionid) || Teleport_GetCharacter(elementid) != 0)
+            new tfactionid = Teleport_GetFaction(teleport);
+            if(Faction_IsValid(tfactionid) || Teleport_GetCharacter(teleport) != 0)
             {
-                if(tfactionid != Character_GetFaction(playerid) && Teleport_GetCharacter(elementid) != Character_GetID(playerid))
+                if(tfactionid != Character_GetFaction(playerid) && Teleport_GetCharacter(teleport) != Character_GetID(playerid))
                     return SendClientMessage(playerid, COLOR_ERROR, "Non puoi entrare.");
-
             }
         }
 
-        new Float:gotoX, Float:gotoY, Float:gotoZ,
-                gotoInterior, gotoWorld;
-
-        {
-            new 
-                Float:x, Float:y, Float:z
-            ;
-            
-            Teleport_GetEnterPosition(elementid, x, y, z);
-            if(IsPlayerInRangeOfPoint(playerid, range, x, y, z))
-            {
-                Teleport_GetExitPosition(elementid, gotoX, gotoY, gotoZ);
-                gotoInterior = Teleport_GetExitInterior(elementid);
-                gotoWorld = Teleport_GetExitWorld(elementid);
-            }
-            else
-            {
-                Teleport_GetExitPosition(elementid, x, y, z);
-                if(IsPlayerInRangeOfPoint(playerid, range, x, y, z))
-                {
-                    Teleport_GetEnterPosition(elementid, gotoX, gotoY, gotoZ);
-                    gotoInterior = Teleport_GetEnterInterior(elementid);
-                    gotoWorld = Teleport_GetEnterWorld(elementid);
-                }
-            }
-        }
+        if(finalX == 0.0 && finalY == 0.0 && finalZ == 0.0)
+            return continue(playerid);
 
         if(vehicleid > 0)
         {
-            LinkVehicleToInterior(vehicleid, gotoInterior);
-            SetVehicleVirtualWorld(vehicleid, gotoWorld);
-            SetVehiclePos(vehicleid, gotoX, gotoY, gotoZ);
             foreach(new p : Player)
             {
                 if(p == playerid || GetPlayerVehicleID(p) != vehicleid) 
                     continue;
                 
-                Character_SetVirtualWorld(p, gotoWorld);
-                SetPlayerInterior(p, gotoInterior);
+                Character_SetSafePosition(p, finalX, finalY, finalZ, finalInterior, finalWorld);
+                Character_SetVirtualWorld(p, finalWorld);
+                SetPlayerInterior(p, finalInterior);
+
+                defer SetPlayerInSeatAfterTime(p, GetPlayerVehicleID(p), GetPlayerVehicleSeat(p));
             }
+            
+            defer SetVehiclePosDyn(vehicleid, finalX, finalY, finalZ, finalInterior, finalWorld);
         }
         else
         {
-            printf("Teleport Set Pos");
-            Character_SetSafePosition(playerid, gotoX, gotoY, gotoZ, gotoInterior, gotoWorld);
+            printf("Teleport Set Pos: %f - %f - %f", finalX, finalY, finalZ);
+            Character_SetSafePosition(playerid, finalX, finalY, finalZ, finalInterior, finalWorld);
         }
-        SetPlayerInterior(playerid, gotoInterior);
-        Character_SetVirtualWorld(playerid, gotoWorld);
+        return 1;
     }
 
     return continue(playerid);
+}
+
+stock Character_GetCurrentTeleport(playerid)
+{
+    new teleportid = 0, elementid, E_ELEMENT_TYPE:type;
+    if(Character_GetNearestPickup(playerid, elementid, type) && type == ELEMENT_TYPE_TELEPORT)
+    {
+        teleportid = elementid;
+    }
+    
+    return teleportid;
 }
 
 stock Teleport_Create(const name[], Float:x, Float:y, Float:z, interior, world)

@@ -738,9 +738,19 @@ stock Building:Character_GetCurrentBuilding(playerid)
 {
 	new Building:building = Character_GetBuilding(playerid, false);
 	if(Building_IsValid(building))
+	{
 		return building;
+	}
 	building = Character_GetBuilding(playerid, true);
-	return building;
+	if(Building_IsValid(building))
+	{
+		new Float:x, Float:y, Float:z, Float:ex, Float:ey, Float:ez;
+		Building_GetEnterPos(building, x, y, z);
+		Building_GetExitPos(building, ex, ey, ez);
+		if(IsPlayerInRangeOfPoint(playerid, 1.5, x, y, z) || IsPlayerInRangeOfPoint(playerid, 1.5, ex, ey, ez))
+			return building;
+	}
+	return Building:0;
 }
 
 stock Building:Character_GetBuilding(playerid, bool:inside)
@@ -966,6 +976,7 @@ Dialog:Dialog_BuildingSellToPlayer(playerid, response, listitem, inputtext[])
 
 hook function Character_Enter(playerid)
 {   
+	printf("[Character_Enter]: Building");
 	if(IsPlayerInAnyVehicle(playerid))
 		return continue(playerid);
 	new Building:building, E_ELEMENT_TYPE:type;
@@ -991,6 +1002,8 @@ hook function Character_Enter(playerid)
 			world = Building_GetExitWorld(building);
 			
 			CallLocalFunction(#OnPlayerEnterBuilding, "dd", playerid, _:building);
+
+			printf("Enter Building");
 		}
 		else if(type == ELEMENT_TYPE_BUILDING_EXIT)
 		{
@@ -1001,9 +1014,13 @@ hook function Character_Enter(playerid)
 			printf("Character_Enter -> Building -> Pos: %f - %f - %f", x, y, z);
 
 			CallLocalFunction(#OnPlayerExitBuilding, "dd", playerid, _:building);
+			printf("Exit Building");
 		}
-		// Should I use Fading?
-		Character_SetSafePosition(playerid, x, y, z, interiorId, world);
+		if(x != 0.0 && y != 0.0 && z != 0.0)
+		{
+			// Should I use Fading?
+			Character_SetSafePosition(playerid, x, y, z, interiorId, world);
+		}
 		return 1;
     }
     return continue(playerid);

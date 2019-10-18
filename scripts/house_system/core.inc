@@ -87,6 +87,7 @@ stock bool:Character_CanUseHouseMenu(playerid, House:house)
 
 hook function Character_Enter(playerid)
 {
+    printf("[Character_Enter]: House");
     if(IsPlayerInAnyVehicle(playerid))
         return continue(playerid);
 

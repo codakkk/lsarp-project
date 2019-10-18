@@ -79,11 +79,16 @@ forward OnCharacterDisconnected(playerid, reason);
 forward OnCharacterSelected(playerid); // Called when a player select a character during login.
 forward OnCharacterSpawn(playerid); // Called when Character_Spawn is called.
 
+// Called when a character uses /accetta. A YHash is passed instead of char array.
+forward OnCharacterAccept(playerid, stringHash);
+
 static enum E_PLAYER_DATA
 {
     ID,
 	Level,
 	Experience,
+	
+	MinutesPlayed,
 
     Float:Health,
     Float:Armour,
@@ -182,17 +187,35 @@ stock Character_ShowStats(playerid, targetid)
 	getdate(year, month, day);
 	gettime(hours, minutes, seconds);
 	
-	new factionName[MAX_FACTION_NAME] = "N/A", rankName[MAX_FACTION_RANK_NAME] = "N/A";
+	new factionName[MAX_FACTION_NAME] = "N/A", rankName[MAX_FACTION_RANK_NAME] = "N/A", jobName[32] = "Nessuno";
+
     if(Faction_IsValid(Character_GetFaction(playerid)))
 	{
 		Faction_GetName(Character_GetFaction(playerid), factionName);
 		Faction_GetRankName(Character_GetFaction(playerid), Character_GetRank(playerid), rankName);
 	}
 
+	Job_GetName(Character_GetJobType(playerid), jobName);
+
+	new timePlayed[32];
+
+	new minutesPlayed = Character_GetMinutesPlayed(playerid);
+
+	if(minutesPlayed > 60)
+	{
+		new hoursPlayed = minutesPlayed/60;
+		new tempMins = minutesPlayed - (hoursPlayed * 60);
+		format(timePlayed, sizeof(timePlayed), "%d ore e %d min.", hoursPlayed, tempMins);
+	}
+	else
+	{
+		format(timePlayed, sizeof(timePlayed), "%d min.", minutesPlayed);
+	}
+
     SendFormattedMessage(targetid, 0x33AA33FF, "_____________________[Stats Help - %02d/%02d/%02d @ %02d:%02d:%02d]_____________________", day, month, year, hours, minutes, seconds);
 	SendFormattedMessage(targetid, 0xCCE6E6FF, "[Account] %s | Admin Level: [%d] | Premium Level: [%d] | E-Mail: %s", Account_GetName(playerid), Account_GetAdminLevel(playerid), Account_GetPremiumLevel(playerid), Account_GetEMail(playerid));
-	SendFormattedMessage(targetid, 0xCCE6E6FF, "[Personaggio] Livello: [%d] | Esperienza: [%d] | Fazione: [%s] | Rank: [%s]", Character_GetLevel(playerid), Character_GetExperience(playerid), factionName, rankName);
-    SendFormattedMessage(targetid, 0xCCE6E6FF, "[Personaggio] HP: [%.2f] | Armatura: [%.2f] | Max HP: [%.2f] | Max AP: [%.2f] | Ore di gioco: [%d]", Character_GetHealth(playerid), Character_GetArmour(playerid), Character_GetMaxHealth(playerid), Character_GetMaxArmour(playerid), 0);
+	SendFormattedMessage(targetid, 0xCCE6E6FF, "[Personaggio] Livello: [%d] | Esperienza: [%d] | Lavoro: [%s] | Fazione: [%s] | Rank: [%s]", Character_GetLevel(playerid), Character_GetExperience(playerid), jobName, factionName, rankName);
+    SendFormattedMessage(targetid, 0xCCE6E6FF, "[Personaggio] HP: [%.2f] | Armatura: [%.2f] | Max HP: [%.2f] | Max AP: [%.2f] | Ore di gioco: [%s]", Character_GetHealth(playerid), Character_GetArmour(playerid), Character_GetMaxHealth(playerid), Character_GetMaxArmour(playerid), timePlayed);
 	SendFormattedMessage(targetid, 0xCCE6E6FF, "[Personaggio] Soldi: [$%s] | Banca: [$%s] | Stipendio: [$%s]", FormatNumber(Character_GetMoney(playerid)), FormatNumber(Character_GetBank(playerid)), FormatNumber(Character_GetPayCheck(playerid)));
     SendFormattedMessage(targetid, 0xCCE6E6FF, "[Altro] X: [%.2f] | Y: [%.2f] | Z: [%.2f] | Interior: [%d] | VW: [%d]", x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
     SendClientMessage(targetid, 0x33AA33FF,    "________________________________________________________________________________________");
@@ -336,6 +359,8 @@ stock LoadCharacterResult(playerid)
     {
 		cache_get_value_name_int(0, "id", PlayerInfo[playerid][ID]);
 		cache_get_value_name(0, "name", CharacterName[playerid]);
+		
+		cache_get_value_name_int(0, "minutes_played", PlayerInfo[playerid][MinutesPlayed]);
 
 		cache_get_value_name_int(0, "faction", PlayerInfo[playerid][Faction]);
 		cache_get_value_name_int(0, "faction_rank", PlayerInfo[playerid][Rank]);
@@ -587,4 +612,16 @@ stock Float:Character_GetArmour(playerid)
 	new Float:armour;
 	GetPlayerArmour(playerid, armour);
 	return armour;
+}
+
+stock Character_AddMinutesPlayed(playerid, add)
+{
+	PlayerInfo[playerid][MinutesPlayed] += add;
+	mysql_tquery_f(gMySQL, "UPDATE `characters` SET minutes_played = '%d' WHERE id = '%d'", Character_GetMinutesPlayed(playerid), Character_GetID(playerid));
+	return 1;
+}
+
+stock Character_GetMinutesPlayed(playerid)
+{
+	return PlayerInfo[playerid][MinutesPlayed];
 }

@@ -155,15 +155,16 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 	{
 		if(PRESSED(KEY_YES))
 		{
-			// Should I write an "OnInteract" callback?
-			Character_Enter(playerid);
+			pc_cmd_entra(playerid, "");
 		}
 	}
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
+// Pref pc_cmd_entra(playerid, ""); instead of Character_Enter because the first makes some considerations.
 stock Character_Enter(playerid)
 {
+	printf("[Character_Enter]: Stock");
 	#pragma unused playerid
 	return 1;
 }

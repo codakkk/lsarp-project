@@ -479,6 +479,7 @@ Dialog:Dialog_WearObjectSelect(playerid, response, listitem, inputtext[])
     SendFormattedMessage(playerid, -1, "Hai modificato l'oggetto. Stai ora indossando: %s.", PlayerObjectsList[objectid][oName]);
 
     new PlayerObject:playerObject = CreateWearObject(playerid, PlayerObjectsList[objectid][oName], PlayerObjectsList[objectid][Object], PlayerObjectsList[objectid][DefaultBone]);
+    #pragma unused playerObject
     return 1;
 }
 

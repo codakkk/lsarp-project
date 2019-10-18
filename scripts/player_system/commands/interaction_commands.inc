@@ -7,16 +7,13 @@
 flags:entra(CMD_ALIVE_USER);
 CMD:entra(playerid, params[])
 {
+	if(!Character_CanInteract(playerid))
+		return 0;
 	Character_Enter(playerid);
     return 1;
 }
+alias:entra("esci");
 
-flags:esci(CMD_ALIVE_USER);
-CMD:esci(playerid, params[])
-{
-	pc_cmd_entra(playerid, "");
-    return 1;
-}
 
 flags:dai(CMD_ALIVE_USER);
 CMD:dai(playerid, params[])
@@ -113,7 +110,9 @@ CMD:accetta(playerid, params[])
 	{
 		if( strcmp(params, "morte", true) && strcmp(params, "cure", true) && !Character_IsAlive(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
-		if(!strcmp(params, "arma", true))
+		
+		new hash = YHash(params, false);
+		if(hash == _I<arma>)
 		{
 			if(!Request_IsPending(playerid, REQUEST_TYPE_WEAPON))
 				return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta d'arma attiva.");
@@ -162,49 +161,51 @@ CMD:accetta(playerid, params[])
 				SendClientMessage(playerid, COLOR_ERROR, "Hai già un'arma e non hai abbastanza spazio nell'inventario.");
 
 		}
-		else if(!strcmp(params, "morte", true))
+		else if(hash == _I<morte>)
 		{
 			Character_AcceptDeathState(playerid);
 		}
-		else if(!strcmp(params, "cure", true))
+		else if(hash == _I<cure>)
 		{
 			Character_AcceptCare(playerid);
 			//Log(Character_GetOOCName(playerid), Character_GetOOCName(senderid), "/accetta cure", senderid);
 		}
-		else if(!strcmp(params, "oggetto", true))
+		else if(hash == _I<oggetto>)
 		{
 			Character_AcceptItemRequest(playerid);
 		}
-		else if(!strcmp(params, "riparazione", true))
+		else if(hash == _I<riparazione>)
 		{
 			Character_AcceptRepair(playerid);
 		}
-		else if(!strcmp(params, "verniciatura", true) || !strcmp(params, "vern", true))
+		else if(hash == _I<verniciatura> || hash == _I<vern>)
 		{
 			Character_AcceptVehicleSpray(playerid);
 		}
-		else if(!strcmp(params, "perquisizione", true) || !strcmp(params, "perq", true))
+		else if(hash == _I<perquisizione> || hash == _I<perq>)
 		{
 			Character_AcceptSearch(playerid);
 		}
-		else if(!strcmp(params, "edificio", true) || !strcmp(params, "edi", true) || !strcmp(params, "biz", true))
+		else if(hash == _I<edificio> || hash == _I<edi> || hash == _I<biz>)
 		{
 			Character_AcceptBuilding(playerid);
 		}
-		else if(!strcmp(params, "fazione", true) || !strcmp(params, "faz", true) || !strcmp(params, "faction", true))
+		else if(hash == _I<fazione> || hash == _I<faz> || hash == _I<faction>)
 		{
 			Character_AcceptFaction(playerid);	
 		}
-		else if(!strcmp(params, "veicolo", true) || !strcmp(params, "vehicle", true) || !strcmp(params, "veh", true))
+		else if(hash == _I<veicolo> || hash == _I<veh> || hash == _I<vehicle>)
 		{
 			Character_AcceptVehicleRequest(playerid);	
 		}
-		else if(!strcmp(params, "blackjack", true))
+		else if(hash == _I<blackjack>)
 		{
 			Character_AcceptBlackJack(playerid);
 		}
-		//else
-			//CallLocalFunction(#OnCharacterAccept, "ds", playerid, params);
+		else
+		{
+			CallLocalFunction("OnCharacterAccept", "dd", playerid, hash);
+		}
 	}
 	else
 	{

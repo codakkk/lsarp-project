@@ -8,7 +8,7 @@ ptask OnPlayerPayDayMinute[60000](playerid) //
 	if(!Character_IsLogged(playerid))
 		return 1;
 	Account_AddPayDay(playerid, 1);
-	
+	Character_AddMinutesPlayed(playerid, 1);
 	if(Account_GetPayDay(playerid) >= 60) // Pay Day Time in minutes
 	{
 		Account_AddPayDay(playerid, -60);

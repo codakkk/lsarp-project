@@ -13,8 +13,9 @@ enum _:e_PendingType
 	REQUEST_TYPE_FACTION,
 	REQUEST_TYPE_VEHICLE,
 	REQUEST_TYPE_BLACKJACK,
-	// Write request types before REQUEST_TYPE_LAST
+	REQUEST_TYPE_TAXI,
 
+	// Write request types before REQUEST_TYPE_LAST
 	REQUEST_TYPE_LAST
 };
 

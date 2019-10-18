@@ -212,6 +212,7 @@ stock Float:GasStation_GetFuelState(Building:building)
 
 hook function Character_Enter(playerid)
 {
+    printf("[Character_Enter]: Gas Station");
     new Building:building, E_ELEMENT_TYPE:type;
     Character_GetNearestPickup(playerid, building, type);
     if(type == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_IsValid(building) && Building_GetType(building) == BUILDING_TYPE_GAS_STATION)

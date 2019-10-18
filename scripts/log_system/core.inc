@@ -64,11 +64,6 @@ stock Log(const playerName[], const giveplayerName[], const text[], extravar = 0
 										gettime());
 }
 
-static LogOther(playerid, e_LOG_ENTITY_TYPE:type, id, const reason[], extra = 0)
-{
-	
-}
-
 stock LogCharacter(playerid, issuerid, e_LOG_TYPE:type, const reason[] = "", extra = 0)
 {
 	mysql_tquery_f(gMySQL, "INSERT INTO `character_logs` \
