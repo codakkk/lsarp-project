@@ -1,5 +1,5 @@
 #include <house_system\core>
-#include <building_system\core>
+#include <buildings\core>
 #include <inventory_system\core>
 #include <YSI_Coding\y_hooks>
 

@@ -624,6 +624,9 @@ CMD:goto(playerid, params[])
 	if(id == playerid)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso.");
 
+	if(Player_GetSpectatingPlayer(id) != INVALID_PLAYER_ID)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi gotarti da un admin in recon.");
+
     new 
 	   Float:x, Float:y, Float:z,
 	   vw = Character_GetVirtualWorld(id), int = GetPlayerInterior(id);
@@ -659,6 +662,9 @@ CMD:gethere(playerid, params[])
     
 	if(id == playerid)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su te stesso.");
+
+	if(Player_GetSpectatingPlayer(id) != INVALID_PLAYER_ID)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi gotare un admin in recon.");
 
 	new 
 	   Float:x, Float:y, Float:z,

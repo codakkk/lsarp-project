@@ -12,7 +12,7 @@
 
 #define for_house(%0) for(new Iter:iter=map_iter(GetHousesMap()), House:%0=House:iter_get_value(iter);iter_inside(iter);%0=(iter_move_next(iter) != ITER_NULL ? (House:iter_get_value(iter)) : (House:0)))
 
-#include <building_system\core>
+#include <buildings\core>
 
 #include <house_system\components\inventory>
 #include <house_system\components\interiors>

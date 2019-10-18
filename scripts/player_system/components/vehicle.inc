@@ -295,7 +295,7 @@ stock Character_AcceptVehicleRequest(playerid)
 		return SendClientMessage(receiver, COLOR_ERROR, "Non hai abbastanza soldi.");
 
 	Character_GiveMoney(senderid, price, "vehicle_sell_to_player");
-	Character_GiveMoney(-receiver, -price, "vehicle_buy_by_player");
+	Character_GiveMoney(receiver, -price, "vehicle_buy_by_player");
 
 	SendFormattedMessage(senderid, COLOR_ORANGE, "%s ha accettato la tua richiesta ed è ora proprietario del tuo veicolo (%s). Hai guadagnato: $%d.", Character_GetRolePlayName(receiver), Vehicle_GetName(vehicleid), price);
 	SendFormattedMessage(receiver, COLOR_ORANGE, "Hai accettato il veicolo (%s) di %s per $%d.", Vehicle_GetName(vehicleid), Character_GetRolePlayName(receiver), price);

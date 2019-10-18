@@ -154,7 +154,7 @@ enum (<<= 1)
 #include <vehicles_system\core>
 #include <dealership_system\core>
 #include <house_system\core>
-#include <building_system\core>
+#include <buildings\core>
 #include <admin_system\core>
 #include <drop_system\core>
 #include <faction_system\core>

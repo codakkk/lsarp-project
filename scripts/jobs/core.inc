@@ -188,7 +188,7 @@ stock bool:Job_GetName(JobType:jobType, name[])
     {
         if(JobInfo[i][Type] == jobType)
         {
-            strcat(name, JobInfo[i][Name]);
+            strcat(name, JobInfo[i][Name], 32);
             break;
         }       
     }

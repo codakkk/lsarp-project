@@ -131,7 +131,7 @@ CMD:radiocmds(playerid, params[])
 	SendClientMessage(playerid, -1, "(/r)adio - Parla usando la radio nel channel che hai scelto.");
 	SendClientMessage(playerid, -1, "/rlow - Parla con tono basso alla radio.");
 	SendClientMessage(playerid, -1, "/rtrace - Divisione Investigativa LVMPD");
-	SendClientMessage(playerid, -1, "{33AA33}[(CH: 3409)] {FFFFFF}((frequenza attuale))");
+	SendFormattedMessage(playerid, -1, "{33AA33}[(CH: %d)] {FFFFFF}((frequenza attuale))", Character_GetRadioFrequency(playerid));
 	SendClientMessage(playerid, 0x33AA33FF, "|____________________________________________________________|");
 	return 1;
 }
@@ -171,7 +171,7 @@ CMD:radio(playerid, params[])
     	return SendClientMessage(playerid, COLOR_ERROR, "Non sei connesso ad una frequenza (/(freq)uenza).");
 
     if(strlen(params) <= 0 || strlen(params) > 128)
-    	return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USA: (/r)adio <testo>.");
+    	return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USA: (/r)adio <testo>");
 
     new frequency = Character_GetRadioFrequency(playerid);
 

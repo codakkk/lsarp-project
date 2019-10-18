@@ -326,14 +326,11 @@ hook function Character_Enter(playerid)
         {
             foreach(new p : Player)
             {
-                if(p == playerid || GetPlayerVehicleID(p) != vehicleid) 
+                if(!Character_IsLogged(p) || GetPlayerVehicleID(p) != vehicleid) 
                     continue;
                 
-                Character_SetSafePosition(p, finalX, finalY, finalZ, finalInterior, finalWorld);
-                Character_SetVirtualWorld(p, finalWorld);
-                SetPlayerInterior(p, finalInterior);
-
                 defer SetPlayerInSeatAfterTime(p, GetPlayerVehicleID(p), GetPlayerVehicleSeat(p));
+                Character_SetSafePosition(p, finalX, finalY, finalZ, finalInterior, finalWorld);
             }
             
             defer SetVehiclePosDyn(vehicleid, finalX, finalY, finalZ, finalInterior, finalWorld);

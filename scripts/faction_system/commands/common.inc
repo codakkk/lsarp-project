@@ -27,7 +27,7 @@ CMD:servizio(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando in admin duty.");
 		
 	new factionid = Character_GetFaction(playerid);
-	if(!Faction_IsValid(factionid) || Faction_GetType(factionid) != FACTION_TYPE_POLICE)
+	if(!Faction_IsValid(factionid) || (Faction_GetType(factionid) != FACTION_TYPE_POLICE && Faction_GetType(factionid) != FACTION_TYPE_MEDICAL))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando.");
 	
 	if(!Character_IsAlive(playerid))

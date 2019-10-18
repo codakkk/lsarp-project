@@ -1,6 +1,6 @@
 
 #include <pickup_system\core>
-#include <building_system\core>
+#include <buildings\core>
 #include <player_system\core>
 
 #include <YSI_Coding\y_hooks>
@@ -333,14 +333,13 @@ hook function Character_Enter(playerid)
     {
         foreach(new p : Player)
         {
-            if(p == playerid || GetPlayerVehicleID(p) != vehicleid) 
+            if(!Character_IsLogged(p) || GetPlayerVehicleID(p) != vehicleid) 
                 continue;
             
-            Character_SetSafePosition(p, finalX, finalY, finalZ, finalInterior, finalWorld);
-            Character_SetVirtualWorld(p, finalWorld);
-            SetPlayerInterior(p, finalInterior);
-
             defer SetPlayerInSeatAfterTime(p, GetPlayerVehicleID(p), GetPlayerVehicleSeat(p));
+            
+            Character_SetSafePosition(p, finalX, finalY, finalZ, finalInterior, finalWorld);
+
         }
         
         defer SetVehiclePosDyn(vehicleid, finalX, finalY, finalZ, finalInterior, finalWorld);
@@ -350,8 +349,6 @@ hook function Character_Enter(playerid)
         Character_SetSafePosition(playerid, finalX, finalY, finalZ, finalInterior, finalWorld);
         printf("[Character_Enter]: Garage Enter on %f - %f - %f", finalX, finalY, finalZ);
     }
-    SetPlayerInterior(playerid, finalInterior);
-    Character_SetVirtualWorld(playerid, finalWorld);
     printf("[Character_Enter]: Garage Enter 2");
     return 1;
 }

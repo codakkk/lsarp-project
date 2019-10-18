@@ -181,7 +181,7 @@ CMD:aiuto(playerid, params[])
 	SendClientMessage(playerid, 0xCCE6E6FF, "[ACCOUNT] /stats /inv /oggetto /hotkeys /lostitems /zpoints");
     SendClientMessage(playerid, 0xCCE6E6FF, "[GENERALE]: /paga /time /compra /id /cellinfo /chiama /bussa /blindfold /sa /animlist");
     SendClientMessage(playerid, 0xCCE6E6FF, "[GENERALE]: (/pub)blicita /documenti /report /stilechat /stilelotta /stilecamminata");
-	SendClientMessage(playerid, 0xCCE6E6FF, "[CHAT]: (/w)hisper (/o)(OOC) (/s)hout /me /b(OOC) /do /cw /low /pm(OOC) /r /melow /ame /dolow");
+	SendClientMessage(playerid, 0xCCE6E6FF, "[CHAT]: (/w)hisper (/s)hout /me /b(OOC) /do /cw /low /pm(OOC) /r /melow /ame /dolow");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[BANCA]: /bilancio /ritira /deposita /bonifico /ritirastipendio");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[HELP]: /cellcmds /casacmds (/v)ehicle /furniturecmds /invcmds /fcmds");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[HELP]: /radiocmds /businesscmds (/dom)anda /aiutami /aiuto");

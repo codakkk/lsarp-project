@@ -1,6 +1,6 @@
 
 #include <pickup_system\core>
-#include <building_system\core>
+#include <buildings\core>
 
 #include <YSI_Coding\y_hooks>
 

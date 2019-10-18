@@ -33,13 +33,13 @@ enum //E_BUILDING_TYPE
 #include <faction_system\core>
 #include <player_system\core>
 
-#include <building_system\components\inventory>
-#include <building_system\components\garage>
-#include <building_system\components\shop>
-#include <building_system\components\ads>
-#include <building_system\components\gas_station>
+#include <buildings\components\inventory>
+#include <buildings\components\garage>
+#include <buildings\components\shop>
+#include <buildings\components\ads>
+#include <buildings\components\gas_station>
 
-#include <building_system\commands\admin>
+#include <buildings\commands\admin>
 
 #include <YSI_Coding\y_hooks>
 
