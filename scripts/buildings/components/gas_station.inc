@@ -23,6 +23,12 @@ hook OnCharacterClearData(playerid)
     return 1;
 }
 
+CMD:cccc(playerid, params[])
+{
+    printf("Ping: %d", GetPlayerPing(playerid));   
+    return 1;
+}
+
 hook OnPlayerStateChange(playerid, newstate, oldstate)
 {
     if(!Building_IsValid(IsDoingGas[playerid]))

@@ -277,9 +277,12 @@ Dialog:Dialog_SellVehicleToPlayer(playerid, response, listitem, inputtext[])
 	return 1;
 }
 
-stock Character_AcceptVehicleRequest(playerid)
+hook OnCharacterAccept(playerid, stringHash)
 {
-	if(!Request_IsPending(playerid, REQUEST_TYPE_VEHICLE))
+    if(stringHash != _I<veicolo> && stringHash != _I<veh> && stringHash != _I<vehicle>)
+		return 0;
+	
+	if(!Request_IsPending(playerid, REQUEST_TYPE_VEHICLE) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_VEHICLE))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta attiva.");
 	new 
 		senderid = Request_GetSender(playerid, REQUEST_TYPE_VEHICLE),
@@ -459,7 +462,7 @@ ptask OnVehicleFuelTextDrawTimer[1000](playerid)
 hook OnPlayerExitVehicle(playerid, vehicleid)
 {
 	new seat = GetPlayerVehicleSeat(playerid);
-	if(Vehicle_IsLocked(vehicleid)&& !Player_IsAdminDuty(playerid))
+	if(Vehicle_IsLocked(vehicleid) && !Player_IsAdminDuty(playerid))
 	{
 		if(Vehicle_GetOwnerID(vehicleid) != Character_GetID(playerid))// && (!IsABike(vehicleid) && !IsAMotorBike(vehicleid)))
 		{

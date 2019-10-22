@@ -24,15 +24,13 @@ stock Character_OpenNearDoor(playerid)
 {
 
     new 
-        worldid = Character_GetVirtualWorld(playerid);
-    new
-        Pool:furnitures = Furniture_GetAllInWorld(worldid),
+        worldid = Character_GetVirtualWorld(playerid),
         Float:x, Float:y, Float:z, Float:rotX, Float:rotY, Float:rotZ
     ;
 
-    for_pool(i : furnitures)
+    for_furnitures(i : worldid)
     {
-        new objectid = iter_get_value(i);
+        new objectid = iter_get(i);
         if(!IsValidDynamicObject(objectid))
             continue;
 		if(Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_WORLD_ID) != worldid)

@@ -22,7 +22,8 @@
 		"Southclaws/samp-logger",
 		"pBlueG/SA-MP-MySQL",
 		"AGraber/pawn-plus-mysql",
-		"oscar-broman/SKY"
+		"oscar-broman/SKY",
+		"AGraber/samp-async-dialogs"
 	],
 	"local": true,
 	"builds": [
@@ -45,7 +46,8 @@
 			"args": [
 				"-;+",
 				"-(+",
-				"-O1"
+				"-O1",
+				"-d3"
 			],
 			"includes": [
 				"dependencies/legacy",

@@ -1,9 +1,15 @@
+
+#if defined _furniture_included
+	#endinput
+#endif
+#define _furniture_included
+
+#define for_furnitures(%0:%1) for(new List:__def__list__ = List:map_get(GetFurnituresMap(), %1), Iter:%0=list_iter(__def__list__);iter_inside(%0);iter_move_next(%0))
+
 #include <furniture_system\furnitures_list>
 #include <furniture_system\components\door>
 /*
-    TODO: Must fix local ids (/furnitureid) when editing exteriors
     Should I create a separate Map for exterior maps? NO
-    
 */
 
 #include <YSI_Coding\y_hooks>
@@ -23,8 +29,7 @@ static
     List:FurnitureListItem[MAX_PLAYERS],
     List:FurnitureLabels[MAX_PLAYERS],
     ShowingLabelsForWorld[MAX_PLAYERS] = {-1, ...},
-    Map:Furnitures, // Map<worldid, Pool<objectid>>
-    Map:ObjectIDToIndex // <objectid, pool index id> used with pool with all furnitures to avoid looping on each element to find the index.
+    Map:Furnitures // Map<worldid, List<objectid>>
 ;
 
 static enum e_FurnitureCustomData
@@ -45,14 +50,16 @@ static
 
 #include <furniture_system\commands>
 
+stock Map:GetFurnituresMap()
+{
+    return Furnitures;
+}
+
 hook OnGameModeInit()
 {
     Furnitures = map_new();
-    ObjectIDToIndex = map_new();
-
     mysql_tquery(gMySQL, "UPDATE `furnitures` SET object_id = '0' WHERE 1");
     Furniture_Load(0);
-
     return 1;
 }
 
@@ -301,7 +308,6 @@ Dialog:Dialog_FurnitureOptions(playerid, response, listitem, inputtext[])
     if(!response)
     {
         Character_ShowFurnitures(playerid, FurniturePage{playerid});
-        SelectedFurniture[playerid] = -1;
         return 1;   
     }
     
@@ -454,23 +460,18 @@ stock Furniture_Store(objectid, furnitureid, createdBy = -1, linked_to = -1)
 stock Furniture_Load(worldid)
 {
     if(Furniture_AreLoaded(worldid))
-        return printf("Furnitures already loaded for world %d.", worldid);
+        return printf("[Furniture] Furnitures already loaded for world %d.", worldid);
     
-    map_add(Furnitures, worldid, pool_new());
+    map_add(Furnitures, worldid, list_new());
     inline OnLoad()
     {
-        
-        /*
-        // Commented because we create Pool and then add it to Furnitures map.
-        new rows = cache_num_rows();
-        if(!rows)
-            return 1;*/
         new rows = cache_num_rows();
         new modelid, vw, interior,
             Float:x, Float:y, Float:z,
             Float:rx, Float:ry, Float:rz
             ;
-        new Pool:pool = Pool:map_get(Furnitures, worldid);
+        
+        new List:list = List:map_get(Furnitures, worldid);
 
         for(new i = 0; i < rows; ++i)
         {
@@ -498,18 +499,18 @@ stock Furniture_Load(worldid)
             cache_get_value_name_int(i, "linked_to", FurnitureCustomData[FURNITURE_LINKED_TO]);
 
             new objectid = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, vw, interior);
+
             if(IsOpenableDoor(modelid))
                 printf("Create object: %d - ID: %d", objectid, FurnitureCustomData[FURNITURE_DATABASE_ID]);
+            
             Furniture_LoadTextures(objectid);
 
             Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
             
             Furniture_SetObject(objectid, FurnitureCustomData[FURNITURE_DATABASE_ID]);
 
-            map_add(ObjectIDToIndex, objectid, pool_add(pool, objectid));
+            list_add(list, objectid);
         }
-        
-        map_add(Furnitures, worldid, pool);
 
         //printf("%d furnitures loaded for world %d.", rows, worldid);
     }
@@ -519,9 +520,9 @@ stock Furniture_Load(worldid)
 }
 
 // Checks if furnitures are loaded for a specific world
-stock Furniture_AreLoaded(world)
+stock Furniture_AreLoaded(worldid)
 {
-    return map_valid(Furnitures) && map_has_key(Furnitures, world) && pool_valid(Pool:map_get(Furnitures, world));
+    return map_has_key(Furnitures, worldid) && list_valid(List:map_get(Furnitures, worldid));
 }
 
 stock Furniture_SetObject(objectid, dbid)
@@ -647,9 +648,9 @@ stock Furniture_UpdateInfoList(playerid)
     if(!Furniture_IsShowingInfo(playerid))
         return 0;
     new world = Character_GetVirtualWorld(playerid),
-        Pool:furnitures = Pool:map_get(Furnitures, world);
+        List:furnitures = List:map_get(Furnitures, world);
     
-    if(!pool_valid(furnitures))
+    if(!list_valid(furnitures))
         return 0;
 
     for_list(i : FurnitureLabels[playerid])
@@ -671,10 +672,10 @@ stock Furniture_UpdateInfoList(playerid)
 
     printf("Showing ids for world %d", ShowingLabelsForWorld[playerid]);
 
-    new text[128 + MAX_PLAYER_NAME], Text3D:labelid;
-    for_pool(i : furnitures)
+    new text[128 + MAX_PLAYER_NAME], Text3D:labelid, index = 0;
+    for_list(i : furnitures)
     {
-        new objectid = iter_get_value(i), index = iter_get_key(i);
+        new objectid = iter_get(i);
 
         Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
 
@@ -694,6 +695,8 @@ stock Furniture_UpdateInfoList(playerid)
         labelid = CreateDynamic3DTextLabel(text, -1, x, y, z + 0.2, 20.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), playerid);  
 
         list_add(FurnitureLabels[playerid], labelid);
+
+        index++;
     }
     
     return 1;
@@ -702,7 +705,7 @@ stock Furniture_UpdateInfoList(playerid)
 // Returns furning house
 stock House:Character_CanFurnish(playerid, bool:outsideCheck = false)
 {
-    new House:currentHouse = Character_GetHouse(playerid, true);
+    new House:currentHouse = Character_GetCurrentHouse(playerid);
     if(outsideCheck && !House_IsValid(currentHouse))
     {
         new Float:x, Float:y, Float:z;
@@ -755,12 +758,12 @@ stock Character_GetFurnitureCount(playerid)
     new worldid = Character_GetVirtualWorld(playerid);
     if(map_has_key(Furnitures, worldid))
     {
-        new Pool:pool = Pool:map_get(Furnitures, worldid);
+        new List:list = List:map_get(Furnitures, worldid);
         if(worldid == 0) // So exterior
         {
             return Furniture_GetExtCount(FurnitureLinkedTo[playerid]);
         }
-        return pool_size(pool);
+        return list_size(list);
     }
     return 0;
 }
@@ -804,30 +807,31 @@ stock Internal_RemoveFurniture(worldid, objectid)
 
     DestroyDynamicObject(objectid);
 
-    if(map_has_key(Furnitures, worldid) && map_has_key(ObjectIDToIndex, objectid))
+    if(map_has_key(Furnitures, worldid))
     {
-        new Pool:pool = Pool:map_get(Furnitures, worldid);
-        pool_remove(pool, map_get(ObjectIDToIndex, objectid));
-        map_remove(ObjectIDToIndex, objectid);
+        new List:list = List:map_get(Furnitures, worldid);
+        new index = list_find(list, objectid);
+        if(index != -1)
+            list_remove(list, index);
     }
     return 1;
 }
 
-stock Furniture_AddToWorld(objectid, worldid)
+stock bool:Furniture_AddToWorld(objectid, worldid)
 {
     if(map_has_key(Furnitures, worldid))
     {
-        new Pool:pool = Pool:map_get(Furnitures, worldid);
-        map_add(ObjectIDToIndex, objectid, pool_add(pool, objectid));
+        new List:list = List:map_get(Furnitures, worldid);
+        list_add(list, objectid);
         foreach(new i : Player)
         {
             if(Character_GetVirtualWorld(i) != worldid)
                 continue;
             Furniture_UpdateInfoList(i);
         }
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
 
 stock Furniture_ShowCategoryList(playerid)
@@ -837,24 +841,14 @@ stock Furniture_ShowCategoryList(playerid)
     return 1;
 }
 
-stock Furniture_IsValidLocalId(worldid, localid)
-{
-    new Pool:pool;
-    
-    if(!map_get_safe(Furnitures, worldid, pool) || !pool_has(pool, localid))
-        return 0;
-    
-    return 1;
-}
-
 stock Furniture_GetFurnitureObjectID(worldid, localid)
 {
-    new Pool:pool;
+    new List:list;
     
-    if(!map_get_safe(Furnitures, worldid, pool) || !pool_has(pool, localid))
+    if(!map_get_safe(Furnitures, worldid, list) || localid < 0 || localid >= list_size(list))
         return -1;
     
-    return pool_get(pool, localid);
+    return list_get(list, localid);
 }
 
 stock Furniture_Rename(worldid, objectid, const name[])
@@ -872,7 +866,8 @@ stock Furniture_Rename(worldid, objectid, const name[])
 
 stock Furniture_CreateLabels(playerid)
 {
-    FurnitureLabels[playerid] = list_new();
+    if(!list_valid(FurnitureLabels[playerid]))
+        FurnitureLabels[playerid] = list_new();
     Furniture_UpdateInfoList(playerid);
     return 1;
 }
@@ -979,7 +974,6 @@ stock Character_ShowFurnitures(playerid, page)
     
     FurniturePage{playerid} = page;
 
-
     new 
         world = Character_GetVirtualWorld(playerid),
         linked_to = world
@@ -995,11 +989,11 @@ stock Character_ShowFurnitures(playerid, page)
     }
     
     new 
-        Pool:furnituresInWorld = Pool:map_get(Furnitures, world), 
-        rows = pool_size(furnituresInWorld)
+        List:furnituresInWorld = List:map_get(Furnitures, world), 
+        rows = list_size(furnituresInWorld)
     ;
     
-    if(!pool_valid(furnituresInWorld))
+    if(!list_valid(furnituresInWorld) || rows <= 0)
         return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono mobili.");
     
     FurnitureWorldID[playerid] = FurnitureLinkedTo[playerid] = linked_to;
@@ -1015,25 +1009,15 @@ stock Character_ShowFurnitures(playerid, page)
     //for(new i = page * MAX_FURNITURE_PER_PAGE; i < rows; ++i)
     new 
         objectid = 0,
-        counter = 0,
         startIndex = page * MAX_FURNITURE_PER_PAGE,
-        lastIndex = startIndex + MAX_FURNITURE_PER_PAGE,
-        playerFurnituresCount
+        lastIndex = (startIndex + MAX_FURNITURE_PER_PAGE)
         ;
-        
-    for_pool(i : furnituresInWorld)
-    {
-        
-        if(counter < startIndex)
-        {
-            counter++;
-            continue;
-        }
-
-        if(counter == lastIndex)
-            break;
-
-        objectid = iter_get_value(i);
+    if(lastIndex > list_size(furnituresInWorld))
+        lastIndex = list_size(furnituresInWorld);
+    //for_list(i : furnituresInWorld)
+    for(new i = startIndex; i < lastIndex; ++i)
+    {   
+        objectid = list_get(furnituresInWorld, i);
         
         if(Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_WORLD_ID) != world)
             continue;
@@ -1044,15 +1028,10 @@ stock Character_ShowFurnitures(playerid, page)
             continue;
 
         new modelid = Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_MODEL_ID);
-        str += str_format("%s [ID: %d - Model ID: %d]\n", FurnitureCustomData[FURNITURE_NAME], iter_get_key(i), modelid);
+        str += str_format("%s [ID: %d - Model ID: %d]\n", FurnitureCustomData[FURNITURE_NAME], i, modelid);
 
         list_add(FurnitureListItem[playerid], objectid);
-        counter++;
-        playerFurnituresCount++;
     }
-    
-    if(playerFurnituresCount <= 0)
-        return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono mobili piazzati.");
 
     if(rows > page * MAX_FURNITURE_PER_PAGE + MAX_FURNITURE_PER_PAGE)
         str += String:str_format(">>> Pagina %d\n", page + 2);
@@ -1075,12 +1054,12 @@ stock House_RemoveExteriorFurnitures(House:house)
         return 0;
     new 
         worldid = House_GetExitWorld(house),
-        Pool:furnituresInWorld = Pool:map_get(Furnitures, 0),
+        List:furnituresInWorld = List:map_get(Furnitures, 0),
         objectid = 0
     ;
-    for_pool(i : furnituresInWorld)
+    for_list(i : furnituresInWorld)
     {
-        objectid = iter_get_value(i);
+        objectid = iter_get(i);
         if(!IsValidDynamicObject(objectid))
             continue;
         Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
@@ -1091,7 +1070,7 @@ stock House_RemoveExteriorFurnitures(House:house)
     return 1;
 }
 
-// Should I delete Pool when removing all furnitures?
+// Should I delete List when removing all furnitures?
 stock House_RemoveAllfurnitures(House:house)
 {
     if(!House_IsValid(house))
@@ -1102,12 +1081,12 @@ stock House_RemoveAllfurnitures(House:house)
     if(!map_has_key(Furnitures, worldid))
         return 1;
     new
-        Pool:furnituresInWorld = Pool:map_get(Furnitures, worldid),
+        List:furnituresInWorld = List:map_get(Furnitures, worldid),
         objectid = 0
     ;
-    for_pool(i : furnituresInWorld)
+    for_list(i : furnituresInWorld)
     {
-        objectid = iter_get_value(i);
+        objectid = iter_get(i);
         if(!IsValidDynamicObject(objectid))
             continue;
         Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
@@ -1121,12 +1100,12 @@ stock House_RemoveAllfurnitures(House:house)
 stock Furniture_GetExtCount(linkedtoWorld)
 {
     new 
-        Pool:pool = Pool:map_get(Furnitures, 0),
+        List:list = List:map_get(Furnitures, 0),
         objectid,
         count = 0;
-    for_pool(i : pool)
+    for_list(i : list)
     {
-        objectid = iter_get_value(i);
+        objectid = iter_get(i);
         if(objectid <= 0)
             continue;
         Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);  
@@ -1148,11 +1127,11 @@ stock Character_GetFurnitureLinkedTo(playerid)
     return FurnitureLinkedTo[playerid];
 }
 
-stock Pool:Furniture_GetAllInWorld(worldid)
+stock List:Furniture_GetListByWorld(worldid)
 {
     if(!map_has_key(Furnitures, worldid))
-        return Pool:0;
-    return Pool:map_get(Furnitures, worldid);
+        return List:0;
+    return List:map_get(Furnitures, worldid);
 }
 
 stock Furniture_SetOpened(objectid, bool:s)

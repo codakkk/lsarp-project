@@ -149,10 +149,14 @@ CMD:vernicia(playerid, params[])
     return 1;
 }
 
-stock Character_AcceptVehicleSpray(playerid)
+static Character_AcceptVehicleSpray(playerid)
 {
-    if(!Request_IsPending(playerid, REQUEST_TYPE_VEHICLE_SPRAY))
+    
+    
+    if(!Request_IsPending(playerid, REQUEST_TYPE_VEHICLE_SPRAY) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_VEHICLE_SPRAY))
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di riverniciatura attiva."), 0;
+        
+
     if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_VEHICLE_SPRAY), 5.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
     
@@ -181,37 +185,46 @@ stock Character_AcceptVehicleSpray(playerid)
     return 1;
 }
 
-stock Character_AcceptRepair(playerid)
+hook OnCharacterAccept(playerid, stringHash)
 {
-    if(!Request_IsPending(playerid, REQUEST_TYPE_REPAIR))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di riparazione attiva."), 0;
+    if(stringHash == _I<verniciatura> || stringHash == _I<vern>)
+	{
+        Character_AcceptVehicleSpray(playerid);
+    }
+    else if(stringHash == _I<riparazione>)
+    {
+
+        if(!Request_IsPending(playerid, REQUEST_TYPE_REPAIR) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_REPAIR))
+            return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di riparazione attiva."), 0;
+        
+        if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_REPAIR), 5.0))
+            return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
+
+
+        new senderid = Request_GetSender(playerid, REQUEST_TYPE_REPAIR),
+            price = Request_GetAmount(playerid, REQUEST_TYPE_REPAIR),
+            vehicleid = GetPlayerVehicleID(playerid)
+        ;
+
+        if(!Character_CanInteract(senderid))
+            return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non puo' ripararti il veicolo al momento.");
+
+        Character_GiveMoney(playerid, -price, "repair");
+        Character_GiveMoney(senderid, price, "repair");
+
+        Character_DecreaseItemAmount(senderid, gItem_MechanicalComponents, MATERIALS_PER_REPAIR);
+        
+        SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s ha accettato la tua richiesta di riparazione. Hai guadagnato $%d.", Character_GetRolePlayName(playerid), price);
+        SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "La riparazione ti è costata: %d materiali meccanici.", MATERIALS_PER_REPAIR);
+
+        SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "%s ha riparato il tuo veicolo (%s) per $%d.", Character_GetRolePlayName(senderid), Vehicle_GetName(vehicleid), price);
+
+        Vehicle_Repair(vehicleid);
+
+        Request_Reset(playerid, REQUEST_TYPE_REPAIR);
+        Request_Reset(senderid, REQUEST_TYPE_REPAIR);
+    }
     
-    if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_REPAIR), 5.0))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
-
-
-    new senderid = Request_GetSender(playerid, REQUEST_TYPE_REPAIR),
-        price = Request_GetAmount(playerid, REQUEST_TYPE_REPAIR),
-        vehicleid = GetPlayerVehicleID(playerid)
-    ;
-
-    if(!Character_CanInteract(senderid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non puo' ripararti il veicolo al momento.");
-
-    Character_GiveMoney(playerid, -price, "repair");
-    Character_GiveMoney(senderid, price, "repair");
-
-    Character_DecreaseItemAmount(senderid, gItem_MechanicalComponents, MATERIALS_PER_REPAIR);
-    
-    SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s ha accettato la tua richiesta di riparazione. Hai guadagnato $%d.", Character_GetRolePlayName(playerid), price);
-    SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "La riparazione ti è costata: %d materiali meccanici.", MATERIALS_PER_REPAIR);
-
-    SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "%s ha riparato il tuo veicolo (%s) per $%d.", Character_GetRolePlayName(senderid), Vehicle_GetName(vehicleid), price);
-
-    Vehicle_Repair(vehicleid);
-
-    Request_Reset(playerid, REQUEST_TYPE_REPAIR);
-    Request_Reset(senderid, REQUEST_TYPE_REPAIR);
     return 1;
 }
 

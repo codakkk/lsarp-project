@@ -1,3 +1,4 @@
+#include <YSI_Coding\y_hooks>
 
 flags:fcmds(CMD_USER);
 CMD:fcmds(playerid, params[])
@@ -240,8 +241,13 @@ CMD:finvita(playerid, params[])
 	return 1;
 }
 
-stock Character_AcceptFaction(playerid)
+hook OnCharacterAccept(playerid, stringHash)
 {
+    if(stringHash != _I<fazione> && stringHash != _I<faz> && stringHash != _I<faction>)
+		return 0;
+	
+	if(!Request_IsPending(playerid, REQUEST_TYPE_FACTION) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_FACTION))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta fazione attiva.");
 	if(Faction_IsValid(Character_GetFaction(playerid)))
 		return SendClientMessage(playerid, COLOR_ERROR, "Fai già parte di una fazione.");
 	

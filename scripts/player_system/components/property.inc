@@ -1,6 +1,5 @@
 #include <house_system\core>
 #include <pickup_system\core>
-
 #include <YSI_Coding\y_hooks>
 
 static
@@ -79,13 +78,36 @@ hook OnCharacterTryBuy(playerid)
 {
 	new House:house = Character_GetHouse(playerid, false);
 	if(House_IsValid(house))
-		return Character_BuyHouse(playerid, house);
+		return Dialog_Show_s(playerid, Dialog_BuyHouse, DIALOG_STYLE_MSGBOX, str_new(House_GetAddress(house)), str_format("Sei sicuro di voler acquistare questa casa per $%d?", House_GetPrice(house)), "Acquista", "Annulla");
 				
-	new Building:building, E_ELEMENT_TYPE:type;
-	if(Character_GetNearestPickup(playerid, building, type) && type == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_IsValid(building))
-		return Character_BuyBuilding(playerid, building);
+	new Building:building = Character_GetBuilding(playerid, false);
+	if(Building_IsValid(building))
+		return Dialog_Show_s(playerid, Dialog_Buybuilding, DIALOG_STYLE_MSGBOX, str_new(Building_GetAddress(building)), str_format("Sei sicuro di voler acquistare questa biz per $%d?", Building_GetPrice(building)), "Acquista", "Annulla");
 	return 1;
 }
+
+Dialog:Dialog_BuyHouse(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+		return 0;
+	new House:house = Character_GetHouse(playerid, false);
+	if(!House_IsValid(house))
+		return 0;
+	Character_BuyHouse(playerid, house);
+	return 1;
+}
+
+Dialog:Dialog_BuyBuilding(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+		return 0;
+	new Building:building = Character_GetBuilding(playerid, false);
+	if(!Building_IsValid(building))
+		return 0;
+	Character_BuyBuilding(playerid, building);
+	return 1;
+}
+
 
 CMD:myhouses(playerid, params[])
 {
@@ -203,29 +225,20 @@ stock Character_BuyHouse(playerid, House:house)
     if(House_GetOwnerID(house) != 0)
 	   return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
 
-    //if(Character_HasRentHouse(playerid))
-	   //return SendClientMessage(playerid, COLOR_ERROR, "Sei già proprietario di una casa.");
-
     new price = House_GetPrice(house);
     if(Character_GetMoney(playerid) < price)
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi per acquistare questa proprietà.");
 
-    House_SetOwner(house, playerid);
+	if(!Character_CanOwnHouse(playerid, house))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi acquistare ulteriori immobili.");
 
-    Character_GiveMoney(playerid, -price, "Character_BuyHouse");
-
-    SendFormattedMessage(playerid, 0x33AA33FF, "Hai acquistato l'immobile situato a %s.", House_GetAddress(house));
-    return 1;
-}
-
-stock Character_ShowHouseDialog(playerid)
-{
-	new House:house = Character_GetHouseMenu(playerid);
-	if(House_IsValid(house))
+    if(House_SetOwner(house, playerid))
 	{
-		return Dialog_Show(playerid, Dialog_House, DIALOG_STYLE_LIST, "Casa", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nCambia Interior\nLista Affittuari\nAttiva/Disattiva Affitto\nPrezzo Affitto", "Continua", "Chiudi");
+    	Character_GiveMoney(playerid, -price, "Character_BuyHouse");
+    	
+		SendFormattedMessage(playerid, 0x33AA33FF, "Hai acquistato l'immobile situato a %s.", House_GetAddress(house));
 	}
-	return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno di casa tua."), 0;
+    return 1;
 }
 
 stock bool:Character_AddOwnedBuilding(playerid, Building:building)
@@ -376,9 +389,10 @@ stock Character_GetOwnedHouseCount(playerid)
 
 stock bool:Character_CanOwnHouse(playerid, House:house)
 {
+	#pragma unused house
 	static const maxBuildings[] = {2, 3, 4, 5};
-	new max = maxBuildings[Account_GetPremiumLevel(playerid)];
-	if(Character_GetOwnedHouseCount(playerid) >= max)
+	new m = maxBuildings[Account_GetPremiumLevel(playerid)];
+	if(Character_GetOwnedHouseCount(playerid) >= m)
 		return false;
 	return true;
 }

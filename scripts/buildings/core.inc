@@ -681,9 +681,12 @@ stock Building_GetAddress(Building:building)
     return zone;
 }
 
-stock Character_AcceptBuilding(playerid)
+hook OnCharacterAccept(playerid, stringHash)
 {
-	if(!Request_IsPending(playerid, REQUEST_TYPE_BUILDING))
+    if(stringHash != _I<edificio> && stringHash != _I<edi> && stringHash != _I<biz>)
+		return 0;
+	
+	if(!Request_IsPending(playerid, REQUEST_TYPE_BUILDING) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_BUILDING))
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di riparazione attiva."), 0;
 	
     if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_BUILDING), 5.0))

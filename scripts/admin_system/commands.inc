@@ -93,8 +93,8 @@ CMD:aduty(playerid, params[])
 	{
 		Player_SetAdminDuty(playerid, false);
 		SetPlayerName(playerid, Character_GetOOCName(playerid));
-		Character_SetHealth(playerid, 100);
-		Character_SetArmour(playerid, 0);
+		//Character_SetHealth(playerid, 100);
+		//Character_SetArmour(playerid, 0);
 		SendMessageToAdmins(0, 0xFF6347FF, "AdmCmd: %s (%d) non è più in servizio.", Account_GetName(playerid), playerid);
 		
 		SetPlayerColor(playerid, LastColor[playerid]);
@@ -110,8 +110,7 @@ CMD:aduty(playerid, params[])
 		
 		Player_SetAdminDuty(playerid, true);
 		SetPlayerName(playerid, Account_GetName(playerid));
-		Character_SetHealth(playerid, 99999.0);
-		Character_SetArmour(playerid, 99999.0);
+		
 		//pc_cmd_jetpack(playerid, NULL);
 		SendMessageToAdmins(0, 0xFF6347FF, "AdmCmd: %s (%d) è in servizio.", Account_GetName(playerid), playerid);
 		

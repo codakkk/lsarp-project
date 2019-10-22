@@ -9,6 +9,7 @@ enum _:e_PendingType
 	REQUEST_TYPE_VEHICLE_SPRAY,
 	REQUEST_TYPE_SEARCH,
 	REQUEST_TYPE_BUILDING,
+	REQUEST_TYPE_HOUSE,
 	REQUEST_TYPE_CARE,
 	REQUEST_TYPE_FACTION,
 	REQUEST_TYPE_VEHICLE,
@@ -98,11 +99,14 @@ ptask OnRequestUpdateTimer[1000](playerid)
 	return 1;
 }
 
-stock Character_SetRequest(byPlayer, toPlayer, type, GLOBAL_TAG_TYPES:item = 0, amount = 0, slot = -1)
+stock bool:Character_SetRequest(byPlayer, toPlayer, type, GLOBAL_TAG_TYPES:item = 0, amount = 0, slot = -1)
 {
 	if(! (REQUEST_TYPE_NONE < type < REQUEST_TYPE_LAST))
-		return 1;
+		return false;
 	
+	if(Request_IsPending(byPlayer, type) || Request_IsPending(toPlayer, type))
+		return false;
+
 	PendingRequestInfo[byPlayer][type][Pending] = PendingRequestInfo[toPlayer][type][Pending] = 1;
 
 	PendingRequestInfo[byPlayer][type][ToPlayer] = toPlayer;
@@ -120,7 +124,7 @@ stock Character_SetRequest(byPlayer, toPlayer, type, GLOBAL_TAG_TYPES:item = 0, 
 	PendingRequestInfo[byPlayer][type][Amount] = PendingRequestInfo[toPlayer][type][Amount] = amount;
 
 	PendingRequestInfo[byPlayer][type][Type] = PendingRequestInfo[toPlayer][type][Type] = type;
-	return 1;
+	return true;
 }
 
 //stock Character_SetPendingRequest(playerid, bool:)
@@ -130,6 +134,13 @@ stock Request_IsPending(playerid, type)
 	if(! (REQUEST_TYPE_NONE < type < REQUEST_TYPE_LAST))
 		return 0;
 	return PendingRequestInfo[playerid][type][Pending];
+}
+
+stock bool:Character_CanAcceptRequest(playerid, type)
+{
+	if(!Request_IsPending(playerid, type) || Request_GetSender(playerid, type) == playerid)
+		return false;
+	return true;
 }
 
 stock Request_GetItem(playerid, reqType)
@@ -162,9 +173,12 @@ stock Request_GetReceiver(playerid, reqType)
 	return PendingRequestInfo[playerid][reqType][ToPlayer];
 }
 
-stock Character_AcceptItemRequest(playerid)
+hook OnCharacterAccept(playerid, stringHash)
 {
-	if(!Request_IsPending(playerid, REQUEST_TYPE_ITEM))
+    if(stringHash != _I<oggetto> && stringHash != _I<item>)
+		return 0;
+	
+	if(!Request_IsPending(playerid, REQUEST_TYPE_ITEM) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_ITEM))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta attiva.");
 
 	if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_ITEM), 5.0))

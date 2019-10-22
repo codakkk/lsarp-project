@@ -29,6 +29,12 @@ hook OnCharacterClearData(playerid)
     return 1;
 }
 
+CMD:job(playerid, params[])
+{
+    Character_SetJobType(playerid, JOB_TYPE_TAXI);
+    return 1;
+}
+
 hook OnPlayerExitVehicle(playerid, vehicleid)
 {
     if(TaxiPassenger[playerid] != INVALID_PLAYER_ID)
@@ -44,7 +50,6 @@ timer EachSecondTaxiUpdate[1000](playerDoingTaxi, playerPassenger)
     if(vehicleid == GetPlayerVehicleID(playerPassenger) && !IsPlayerInRangeOfPoint(playerPassenger, 60.0, StartingPosX[playerPassenger], StartingPosY[playerPassenger], StartingPosZ[playerPassenger]))
     {
         TaxiPayment[playerDoingTaxi] += TaxiPrice[playerPassenger];
-
         if(Character_GetMoney(playerPassenger) < TaxiPrice[playerPassenger])
         {
             RemovePlayerFromVehicle(playerPassenger);
@@ -61,6 +66,7 @@ timer EachSecondTaxiUpdate[1000](playerDoingTaxi, playerPassenger)
             StartingPosX[playerPassenger] = StartingPosY[playerPassenger] = StartingPosZ[playerPassenger] = 0.0;
 
             stop TaxiTimer[playerDoingTaxi];
+            TaxiTimer[playerDoingTaxi] = Timer:0;
         }
     }
 }
@@ -72,7 +78,7 @@ hook function Character_EnterJobDuty(playerid)
     
     new vehicleid = GetPlayerVehicleID(playerid);
 
-    if(vehicleid <= 0 || IsTaxiVehicle(vehicleid) || !Vehicle_IsOwner(vehicleid, playerid, false))
+    if(vehicleid <= 0 || !IsTaxiVehicle(vehicleid) || !Vehicle_IsOwner(vehicleid, playerid, false))
     {
         SendClientMessage(playerid, COLOR_ERROR, "Devi essere su un tuo taxi per poter utilizzare questo comando.");
         return false;
@@ -136,6 +142,9 @@ CMD:tassametro(playerid, params[])
 
     if(GetPlayerVehicleID(id) != vehicleid)
         return SendClientMessage(playerid, COLOR_ERROR, "Questo giocatore non è nel tuo taxi.");
+
+    if(Request_IsPending(playerid, REQUEST_TYPE_TAXI) || Request_IsPending(id, REQUEST_TYPE_TAXI))
+        return SendClientMessage(playerid, COLOR_ERROR, "Tu od il giocatore avete già una richiesta attiva.");
 
     if(price < 0 || price > 30)
         return SendClientMessage(playerid, COLOR_ERROR, "Prezzo non valido. ($0 - $30).");
@@ -205,7 +214,7 @@ hook OnCharacterAccept(playerid, hash)
 
     GetPlayerPos(playerid, StartingPosX[playerid], StartingPosY[playerid], StartingPosZ[playerid]);
 
-    defer EachSecondTaxiUpdate(senderid, playerid);
+    TaxiTimer[senderid] = repeat EachSecondTaxiUpdate(senderid, playerid);
 
     Request_Reset(playerid, REQUEST_TYPE_TAXI);
     Request_Reset(senderid, REQUEST_TYPE_TAXI);    

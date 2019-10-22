@@ -62,8 +62,6 @@ static
 
 static SelectedPage[MAX_PLAYERS char], List:PlayerRenters[MAX_PLAYERS], SelectedRenter[MAX_PLAYERS];
 
-static const RENTERS_PER_PAGE = 10;
-
 stock Map:GetHousesMap()
 {
     return Houses;
@@ -76,12 +74,16 @@ hook OnGameModeInit()
     return 1;
 }
 
-stock bool:Character_CanUseHouseMenu(playerid, House:house)
+stock bool:Character_CanUseHouseMenu(playerid, House:house, bool:onlyOwner = false)
 {
 	if(!House_IsValid(house))
 		return false;
-	if(Player_IsAdminDuty(playerid) || Character_DoesOwnHouse(playerid, house))
+	if(Player_IsAdminDuty(playerid))
 		return true;
+    if(!onlyOwner && Character_GetRentHouse(playerid) == house)
+        return true;
+    if(Character_DoesOwnHouse(playerid, house))
+        return true;
 	return false;
 }
 
@@ -181,6 +183,20 @@ hook OnPlayerEnterDynamicCP(playerid, checkpointid)
             SendFormattedMessage(playerid, 0x33AA33FF, "Prezzo: $%s", FormatNumber(House_GetPrice(house)));
             SendClientMessage(playerid, -1, "/compra");
         }
+        else if(Player_IsAdminDuty(playerid))
+        {
+            inline OnLoad()
+            {
+                if(cache_num_rows() <= 0)
+                    return 0;
+                
+                new name[MAX_PLAYER_NAME];
+                cache_get_value_name(0, "name", name);
+                SendFormattedMessage(playerid, COLOR_ADMIN, "[Admin] Proprietario: %s", name);
+            }
+            MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT name FROM characters WHERE id = '%d'", House_GetOwnerID(house));
+        }
+
         SendClientMessage(playerid, 0x33AA33FF, House_GetAddress(house));
         SendClientMessage(playerid, -1, "Comandi disponibili: /entra, /ds(hout), /ddo, /bussa");
     }
@@ -342,7 +358,7 @@ stock House_GetID(House:house)
 
 stock bool:House_SetOwner(House:house, playerid)
 {
-    if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid) || Character_HasRentHouse(playerid))
+    if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid))
 	   return false;
     
     House_ResetOwner(house);
@@ -670,10 +686,11 @@ stock House_LoadAll()
     MySQL_PQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `houses` ORDER BY id");
 }
 
-stock House_ShowRentersList(House:house, playerid, page = 0)
+/*stock House_ShowRentersList(House:house, playerid, page = 0)
 {
     if(page < 0)
         return 0;
+    
     inline OnLoad()
     {
         if(cache_num_rows() <= 0)
@@ -722,7 +739,10 @@ Dialog:Dialog_HouseRentersList(playerid, response, listitem, inputtext[])
 		return 0;
     
     if(!response)
-        return Character_ShowHouseDialog(playerid);
+    {
+        Character_ShowHouseDialog(playerid);
+        return 1;
+    } 
     if(SelectedPage{playerid} > 0)
     {
         if(listitem == 0)
@@ -793,4 +813,4 @@ Dialog:Dialog_HouseRenterAction(playerid, response, listitem, inputtext[])
         }
     }
     return 1;
-}
+}*/

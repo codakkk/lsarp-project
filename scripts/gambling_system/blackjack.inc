@@ -540,12 +540,16 @@ stock BJ_CreateTD()
 	TextDrawSetShadow(GlobalBJ_TD[6], 0);
 }
 
-stock Character_AcceptBlackJack(playerid)
+hook OnCHaracterAccept(playerid, stringHash)
 {
-    new senderid = Request_GetSender(playerid, REQUEST_TYPE_BLACKJACK);
-		
-    if(!Request_IsPending(playerid, REQUEST_TYPE_BLACKJACK) || senderid == playerid)
+	if(stringHash != _I<blackjack>)
+		return 0;
+	
+    if(!Request_IsPending(playerid, REQUEST_TYPE_BLACKJACK) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_BLACKJACK))
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai richieste per giocare a blackjack.");
+		
+	new senderid = Request_GetSender(playerid, REQUEST_TYPE_BLACKJACK);
+		
     
     if(!IsPlayerInRangeOfPlayer(playerid, senderid, 2.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è vicino a te.");

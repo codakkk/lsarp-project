@@ -250,12 +250,12 @@ static Internal_UpdateDeathState(playerid)
 
 stock Character_AcceptDeathState(playerid)
 {
+	if(!Character_IsInjured(playerid)) 
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei in sistema ferito.");
 	new deathTime = GetTickCount() - Character_GetDeathTime(playerid);
 	if(deathTime < INJURED_TIME_AS_SECONDS * 1000/*120000*/)
 		return SendFormattedMessage(playerid, COLOR_ERROR, "Devi aspettare ancora %d secondi prima di poter digitare il comando.", INJURED_TIME_AS_SECONDS - deathTime/1000);
 	
-	if(!Character_IsInjured(playerid)) 
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei in sistema ferito.");
 
 	Character_SetHealth(playerid, 0.0);
 	Character_SetDeathTime(playerid, 0);

@@ -165,43 +165,6 @@ CMD:accetta(playerid, params[])
 		{
 			Character_AcceptDeathState(playerid);
 		}
-		else if(hash == _I<cure>)
-		{
-			Character_AcceptCare(playerid);
-			//Log(Character_GetOOCName(playerid), Character_GetOOCName(senderid), "/accetta cure", senderid);
-		}
-		else if(hash == _I<oggetto>)
-		{
-			Character_AcceptItemRequest(playerid);
-		}
-		else if(hash == _I<riparazione>)
-		{
-			Character_AcceptRepair(playerid);
-		}
-		else if(hash == _I<verniciatura> || hash == _I<vern>)
-		{
-			Character_AcceptVehicleSpray(playerid);
-		}
-		else if(hash == _I<perquisizione> || hash == _I<perq>)
-		{
-			Character_AcceptSearch(playerid);
-		}
-		else if(hash == _I<edificio> || hash == _I<edi> || hash == _I<biz>)
-		{
-			Character_AcceptBuilding(playerid);
-		}
-		else if(hash == _I<fazione> || hash == _I<faz> || hash == _I<faction>)
-		{
-			Character_AcceptFaction(playerid);	
-		}
-		else if(hash == _I<veicolo> || hash == _I<veh> || hash == _I<vehicle>)
-		{
-			Character_AcceptVehicleRequest(playerid);	
-		}
-		else if(hash == _I<blackjack>)
-		{
-			Character_AcceptBlackJack(playerid);
-		}
 		else
 		{
 			CallLocalFunction("OnCharacterAccept", "dd", playerid, hash);
