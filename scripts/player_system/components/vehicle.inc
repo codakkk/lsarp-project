@@ -428,11 +428,6 @@ stock Character_ShowVehicleList(showToPlayer, playerid, bool:forceTextOnly = fal
 	return 1;
 }
 
-hook OnCharacterLoad(playerid)
-{
-	return 1;
-}
-
 hook OnCharacterClearData(playerid)
 {
 	TextDraw_ShowFuel(playerid, false);

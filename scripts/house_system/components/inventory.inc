@@ -9,12 +9,10 @@ static enum _:E_DIALOG_HOUSE_DATA
 }
 
 static 
-	Map:HouseInventory,
 	Map:PlayerHouseInventory; // <playerid, E_DIALOG_HOUSE_DATA>
 
 hook OnGameModeInit()
 {
-	HouseInventory = map_new();
 	PlayerHouseInventory = map_new();
 
 	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `house_inventory` ( \
@@ -39,22 +37,13 @@ hook OnHouseLoaded(House:house)
 
 stock Inventory:House_InitializeInventory(House:house)
 {
-	if(map_has_key(HouseInventory, House_GetID(house)))
-		return Inventory:0;
-	new Inventory:inv = Inventory_New(20);
-	map_add(HouseInventory, House_GetID(house), List:inv);
-	//printf("House %d List:inventory initialized");
+	new Inventory:inv = Inventory_New(ENTITY_TYPE_HOUSE, House_GetID(house), 20);
 	return inv;
 }
 
 stock Inventory:House_GetInventory(House:house)
 {
-	new Inventory:inv;
-	if(map_get_safe(HouseInventory, House_GetID(house), List:inv))
-	{
-		return inv;
-	}
-	return Inventory:0;
+	return Inventory_Get(ENTITY_TYPE_HOUSE, House_GetID(house));
 }
 
 stock House_SaveInventory(House:house)
@@ -96,12 +85,7 @@ stock House_ShowInventory(House:house, playerid)
 
 Dialog:Dialog_HouseInventory(playerid, response, listitem, inputtext[])
 {
-	if(!response)
-    {
-		Character_ShowHouseDialog(playerid);
-		return 1;
-	}
-	
+	if(!response) return 1;
     
     Internal_ShowHouseSlotAction(playerid, listitem);
 	return 1;
@@ -200,7 +184,7 @@ Dialog:HouseInventoryDepSelectItem(playerid, response, listitem, inputtext[])
 		Inventory:inventoryRef = Internal_GetInventory(playerid),
 		itemid = Character_GetSlotItem(playerid, listitem),
 		amount = Character_GetSlotAmount(playerid, listitem),
-		extra = Character_GetSlotExtra(playerid, Internal_GetSlotID(playerid), 0)
+		extra = Character_GetSlotExtra(playerid, listitem, 0)
 	;
 	if(ServerItem_IsUnique(itemid) || amount == 1)
 	{

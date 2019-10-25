@@ -354,6 +354,13 @@ stock Float:FuelItem_GetAmount(itemid)
 	return float(ServerItem_GetExtra(itemid, 0));
 }
 
+SSCANF:slotid(string[])
+{
+	new value = strval(string);
+	value--;
+	return value;
+}
+
 SSCANF:item(string[])
 {
 	// probably an ID

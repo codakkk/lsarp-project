@@ -3,9 +3,7 @@
 
 #include <YSI_Coding\y_hooks>
 
-static 
-	Map:PlayerInventory, 
-	pInventoryBag[MAX_PLAYERS],
+static
 	SelectedListItem[MAX_PLAYERS]
 ;
 forward OnCharacterUseItem(playerid, slotid, itemid);
@@ -14,44 +12,29 @@ forward OnCharacterGiveItem(playerid, itemid, amount, extra, Map:tempExtra);
 
 // #define Character_%0(%1, Inventory_%0(Character_GetInventory(%1), // It is a convenient way to call Inventory_Func with player inventory
 
-hook OnGameModeInit()
+hook OnCharacterLoad(playerid)
 {
-	PlayerInventory = map_new();
+	Inventory_New(ENTITY_TYPE_PLAYER, playerid, PLAYER_INVENTORY_START_SIZE);
+	Character_LoadInventory(playerid);
 	return 1;
 }
 
-stock bool:Character_InitializeInventory(playerid)
+stock Inventory:Character_GetInventory(playerid)
 {
-	//if(!Character_IsLogged(playerid))
-		//return false;
-	if(map_has_key(PlayerInventory, playerid))
-	{
-		map_remove_deep(PlayerInventory, playerid);
-	}
-	new Inventory:inventory = Inventory_New(PLAYER_INVENTORY_START_SIZE);
-	map_add(PlayerInventory, playerid, List:inventory);
-	return true;
+	return Inventory_Get(ENTITY_TYPE_PLAYER, playerid);
 }
 
 stock bool:Character_UnloadInventory(playerid)
 {
 	if(!Character_IsLogged(playerid))
 		return false;
-	map_remove_deep(PlayerInventory, playerid);
+	Inventory_Delete(Inventory_Get(ENTITY_TYPE_PLAYER, playerid));
 	return true;
-}
-
-hook OnCharacterLoad(playerid)
-{
-	Character_InitializeInventory(playerid);
-	Character_LoadInventory(playerid);
-	return 1;
 }
 
 hook OnCharacterClearData(playerid)
 {
 	SelectedListItem[playerid] = -1;
-	Character_ResetInventory(playerid);
 	Character_UnloadInventory(playerid);
 	return 1;
 }
@@ -98,17 +81,6 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 		}
 	}
 	return 1;
-}
-
-stock Inventory:Character_GetInventory(playerid)
-{
-	new Inventory:inv;
-	if(!map_has_key(PlayerInventory, playerid))
-	{
-		Character_InitializeInventory(playerid);
-	}
-	map_get_safe(PlayerInventory, playerid, List:inv);
-	return inv;
 }
 
 // Returns success or not.
@@ -162,7 +134,8 @@ stock Character_ResizeInventory(playerid)
 
 stock Character_GetInventorySize(playerid)
 {
-	return PLAYER_INVENTORY_START_SIZE + ServerItem_GetBagSize(Character_GetBag(playerid));
+	#pragma unused playerid
+	return PLAYER_INVENTORY_START_SIZE;
 }
 
 stock bool:Character_IsSlotUsed(playerid, slotid)
@@ -338,9 +311,7 @@ Dialog:Dialog_InvItemAction(playerid, response, listitem, inputtext[])
 		{
 			if(ServerItem_GetType(itemid) == ITEM_TYPE_WEAPON && extra > 0)
 			{
-				new dest[8];
-				valstr(dest, slotid);
-				callcmd::disassembla(playerid, dest);
+				Character_DisassembleWeapon(playerid, slotid);
 				return 1;
 			}
 		}
@@ -467,25 +438,6 @@ stock Character_GetItemAmount(playerid, itemid)
 stock Character_HasItem(playerid, itemid, min = 1) return Inventory_HasItem(Character_GetInventory(playerid), itemid, min);
 
 stock Character_HasSpaceForItem(playerid, itemid, amount) return Inventory_HasSpaceForItem(Character_GetInventory(playerid), itemid, amount);
-
-stock Character_HasBag(playerid) return pInventoryBag[playerid] != 0 && ServerItem_IsBag(pInventoryBag[playerid]);
-
-stock Character_GetBag(playerid) return pInventoryBag[playerid];
-
-stock bool:Character_SetBag(playerid, bagid)
-{
-	if(bagid != 0 && !ServerItem_IsBag(bagid))
-		return false;
-	pInventoryBag[playerid] = bagid;
-	Character_ResizeInventory(playerid);
-	return true;
-}
-
-stock Character_ResetInventory(playerid)
-{
-	Character_SetBag(playerid, 0);
-	return 1;
-}
 
 stock Character_SaveInventory(playerid)
 {

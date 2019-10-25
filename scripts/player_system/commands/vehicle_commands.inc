@@ -172,7 +172,7 @@ CMD:vdisassembla(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino ad un veicolo.");
 	if(!Vehicle_IsOwner(vehicleid, playerid, false))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei il proprietario di questo veicolo.");
-	if(sscanf(params, "d", slotid))
+	if(sscanf(params, "k<slotid>", slotid))
 	{
 		if(Character_IsFactionDuty(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");

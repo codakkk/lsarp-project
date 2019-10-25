@@ -142,7 +142,7 @@ enum (<<= 1)
 #include <checkpoint_system\core>
 #include <weapon_system\core>
 #include <dp_system\core>
-#include <loot_zone_system\core>
+//#include <loot_zone_system\core>
 #include <utils\utils>
 #include <utils\maths>
 #include <faction_system\core>

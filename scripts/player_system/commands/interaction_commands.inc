@@ -352,35 +352,6 @@ CMD:compra(playerid, params[])
     return 1;//SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando qui.");
 }
 
-flags:rimuovi(CMD_ALIVE_USER);
-CMD:rimuovi(playerid, params[])
-{
-    new
-        text[128];
-    if(sscanf(params, "s[128]", text))
-    {
-        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /rimuovi [oggetto]");
-        SendClientMessage(playerid, COLOR_ERROR, "Oggetti: zaino");
-        return 1;
-    }
-    if(!strcmp(text, "zaino", true))
-    {
-        new Inventory:playerInv = Character_GetInventory(playerid);
-        if(!Character_HasBag(playerid))
-            return SendClientMessage(playerid, COLOR_ERROR, "Non stai indossando uno zaino.");
-        if(Inventory_GetUsedSpace(playerInv) > PLAYER_INVENTORY_START_SIZE-1)
-            return SendClientMessage(playerid, COLOR_ERROR, "Non puoi toglierti lo zaino se hai piu' di 9 oggetti.");
-        Character_GiveItem(playerid, Character_GetBag(playerid), 1);
-        Character_SetBag(playerid, 0);
-        SendClientMessage(playerid, COLOR_GREEN, "Lo zaino è stato rimesso nel tuo inventario.");
-        Character_AMe(playerid, "si toglie lo zaino.");
-        return 1;
-    }
-	else
-		SendClientMessage(playerid, COLOR_ERROR, "Oggetti: zaino");
-    return 1;
-}
-
 CMD:arma(playerid, params[])
 {
 	if(!IsPlayerInAnyVehicle(playerid) || GetPlayerState(playerid) != PLAYER_STATE_PASSENGER)

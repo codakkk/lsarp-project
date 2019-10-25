@@ -187,7 +187,7 @@ CMD:gps(playerid, params[])
 }
 alias:gps("luoghi");
 
-static ShowGPS(playerid, page = 0)
+static ShowGPS(playerid)
 {
     if(list_size(Locations) <= 0)
     {

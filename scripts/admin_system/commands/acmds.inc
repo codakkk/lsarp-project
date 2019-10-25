@@ -54,7 +54,7 @@ CMD:acmds(playerid, params[])
     return 1;
 }
 
-static PrintPlayerCommandsByFlags(playerid, flags = 0, const levelName[] = "")
+stock static PrintPlayerCommandsByFlags(playerid, flags = 0, const levelName[] = "")
 {
 	new
 		String:temp = str_format("[%s]:", levelName),

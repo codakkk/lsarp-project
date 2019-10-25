@@ -1,3 +1,4 @@
+// Remember that we're using set instead of add for inventory size
 
 #if defined _included_INVENTORY_CORE
     #endinput
@@ -7,10 +8,9 @@
 
 #include <inventory_system\server>
 
-#define Inventory List@Inventory
-
 #define for_inventory(%0:%1) for_list(%0:%1)
-
+//#define for_inventories(%0:%1) for(new E_ENTITY_TYPE:_____i = E_ENTITY_TYPE:0; _____i < E_ENTITY_TYPE; ++_____i) \
+ //							   for_map(_____b:Inventory_GetMap(%0))
 #define Inventory_Show(%0,%1,%2,%3, Inventory_InternalShow(%0, %1, %2, #%3,
 #define Inventory_ShowStr(%0,%1,%2,%3, Inventory_InternalShowStr(%0, %1, %2, #%3,
 
@@ -24,7 +24,15 @@ enum E_ENTITY_TYPE
     ENTITY_TYPE_BUILDING = 3,
 	ENTITY_TYPE_VEHICLE = 4,
     ENTITY_TYPE_DROP = 5,
+	ENTITY_TYPE_BAG = 6
 }
+
+static enum _:E_INVENTORY_DATA
+{
+	E_ENTITY_TYPE:EntityType,
+	EntityID,
+	List:Items
+};
 
 enum // Error Type
 {
@@ -48,45 +56,101 @@ static enum _:E_ITEM_DATA
 	Map:TempExtra
 };
 
-#include <inventory_system\types\types>
-#include <inventory_system\callbacks>
+#include "types\types"
+#include "callbacks"
+
 #include <YSI_Coding\y_hooks>
 
-// Remember that we're using set instead of add for inventory size
-
-// Overload operators for the new container "Inventory:" (must be on top of everything)
-
-stock List:operator=(Inventory:l) return List:l;
+static 
+	List:InventoriesList,
+	Map:InventoriesMap[E_ENTITY_TYPE];
 
 
-stock Inventory:Inventory_New(space)
+stock Map:Inventory_GetMap(E_ENTITY_TYPE:entityType)
 {
-    new Inventory:inventory = Inventory:list_new();
-    list_resize_var(inventory, space, VAR_NULL);
+	return InventoriesMap[entityType];
+}
+
+//stock List:operator=(Inventory:l) return List:l;
+
+hook OnGameModeInit()
+{
+	for(new E_ENTITY_TYPE:i = E_ENTITY_TYPE:0; i < E_ENTITY_TYPE; ++i)
+	{
+		InventoriesMap[i] = map_new();
+	}
+	InventoriesList = list_new();
+}
+
+stock Inventory:Inventory_New(E_ENTITY_TYPE:entityType, entityId, space)
+{
+	if(map_has_key(InventoriesMap[entityType], entityId))
+	{
+		printf("Trying to create another inventory for entity type %d id %d.", _:entityType, entityId);
+		return Inventory:0;
+	}
+	
+	new List:items = list_new();
+    list_resize_var(items, space, VAR_NULL);
+
+	new Inventory:inventory = Inventory:var_new_buf(E_INVENTORY_DATA);
+	var_acquire(Variant:inventory);
+	var_set_cell(Variant:inventory, EntityType, _:entityType);
+	var_set_cell(Variant:inventory, EntityID, entityId);
+	var_set_cell(Variant:inventory, Items, items);
+
+	map_add(InventoriesMap[entityType], entityId, inventory);
+	list_add(InventoriesList, inventory);
+
+	printf("Inventory created for entity type %d id %d", _:entityType, entityId);
     return inventory;
 }
 
 stock bool:Inventory_IsValid(Inventory:inv)
 {
-	return list_valid(inv);
+	return var_valid(Variant:inv);
+}
+
+stock bool:Inventory_Delete(Inventory:inventory)
+{
+	map_remove_deep(InventoriesMap[Inventory_GetEntityType(inventory)], Inventory_GetEntityID(inventory));
+	var_release(Variant:inventory);
+	var_delete(Variant:inventory);
+	new index = list_find(InventoriesList, inventory);
+	if(index != -1)
+		list_remove(InventoriesList, index);
+	return true;
+}
+
+stock Inventory:Inventory_Get(E_ENTITY_TYPE:entityType, entityId)
+{
+	return Inventory:map_get(InventoriesMap[entityType], entityId);
+}
+
+stock E_ENTITY_TYPE:Inventory_GetEntityType(Inventory:inventory)
+{
+	return E_ENTITY_TYPE:var_get(Variant:inventory, EntityType);
+}
+
+stock Inventory_GetEntityID(Inventory:inventory)
+{
+	return var_get(Variant:inventory, EntityID);
+}
+
+stock List:Inventory_GetItems(Inventory:inventory)
+{
+	return List:var_get(Variant:inventory, Items);
 }
 
 stock bool:Inventory_Resize(Inventory:inventory, new_space)
 {
-    if(!list_valid(inventory))
-	   return false;
-    list_resize_var(inventory, new_space, VAR_NULL);
+    list_resize_var(Inventory_GetItems(inventory), new_space, VAR_NULL);
     return true;
-}
-
-stock Inventory_Delete(Inventory:inventory)
-{
-    list_delete(inventory);
 }
 
 stock bool:Inventory_SetItem(Inventory:inventory, slotid, itemid, amount, extra, Map:tempExtra = Map:0)
 {
-    if(!list_valid(inventory) || (itemid != 0 && amount <= 0) || !ServerItem_IsValid(itemid) || slotid < 0 || slotid >= list_size(inventory))
+    if((itemid != 0 && amount <= 0) || !ServerItem_IsValid(itemid) || slotid < 0 || slotid >= list_size(Inventory_GetItems(inventory)))
 	   return false;
     
     if(amount > ServerItem_GetMaxStack(itemid))
@@ -99,7 +163,7 @@ stock bool:Inventory_SetItem(Inventory:inventory, slotid, itemid, amount, extra,
     {
 		if(map_valid(Inventory_GetSlotTempExtraMap(inventory, slotid)))
 			map_delete(Inventory_GetSlotTempExtraMap(inventory, slotid));
-		list_set_var(inventory, slotid, VAR_NULL);
+		list_set_var(Inventory_GetItems(inventory), slotid, VAR_NULL);
     }
     else
     {
@@ -111,7 +175,7 @@ stock bool:Inventory_SetItem(Inventory:inventory, slotid, itemid, amount, extra,
 			item[TempExtra] = tempExtra;
 		else
 	   		item[TempExtra] = map_new();
-	   	list_set_arr(inventory, slotid, item);
+	   	list_set_arr(Inventory_GetItems(inventory), slotid, item);
     }
     return true;
 }
@@ -126,10 +190,6 @@ stock Inventory_Reset(Inventory:inventory)
 
 stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra, Map:tempExtra = Map:0)
 {
-	if(!list_valid(inventory))
-	{
-		return 0;
-	}
 	if(!ServerItem_IsValid(itemid))
 		return INVENTORY_FAILED_INVALID_ITEM;
     if(amount < 0)
@@ -138,7 +198,8 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra, Map:tempExtr
 		return INVENTORY_NO_SPACE;
     new 
 		maxStack = ServerItem_GetMaxStack(itemid),
-		tempAmount = amount
+		tempAmount = amount,
+		List:items = Inventory_GetItems(inventory)
 	;
 	if(ServerItem_IsUnique(itemid))
 	{
@@ -172,8 +233,8 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra, Map:tempExtr
 
 			tempAmount -= (itemAmount - preAdd);
 
-			list_set_cell(inventory, slotid, InvAmount, itemAmount);
-			list_set_cell(inventory, slotid, InvExtra + 0, extra);
+			list_set_cell(items, slotid, InvAmount, itemAmount);
+			list_set_cell(items, slotid, InvExtra + 0, extra);
 		}
 		if(tempAmount > 0)// If no items with same id and enough amount, add item in new slot
 		{
@@ -196,17 +257,17 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra, Map:tempExtr
 
 stock bool:Inventory_DecreaseSlotAmount(Inventory:inventory, slotid, amount = 1)
 {
-    if(slotid < 0 || slotid >= Inventory_GetSpace(inventory) || list_sizeof(inventory, slotid) == 0)
+    if(slotid < 0 || slotid >= Inventory_GetSpace(inventory) || list_sizeof(Inventory_GetItems(inventory), slotid) == 0)
 	   return false;
 	
     new item[E_ITEM_DATA];
-    if(list_get_arr_safe(inventory, slotid, item))
+    if(list_get_arr_safe(Inventory_GetItems(inventory), slotid, item))
     {
 	   item[InvAmount] -= amount;
 	   if(item[InvAmount] <= 0)
-		  list_set_var(inventory, slotid, VAR_NULL);
+		  list_set_var(Inventory_GetItems(inventory), slotid, VAR_NULL);
 	   else
-		  list_set_arr(inventory, slotid, item);
+		  list_set_arr(Inventory_GetItems(inventory), slotid, item);
     }
     return true;
 }
@@ -218,7 +279,7 @@ stock Inventory_DecreaseItemAmount(Inventory:inventory, itemid, amount = 1)
     new 
 	   item[E_ITEM_DATA],
 	   tempDecreaseAmount = amount;
-    for_inventory(i : inventory)
+    for_list(i : Inventory_GetItems(inventory))
     {
 	   if(iter_sizeof(i) == 0) 
 		  continue;
@@ -262,7 +323,7 @@ stock Inventory_HasSpaceForItem(Inventory:inventory, itemid, amount)
 		  
     if(!ServerItem_IsUnique(itemid))
     {
-		for_list(i : inventory)
+		for_list(i : Inventory_GetItems(inventory))
 		{
 			iter_get_arr_safe(i, item);
 			tempCurrentQuantity = item[InvAmount];
@@ -312,7 +373,7 @@ stock Inventory_HasSpaceForItems(Inventory:inventory, items[10], amounts[10])
 		tempAmount = amounts[x];
 		if(!ServerItem_IsUnique(itemid))
 		{
-			for_list(i : inventory)
+			for_list(i : Inventory_GetItems(inventory))
 			{
 				iter_get_arr_safe(i, item);
 				tempCurrentQuantity = item[InvAmount];
@@ -352,7 +413,7 @@ stock Inventory_HasSpaceForItems(Inventory:inventory, items[10], amounts[10])
 stock Inventory_HasItem(Inventory:inventory, itemid, min = 1)
 {
 	new item[E_ITEM_DATA];
-	for(new i = 0, j = list_size(inventory); i < j; ++i)
+	for(new i = 0, j = Inventory_GetSpace(inventory); i < j; ++i)
 	{
 		Inventory_GetItemData(inventory, i, item);
 		if(item[InvItem] == itemid && item[InvAmount] >= min)
@@ -365,9 +426,9 @@ stock Inventory_HasItem(Inventory:inventory, itemid, min = 1)
 stock List:Inventory_HasItemBySlots(Inventory:inventory, itemid)
 {
 	new List:list = list_new(), item[E_ITEM_DATA];
-	for(new i = 0, j = list_size(inventory); i < j; ++i)
+	for(new i = 0, j = Inventory_GetSpace(inventory); i < j; ++i)
 	{
-		if(list_sizeof(inventory, i) == 0)
+		if(list_sizeof(Inventory_GetItems(inventory), i) == 0)
 			continue;
 		Inventory_GetItemData(inventory, i, item);
 		if(item[InvItem] == itemid && item[InvAmount] > 0)
@@ -378,7 +439,7 @@ stock List:Inventory_HasItemBySlots(Inventory:inventory, itemid)
 
 stock bool:Inventory_IsSlotUsed(Inventory:inventory, slotid)
 {
-    return list_valid(inventory) && (list_sizeof(inventory, slotid) != 0 || Inventory_GetSlotItem(inventory, slotid) != 0 );
+    return (list_sizeof(Inventory_GetItems(inventory), slotid) != 0 || Inventory_GetSlotItem(inventory, slotid) != 0 );
 }
 
 // Checks if slotid is in the inventory boundaries (0 <= slotid <= Inventory_GetSpace(inventory))
@@ -389,27 +450,27 @@ stock Inventory_IsValidSlot(Inventory:inventory, slotid)
 
 stock Inventory_GetItemData(Inventory:inventory, slotid, item[E_ITEM_DATA])
 {
-    list_get_arr_safe(inventory, slotid, item);
+    list_get_arr_safe(Inventory_GetItems(inventory), slotid, item);
 }
 
 stock Inventory_GetSlotItem(Inventory:inventory, slotid)
 {
-	if(!Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
+	if(!Inventory_IsValidSlot(inventory, slotid) || list_sizeof(Inventory_GetItems(inventory), slotid) == 0)
 		return 0;
-    return list_get(inventory, slotid, InvItem);
+    return list_get(Inventory_GetItems(inventory), slotid, InvItem);
 }
 
 stock Inventory_GetSlotAmount(Inventory:inventory, slotid)
 {
-	if(!Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
+	if(!Inventory_IsValidSlot(inventory, slotid) || list_sizeof(Inventory_GetItems(inventory), slotid) == 0)
 		return 0;
-    return list_get(inventory, slotid, InvAmount);
+    return list_get(Inventory_GetItems(inventory), slotid, InvAmount);
 }
 
 stock Inventory_GetItemAmount(Inventory:inventory, itemid)
 {
     new item[E_ITEM_DATA], count = 0;
-    for_inventory(i : inventory)
+    for_list(i : Inventory_GetItems(inventory))
     {
 	   if(iter_sizeof(i) == 0 || !iter_get_arr_safe(i, item) || item[InvItem] != itemid)
 		  continue;
@@ -420,15 +481,13 @@ stock Inventory_GetItemAmount(Inventory:inventory, itemid)
 
 stock Inventory_GetSpace(Inventory:inventory)
 {
-    if(!list_valid(inventory))
-	   return 0;
-    return list_size(inventory);
+    return list_size(Inventory_GetItems(inventory));
 }
 
 stock Inventory_GetUsedSpace(Inventory:inventory)
 {
     new space = 0;
-    for_inventory(i : inventory)
+    for_inventory(i : Inventory_GetItems(inventory))
     {
 	   if(iter_sizeof(i) != 0)
 		  space++;
@@ -438,7 +497,7 @@ stock Inventory_GetUsedSpace(Inventory:inventory)
 
 stock bool:Inventory_IsEmpty(Inventory:inventory)
 {
-    for_inventory(i : inventory)
+    for_inventory(i : Inventory_GetItems(inventory))
     {
 	   if(iter_sizeof(i) != 0)
 		  return false;
@@ -449,7 +508,7 @@ stock bool:Inventory_IsEmpty(Inventory:inventory)
 stock Inventory_GetFreeSlot(Inventory:inventory)
 {
 	new index = 0, tempItem[E_ITEM_DATA];
-	for_inventory(i : inventory)
+	for_inventory(i : Inventory_GetItems(inventory))
 	{
 		iter_get_arr_safe(i, tempItem);
 		if(iter_sizeof(i) == 0 || tempItem[InvItem] == 0 || tempItem[InvAmount] == 0)
@@ -461,17 +520,12 @@ stock Inventory_GetFreeSlot(Inventory:inventory)
 
 static Inventory_ShowInChatStr(Inventory:inventory, playerid, String:title)
 {
-	if(!list_valid(inventory))
-		return 0;
-	//if(title != STRING_NULL || str_len(title) > 0)
-		//SendClientMessageStr(playerid, COLOR_GREEN, str_format("_______________[%S (%d/%d)]_______________", title, Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory)));
-	//else
 	new String:str = str_format("_______________[%S]_______________", title);
 
 	SendClientMessageStr(playerid, 0xFF6347FF, str);
 	
-	new tempItem[E_ITEM_DATA], slotid = -1;
-	for_inventory(i : inventory)
+	new tempItem[E_ITEM_DATA], slotid = 0;
+	for_inventory(i : Inventory_GetItems(inventory))
 	{
 		slotid++;
 		new String:s = str_format("{FF6347}[{FFFFFF} %d. ", slotid);
@@ -525,7 +579,7 @@ static Inventory_ShowInDialog(Inventory:inventory, playerid, const title[], cons
 {
 	new String:string = @("Nome\tQuantità\tTipo\tAltro\n"),
 		tempItem[E_ITEM_DATA], slotid = 0;
-	for_inventory(i : inventory)
+	for_inventory(i : Inventory_GetItems(inventory))
 	{
 		iter_get_arr(i, tempItem);
 		if(iter_sizeof(i) == 0 || tempItem[InvItem] == 0) // If no item
@@ -581,8 +635,6 @@ stock Inventory_InternalShowStr(Inventory:inventory, playerid, String:title, con
 
 stock Inventory_InternalShow(Inventory:inventory, playerid, const title[], const dialog[] = "", const button1[] = "", const button2[] = "", bool:forceDialog = false)
 {
-	if(!list_valid(inventory))
-		return 0;
 	if(Player_HasInvModeEnabled(playerid) && !forceDialog)
 	{
 		Inventory_ShowInChat(inventory, playerid, title);
@@ -594,27 +646,8 @@ stock Inventory_InternalShow(Inventory:inventory, playerid, const title[], const
 	return 1;
 }
 
-stock Inventory_Print(Inventory:inventory)
-{
-    if(!list_valid(inventory))
-	   return printf("Invalid inventory.");
-    new item[E_ITEM_DATA];
-    for_inventory(i : inventory)
-    {
-	   if(iter_sizeof(i) == 0)
-		  continue;
-	   iter_get_arr(i, item);
-	   printf("Item Name: %s - Amount: %d", ServerItem_GetMaxStack(item[InvItem]), item[InvAmount]);
-    }
-    printf("Space: %d - Space Used: %d", Inventory_GetSpace(inventory), Inventory_GetUsedSpace(inventory));
-    printf("Total free space: %d", Inventory_GetSpace(inventory) - Inventory_GetUsedSpace(inventory));
-    return 1;
-}
-
 stock Inventory_LoadFromDatabase(Inventory:inventory, const databaseName[], const entityKeyName[], id)
 {
-	if(!list_valid(inventory))
-		return false;
 	inline OnLoad()
 	{
 		Inventory_Reset(inventory);
@@ -672,32 +705,32 @@ stock bool:Inventory_SetSlotExtra(Inventory:inventory, slotid, index, value)
 {
 	if(!Inventory_IsValid(inventory) || !(0 <= index < MAX_SLOT_EXTRA) || !Inventory_IsValidSlot(inventory, slotid))
 		return false;
-	if(list_sizeof(inventory, slotid) == 0)
+	if(list_sizeof(Inventory_GetItems(inventory), slotid) == 0)
 		return false;
-	list_set_cell(inventory, slotid, InvExtra + index, value);
+	list_set_cell(Inventory_GetItems(inventory), slotid, InvExtra + index, value);
 	return true;
 }
 
 stock Inventory_GetSlotExtra(Inventory:inventory, slotid, index = 0)
 {
-    if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0 || !(0 <= index < MAX_SLOT_EXTRA))
+    if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(Inventory_GetItems(inventory), slotid) == 0 || !(0 <= index < MAX_SLOT_EXTRA))
 		return 0;
-    return list_get(inventory, slotid, InvExtra + index);
+    return list_get(Inventory_GetItems(inventory), slotid, InvExtra + index);
 }
 
 stock Map:Inventory_GetSlotTempExtraMap(Inventory:inventory, slotid)
 {
-	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
+	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(Inventory_GetItems(inventory), slotid) == 0)
 		return Map:0;
-	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	new Map:map = Map:list_get(Inventory_GetItems(inventory), slotid, TempExtra);
 	return map;
 }
 
 stock bool:Inventory_RemoveSlotTempExtra(Inventory:inventory, slotid, key[])
 {
-	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
+	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(Inventory_GetItems(inventory), slotid) == 0)
 		return false;
-	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	new Map:map = Map:list_get(Inventory_GetItems(inventory), slotid, TempExtra);
 	if(!map_valid(map))
 		return false;
 	if(!map_has_key(map, key))
@@ -708,9 +741,9 @@ stock bool:Inventory_RemoveSlotTempExtra(Inventory:inventory, slotid, key[])
 
 stock bool:Inventory_SetSlotTempExtra(Inventory:inventory, slotid, key[], data)
 {
-	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
+	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(Inventory_GetItems(inventory), slotid) == 0)
 		return false;
-	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	new Map:map = Map:list_get(Inventory_GetItems(inventory), slotid, TempExtra);
 	if(!map_valid(map))
 		return false;
 	if(map_has_str_key(map, key))
@@ -722,9 +755,9 @@ stock bool:Inventory_SetSlotTempExtra(Inventory:inventory, slotid, key[], data)
 
 stock bool:Inventory_SetSlotTempExtraArr(Inventory:inventory, slotid, key[], data[])
 {
-	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
+	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(Inventory_GetItems(inventory), slotid) == 0)
 		return 0;
-	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	new Map:map = Map:list_get(Inventory_GetItems(inventory), slotid, TempExtra);
 	if(!map_valid(map))
 		return false;
 	if(map_has_str_key(map, key))
@@ -736,9 +769,9 @@ stock bool:Inventory_SetSlotTempExtraArr(Inventory:inventory, slotid, key[], dat
 
 stock Inventory_GetSlotTempExtra(Inventory:inventory, slotid, key[])
 {
-	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
+	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(Inventory_GetItems(inventory), slotid) == 0)
 		return 0;
-	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	new Map:map = Map:list_get(Inventory_GetItems(inventory), slotid, TempExtra);
 	if(!map_valid(map) || !map_has_str_key(map, key))
 		return 0;
 	return map_str_get(map, key);
@@ -746,9 +779,9 @@ stock Inventory_GetSlotTempExtra(Inventory:inventory, slotid, key[])
 
 stock bool:Inventory_GetSlotTempExtraArr(Inventory:inventory, slotid, key[], data[])
 {
-	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
+	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(Inventory_GetItems(inventory), slotid) == 0)
 		return false;
-	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	new Map:map = Map:list_get(Inventory_GetItems(inventory), slotid, TempExtra);
 	if(!map_valid(map) || !map_has_str_key(map, key))
 		return false;
 	map_get_arr(map, key, data)
@@ -757,10 +790,39 @@ stock bool:Inventory_GetSlotTempExtraArr(Inventory:inventory, slotid, key[], dat
 
 stock bool:Inventory_HasSlotTempExtra(Inventory:inventory, slotid, key[])
 {
-	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(inventory, slotid) == 0)
+	if(!Inventory_IsValid(inventory) || !Inventory_IsValidSlot(inventory, slotid) || list_sizeof(Inventory_GetItems(inventory), slotid) == 0)
 		return false;
-	new Map:map = Map:list_get(inventory, slotid, TempExtra);
+	new Map:map = Map:list_get(Inventory_GetItems(inventory), slotid, TempExtra);
 	if(!map_valid(map))
 		return false;
 	return map_has_str_key(map, key);
+}
+
+stock bool:World_FindItem(itemid, extra, &E_ENTITY_TYPE:entityType, &entityId, &slotid)
+{
+	entityId = 0;
+	entityType = ENTITY_TYPE_NONE;
+	new bool:found = false, index = 0;
+	static data[E_ITEM_DATA];
+	data[InvItem] = data[InvAmount] = 0;
+	for_list(i : InventoriesList)
+	{
+		new Inventory:inventory = Inventory:iter_get(i);
+		for_list(item : Inventory_GetItems(inventory))
+		{
+			iter_get_arr(item, data);
+			if(iter_sizeof(item) != 0 && data[InvItem] == itemid && data[InvExtra][0] == extra && data[InvAmount] > 0)
+			{
+				found = true;
+				entityType = Inventory_GetEntityType(inventory);
+				entityId = Inventory_GetEntityID(inventory);
+				slotid = index;
+				break;
+			}
+			index++;
+		}
+		if(found) break;
+		index = 0;
+	}
+	return found;
 }

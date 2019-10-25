@@ -11,7 +11,6 @@ static enum _:E_DROP_INFO // _: for tag mismatch thing
 	Float:RotX,
 	Float:RotY,
 	Float:RotZ,
-	Inventory:Inventory,
     /*Item,
     ItemAmount,
     ItemExtra[5],*/
@@ -111,15 +110,12 @@ stock Drop_Create(String:createdBy, Float:x, Float:y, Float:z, world, interior, 
 	data[RotZ] = 0.0;
     data[World] = world;
     data[Interior] = interior;
-	data[Inventory] = Inventory_New(1);
-	
-	Inventory_SetItem(data[Inventory], 0, itemid, amount, extra, extraData);
-
     data[CreatedBy] = createdBy;
     data[CreatedTime] = GetTickCount();
 
 	new id = pool_add_arr(Drops, data);
-
+	new Inventory:inventory = Inventory_New(ENTITY_TYPE_DROP, id, 1);
+	Inventory_AddItem(inventory, itemid, amount, extra, extraData);
     Drop_CreateElements(id);
     return id;
 }
@@ -228,16 +224,17 @@ stock Inventory:Drop_GetInventory(dropid)
 {
 	if(!Drop_IsValid(dropid))
 		return INVENTORY_NULL;
-	return Inventory:pool_get(Drops, dropid, Inventory);
+	return Inventory_Get(ENTITY_TYPE_DROP, dropid);
 }
 
 stock Drop_GetItemData(dropid, &itemid, &amount, &extra)
 {
 	if(Drop_IsValid(dropid))
 	{
-		itemid = Inventory_GetSlotItem(Drop_GetInventory(dropid), 0);
-		amount = Inventory_GetSlotAmount(Drop_GetInventory(dropid), 0);
-		extra = Inventory_GetSlotExtra(Drop_GetInventory(dropid), 0, 0);
+		new Inventory:inventory = Drop_GetInventory(dropid);
+		itemid = Inventory_GetSlotItem(inventory, 0);
+		amount = Inventory_GetSlotAmount(inventory, 0);
+		extra = Inventory_GetSlotExtra(inventory, 0, 0);
 		return 1;
 	}
 	return 0;
@@ -247,6 +244,8 @@ stock Drop_GetItem(dropid)
 {
 	if(!Drop_IsValid(dropid))
 		return 0;
+	new Inventory:inventory = Drop_GetInventory(dropid);
+	printf("Inventory for drop %d: %d", dropid, _:inventory);
 	return Inventory_GetSlotItem(Drop_GetInventory(dropid), 0);
 }
 

@@ -116,7 +116,7 @@ stock bool:LootZone_Initialize(lootzoneid)
 		return false;
 	
 	if(!Inventory_IsValid(LootZone_GetInventory(lootzoneid)))
-		map_set_cell(LootZones, LootZone_GetID(lootzoneid), Inventory, List:Inventory_New(10));
+		map_set_cell(LootZones, LootZone_GetID(lootzoneid), Inventory, Inventory_New(ENTITY_TYPE_DROP, lootzoneid, 10));
 	
 	if(!map_valid(LootZone_GetItems(lootzoneid)))
 		map_set_cell(LootZones, LootZone_GetID(lootzoneid), Items, map_new());

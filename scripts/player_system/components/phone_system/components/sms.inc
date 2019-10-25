@@ -91,25 +91,29 @@ stock Character_SendSMS(playerid, slot, number, const msg[])
     else
         SendFormattedMessage(playerid, COLOR_YELLOW, "SMS inviato al numero %d. Testo: %s", number, msg);
 
-    new Inventory:entityInv, entityId, E_ENTITY_TYPE:entityType, phoneSlotId;
-    if(World_FindPhoneByNumber(number, entityInv, entityId, entityType, phoneSlotId) && !Phone_IsOff(entityInv, phoneSlotId))
+    new entityId, E_ENTITY_TYPE:entityType, phoneSlotId;
+    if(World_FindPhoneByNumber(number, entityType, entityId, phoneSlotId))
     {
-        if(entityType == ENTITY_TYPE_PLAYER)
+        new Inventory:entityInv = Inventory_Get(entityType, entityId);
+        if(!Phone_IsOff(entityInv, phoneSlotId))
         {
-            if(PhoneBook_GetContactName(number, senderNumber, name))
+            if(entityType == ENTITY_TYPE_PLAYER)
             {
-                SendFormattedMessage(entityId, COLOR_GREEN, "SMS ricevuto da %s. Usa il tuo cellulare (/cell <slot>) per leggere il messaggio.", name);
+                if(PhoneBook_GetContactName(number, senderNumber, name))
+                {
+                    SendFormattedMessage(entityId, COLOR_GREEN, "SMS ricevuto da %s. Usa il tuo cellulare (/cell <slot>) per leggere il messaggio.", name);
+                }
+                else
+                {
+                    SendFormattedMessage(entityId, COLOR_GREEN, "SMS ricevuto da %d. Usa il tuo cellulare per leggere il messaggio.", senderNumber);
+                }
             }
-            else
+            else if(entityType == ENTITY_TYPE_DROP)
             {
-                SendFormattedMessage(entityId, COLOR_GREEN, "SMS ricevuto da %d. Usa il tuo cellulare per leggere il messaggio.", senderNumber);
+                new Float:x, Float:y, Float:z;
+                Drop_GetPosition(entityId, x, y, z);
+                SendRangedMessage(10.0, x, y, z, Drop_GetVirtualWorld(entityId), Drop_GetInterior(entityId), "(( * Si sente lo squillo di un SMS ))", COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
             }
-        }
-        else if(entityType == ENTITY_TYPE_DROP)
-        {
-            new Float:x, Float:y, Float:z;
-            Drop_GetPosition(entityId, x, y, z);
-            SendRangedMessage(10.0, x, y, z, Drop_GetVirtualWorld(entityId), Drop_GetInterior(entityId), "(( * Si sente lo squillo di un SMS ))", COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5);
         }
     }
     Character_Me(playerid, "prende il cellulare ed invia un messaggio.");

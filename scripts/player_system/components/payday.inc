@@ -53,7 +53,7 @@ stock Character_PayDay(playerid)
 		static const premiumPaycheck[] = {1000, 2000, 3000};
 		premiumMoney = premiumPaycheck[currentPremiumLevel-1];
 		paycheck += premiumMoney;
-		SendFormattedMessage(playerid, COLOR_YELLOW, "Hai ricevuto $%d aggiuntivi come bonus Premium.", paycheck);
+		//SendFormattedMessage(playerid, COLOR_YELLOW, "Hai ricevuto $%d aggiuntivi come bonus Premium.", paycheck);
 	}
 
 	new factionid = Character_GetFaction(playerid);

@@ -10,12 +10,10 @@ static enum _:E_DIALOG_HOUSE_DATA
 }
 
 static
-    Map:BuildingInventory,
     Map:PlayerBuildingInventory; // <playerid, E_DIALOG_HOUSE_DATA>
 
 hook OnGameModeInit()
 {
-    BuildingInventory = map_new();
 	PlayerBuildingInventory = map_new();
 
     mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `building_inventory` ( \
@@ -39,21 +37,13 @@ hook OnBuildingLoaded(Building:building)
 
 static Inventory:Building_InitializeInventory(Building:building)
 {
-    if(map_has_key(BuildingInventory, Building_GetID(building)))
-		return Inventory:0;
-	new Inventory:inv = Inventory_New(30);
-	map_add(BuildingInventory, Building_GetID(building), List:inv);
+	new Inventory:inv = Inventory_New(ENTITY_TYPE_BUILDING, Building_GetID(building), 30);
 	return inv;
 }
 
 stock Inventory:Building_GetInventory(Building:building)
 {
-	new Inventory:inv;
-	if(map_get_safe(BuildingInventory, Building_GetID(building), List:inv))
-	{
-		return inv;
-	}
-	return Inventory:0;
+	return Inventory_Get(ENTITY_TYPE_BUILDING, Building_GetID(building));
 }
 
 stock Building_SaveInventory(Building:building)

@@ -24,7 +24,7 @@ hook OnGameModeInit()
     return 1;
 }
 
-hook OnCharacterClearData(playerid)
+hook OnCharacterDisconnected(playerid, reason)
 {
     for(new i = 0, j = Character_GetInventorySize(playerid); i < j; ++i)
     {
@@ -46,7 +46,7 @@ flags:rubrica(CMD_ALIVE_USER);
 CMD:rubrica(playerid, params[])
 {
     new slotid;
-    if(sscanf(params, "d", slotid))
+    if(sscanf(params, "k<slotid>", slotid))
         return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /rubrica <slotid>");
     Character_ShowPhoneBook(playerid, slotid);
     return 1;

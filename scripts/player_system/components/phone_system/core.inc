@@ -134,9 +134,10 @@ hook OnCharacterDropItem(playerid, slotid)
 
 timer RingPhoneTimer[10000](number)
 {
-    static Inventory:entityInv, entityId, E_ENTITY_TYPE:entityType, entityPhoneSlotId;
-    if(World_FindPhoneByNumber(number, entityInv, entityId, entityType, entityPhoneSlotId))
+    static entityId, E_ENTITY_TYPE:entityType, entityPhoneSlotId;
+    if(World_FindPhoneByNumber(number, entityType, entityId, entityPhoneSlotId))
     {
+        //new Inventory:entityInv = Inventory_Get(entityType, entityId);
         if(entityType == ENTITY_TYPE_PLAYER)
         {
             Character_Do(entityId, "Il cellulare comincia a squillare...");
@@ -153,6 +154,8 @@ timer RingPhoneTimer[10000](number)
 //ptask OnCheckPlayerPhone[500](playerid) 
 hook OnPlayerUpdate(playerid)
 {
+    if(!Character_IsLogged(playerid))
+        return 1;
     if(!UsingPhone{playerid})
     {
         new itemid, number;
@@ -190,10 +193,12 @@ hook OnCharacterTalk(playerid, text[])
 
     new number = Phone_GetCallingNumber(Character_GetInventory(playerid), UsingPhoneSlotID[playerid]);
     
-    new Inventory:entityInv, entityId, E_ENTITY_TYPE:entityType, entityPhoneSlotId;
-    World_FindPhoneByNumber(number, entityInv, entityId, entityType, entityPhoneSlotId);
-
+    new entityId, E_ENTITY_TYPE:entityType, entityPhoneSlotId;
+    
+    World_FindPhoneByNumber(number, entityType, entityId, entityPhoneSlotId);
     printf("Slot: %d - Number: %d - Entity Type: %d - Entity id: %d", UsingPhoneSlotID[playerid], number, _:entityType, entityId);
+
+    new Inventory:entityInv = Inventory_Get(entityType, entityId);
 
     new speakerMode = Phone_GetSpeakerPhone(entityInv, entityPhoneSlotId);
 
@@ -269,9 +274,9 @@ CMD:cellcmds(playerid, params[])
 flags:cellulare(CMD_ALIVE_USER);
 CMD:cellulare(playerid, params[])
 {
-    if(isnull(params))
+    new slotid;
+    if(sscanf(params, "k<slotid>", slotid))
         return SendClientMessage(playerid, COLOR_ERROR, "(/cell)ulare <slotid>");
-    new slotid = strval(params);
     
     if(!Character_ShowPhone(playerid, slotid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai un cellulare in questo slot.");
@@ -283,28 +288,10 @@ flags:cellinfo(CMD_USER);
 CMD:cellinfo(playerid, params[])
 {
     new slotid;
-    if(sscanf(params, "d", slotid))
+    if(sscanf(params, "k<slotid>", slotid))
         return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /cellinfo <slotid>");
     
-    if(!Character_HasPhoneInSlot(playerid, slotid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non hai un telefono in questo slot.");
-    
-    new number = Character_GetSlotExtra(playerid, slotid, 0);
-
-    inline OnLoad()
-    {
-        if(cache_num_rows() <= 0)
-            return SendClientMessage(playerid, COLOR_ERROR, "Il cellulare non ha un numero valido.");
-
-        new time, year, month, day, hour, minute, second;
-        cache_get_value_name_int(0, "created_at", time);
-
-        TimestampToDate(time, year, month, day, hour, minute, second, 1);
-
-        SendFormattedMessage(playerid, -1, "[Cellulare] Numero: %d - Acquistato il %d/%d/%d alle %d:%d.", number, day, month, year, hour, minute);
-    }
-    printf("Number: %d", number);
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT created_at FROM `phone_data` WHERE number = '%d'", number);
+    Character_ShowPhoneInfo(playerid, slotid);
     //TimestampToDate(, &year, &month, &day, &hour, &minute, &second, HourGMT, MinuteGMT = 0)
     return 1;
 }
@@ -319,7 +306,7 @@ CMD:chiama(playerid, params[])
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei già in una chiamata.");
 
     new slot, norn[9];
-    if(sscanf(params, "ds[9]", slot, norn))
+    if(sscanf(params, "k<slotid>s[9]", slot, norn))
         return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /chiama <slot> <numero/nome rubrica>");
 
     Character_StartCall(playerid, slot, norn);
@@ -333,7 +320,7 @@ CMD:rispondi(playerid, params[])
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei al telefono.");
     
     new slot;
-    if(sscanf(params, "d", slot))
+    if(sscanf(params, "k<slotid>", slot))
         return SendClientMessage(playerid, COLOR_ERROR, "(/ri)spondi <slot>");
     
     if(!Character_HasPhoneInSlot(playerid, slot))
@@ -348,8 +335,8 @@ CMD:rispondi(playerid, params[])
     Phone_SetRinging(playerInventory, slot, false);
     Phone_SetIncomingFromNumber(playerInventory, slot, 0);
 
-    new Inventory:otherInv, entityId, E_ENTITY_TYPE:entityType, entityPhoneSlotId;
-    World_FindPhoneByNumber(Phone_GetCallingNumber(playerInventory, slot), otherInv, entityId, entityType, entityPhoneSlotId);
+    new entityId, E_ENTITY_TYPE:entityType, entityPhoneSlotId;
+    World_FindPhoneByNumber(Phone_GetCallingNumber(playerInventory, slot), entityType, entityId, entityPhoneSlotId);
 
     if(entityType == ENTITY_TYPE_PLAYER)
     {
@@ -373,7 +360,7 @@ flags:chiudi(CMD_ALIVE_USER);
 CMD:chiudi(playerid, params[])
 {
     new slot;
-    if(sscanf(params, "d", slot))
+    if(sscanf(params, "k<slotid>", slot))
         return SendClientMessage(playerid, COLOR_ERROR, "(/ch)iudi <slotid>");
     Character_StopCall(playerid, slot);
     return 1;
@@ -384,7 +371,7 @@ flags:vivavoce(CMD_ALIVE_USER);
 CMD:vivavoce(playerid, params[])
 {
     new slotid;
-    if(sscanf(params, "d", slotid))
+    if(sscanf(params, "k<slotid>", slotid))
         return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /vivavoce <slotid>");
     
     if(!Character_HasPhoneInSlot(playerid, slotid))
@@ -462,9 +449,9 @@ stock Character_StartCall(playerid, slotid, textNumber[])
         return 1;
     }
 
-    new Inventory:entityInv, entityId, E_ENTITY_TYPE:entityType, entityPhoneSlotId;
+    new entityId, E_ENTITY_TYPE:entityType, entityPhoneSlotId;
     
-    if(!World_FindPhoneByNumber(number, entityInv, entityId, entityType, entityPhoneSlotId))
+    if(!World_FindPhoneByNumber(number, entityType, entityId, entityPhoneSlotId))
     {
         inline OnSearch()
         {
@@ -483,6 +470,8 @@ stock Character_StartCall(playerid, slotid, textNumber[])
         MySQL_TQueryInline(gMySQL, using inline OnSearch, "SELECT * FROM `phone_data` WHERE number = '%d'", number);
         return 0;
     }
+
+    new Inventory:entityInv = Inventory_Get(entityType, entityId);
 
     new validSlotId = Inventory_GetPhoneSlotByNumber(entityInv, number);
 
@@ -545,9 +534,10 @@ stock Character_StopCall(playerid, slotid)
         playerNumber = Inventory_GetSlotExtra(playerInventory, slotid, 0),
         callingNumber = Phone_GetCallingNumber(playerInventory, slotid);
 
-    new Inventory:entityInv, entityId, E_ENTITY_TYPE:entityType, phoneSlotId;
-    if(World_FindPhoneByNumber(callingNumber, entityInv, entityId, entityType, phoneSlotId))
+    new entityId, E_ENTITY_TYPE:entityType, phoneSlotId;
+    if(World_FindPhoneByNumber(callingNumber, entityType, entityId, phoneSlotId))
     {
+        new Inventory:entityInv = Inventory_Get(entityType, entityId);
         if(entityType == ENTITY_TYPE_PLAYER)
         {
             if(!Phone_IsOff(entityInv, phoneSlotId))
@@ -683,36 +673,9 @@ stock Character_FindByPhoneNumber(number)
     return p;
 }
 
-stock bool:World_FindPhoneByNumber(number, &Inventory:entityInv, &entityId, &E_ENTITY_TYPE:entityType, &phoneSlotId)
+stock bool:World_FindPhoneByNumber(number, &E_ENTITY_TYPE:entityType, &entityId, &phoneSlotId)
 {
-    entityInv = INVENTORY_NULL;
-    entityId = 0;
-    entityType = ENTITY_TYPE_NONE;
-
-    new entity = Character_FindByPhoneNumber(number);
-
-    if(entity != INVALID_PLAYER_ID)
-    {
-        entityInv = Character_GetInventory(entity);
-        entityType = ENTITY_TYPE_PLAYER;
-        entityId = entity;
-        phoneSlotId = Inventory_GetPhoneSlotByNumber(entityInv, number);
-        return true;
-    }
-
-    for_pool(i : GetDropsPool())
-    {
-        entity = iter_get_key(i);
-        if(Drop_GetItem(entity) != gItem_Phone || Drop_GetItemExtra(entity) != number)
-            continue;
-        entityInv = Drop_GetInventory(entity);
-        entityType = ENTITY_TYPE_DROP;
-        entityId = entity;
-        phoneSlotId = 0;
-        return true;
-    }
-
-    return false;
+    return World_FindItem(gItem_Phone, number, entityType, entityId, phoneSlotId);
 }
 
 stock bool:Character_HasPhoneInSlot(playerid, slotid)
@@ -757,9 +720,7 @@ Dialog:Dialog_UseCellPhone(playerid, response, listitem, inputtext[])
     
     if(listitem == 0)
     {
-        new val[16];
-        valstr(val, SelectedPhone{playerid});
-        callcmd::cellinfo(playerid, val);
+        Character_ShowPhoneInfo(playerid, slotid);
     }
     else if(listitem == 1)
     {
@@ -893,4 +854,25 @@ stock Character_GetSelectedPhone(playerid)
 stock Character_SetSelectedPhone(playerid, number)
 {
     SelectedPhoneNumber[playerid] = number;
+}
+
+static Character_ShowPhoneInfo(playerid, slotid)
+{
+    if(!Character_HasPhoneInSlot(playerid, slotid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai un telefono in questo slot."), 0;
+    
+    new number = Character_GetSlotExtra(playerid, slotid, 0);
+
+    await mysql_aquery_s(gMySQL, str_format("SELECT created_at FROM `phone_data` WHERE number = '%d'", number));
+
+    if(cache_num_rows() <= 0)
+        return SendClientMessage(playerid, COLOR_ERROR, "Il cellulare non ha un numero valido."), 0;
+
+    new time, year, month, day, hour, minute, second;
+    cache_get_value_name_int(0, "created_at", time);
+
+    TimestampToDate(time, year, month, day, hour, minute, second, 1);
+
+    SendFormattedMessage(playerid, -1, "[Cellulare] Numero: %d - Acquistato il %d/%d/%d alle %d:%d.", number, day, month, year, hour, minute);
+    return 1;
 }

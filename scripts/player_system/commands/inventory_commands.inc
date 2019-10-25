@@ -32,11 +32,13 @@ CMD:usa(playerid, params[])
 	if(Request_IsPending(playerid, REQUEST_TYPE_ITEM))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'oggetto attiva.");
 	new slotid;
-	if(sscanf(params, "d", slotid))
+	if(sscanf(params, "k<slotid>", slotid))
 		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /usa <slotid>");
+
 	new itemid = Character_GetSlotItem(playerid, slotid);
 	if(itemid == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Slot non valida.");
+	
 	Character_UseInventoryItem(playerid, slotid);
 	return 1;
 }
@@ -50,7 +52,7 @@ CMD:passa(playerid, params[])
 	if(Request_IsPending(playerid, REQUEST_TYPE_ITEM))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'oggetto attiva.");
 	new slotid, id, amount;
-	if(sscanf(params, "k<u>dD(1)", id, slotid, amount))
+	if(sscanf(params, "k<u>k<slotid>D(1)", id, slotid, amount))
 		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /passa [playerid/partofname] <slotid> <quantità (default 1)>");
 
 	Character_SendItemRequest(playerid, id, slotid, amount);
@@ -67,7 +69,7 @@ CMD:getta(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
 	
 	new slotid, amount;
-	if(sscanf(params, "dD(1)", slotid, amount))
+	if(sscanf(params, "k<slotid>D(1)", slotid, amount))
 		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /getta <slotid> <quantità (default 1)>");
 	
 	Character_DropItem(playerid, slotid, amount);
@@ -130,64 +132,77 @@ alias:depositaarma("dep");
 flags:disassembla(CMD_ALIVE_USER);
 CMD:disassembla(playerid, params[])
 {
+	new slotid;
+	if(sscanf(params, "k<slotid>", slotid))
+	{
+		Character_DisassembleWeapon(playerid, -1);
+	}
+	else
+	{
+		Character_DisassembleWeapon(playerid, slotid);
+	}
+	return 1;
+}
+alias:disassembla("dis");
+
+stock bool:Character_DisassembleWeapon(playerid, slotid = -1)
+{
 	if(!Character_CanInteract(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questa funzionalità ora."), false;
 	
 	if(Character_IsFactionDuty(playerid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi disassemblare un'arma se sei in servizio."), false;
 
 	if(Request_IsPending(playerid, REQUEST_TYPE_WEAPON))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'arma attiva.");
-
-	new 
-		slotid, itemid, ammo;
-	if(sscanf(params, "d", slotid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi disassemblare un'arma se hai una richiesta d'arma attiva."), false;
+	
+	new itemid, ammo;
+	if(slotid == -1)
 	{
 		Character_GetCurrentWeaponData(playerid, itemid, ammo);
 		if(itemid == 0 || ammo == 0)
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando senza un'arma.");
-			return SendClientMessage(playerid, COLOR_ERROR, "Altrimenti usa (/dis)assembla <slotid> per disassemblare un'arma nell'inventario.");
+			return SendClientMessage(playerid, COLOR_ERROR, "Altrimenti usa (/dis)assembla <slotid> per disassemblare un'arma nell'inventario."), false;
 		}
 		if(!Weapon_CanBeDisassembled(itemid))
-			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi disassemblare quest'arma.");
+			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi disassemblare quest'arma."), false;
 		new data[10], amounts[10];
 		data[0] = itemid;
 		data[1] = Weapon_GetAmmoType(itemid);
 		amounts[0] = 1;
 		amounts[1] = ammo;
 		if(!Inventory_HasSpaceForItems(Character_GetInventory(playerid), data, amounts))
-			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario.");
+			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario."), false;
 		Character_RemoveWeapon(playerid, itemid);
 	}
 	else
 	{	
 		if(!Character_IsValidSlot(playerid, slotid))
-			return SendClientMessage(playerid, COLOR_ERROR, "Slot non valida.");
+			return SendClientMessage(playerid, COLOR_ERROR, "Slot non valida."), false;
 		itemid = Character_GetSlotItem(playerid, slotid);
 		ammo = Character_GetSlotExtra(playerid, slotid);
 		if(ServerItem_GetType(itemid) != ITEM_TYPE_WEAPON)
-			return SendClientMessage(playerid, COLOR_ERROR, "L'oggetto selezionato non è un'arma.");
+			return SendClientMessage(playerid, COLOR_ERROR, "L'oggetto selezionato non è un'arma."), false;
 		if(!Weapon_CanBeDisassembled(itemid))
-			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi disassemblare quest'arma.");
+			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi disassemblare quest'arma."), false;
 		if(ammo == 0)
-			return SendClientMessage(playerid, COLOR_ERROR, "L'arma selezionata è giè disassemblata.");
+			return SendClientMessage(playerid, COLOR_ERROR, "L'arma selezionata è giè disassemblata."), false;
 		new data[10], amounts[10];
 		data[0] = itemid;
 		data[1] = Weapon_GetAmmoType(itemid);
 		amounts[0] = 1;
 		amounts[1] = ammo;
 		if(!Inventory_HasSpaceForItems(Character_GetInventory(playerid), data, amounts))
-			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario.");
+			return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario."), false;
 		Character_DecreaseSlotAmount(playerid, slotid, 1);
 	}
 	Character_GiveItem(playerid, itemid, 1);
 	Character_GiveItem(playerid, Weapon_GetAmmoType(itemid), ammo);
 	SendFormattedMessage(playerid, COLOR_GREEN, "Hai disassemblato la tua arma (%s). Munizioni: %d", ServerItem_GetName(itemid), ammo);
 	Character_AMe(playerid, "disassembla un'arma.");
-	return 1;
+	return true;
 }
-alias:disassembla("dis");
 
 flags:gettaarma(CMD_ALIVE_USER);
 CMD:gettaarma(playerid, params[])
