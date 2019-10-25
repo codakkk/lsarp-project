@@ -257,7 +257,7 @@ stock Dealership_PlayerConfirmBuy(playerid)
 	SelectedVehiclePrice[playerid] = 0;
 	SetCameraBehindPlayer(playerid);
 	ClearBuyingVehicleData(playerid);
-	TogglePlayerControllable(playerid, 1);
+	Character_SetFreezed(playerid, false);
 	return 1;
 }
 
@@ -270,7 +270,7 @@ stock Dealership_PlayerCancelBuy(playerid)
 	Dealership_GetPosition(dealershipid, x, y, z);
 	SetPlayerPos(playerid, x, y, z);
 
-    TogglePlayerControllable(playerid, 1);
+    Character_SetFreezed(playerid, false);
     Character_SetVirtualWorld(playerid, 0);
     SetCameraBehindPlayer(playerid);
     ClearBuyingVehicleData(playerid);

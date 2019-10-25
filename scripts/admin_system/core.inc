@@ -1,7 +1,12 @@
-#include <admin_system\components\recon>
+#include "commands\acmds"
+#include "commands\tester"
+#include "commands\jr_moderator"
+#include "commands\moderator"
+#include "commands\admin"
+#include "commands\developer"
+#include "commands\rcon"
 
-#include <admin_system\commands>
-#include <admin_system\supporter_commands>
+#include "commands\recon"
 
 #include <YSI_Coding\y_hooks>
 

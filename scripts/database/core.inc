@@ -11,7 +11,7 @@ hook OnGameModeInit()
 	   if(mysql_errno(gMySQL) != 0) 
 		  printf("Impossibile collegarsi al Database");
     }
-	mysql_log(ERROR | WARNING);
+	//mysql_log(ERROR | WARNING);
 	
     mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS accounts \
 						(`id` INT(11) NOT NULL AUTO_INCREMENT, \

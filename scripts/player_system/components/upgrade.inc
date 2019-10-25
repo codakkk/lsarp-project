@@ -20,8 +20,8 @@ hook OnCharacterLoad(playerid)
     inline OnLoad()
     {
         cache_get_value_name_float(0, "max_health", PlayerMaxHealth[playerid]);
-        cache_get_value_name_float(1, "max_armour", PlayerMaxArmour[playerid]);
-        cache_get_value_name_int(2, "upgrade_points", UpgradePoints[playerid]);
+        cache_get_value_name_float(0, "max_armour", PlayerMaxArmour[playerid]);
+        cache_get_value_name_int(0, "upgrade_points", UpgradePoints[playerid]);
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT max_health, max_armour, upgrade_points FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
     return 1;

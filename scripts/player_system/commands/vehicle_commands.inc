@@ -77,34 +77,34 @@ alias:finestrino("fin");
 flags:vluci(CMD_ALIVE_USER);
 CMD:vluci(playerid, params[])
 {
-	return pc_cmd_vehicle(playerid, "luci");
+	return callcmd::vehicle(playerid, "luci");
 }
 
 flags:vparcheggia(CMD_ALIVE_USER);
 CMD:vparcheggia(playerid, params[])
 {
-	return pc_cmd_vehicle(playerid, "parcheggia");
+	return callcmd::vehicle(playerid, "parcheggia");
 }
 alias:vparcheggia("vpark");
 
 flags:vsicura(CMD_ALIVE_USER);
 CMD:vsicura(playerid, params[])
 {
-    return pc_cmd_vehicle(playerid, "sicura");
+    return callcmd::vehicle(playerid, "sicura");
 }
 
 
 flags:vbagagliaio(CMD_ALIVE_USER);
 CMD:vbagagliaio(playerid, params[])
 {
-	return pc_cmd_vehicle(playerid, "bagagliaio");
+	return callcmd::vehicle(playerid, "bagagliaio");
 }
 alias:vbagagliaio("vtrunk");
 
 flags:vinventario(CMD_ALIVE_USER);
 CMD:vinventario(playerid, params[])
 {
-	return pc_cmd_vehicle(playerid, "inventario");
+	return callcmd::vehicle(playerid, "inventario");
 }
 alias:vinventario("vinv");
 
@@ -235,7 +235,7 @@ CMD:vusa(playerid, params[])
 flags:motore(CMD_ALIVE_USER);
 CMD:motore(playerid, params[])
 {
-    return pc_cmd_vehicle(playerid, "motore");
+    return callcmd::vehicle(playerid, "motore");
 }
 
 /*timer TurnOnVehicleEngine[500](playerid)
@@ -295,11 +295,11 @@ Dialog:Dialog_VehicleAction(playerid, response, listitem, inputtext[])
         {
             new dst[24];
 			format(dst, sizeof(dst), "sicura %d", dst);
-			pc_cmd_vsicura(playerid, dst);
+			callcmd::vsicura(playerid, dst);
         }
         case 1: // Park
         {
-            return pc_cmd_vparcheggia(playerid, "");
+            return callcmd::vparcheggia(playerid, "");
         }
         case 2: // Trunk
         {

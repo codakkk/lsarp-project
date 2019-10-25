@@ -131,7 +131,7 @@ CMD:mostradocumenti(playerid, params[])
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore inserito non è collegato.");
 
     if(playerid == id)
-        return pc_cmd_documenti(playerid, "");
+        return callcmd::documenti(playerid, "");
 
     if(!IsPlayerInRangeOfPlayer(playerid, id, 5.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");

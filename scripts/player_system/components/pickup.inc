@@ -15,7 +15,7 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, Building:building, E_ELEMENT_TY
 		}
 		if(Building_IsOwnable(building))
 		{
-			if(Building_GetOwnerID(building) != 0)
+			if(Building_IsOwned(building))
 			{
 				new bname[MAX_BUILDING_NAME];
 				Building_GetName(building, bname);

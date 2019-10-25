@@ -87,9 +87,10 @@
 #include <streamer>
 #define PP_SYNTAX 1
 //#define PP_SYNTAX_GENERIC 1
-#define PP_ALL_TAGS _,bool,Float,VariantTags,StringTags,List,Map,IterTags,Text3D,Pool,PlayerObject,Inventory,Building,House,PlayerObject
+#define PP_ALL_TAGS _,bool,Float,VariantTags,StringTags,Task,List,Map,IterTags,Text3D,Pool,PlayerObject,Inventory,Building,House,PlayerObject
 #include <PawnPlus>
-// #include <pp-mysql> // Must update pp first
+#include <async-dialogs>
+#include <pp-mysql> // Must update pp first
 #include <OPA>
 #include <miscellaneous\pp_wrappers>
 #include <PreviewModelDialog>
@@ -123,7 +124,7 @@ enum (<<= 1)
 	CMD_MEDICAL,
 	CMD_GOVERNMENT,
 	CMD_ILLEGAL,
-	CMD_SUPPORTER,
+	CMD_TESTER,
 	CMD_JR_MODERATOR,
 	CMD_MODERATOR,
 	CMD_ADMIN,
@@ -170,7 +171,7 @@ enum (<<= 1)
 
 // ========== [ DIALOGS ] ==========
 #include <player_system\dialogs>
-#include <YSI_Coding\y_hooks> // Place hooks after this. Everything included before this, is hooked first.
+#include <YSI_Coding\y_hooks> // Place hooks after this. Everything included before, gets hooked first
 
 forward OnCharacterDamageDone(playerid, Float:amount, issuerid, weaponid, bodypart);
 
@@ -184,6 +185,11 @@ main()
 		//printf("domain: %s", domain);
 }
 
+
+public OnPlayerStateChange(playerid, newstate, oldstate)
+{
+	return 1;
+}
 
 public OnGameModeInit() 
 {
@@ -469,7 +475,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 		}
 	}
 	
-	if(flags & CMD_SUPPORTER && Account_GetAdminLevel(playerid) < 1)
+	if(flags & CMD_TESTER && Account_GetAdminLevel(playerid) < 1)
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro dello staff.");
 		return 0;

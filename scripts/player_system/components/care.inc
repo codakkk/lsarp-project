@@ -63,8 +63,13 @@ ptask OnCharacterCareUpdateTimer[1000](playerid)
 	return 1;
 }
 
-stock Character_AcceptCare(playerid)
+hook OnCharacterAccept(playerid, stringHash)
 {
+    if(stringHash != _I<cure>)
+		return 0;
+	
+	if(!Request_IsPending(playerid, REQUEST_TYPE_CARE) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_CARE))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta cure attiva.");
 	new senderid = Request_GetSender(playerid, REQUEST_TYPE_CARE);
 	
 	if(!Character_CanInteract(senderid))

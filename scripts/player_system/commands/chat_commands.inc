@@ -123,7 +123,7 @@ CMD:me(playerid, params[])
     if(isnull(params) || strlen(params) > 128) 
         return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /me <testo>");
 	if(Character_IsInjured(playerid))
-		return pc_cmd_melow(playerid, params);
+		return callcmd::melow(playerid, params);
     Character_Me(playerid, params);
     return 1;
 }

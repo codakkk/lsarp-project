@@ -176,7 +176,7 @@ Dialog:Dialog_ZPoints(playerid, response, listitem, inputtext[])
 Dialog:Dialog_ZPointsUseReward(playerid, response, listitem, inputtext[])
 {
 	if(!response)
-		return pc_cmd_zpoints(playerid, "");
+		return callcmd::zpoints(playerid, "");
 	switch(listitem)
 	{
 		case 0:

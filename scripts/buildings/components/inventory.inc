@@ -96,7 +96,7 @@ stock Building_ShowInventory(Building:building, playerid)
 Dialog:Dialog_BizInventory(playerid, response, listitem, inputtext[])
 {
 	if(!response)
-        return Character_ShowBizDialog(playerid);
+        return 0;
     
     Internal_ShowBuildingSlotAction(playerid, listitem);
 	return 1;

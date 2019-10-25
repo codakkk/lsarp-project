@@ -132,7 +132,7 @@ CMD:vehicle(playerid, params[])
 	
 		Vehicle_ShowInventory(vehicleid, playerid);
 	}
-	else if(commandHash == _I<lista>)
+	else if(commandHash == _I<lista> || commandHash == _I<list>)
 	{
 		return Character_ShowVehicleList(playerid, playerid);
 	}
@@ -277,9 +277,12 @@ Dialog:Dialog_SellVehicleToPlayer(playerid, response, listitem, inputtext[])
 	return 1;
 }
 
-stock Character_AcceptVehicleRequest(playerid)
+hook OnCharacterAccept(playerid, stringHash)
 {
-	if(!Request_IsPending(playerid, REQUEST_TYPE_VEHICLE))
+    if(stringHash != _I<veicolo> && stringHash != _I<veh> && stringHash != _I<vehicle>)
+		return 0;
+	
+	if(!Request_IsPending(playerid, REQUEST_TYPE_VEHICLE) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_VEHICLE))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta attiva.");
 	new 
 		senderid = Request_GetSender(playerid, REQUEST_TYPE_VEHICLE),
@@ -377,58 +380,51 @@ public LoadCharacterVehicle(playerid, slotid)
 	return 1;
 }
 
-stock Character_ShowVehicleList(showToPlayer, playerid)
+stock Character_ShowVehicleList(showToPlayer, playerid, bool:forceTextOnly = false)
 {
-	inline OnLoad()
+	if(playerid != showToPlayer)
+		SendFormattedMessage(showToPlayer, -1, "Veicoli di %s (%d)", Character_GetRolePlayName(playerid), playerid);
+
+	new 
+		dbid, modelid, plate[9], vehicleid = 0,
+		String:string = str_new("");
+	
+	await mysql_aquery_s(gMySQL, str_format("SELECT id, model, plate FROM `vehicles` WHERE owner_id = '%d'", Character_GetID(playerid)));
+
+	new rows = cache_num_rows();
+
+	if(rows <= 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Nessun veicolo trovato.");
+
+	for(new i = 0; i < rows; ++i)
 	{
-		new rows = cache_num_rows();
-		
-		if(rows <= 0)
-			return SendClientMessage(showToPlayer, COLOR_ERROR, "Non sono stati trovati veicoli.");
+		vehicleid = 0;
 
-		if(playerid != showToPlayer)
-			SendFormattedMessage(showToPlayer, -1, "Veicoli di %s (%d)", Character_GetRolePlayName(playerid), playerid);
+		cache_get_value_name_int(i, "id", dbid);
+		cache_get_value_name_int(i, "model", modelid);
+		cache_get_value_name(i, "plate", plate);
 
-		new 
-			dbid, modelid, plate[9], vehicleid = 0,
-			String:string;
-		for(new i = 0; i < rows; ++i)
+		if(map_has_key(GetVehiclesMap(), dbid))
+			vehicleid = map_get(GetVehiclesMap(), dbid);
+
+		if(Player_HasVehModeEnabled(playerid) || forceTextOnly)
 		{
-			vehicleid = 0;
-
-			cache_get_value_name_int(i, "id", dbid);
-			cache_get_value_name_int(i, "model", modelid);
-			cache_get_value_name(i, "plate", plate);
-
-			foreach(new v : Vehicle)
-			{
-				if(Vehicle_GetID(v) == dbid)
-				{
-					vehicleid = v;
-					break;
-				}
-			}
-
-			if(Player_HasVehModeEnabled(playerid))
-			{
-				if(vehicleid != 0)
-					SendFormattedMessage(playerid, COLOR_LIGHTBLUE, "[Slot %d] %s [%s] - Spawnato - ID: %d", i + 1, Vehicle_GetNameFromModel(modelid), plate, vehicleid);
-				else
-					SendFormattedMessage(playerid, COLOR_LIGHTBLUE, "[Slot %d] %s [%s] - Non Spawnato", i + 1, Vehicle_GetNameFromModel(modelid), plate);
-			}
+			if(vehicleid != 0)
+				SendFormattedMessage(playerid, COLOR_LIGHTBLUE, "[Slot %d] %s [%s] - Spawnato - ID: %d", i + 1, Vehicle_GetNameFromModel(modelid), plate, vehicleid);
 			else
-			{
-				if(vehicleid == 0)
-					string += str_format("[Slot %d] %s [%s] - Non Spawnato\n", i + 1, Vehicle_GetNameFromModel(modelid), plate);
-				else
-					string += str_format("[Slot %d] %s [%s] - Spawnato - ID: %d\n", i + 1, Vehicle_GetNameFromModel(modelid), plate, vehicleid);
-			}
+				SendFormattedMessage(playerid, COLOR_LIGHTBLUE, "[Slot %d] %s [%s] - Non Spawnato", i + 1, Vehicle_GetNameFromModel(modelid), plate);
 		}
-
-		if(!Player_HasInvModeEnabled(playerid))
-			Dialog_Show_s(playerid, DialogNull, DIALOG_STYLE_LIST, @("Lista veicoli"), string, "Seleziona", "Chiudi");
+		else
+		{
+			if(vehicleid == 0)
+				str_append_format(string, "[Slot %d] %s [%s] - Non Spawnato\n", i + 1, Vehicle_GetNameFromModel(modelid), plate);
+			else
+				str_append_format(string, "[Slot %d] %s [%s] - Spawnato - ID: %d\n", i + 1, Vehicle_GetNameFromModel(modelid), plate, vehicleid);
+		}
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `vehicles` WHERE owner_id = '%d'", Character_GetID(playerid));
+
+	if(!Player_HasInvModeEnabled(playerid) && !forceTextOnly)
+		Dialog_Show_s(playerid, DialogNull, DIALOG_STYLE_LIST, @("Lista veicoli"), string, "Seleziona", "Chiudi");
 	return 1;
 }
 
@@ -459,7 +455,7 @@ ptask OnVehicleFuelTextDrawTimer[1000](playerid)
 hook OnPlayerExitVehicle(playerid, vehicleid)
 {
 	new seat = GetPlayerVehicleSeat(playerid);
-	if(Vehicle_IsLocked(vehicleid)&& !Player_IsAdminDuty(playerid))
+	if(Vehicle_IsLocked(vehicleid) && !Player_IsAdminDuty(playerid))
 	{
 		if(Vehicle_GetOwnerID(vehicleid) != Character_GetID(playerid))// && (!IsABike(vehicleid) && !IsAMotorBike(vehicleid)))
 		{
@@ -470,7 +466,7 @@ hook OnPlayerExitVehicle(playerid, vehicleid)
 		{
 			new r[8];
 			valstr(r, vehicleid);
-			pc_cmd_vapri(playerid, r);
+			callcmd::vapri(playerid, r);
 		}*/
 	}
 	return Y_HOOKS_CONTINUE_RETURN_1;
@@ -484,7 +480,7 @@ hook OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
 		{
 			new r[8];
 			valstr(r, vehicleid);
-			pc_cmd_vapri(playerid, r);
+			callcmd::vapri(playerid, r);
 		}
 		else
 		{*/
@@ -542,7 +538,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 			new vehicleid = GetPlayerVehicleID(playerid);
 			if( (PRESSED(KEY_YES) ) )
 			{
-				pc_cmd_motore(playerid, "");
+				callcmd::motore(playerid, "");
 			}
 			else if( (PRESSED(KEY_LOOK_BEHIND)) && Vehicle_IsEngineOn(vehicleid))
 			{
@@ -551,7 +547,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 		}
 		if(PRESSED(KEY_NO))
 		{
-			pc_cmd_vehicle(playerid, "sicura");
+			callcmd::vehicle(playerid, "sicura");
 		}
 	}
 	return Y_HOOKS_CONTINUE_RETURN_1;

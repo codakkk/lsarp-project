@@ -203,16 +203,10 @@ stock Character_HandleFirstSpawn(playerid)
 
 	Character_SetSkin(playerid, Character_GetSkin(playerid));
 	
-	SetPlayerPos(playerid, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
-	Character_SetVirtualWorld(playerid, 0);
-	SetPlayerInterior(playerid, 0);
-
-	Character_SetVirtualWorld(playerid, 0);
-	SetPlayerInterior(playerid, 0);
+	Character_SetSafePosition(playerid, DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z, 0, 0);
 
 	SetCameraBehindPlayer(playerid);
 	
-
 	if(IsFirstSpawn{playerid})
 	{
 		IsFirstSpawn{playerid} = false;
@@ -225,7 +219,7 @@ stock Character_HandleFirstSpawn(playerid)
 			SendClientMessage(playerid, -1, "Utilizza ({85bb65}/inv{FFFFFF})entario per interagire con il tuo inventario.");
 		}
 		
-		SetPlayerHealth(playerid, 100.0);
+		Character_SetHealth(playerid, 100.0);
 
 		new query[128];
 		mysql_format(gMySQL, query, sizeof(query), "UPDATE `character_spawn_data` SET is_first_spawn = '0' WHERE character_id = '%d'", Character_GetID(playerid));
@@ -257,7 +251,7 @@ static Character_Spawn(playerid)
 	#if defined LSARP_DEBUG
 		if(!Player_IsAdminDuty(playerid) && !strcmp(Account_GetName(playerid), "Coda", false))
 		{
-			pc_cmd_aduty(playerid, "");
+			callcmd::aduty(playerid, "");
 		}
 	#endif
 	Character_ResetDeathState(playerid);
@@ -266,6 +260,9 @@ static Character_Spawn(playerid)
 	Character_SetArmour(playerid, PlayerSpawnData[playerid][LastArmour]);
 	
 	Character_FreezeForTime(playerid, 3000);
+
+	TogglePlayerSpectating(playerid, false);
+	SetCameraBehindPlayer(playerid);
 
 	if(IsFirstSpawn{playerid}) // First Login/Spawn
     {
@@ -377,6 +374,7 @@ static Character_LoadSpawnData(playerid)
 		{
 			mysql_tquery_f(gMySQL, "INSERT INTO `character_spawn_data` (character_id, is_first_spawn, spawn_type, spawn_id, spawn_x, spawn_y, spawn_z, spawn_a, spawn_interior, spawn_world) VALUES('%d', 1, '0', '0', '%f', '%f', '%f', '0.0', '0', '0')", Character_GetID(playerid), DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z);
 			IsFirstSpawn{playerid} = true;
+			Character_Spawn(playerid);
 			return 1;
 		}
 

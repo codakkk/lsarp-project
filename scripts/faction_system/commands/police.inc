@@ -251,9 +251,13 @@ CMD:megafono(playerid, params[])
 }
 alias:megafono("m");
 
-stock Character_AcceptSearch(playerid)
+hook OnCharacterAccept(playerid, stringHash)
 {
-	if(!Request_IsPending(playerid, REQUEST_TYPE_SEARCH))
+    if(stringHash != _I<perquisizione> && stringHash != _I<perq>)
+		return 0;
+	
+	if(!Request_IsPending(playerid, REQUEST_TYPE_SEARCH) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_SEARCH))
+	
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di perquisizione attiva."), 0;
     if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_SEARCH), 5.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;

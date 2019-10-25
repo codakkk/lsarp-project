@@ -1,6 +1,5 @@
 #include <house_system\core>
 #include <pickup_system\core>
-
 #include <YSI_Coding\y_hooks>
 
 static
@@ -77,13 +76,36 @@ CMD:affittacasa(playerid, params[])
 
 hook OnCharacterTryBuy(playerid)
 {
+	static response[e_DIALOG_RESPONSE_INFO];
+
 	new House:house = Character_GetHouse(playerid, false);
+	new Building:building = Character_GetBuilding(playerid, false);
+	
 	if(House_IsValid(house))
-		return Character_BuyHouse(playerid, house);
-				
-	new Building:building, E_ELEMENT_TYPE:type;
-	if(Character_GetNearestPickup(playerid, building, type) && type == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_IsValid(building))
-		return Character_BuyBuilding(playerid, building);
+	{
+		if(!House_IsOwnable(house))
+			return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
+		yield 1;
+		await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, House_GetAddressStr(house), str_format("Sei sicuro di voler acquistare questa casa per $%d?", House_GetPrice(house)), @("Acquista"), @("Annulla"));
+		
+		if(response[E_DIALOG_RESPONSE_Response])
+		{
+			Character_BuyHouse(playerid, house);
+		}
+	}	
+	else if(Building_IsValid(building))
+	{
+		if(Building_IsOwned(building))
+			return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
+
+		yield 1;
+		await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, Building_GetAddressStr(building), str_format("Sei sicuro di voler acquistare questa biz per $%d?", Building_GetPrice(building)), @("Acquista"), @("Annulla"));
+		
+		if(response[E_DIALOG_RESPONSE_Response])
+		{
+			Character_BuyBuilding(playerid, building);
+		}
+	}
 	return 1;
 }
 
@@ -113,6 +135,8 @@ CMD:mybiz(playerid, params[])
 	if(Character_GetOwnedHouseCount(playerid) == 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi uno o più businesses.");
 	SendClientMessage(playerid, 0xFF6347FF, "I business che possiedi sono:");
+	if(Character_GetOwnedBuildingCount(playerid) <= 0)
+		return SendClientMessage(playerid, 0xFF6347FF, "Non possiedi uno o più biz.");
 	for_list(i : CharacterBuildings[playerid])
 	{
 		SendFormattedMessage(playerid, 0xFF6347FF, "- %s", Building_GetAddress(Building:iter_get(i)));
@@ -155,13 +179,13 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 	{
 		if(PRESSED(KEY_YES))
 		{
-			pc_cmd_entra(playerid, "");
+			callcmd::entra(playerid, "");
 		}
 	}
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-// Pref pc_cmd_entra(playerid, ""); instead of Character_Enter because the first makes some considerations.
+// Pref callcmd::entra(playerid, ""); instead of Character_Enter because the first makes some considerations.
 stock Character_Enter(playerid)
 {
 	printf("[Character_Enter]: Stock");
@@ -200,32 +224,23 @@ stock Character_BuyHouse(playerid, House:house)
 	if(House_GetOwnerID(house) == Character_GetID(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Sei già proprietario di questa casa.");
 
-    if(House_GetOwnerID(house) != 0)
+    if(!House_IsOwnable(house))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
-
-    //if(Character_HasRentHouse(playerid))
-	   //return SendClientMessage(playerid, COLOR_ERROR, "Sei già proprietario di una casa.");
 
     new price = House_GetPrice(house);
     if(Character_GetMoney(playerid) < price)
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi per acquistare questa proprietà.");
 
-    House_SetOwner(house, playerid);
+	if(!Character_CanOwnHouse(playerid, house))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi acquistare ulteriori immobili.");
 
-    Character_GiveMoney(playerid, -price, "Character_BuyHouse");
-
-    SendFormattedMessage(playerid, 0x33AA33FF, "Hai acquistato l'immobile situato a %s.", House_GetAddress(house));
-    return 1;
-}
-
-stock Character_ShowHouseDialog(playerid)
-{
-	new House:house = Character_GetHouseMenu(playerid);
-	if(House_IsValid(house))
+    if(House_SetOwner(house, playerid))
 	{
-		return Dialog_Show(playerid, Dialog_House, DIALOG_STYLE_LIST, "Casa", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nCambia Interior\nLista Affittuari\nAttiva/Disattiva Affitto\nPrezzo Affitto", "Continua", "Chiudi");
+    	Character_GiveMoney(playerid, -price, "Character_BuyHouse");
+    	
+		SendFormattedMessage(playerid, 0x33AA33FF, "Hai acquistato l'immobile situato a %s.", House_GetAddress(house));
 	}
-	return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno di casa tua."), 0;
+    return 1;
 }
 
 stock bool:Character_AddOwnedBuilding(playerid, Building:building)
@@ -376,9 +391,10 @@ stock Character_GetOwnedHouseCount(playerid)
 
 stock bool:Character_CanOwnHouse(playerid, House:house)
 {
+	#pragma unused house
 	static const maxBuildings[] = {2, 3, 4, 5};
-	new max = maxBuildings[Account_GetPremiumLevel(playerid)];
-	if(Character_GetOwnedHouseCount(playerid) >= max)
+	new m = maxBuildings[Account_GetPremiumLevel(playerid)];
+	if(Character_GetOwnedHouseCount(playerid) >= m)
 		return false;
 	return true;
 }

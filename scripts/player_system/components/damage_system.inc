@@ -58,7 +58,7 @@ CMD:danni(playerid, params[])
 	{
 		new s[8];
 		valstr(s, playerid);
-		pc_cmd_danni(playerid, s);
+		callcmd::danni(playerid, s);
 		return 1;
 		//return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /danni [playerid/partofname]");
 	}

@@ -244,11 +244,11 @@ Dialog:Dialog_InvEmptyItemAction(playerid, response, listitem, inputtext[])
 		return Character_ShowInventory(playerid, playerid);
 	if(listitem == 0) // /dep
 	{
-		pc_cmd_depositaarma(playerid, "");
+		callcmd::depositaarma(playerid, "");
 	}
 	else if(listitem == 1) // Dis
 	{
-		pc_cmd_disassembla(playerid, "");
+		callcmd::disassembla(playerid, "");
 	}
 	else if(listitem == 2)
 	{
@@ -340,7 +340,7 @@ Dialog:Dialog_InvItemAction(playerid, response, listitem, inputtext[])
 			{
 				new dest[8];
 				valstr(dest, slotid);
-				pc_cmd_disassembla(playerid, dest);
+				callcmd::disassembla(playerid, dest);
 				return 1;
 			}
 		}
@@ -378,7 +378,7 @@ Dialog:Dialog_InvItemDrop(playerid, response, listitem, inputtext[])
 		//return SendClientMessage(playerid, COLOR_ERROR, "Slot non valida o quantità non valida.");
 	//new str[20];
 	//format(str, sizeof(str), "%d %d", slotid, amount);
-	//pc_cmd_getta(playerid, str);
+	//callcmd::getta(playerid, str);
 	Character_DropItem(playerid, slotid, amount);
 	return 1;
 }
@@ -425,7 +425,7 @@ Dialog:Dialog_InvItemGivePlayer(playerid, response, listitem, inputtext[])
 	Character_SendItemRequest(playerid, id, slotid, amount);
 	/*new p[32];
 	format(p, sizeof(p), "%d %d %d", id, slotid, amount);
-	pc_cmd_passa(playerid, p);*/
+	callcmd::passa(playerid, p);*/
 	return 1;
 }
 

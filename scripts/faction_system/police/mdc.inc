@@ -127,7 +127,7 @@ Dialog:Dialog_MDCSearchCharacter(playerid, response, listitem, inputtext[])
             {
                 if(Building_GetOwnerID(building) == id)
                 {
-                    end += str_format("{33AA33}%s{FFFFFF}\n", Building_GetAddress(building));
+                    end += str_format("{33AA33}%S{FFFFFF}\n", Building_GetAddressStr(building));
                 }
             } 
 

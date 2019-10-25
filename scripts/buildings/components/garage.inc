@@ -149,10 +149,14 @@ CMD:vernicia(playerid, params[])
     return 1;
 }
 
-stock Character_AcceptVehicleSpray(playerid)
+static Character_AcceptVehicleSpray(playerid)
 {
-    if(!Request_IsPending(playerid, REQUEST_TYPE_VEHICLE_SPRAY))
+    
+    
+    if(!Request_IsPending(playerid, REQUEST_TYPE_VEHICLE_SPRAY) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_VEHICLE_SPRAY))
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di riverniciatura attiva."), 0;
+        
+
     if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_VEHICLE_SPRAY), 5.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
     
@@ -181,37 +185,46 @@ stock Character_AcceptVehicleSpray(playerid)
     return 1;
 }
 
-stock Character_AcceptRepair(playerid)
+hook OnCharacterAccept(playerid, stringHash)
 {
-    if(!Request_IsPending(playerid, REQUEST_TYPE_REPAIR))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di riparazione attiva."), 0;
+    if(stringHash == _I<verniciatura> || stringHash == _I<vern>)
+	{
+        Character_AcceptVehicleSpray(playerid);
+    }
+    else if(stringHash == _I<riparazione>)
+    {
+
+        if(!Request_IsPending(playerid, REQUEST_TYPE_REPAIR) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_REPAIR))
+            return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di riparazione attiva."), 0;
+        
+        if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_REPAIR), 5.0))
+            return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
+
+
+        new senderid = Request_GetSender(playerid, REQUEST_TYPE_REPAIR),
+            price = Request_GetAmount(playerid, REQUEST_TYPE_REPAIR),
+            vehicleid = GetPlayerVehicleID(playerid)
+        ;
+
+        if(!Character_CanInteract(senderid))
+            return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non puo' ripararti il veicolo al momento.");
+
+        Character_GiveMoney(playerid, -price, "repair");
+        Character_GiveMoney(senderid, price, "repair");
+
+        Character_DecreaseItemAmount(senderid, gItem_MechanicalComponents, MATERIALS_PER_REPAIR);
+        
+        SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s ha accettato la tua richiesta di riparazione. Hai guadagnato $%d.", Character_GetRolePlayName(playerid), price);
+        SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "La riparazione ti è costata: %d materiali meccanici.", MATERIALS_PER_REPAIR);
+
+        SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "%s ha riparato il tuo veicolo (%s) per $%d.", Character_GetRolePlayName(senderid), Vehicle_GetName(vehicleid), price);
+
+        Vehicle_Repair(vehicleid);
+
+        Request_Reset(playerid, REQUEST_TYPE_REPAIR);
+        Request_Reset(senderid, REQUEST_TYPE_REPAIR);
+    }
     
-    if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_REPAIR), 5.0))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
-
-
-    new senderid = Request_GetSender(playerid, REQUEST_TYPE_REPAIR),
-        price = Request_GetAmount(playerid, REQUEST_TYPE_REPAIR),
-        vehicleid = GetPlayerVehicleID(playerid)
-    ;
-
-    if(!Character_CanInteract(senderid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non puo' ripararti il veicolo al momento.");
-
-    Character_GiveMoney(playerid, -price, "repair");
-    Character_GiveMoney(senderid, price, "repair");
-
-    Character_DecreaseItemAmount(senderid, gItem_MechanicalComponents, MATERIALS_PER_REPAIR);
-    
-    SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s ha accettato la tua richiesta di riparazione. Hai guadagnato $%d.", Character_GetRolePlayName(playerid), price);
-    SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "La riparazione ti è costata: %d materiali meccanici.", MATERIALS_PER_REPAIR);
-
-    SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "%s ha riparato il tuo veicolo (%s) per $%d.", Character_GetRolePlayName(senderid), Vehicle_GetName(vehicleid), price);
-
-    Vehicle_Repair(vehicleid);
-
-    Request_Reset(playerid, REQUEST_TYPE_REPAIR);
-    Request_Reset(senderid, REQUEST_TYPE_REPAIR);
     return 1;
 }
 
@@ -274,7 +287,7 @@ hook function Character_Enter(playerid)
 {
     printf("[Character_Enter]: Garage");
     new vehicleid = GetPlayerVehicleID(playerid);
-    new Float:range = Vehicle_IsValid(vehicleid) ? 7.0 : 1.5;
+    new Float:range = Vehicle_IsValid(vehicleid) ? 4.0 : 1.5;
     new Building:building = Character_GetCurrentBuilding(playerid);
 
     static 
@@ -296,6 +309,7 @@ hook function Character_Enter(playerid)
                 finalZ = ez;
                 finalInterior = Building_GetExitInterior(b);
                 finalWorld = Building_GetExitWorld(b);
+                printf("Enter");
                 break;
             }
             if(IsPlayerInRangeOfPoint(playerid, range, ex, ey, ez) && Character_GetVirtualWorld(playerid) == Building_GetExitWorld(b))
@@ -306,6 +320,7 @@ hook function Character_Enter(playerid)
                 finalZ = z;
                 finalInterior = Building_GetEnterInterior(b);
                 finalWorld = Building_GetEnterWorld(b);
+                printf("Exit");
                 break;
             }
         }
@@ -316,10 +331,10 @@ hook function Character_Enter(playerid)
 
     if(vehicleid > 0 && GetPlayerVehicleSeat(playerid) != 0)
     {
-        SendClientMessage(playerid, COLOR_ERROR, "Devi essere il guidatore per poter entrare all'interno dell'edificio.");
+        SendClientMessage(playerid, COLOR_ERROR, "Devi essere il guidatore per poter entrare o uscire dall'edificio.");
         return 0;
     }
-    
+
     if(Building_IsLocked(building))
     {
         GameTextForPlayer(playerid, "~r~Chiuso", 5000, 1);
@@ -335,13 +350,9 @@ hook function Character_Enter(playerid)
         {
             if(!Character_IsLogged(p) || GetPlayerVehicleID(p) != vehicleid) 
                 continue;
-            
             defer SetPlayerInSeatAfterTime(p, GetPlayerVehicleID(p), GetPlayerVehicleSeat(p));
-            
             Character_SetSafePosition(p, finalX, finalY, finalZ, finalInterior, finalWorld);
-
         }
-        
         defer SetVehiclePosDyn(vehicleid, finalX, finalY, finalZ, finalInterior, finalWorld);
     }
     else

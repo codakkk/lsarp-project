@@ -99,7 +99,7 @@ CMD:richieste(playerid, params[])
     return 1;
 }
 
-flags:lr(CMD_SUPPORTER);
+flags:lr(CMD_TESTER);
 CMD:lr(playerid, params[])
 {
     new type = (Account_GetAdminLevel(playerid) == 1) ? (REQUEST_TYPE_SUPPORTER) : (REQUEST_TYPE_MODERATOR);
@@ -115,7 +115,7 @@ CMD:lr(playerid, params[])
     return 1;
 }
 
-flags:rr(CMD_SUPPORTER);
+flags:rr(CMD_TESTER);
 CMD:rr(playerid, params[])
 {
     new rid, reason[128];
@@ -126,7 +126,7 @@ CMD:rr(playerid, params[])
     return 1;
 }
 
-flags:ar(CMD_SUPPORTER);
+flags:ar(CMD_TESTER);
 CMD:ar(playerid, params[])
 {
     new rid;

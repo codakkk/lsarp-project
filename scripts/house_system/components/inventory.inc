@@ -97,7 +97,11 @@ stock House_ShowInventory(House:house, playerid)
 Dialog:Dialog_HouseInventory(playerid, response, listitem, inputtext[])
 {
 	if(!response)
-        return Character_ShowHouseDialog(playerid);
+    {
+		Character_ShowHouseDialog(playerid);
+		return 1;
+	}
+	
     
     Internal_ShowHouseSlotAction(playerid, listitem);
 	return 1;

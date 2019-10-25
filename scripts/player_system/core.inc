@@ -63,6 +63,7 @@
 #include <player_system\components\spawn>
 
 #include <player_system\commands>
+
 // OTHERS
 
 #include <house_system\core>
@@ -99,7 +100,7 @@ static enum E_PLAYER_DATA
     LootZone, // MUST REMOVE FROM HERE SOON
 };
 static
-	PlayerInfo[MAX_PLAYERS][E_PLAYER_DATA],
+	CharacterInfo[MAX_PLAYERS][E_PLAYER_DATA],
 	CharacterName[MAX_PLAYERS][MAX_PLAYER_NAME]
 ;
 
@@ -187,7 +188,7 @@ stock Character_ShowStats(playerid, targetid)
 	getdate(year, month, day);
 	gettime(hours, minutes, seconds);
 	
-	new factionName[MAX_FACTION_NAME] = "N/A", rankName[MAX_FACTION_RANK_NAME] = "N/A", jobName[32] = "Nessuno";
+	new factionName[MAX_FACTION_NAME] = "N/A", rankName[MAX_FACTION_RANK_NAME] = "N/A", jobName[32] = "";
 
     if(Faction_IsValid(Character_GetFaction(playerid)))
 	{
@@ -259,28 +260,28 @@ stock Character_GetID(playerid)
 {
 	if(!IsPlayerConnected(playerid))
 		return 0;
-    return PlayerInfo[playerid][ID];
+    return CharacterInfo[playerid][ID];
 }
 
 stock Character_GetFaction(playerid)
 {
-	return PlayerInfo[playerid][Faction];
+	return CharacterInfo[playerid][Faction];
 }
 
 stock Character_SetFaction(playerid, factionid)
 {
-	PlayerInfo[playerid][Faction] = factionid;
+	CharacterInfo[playerid][Faction] = factionid;
 	mysql_tquery_f(gMySQL, "UPDATE `characters` SET faction = '%d' WHERE id = '%d'", factionid, Character_GetID(playerid));
 }
 
 stock Character_GetRank(playerid)
 {
-	return PlayerInfo[playerid][Rank];
+	return CharacterInfo[playerid][Rank];
 }
 
 stock Character_SetRank(playerid, rank)
 {
-	PlayerInfo[playerid][Rank] = rank;
+	CharacterInfo[playerid][Rank] = rank;
 	mysql_tquery_f(gMySQL, "UPDATE `characters` SET faction_rank = '%d' WHERE id = '%d'", rank, Character_GetID(playerid));
 }
 
@@ -292,17 +293,19 @@ stock House:Character_GetCurrentHouse(playerid)
 	return house;
 }
 
-stock House:Character_GetHouse(playerid, bool:inside = false)
+stock House:Character_GetHouse(playerid, bool:insideCheckToo = false)
 {
 	new House:house = INVALID_HOUSE, House:temp = INVALID_HOUSE;
-	if(inside)
+	if(insideCheckToo)
 	{
-		if(Checkpoint_GetInfoOfType(Character_GetCheckpoint(playerid), CHECKPOINT_TYPE_HOUSE, temp) && House_IsValid(temp) && Character_GetVirtualWorld(playerid) == House_GetExitWorld(temp))
+		temp = House_Find(Character_GetHouseID(playerid));
+		//if(Checkpoint_GetInfoOfType(Character_GetCheckpoint(playerid), CHECKPOINT_TYPE_HOUSE, temp) && House_IsValid(temp) && Character_GetVirtualWorld(playerid) == House_GetExitWorld(temp))
+		if(House_IsValid(temp))
 		{
 			house = temp;
 		}
 	}
-	else if(Checkpoint_GetInfoOfType(Character_GetCheckpoint(playerid), CHECKPOINT_TYPE_HOUSE, temp) && House_IsValid(temp) && Character_GetVirtualWorld(playerid) == House_GetEnterWorld(temp))
+	if(!House_IsValid(house) && Checkpoint_GetInfoOfType(Character_GetCheckpoint(playerid), CHECKPOINT_TYPE_HOUSE, temp) && House_IsValid(temp) && Character_GetVirtualWorld(playerid) == House_GetEnterWorld(temp))
 	{
 		house = temp;
 	}
@@ -357,13 +360,13 @@ stock LoadCharacterResult(playerid)
     cache_get_row_count(count);
     if(count > 0)
     {
-		cache_get_value_name_int(0, "id", PlayerInfo[playerid][ID]);
+		cache_get_value_name_int(0, "id", CharacterInfo[playerid][ID]);
 		cache_get_value_name(0, "name", CharacterName[playerid]);
 		
-		cache_get_value_name_int(0, "minutes_played", PlayerInfo[playerid][MinutesPlayed]);
+		cache_get_value_name_int(0, "minutes_played", CharacterInfo[playerid][MinutesPlayed]);
 
-		cache_get_value_name_int(0, "faction", PlayerInfo[playerid][Faction]);
-		cache_get_value_name_int(0, "faction_rank", PlayerInfo[playerid][Rank]);
+		cache_get_value_name_int(0, "faction", CharacterInfo[playerid][Faction]);
+		cache_get_value_name_int(0, "faction_rank", CharacterInfo[playerid][Rank]);
 		
 		cache_get_value_name_int(0, "faction_duty", tmp);
 		Character_SetFactionDuty(playerid, tmp ? true : false);
@@ -372,8 +375,8 @@ stock LoadCharacterResult(playerid)
 		cache_get_value_name_int(0, "banned", isBanned);
 		cache_get_value_name_int(0, "ban_expiry", banTime);
 
-		cache_get_value_name_int(0, "level", PlayerInfo[playerid][Level]);
-		cache_get_value_name_int(0, "experience", PlayerInfo[playerid][Experience]);
+		cache_get_value_name_int(0, "level", CharacterInfo[playerid][Level]);
+		cache_get_value_name_int(0, "experience", CharacterInfo[playerid][Experience]);
 
 		SetPlayerScore(playerid, Character_GetLevel(playerid));
 		if(isBanned == 2) // Is Freezed?
@@ -424,22 +427,16 @@ stock Character_SetSafePosition(playerid, Float:x, Float:y, Float:z, interior = 
 	// Just a workaround for teleport hack
 	SetSpawnInfo(playerid, 0, GetPlayerSkin(playerid), x, y, z, 0.0, 0, 0, 0, 0, 0, 0);
 
-	TogglePlayerSpectating(playerid, false);
-
 	SetPlayerInterior(playerid, interior);
 	Character_SetVirtualWorld(playerid, world);
 	Streamer_UpdateEx(playerid, x, y, z, world, interior, 2000, 1);
-	/*SetPlayerPos(playerid, x, y, z);
-	SetPlayerInterior(playerid, interior);
-	Character_SetVirtualWorld(playerid, world);
-	Character_FreezeForTime(playerid, 2000);*/
 	return 1;
 }
 
 stock Character_Clear(playerid)
 {
     new CleanData[E_PLAYER_DATA];
-    PlayerInfo[playerid] = CleanData;
+    CharacterInfo[playerid] = CleanData;
 }
 
 stock Character_LoadData(playerid)
@@ -557,7 +554,7 @@ stock Character_IsIDConnected(dbid)
 
 stock Character_SetLevel(playerid, level)
 {
-	PlayerInfo[playerid][Level] = level;
+	CharacterInfo[playerid][Level] = level;
 	SetPlayerScore(playerid, level);
 	mysql_tquery_f(gMySQL, "UPDATE `characters` SET level = '%d' WHERE id = '%d'", level, Account_GetID(playerid));
 }
@@ -569,12 +566,12 @@ stock Character_IncreaseLevel(playerid, amount)
 
 stock Character_GetLevel(playerid)
 {
-	return PlayerInfo[playerid][Level];
+	return CharacterInfo[playerid][Level];
 }
 
 stock Character_SetExperience(playerid, exp)
 {
-	PlayerInfo[playerid][Experience] = exp;
+	CharacterInfo[playerid][Experience] = exp;
 	mysql_tquery_f(gMySQL, "UPDATE `characters` SET level = '%d' WHERE id = '%d'", exp, Character_GetID(playerid));
 }
 
@@ -585,7 +582,7 @@ stock Character_AddExperience(playerid, amount)
 
 stock Character_GetExperience(playerid)
 {
-	return PlayerInfo[playerid][Experience];
+	return CharacterInfo[playerid][Experience];
 }
 
 stock Character_SetHealth(playerid, Float:health)
@@ -616,12 +613,12 @@ stock Float:Character_GetArmour(playerid)
 
 stock Character_AddMinutesPlayed(playerid, add)
 {
-	PlayerInfo[playerid][MinutesPlayed] += add;
+	CharacterInfo[playerid][MinutesPlayed] += add;
 	mysql_tquery_f(gMySQL, "UPDATE `characters` SET minutes_played = '%d' WHERE id = '%d'", Character_GetMinutesPlayed(playerid), Character_GetID(playerid));
 	return 1;
 }
 
 stock Character_GetMinutesPlayed(playerid)
 {
-	return PlayerInfo[playerid][MinutesPlayed];
+	return CharacterInfo[playerid][MinutesPlayed];
 }

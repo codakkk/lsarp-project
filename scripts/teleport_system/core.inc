@@ -247,7 +247,7 @@ alias:teleportedit("tedit");
 stock bool:GetTeleportRightPosByPlayer(playerid, teleportid, &Float:finalX, &Float:finalY, &Float:finalZ, &finalInterior, &finalWorld)
 {
     static Float:x, Float:y, Float:z, Float:ex, Float:ey, Float:ez;
-    new Float:range = IsPlayerInAnyVehicle(playerid) ? 7.0 : 1.5;
+    new Float:range = IsPlayerInAnyVehicle(playerid) ? 4.0 : 1.5;
     Teleport_GetEnterPosition(teleportid, x, y, z);
     Teleport_GetExitPosition(teleportid, ex, ey, ez);
     if(IsPlayerInRangeOfPoint(playerid, range, x, y, z) && Character_GetVirtualWorld(playerid) == Teleport_GetEnterWorld(teleportid))

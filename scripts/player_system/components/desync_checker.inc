@@ -62,9 +62,9 @@ hook OnPlayerUpdate(playerid)
             //Character_SetVirtualWorld(playerid, playerid);
         }
     }
-    new
-		Float:packet = NetStats_PacketLossPercent(playerid);
-
+    static
+		Float:packet = 0.0;
+    packet = NetStats_PacketLossPercent(playerid);
 	if(floatcmp(packet, 0.0) != 0 && floatcmp(packet, PacketLoss{playerid}) != 0)
 	{
 		PacketLoss{playerid} = packet;
