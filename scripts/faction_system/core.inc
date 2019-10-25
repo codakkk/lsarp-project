@@ -492,7 +492,7 @@ Dialog:Dialog_FactionActions(playerid, response, listitem, inputtext[])
 		}
 		case 6:
 		{
-			return pc_cmd_fedit(playerid, "spawn");
+			return callcmd::fedit(playerid, "spawn");
 		}
 		case 7:
 		{

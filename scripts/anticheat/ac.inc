@@ -257,7 +257,7 @@ static bool:ac_ACAllow[] =
 	true,	//20 Anti-GodMode from bullets (in vehicle)
 	true,	//21 Anti-Invisible hack
 	true,	//22 Anti-lagcomp-spoof
-	true,	//23 Anti-Tuning hack
+	false,	//23 Anti-Tuning hack
 	false,	//24 Anti-Parkour mod
 	true,	//25 Anti-Quick turn
 	true,	//26 Anti-Rapid fire
@@ -6649,7 +6649,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 		forward ac_OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ);
 	#endif
 #endif
-
+/*
 public OnVehicleMod(playerid, vehicleid, componentid)
 {
 	if(ACInfo[playerid][acKicked] > 0) return 0;
@@ -6702,7 +6702,7 @@ public OnVehicleMod(playerid, vehicleid, componentid)
 #if defined ac_OnVehicleMod
 	forward ac_OnVehicleMod(playerid, vehicleid, componentid);
 #endif
-
+*/
 public OnVehiclePaintjob(playerid, vehicleid, paintjobid)
 {
 	if(ACInfo[playerid][acKicked] > 0) return 0;

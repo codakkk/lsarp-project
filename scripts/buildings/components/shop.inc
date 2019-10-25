@@ -204,7 +204,7 @@ Dialog:Dialog_EditSellableItems(playerid, response, listitem, inputtext[])
         return 0;
     
     if(!response)
-        return Character_ShowBizDialog(playerid);
+        return 0;
     if(listitem == 0)
     {
         Building_ShowSellingItemsEdit(building, playerid);
@@ -261,7 +261,7 @@ Dialog:Dialog_EditSellableItemPrice(playerid, response, listitem, inputtext[])
         return 0;
 
     if(!response)
-        return Character_ShowBizDialog(playerid);
+        return 0;
     
     if(!Building_HasSellableItem(building, SelectedItemID{playerid}))
     {
@@ -332,7 +332,7 @@ Dialog:Dialog_AddSellableItem(playerid, response, listitem, inputtext[])
 stock bool:Building_CanSellItems(Building:building)
 {
     new type = Building_GetType(building);
-    return Building_IsOwned(building) && Building_IsOwnable(building) && type == BUILDING_TYPE_STORE;
+    return Building_IsOwned(building) && type == BUILDING_TYPE_STORE;
 }
 
 static Building_GetSellableItemPrice(Building:building, itemid)

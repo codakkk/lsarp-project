@@ -97,7 +97,7 @@ CMD:dshout(playerid, params[])
 			if(Character_GetVirtualWorld(p) == world)
 				SendFormattedMessage(p, -1, "[Porta] %s grida: %s!", Character_GetRolePlayName(playerid), params);
 		}
-		pc_cmd_shout(playerid, params);
+		callcmd::shout(playerid, params);
 	}
 	else
 	{
@@ -120,7 +120,7 @@ CMD:dshout(playerid, params[])
 			world = Building_GetEnterWorld(building);
 			interior = Building_GetEnterInterior(building);
 		}
-		pc_cmd_shout(playerid, params);
+		callcmd::shout(playerid, params);
 		SendRangedMessageStr(20.0, x, y, z, world, interior, str_format("[Porta] %s grida: %s", Character_GetRolePlayName(playerid), params), COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false);
 	}
 	return 1;
@@ -144,7 +144,7 @@ CMD:ddo(playerid, params[])
 			if(Character_GetVirtualWorld(p) == world)
 				SendFormattedMessage(p, -1, "* [Porta] %s (( %s ))", params, Character_GetRolePlayName(playerid));
 		}
-		pc_cmd_do(playerid, params);
+		callcmd::do(playerid, params);
 	}
 	else
 	{
@@ -168,7 +168,7 @@ CMD:ddo(playerid, params[])
 			interior = Building_GetEnterInterior(building);
 		}
 		
-		pc_cmd_do(playerid, params);
+		callcmd::do(playerid, params);
 
 		SendRangedMessageStr(20.0, x, y, z, world, interior, str_format("* [Porta] %s (( %s ))", params, Character_GetRolePlayName(playerid)), COLOR_INTERACTION, COLOR_INTERACTION, COLOR_INTERACTION, COLOR_INTERACTION, COLOR_INTERACTION, false);
 	}

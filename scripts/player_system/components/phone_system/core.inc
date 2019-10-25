@@ -759,7 +759,7 @@ Dialog:Dialog_UseCellPhone(playerid, response, listitem, inputtext[])
     {
         new val[16];
         valstr(val, SelectedPhone{playerid});
-        pc_cmd_cellinfo(playerid, val);
+        callcmd::cellinfo(playerid, val);
     }
     else if(listitem == 1)
     {

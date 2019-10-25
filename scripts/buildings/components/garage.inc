@@ -287,7 +287,7 @@ hook function Character_Enter(playerid)
 {
     printf("[Character_Enter]: Garage");
     new vehicleid = GetPlayerVehicleID(playerid);
-    new Float:range = Vehicle_IsValid(vehicleid) ? 7.0 : 1.5;
+    new Float:range = Vehicle_IsValid(vehicleid) ? 4.0 : 1.5;
     new Building:building = Character_GetCurrentBuilding(playerid);
 
     static 
@@ -309,6 +309,7 @@ hook function Character_Enter(playerid)
                 finalZ = ez;
                 finalInterior = Building_GetExitInterior(b);
                 finalWorld = Building_GetExitWorld(b);
+                printf("Enter");
                 break;
             }
             if(IsPlayerInRangeOfPoint(playerid, range, ex, ey, ez) && Character_GetVirtualWorld(playerid) == Building_GetExitWorld(b))
@@ -319,6 +320,7 @@ hook function Character_Enter(playerid)
                 finalZ = z;
                 finalInterior = Building_GetEnterInterior(b);
                 finalWorld = Building_GetEnterWorld(b);
+                printf("Exit");
                 break;
             }
         }
@@ -329,10 +331,10 @@ hook function Character_Enter(playerid)
 
     if(vehicleid > 0 && GetPlayerVehicleSeat(playerid) != 0)
     {
-        SendClientMessage(playerid, COLOR_ERROR, "Devi essere il guidatore per poter entrare all'interno dell'edificio.");
+        SendClientMessage(playerid, COLOR_ERROR, "Devi essere il guidatore per poter entrare o uscire dall'edificio.");
         return 0;
     }
-    
+
     if(Building_IsLocked(building))
     {
         GameTextForPlayer(playerid, "~r~Chiuso", 5000, 1);
@@ -348,13 +350,9 @@ hook function Character_Enter(playerid)
         {
             if(!Character_IsLogged(p) || GetPlayerVehicleID(p) != vehicleid) 
                 continue;
-            
             defer SetPlayerInSeatAfterTime(p, GetPlayerVehicleID(p), GetPlayerVehicleSeat(p));
-            
             Character_SetSafePosition(p, finalX, finalY, finalZ, finalInterior, finalWorld);
-
         }
-        
         defer SetVehiclePosDyn(vehicleid, finalX, finalY, finalZ, finalInterior, finalWorld);
     }
     else

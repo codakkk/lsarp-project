@@ -15,7 +15,7 @@ static
 
 hook OnCharacterClearData(playerid)
 {
-    pc_cmd_stoprifornimento(playerid, "");
+    callcmd::stoprifornimento(playerid, "");
     /*stop Timer[playerid];
     Timer[playerid] = Timer:0;
     IsDoingGas[playerid] = INVALID_BUILDING_ID;
@@ -35,7 +35,7 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
         return 0;
     if(oldstate == PLAYER_STATE_DRIVER && newstate == PLAYER_STATE_ONFOOT)
     {
-        pc_cmd_stoprifornimento(playerid, "");
+        callcmd::stoprifornimento(playerid, "");
     }
     return 1;
 }
@@ -112,14 +112,14 @@ timer GetVehicleLitre[1000](playerid, vehicleid)
     if(!Vehicle_IsValid(vehicleid))
     {
         SendClientMessage(playerid, COLOR_ERROR, "Sei uscito dal veicolo ed hai fermato il rifornimento.");
-        pc_cmd_stoprifornimento(playerid, "");
+        callcmd::stoprifornimento(playerid, "");
         return 1;
     }
     new Building:building = IsDoingGas[playerid];
     if(GasStation_GetFuelState(building) <= PETROL_LITRE_DEF)
     {
         SendClientMessage(playerid, COLOR_ERROR, "La stazione di benzina ha finito le proprie risorse.");
-        pc_cmd_stoprifornimento(playerid, "");
+        callcmd::stoprifornimento(playerid, "");
         return 1;
     }
     new Float:x, Float:y, Float:z;
@@ -128,7 +128,7 @@ timer GetVehicleLitre[1000](playerid, vehicleid)
     if(GetPlayerDistanceFromPoint(playerid, x, y, z) > GAS_STATION_MAX_RANGE)
     {
         SendClientMessage(playerid, COLOR_ERROR, "Ti sei allontanato dalla stazione di benzina ed hai fermato il rifornimento.");
-        pc_cmd_stoprifornimento(playerid, "");
+        callcmd::stoprifornimento(playerid, "");
         return 1;
     }
 
@@ -148,7 +148,7 @@ timer GetVehicleLitre[1000](playerid, vehicleid)
 
     if(Vehicle_GetFuel(vehicleid) >= 100.0)
     {
-        pc_cmd_stoprifornimento(playerid, "");
+        callcmd::stoprifornimento(playerid, "");
     }
     return 1;
 }
@@ -230,27 +230,29 @@ hook function Building_ShowTypeMenu(Building:building, playerid)
 {
     if(Building_GetType(building) != BUILDING_TYPE_GAS_STATION)
         return continue(playerid);
+    
     new fuelPrice = GasStation_GetFuelPrice(building);
     new taxedPrice = GasStation_GetTaxedFuelPrice(building);
-    Dialog_Show(playerid, Dialog_EditGasStationPrice, DIALOG_STYLE_INPUT, "Modifica prezzo benzina", "Inserisci il nuovo prezzo al litro per la benzina.\nPrezzo Attuale: $%d\nPrezzo Finale (compreso di accise): $%d", "Modifica", "Chiudi", fuelPrice, taxedPrice);
-    return 1;
-}
+ 
+    new response[e_DIALOG_RESPONSE_INFO];
+    for(;;)
+    {
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Modifica prezzo benzina"), str_format("Inserisci il nuovo prezzo al litro per la benzina.\nPrezzo Attuale: $%d\nPrezzo Finale (compreso di accise): $%d", fuelPrice, taxedPrice), @("Modifica"), @("Chiudi"));
 
-Dialog:Dialog_EditGasStationPrice(playerid, response, listitem, inputtext[])
-{
-    new Building:building = Character_GetBusinessMenu(playerid);
-    if(!Building_IsValid(building))
-        return 0;
-    
-    if(!response)
-        return Character_ShowBizDialog(playerid);
-    
-    new newPrice = strval(inputtext);
-    if(newPrice <= 0)
-        return Dialog_Show(playerid, Dialog_EditGasStationPrice, DIALOG_STYLE_INPUT, "Modifica prezzo benzina", "{FF0000}Il nuovo prezzo inserito non è valido.{FFFFFF}\nInserisci il nuovo prezzo al litro per la benzina.\nPrezzo Attuale: $%d\nPrezzo Finale (compreso di accise): $%d", "Modifica", "Chiudi");
-    GasStation_SetFuelPrice(building, newPrice);
-    SendFormattedMessage(playerid, COLOR_GREEN, "Hai modificato il prezzo della benzina del tuo business. Nuovo prezzo: $%s.", FormatNumber(newPrice));
-    SendFormattedMessage(playerid, COLOR_ORANGE, "Prezzo: $%s", FormatNumber(newPrice));
-    SendFormattedMessage(playerid, COLOR_ORANGE, "Prezzo finale (compreso di tasse governative): $%s", FormatNumber(GasStation_GetTaxedFuelPrice(building)));
+        if(!response[E_DIALOG_RESPONSE_Response]) break;
+
+        new newPrice = strval(response[E_DIALOG_RESPONSE_InputText]);
+        if(newPrice <= 0) 
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "Il nuovo prezzo inserito per la benzina non è valido.");
+            continue;
+        }
+
+        GasStation_SetFuelPrice(building, newPrice);
+        SendFormattedMessage(playerid, COLOR_GREEN, "Hai modificato il prezzo della benzina del tuo business. Nuovo prezzo: $%s.", FormatNumber(newPrice));
+        SendFormattedMessage(playerid, COLOR_ORANGE, "Prezzo: $%s", FormatNumber(newPrice));
+        SendFormattedMessage(playerid, COLOR_ORANGE, "Prezzo finale (compreso di tasse governative): $%s", FormatNumber(GasStation_GetTaxedFuelPrice(building)));
+        break;
+    }
     return 1;
 }

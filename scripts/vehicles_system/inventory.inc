@@ -70,12 +70,6 @@ stock bool:Vehicle_HasInventory(vehicleid)
     return list_valid(Vehicle_GetInventory(vehicleid));
 }
 
-hook OnVehicleSaved(vehicleid)
-{
-    Vehicle_SaveInventory(vehicleid);
-    return 1;
-}
-
 hook OnVehicleUnloaded(vehicleid)
 {
     Vehicle_UnloadInventory(vehicleid);
@@ -219,9 +213,9 @@ Dialog:Dialog_VehicleInvAction(playerid, response, listitem, inputtext[])
 		if(listitem == 0)
 			Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona oggetto da depositare", Dialog_CharInvDepInVeh, "Deposita", "Annulla"); 
 		else if(listitem == 1)
-			pc_cmd_vdeposita(playerid, "");
+			callcmd::vdeposita(playerid, "");
 		else if(listitem == 2)
-			pc_cmd_vdisassembla(playerid, "");
+			callcmd::vdisassembla(playerid, "");
 	}
 	else
 	{

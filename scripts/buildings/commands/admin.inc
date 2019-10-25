@@ -247,7 +247,7 @@ CMD:abedit(playerid, p[])
     else 
     {
         SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit <buildingid> <pos - interior - price - lock - rmowner - name - type - ..");
-        SendClientMessage(playerid, COLOR_ERROR, ".. faction - exit - ownable - welcometext >");
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, ".. faction - exit - ownable - welcometext >");
     }
     return 1;
 }

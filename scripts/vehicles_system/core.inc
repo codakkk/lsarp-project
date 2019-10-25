@@ -5,7 +5,13 @@
 
 #define _included_VEHICLES
 
+native OnVehicleCreate(vehicleid);
+native OnVehicleLoaded(vehicleid); // Called when a vehicle is successfully loaded
+native OnVehicleUnload(vehicleid); // Called when a vehicle is going to be unloaded.
+native OnVehicleUnloaded(vehicleid); // Called when a vehicle is successfully unloaded
+
 #include "inventory"
+#include "components"
 #include <YSI_Coding\y_hooks>
 
 #define VEHICLE_MIN_HEALTH					300.0
@@ -61,9 +67,13 @@ static BitArray:VehicleBitState[e_Bit1_VehicleData]<MAX_VEHICLES>;
 static VehicleOwnerName[MAX_VEHICLES][MAX_PLAYER_NAME];
 static Float:VehicleFuel[MAX_VEHICLES];
 
+static Map:VehiclesMap;
+
+stock Map:GetVehiclesMap() { return VehiclesMap; }
 
 hook OnGameModeLateInit()
 {
+	VehiclesMap = map_new();
 	printf("LAte Init");
 	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `vehicles` ( \
 						`id` int(11) NOT NULL AUTO_INCREMENT, \
@@ -106,7 +116,8 @@ hook OnGameModeLateInit()
 
 hook OnVehicleMod(playerid, vehicleid, componentid)
 {
-	RemoveVehicleComponent(vehicleid, componentid);
+	//RemoveVehicleComponent(vehicleid, componentid);
+	printf("OnVehicleMod");
 	return 0;
 }
 
@@ -246,6 +257,7 @@ stock Vehicle_Create(modelid, Float:x, Float:y, Float:z, Float:rotation, color1,
 	Vehicle_SetFaction(vehicleid, INVALID_FACTION_ID);
 	Vehicle_SetFuel(vehicleid, 100.0);
 	SetVehicleParamsEx(vehicleid, 0, 0, 0, 0, 0, 0, 0);
+	CallLocalFunction(#OnVehicleCreate, "d", vehicleid);
 	//Vehicle_UpdateLockState(vehicleid);
 	return vehicleid;
 }
@@ -272,6 +284,8 @@ stock Vehicle_InsertInDatabase(vehicleid)
 		Vehicle_SetTemporary(vehicleid, false);
 		Vehicle_InitializeInventory(vehicleid);
 		Vehicle_GeneratePlate(vehicleid);
+
+		map_add(VehiclesMap, VehicleInfo[vehicleid][ID], vehicleid);
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO `vehicles` (owner_id, model, color_1, color_2, x, y, z, angle, locked, faction, price, last_health, max_health) \
 		VALUES('%d', '%d', '%d', '%d', '%f', '%f', '%f', '%f', '0', '%d', '%d', '999.0', '%f')",
@@ -284,6 +298,10 @@ stock Vehicle_Destroy(vehicleid)
 {
 	if(!Vehicle_IsValid(vehicleid))
 		return 0;
+	new id = VehicleInfo[vehicleid][ID];
+	if(id != 0 && map_has_key(VehiclesMap, id))
+		map_remove(VehiclesMap, id);
+	
     Vehicle_Reset(vehicleid);
 	DestroyVehicle(vehicleid);
 	return 1;
@@ -514,13 +532,14 @@ stock Vehicle_Despawn(vehicleid)
 	if(!Vehicle_GetID(vehicleid) || Vehicle_IsTemporary(vehicleid))
 		return 0;
 	
+	CallLocalFunction(#OnVehicleUnload, "d", vehicleid);
+
 	Vehicle_SaveStatus(vehicleid);
 	
 	mysql_tquery_f(gMySQL, "UPDATE `vehicles` SET spawned = '0' WHERE id = '%d'", Vehicle_GetID(vehicleid));
+	Vehicle_Destroy(vehicleid);
 
 	CallLocalFunction(#OnVehicleUnloaded, "d", vehicleid);
-	
-	Vehicle_Destroy(vehicleid);
 	return 1;
 }
 
@@ -624,6 +643,9 @@ public Vehicle_LoadAll()
 		}
 
 		mysql_tquery_f(gMySQL, "UPDATE `vehicles` SET spawned = 1 WHERE id = '%d';", dbid);
+
+		map_add(VehiclesMap, VehicleInfo[vehicleid][ID], vehicleid);
+
 		//printf("LOAD");
 		CallLocalFunction(#OnVehicleLoaded, "d", vehicleid);
 	}

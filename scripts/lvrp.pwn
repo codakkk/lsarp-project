@@ -124,7 +124,7 @@ enum (<<= 1)
 	CMD_MEDICAL,
 	CMD_GOVERNMENT,
 	CMD_ILLEGAL,
-	CMD_SUPPORTER,
+	CMD_TESTER,
 	CMD_JR_MODERATOR,
 	CMD_MODERATOR,
 	CMD_ADMIN,
@@ -188,7 +188,6 @@ main()
 
 public OnPlayerStateChange(playerid, newstate, oldstate)
 {
-	printf("OPSC: %d %d %d", playerid, newstate, oldstate);
 	return 1;
 }
 
@@ -476,7 +475,7 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 		}
 	}
 	
-	if(flags & CMD_SUPPORTER && Account_GetAdminLevel(playerid) < 1)
+	if(flags & CMD_TESTER && Account_GetAdminLevel(playerid) < 1)
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro dello staff.");
 		return 0;

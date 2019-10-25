@@ -398,7 +398,7 @@ Dialog:Dialog_WearObjectList(playerid, response, listitem, inputtext[])
 Dialog:Dialog_WearObjectEdit(playerid, response, listitem, inputtext[])
 {
     if(!response)
-        return pc_cmd_oggetto(playerid, "");
+        return callcmd::oggetto(playerid, "");
     new 
         PlayerObject:selected = SelectedPlayerObject[playerid],
         index = WearObject_GetIndex(selected);
@@ -451,7 +451,7 @@ Dialog:Dialog_WearObjectEdit(playerid, response, listitem, inputtext[])
 Dialog:Dialog_WearObjectBone(playerid, response, listitem, inputtext[])
 {
     if(!response)
-        return pc_cmd_oggetto(playerid, "");
+        return callcmd::oggetto(playerid, "");
     SendClientMessage(playerid, COLOR_GREEN, "Hai modificato l'osso dell'oggetto.");
     WearObject_SetBone(SelectedPlayerObject[playerid], listitem+1);
     WearObject_Update(playerid, SelectedPlayerObject[playerid]);
@@ -461,7 +461,7 @@ Dialog:Dialog_WearObjectBone(playerid, response, listitem, inputtext[])
 Dialog:Dialog_WearObjectCategories(playerid, response, listitem, inputtext[])
 {
     if(!response)
-        return pc_cmd_oggetto(playerid, "");
+        return callcmd::oggetto(playerid, "");
     
     SelectedCategory{playerid} = listitem;
     WearObject_ShowCategory(playerid, listitem);   

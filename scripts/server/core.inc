@@ -1,6 +1,9 @@
 #include <server\components\clock>
 #include <server\components\weather>
 #include <server\maps\maps>
+
+#include "components\gps"
+
 #include <YSI_Coding\y_hooks>
 
 static enum E_SERVER_INFO

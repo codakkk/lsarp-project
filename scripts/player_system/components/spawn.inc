@@ -251,7 +251,7 @@ static Character_Spawn(playerid)
 	#if defined LSARP_DEBUG
 		if(!Player_IsAdminDuty(playerid) && !strcmp(Account_GetName(playerid), "Coda", false))
 		{
-			pc_cmd_aduty(playerid, "");
+			callcmd::aduty(playerid, "");
 		}
 	#endif
 	Character_ResetDeathState(playerid);

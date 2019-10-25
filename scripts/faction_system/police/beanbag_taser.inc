@@ -24,9 +24,9 @@ hook OnCharacterClearData(playerid)
 hook OnCharacterDisconnected(playerid, reason)
 {
     /*if(Character_HasBeanBag(playerid))
-        pc_cmd_beanbag(playerid, "");
+        callcmd::beanbag(playerid, "");
     if(Character_HasTaser(playerid))
-        pc_cmd_taser(playerid, "");*/
+        callcmd::taser(playerid, "");*/
     return 1;
 }
 
@@ -35,10 +35,10 @@ hook OnCharacterDutyChange(playerid, isOnDuty)
     if(!isOnDuty)
     {
         if(Character_HasBeanBag(playerid))
-            pc_cmd_beanbag(playerid, "");
+            callcmd::beanbag(playerid, "");
         
         if(Character_HasTaser(playerid))
-            pc_cmd_taser(playerid, "");
+            callcmd::taser(playerid, "");
     }
     return 1;
 }

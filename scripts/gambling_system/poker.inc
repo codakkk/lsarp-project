@@ -1792,7 +1792,7 @@ stock Poker_JoinTable(playerid, tableid)
 		AC_SetPlayerVirtualWorld(playerid, PokerTableData[co_table_vw]);
 
 		ApplyAnimation(playerid, "CASINO", "cards_out", 4.1, 0, 1, 1, 1, 1, 1);
-		TogglePlayerControllable(playerid, 0);
+		Character_SetFreezed(playerid, true);
 		SetPlayerPosObjectOffset(tableid, playerid, PokerTableMiscObjOffsets[s][0], PokerTableMiscObjOffsets[s][1], PokerTableMiscObjOffsets[s][2]);
 		SetPlayerFacingAngle(playerid, PokerTableMiscObjOffsets[s][5] + 90.0);
 
@@ -1827,7 +1827,7 @@ stock Poker_LeaveTable(playerid)
 	AC_SetPlayerVirtualWorld(playerid, PokerTableData[co_table_vw]);
 	SetPlayerPos(playerid, PlayerInfo[playerid][pTableX], PlayerInfo[playerid][pTableY], PlayerInfo[playerid][pTableZ]+0.1);
 	SetCameraBehindPlayer(playerid);
-	TogglePlayerControllable(playerid, 1);
+	Character_SetFreezed(playerid, false);
 	Dialog_Close(playerid);
 
 	if(PlayerInfo[playerid][pActiveHand])
@@ -1856,7 +1856,7 @@ stock Poker_LeaveTable(playerid)
 
 	Poker_DestroyTD(playerid);
 	SetCameraBehindPlayer(playerid);
-	TogglePlayerControllable(playerid, 1);
+	Character_SetFreezed(playerid, false);
 	ClearAnimations(playerid);
 	CancelSelectTextDraw(playerid);
 

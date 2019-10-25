@@ -35,7 +35,7 @@ hook OnPlayerText(playerid, text[])
 		return 0;
 	if(Player_IsAdminDuty(playerid))
 	{
-		pc_cmd_b(playerid, text);
+		callcmd::b(playerid, text);
 	}
 	else
 	{
@@ -59,7 +59,7 @@ hook OnPlayerText(playerid, text[])
 		}
 		if(Character_IsInjured(playerid))
 		{
-			pc_cmd_low(playerid, text);
+			callcmd::low(playerid, text);
 		}
 		else
 		{

@@ -119,9 +119,11 @@ static ShowSellHouseDialog(playerid, House:house)
             break;
         }
 
-        if(!Player_IsAdminDuty(playerid) && !Character_DoesOwnHouse(playerid, house))
+        if(!Character_DoesOwnHouse(playerid, house))
         {
             SendClientMessage(playerid, COLOR_ERROR, "Solo il proprietario puo' utilizzare questo comando.");
+            if(Player_IsAdminDuty(playerid))
+                SendClientMessage(playerid, COLOR_ORANGE, "Usa /hedit per resettare il proprietario.");
             break;
         }
 

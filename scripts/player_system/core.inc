@@ -188,7 +188,7 @@ stock Character_ShowStats(playerid, targetid)
 	getdate(year, month, day);
 	gettime(hours, minutes, seconds);
 	
-	new factionName[MAX_FACTION_NAME] = "N/A", rankName[MAX_FACTION_RANK_NAME] = "N/A", jobName[32] = "Nessuno";
+	new factionName[MAX_FACTION_NAME] = "N/A", rankName[MAX_FACTION_RANK_NAME] = "N/A", jobName[32] = "";
 
     if(Faction_IsValid(Character_GetFaction(playerid)))
 	{

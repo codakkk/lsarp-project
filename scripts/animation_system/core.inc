@@ -14,7 +14,7 @@ stock ClearAnimationsEx(playerid, bool:animCheck = true)
 	ApplyAnimation(playerid, "CARRY", "crry_prtial", 2.0, 0, 0, 0, 0, 0);
 	SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
 	HideTextAnimationHelper(playerid);
-	TogglePlayerControllable(playerid, 1);
+	Character_SetFreezed(playerid, false);
 	Character_SetAnimLoop(playerid, false);
 	return 1;
 }

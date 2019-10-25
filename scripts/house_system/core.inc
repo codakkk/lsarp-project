@@ -403,6 +403,11 @@ stock House_IsOwned(House:house)
     return House_GetOwnerID(house) > 0;
 }
 
+stock bool:House_IsOwnable(House:house)
+{
+    return House_GetOwnerID(house) <= 0;
+}
+
 stock bool:House_GetOwnerName(House:house, name[MAX_PLAYER_NAME])
 {
     var_get_md_arr(Variant:house, {OwnerName}, name);

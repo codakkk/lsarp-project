@@ -67,7 +67,7 @@
 		"mapname": "Los Santos",
 		"weburl": "www.lsarp.it",
 		"gamemodetext": "ApocalypseV1",
-		"announce": true,
+		"announce": false,
 		"lanmode": false,
 		"query": true,
 		"rcon": false,

@@ -220,7 +220,7 @@ Dialog:Dialog_Furniture(playerid, response, listitem, inputtext[])
 Dialog:Dialog_CategorySelect(playerid, response, listitem, inputtext[])
 {
     if(!response)
-        return pc_cmd_arredamento(playerid, "");
+        return callcmd::arredamento(playerid, "");
     
     if(listitem == 0) // Inserisci ID Manualmente
     {
@@ -289,7 +289,7 @@ Dialog:Dialog_CharacterFurnitures(playerid, response, listitem, inputtext[])
     if(!response)
     {
         if(FurniturePage{playerid} <= 0)
-            return pc_cmd_arredamento(playerid, "");
+            return callcmd::arredamento(playerid, "");
         else
             return Character_ShowFurnitures(playerid, FurniturePage{playerid}-1);
     }
@@ -381,7 +381,7 @@ Dialog:Dialog_SellFurniture(playerid, response, listitem, inputtext[])
     Furniture_Remove(playerid, selected);
 
     SelectedFurniture[playerid] = -1;
-    pc_cmd_arredamento(playerid, "");
+    callcmd::arredamento(playerid, "");
     return 1;
 }
 
@@ -970,7 +970,7 @@ stock Internal_GetNearbyFurnableWorld(playerid)
 stock Character_ShowFurnitures(playerid, page)
 {
     if(page < 0)
-        return pc_cmd_arredamento(playerid, "");
+        return callcmd::arredamento(playerid, "");
     
     FurniturePage{playerid} = page;
 
