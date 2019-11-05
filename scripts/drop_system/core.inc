@@ -244,8 +244,6 @@ stock Drop_GetItem(dropid)
 {
 	if(!Drop_IsValid(dropid))
 		return 0;
-	new Inventory:inventory = Drop_GetInventory(dropid);
-	printf("Inventory for drop %d: %d", dropid, _:inventory);
 	return Inventory_GetSlotItem(Drop_GetInventory(dropid), 0);
 }
 

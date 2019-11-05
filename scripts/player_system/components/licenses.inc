@@ -62,7 +62,7 @@ hook OnCharacterLoad(playerid)
     {
         if(cache_num_rows() <= 0)
         {
-            mysql_tquery_f(gMySQL, "INSERT INTO `character_licenses` (character_id, drive, boat, fly, weapon) VALUES('%d', '0', '0', '0', '0')", Character_GetID(playerid));
+            mysql_pquery_f(gMySQL, "INSERT INTO `character_licenses` (character_id, drive, boat, fly, weapon) VALUES('%d', '0', '0', '0', '0')", Character_GetID(playerid));
             DriveLicense{playerid} = BoatLicense{playerid} = FlyLicense{playerid} = WeaponLicense{playerid} = false;
         }
         else
@@ -288,7 +288,7 @@ stock bool:Character_SetDriveLicense(playerid, bool:set)
     if(!Character_IsLogged(playerid))
         return false;
     DriveLicense{playerid} = set;
-    mysql_tquery_f(gMySQL, "UPDATE `character_licenses` SET drive = '%d' WHERE character_id = '%d'", set ? 1 : 0, Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `character_licenses` SET drive = '%d' WHERE character_id = '%d'", set ? 1 : 0, Character_GetID(playerid));
     return true;
 }
 
@@ -302,7 +302,7 @@ stock bool:Character_SetBoatLicense(playerid, bool:set)
     if(!Character_IsLogged(playerid))
         return false;
     BoatLicense{playerid} = set;
-    mysql_tquery_f(gMySQL, "UPDATE `character_licenses` SET boat = '%d' WHERE character_id = '%d'", set ? 1 : 0, Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `character_licenses` SET boat = '%d' WHERE character_id = '%d'", set ? 1 : 0, Character_GetID(playerid));
     return true;
 }
 
@@ -316,7 +316,7 @@ stock bool:Character_SetFlyLicense(playerid, bool:set)
     if(!Character_IsLogged(playerid))
         return false;
     FlyLicense{playerid} = set;
-    mysql_tquery_f(gMySQL, "UPDATE `character_licenses` SET fly = '%d' WHERE character_id = '%d'", set ? 1 : 0, Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `character_licenses` SET fly = '%d' WHERE character_id = '%d'", set ? 1 : 0, Character_GetID(playerid));
     return true;
 }
 
@@ -330,7 +330,7 @@ stock bool:Character_SetWeaponLicense(playerid, bool:set)
     if(!Character_IsLogged(playerid))
         return false;
     WeaponLicense{playerid} = set;
-    mysql_tquery_f(gMySQL, "UPDATE `character_licenses` SET weapon = '%d' WHERE character_id = '%d'", set ? 1 : 0, Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `character_licenses` SET weapon = '%d' WHERE character_id = '%d'", set ? 1 : 0, Character_GetID(playerid));
     return true;
 }
 

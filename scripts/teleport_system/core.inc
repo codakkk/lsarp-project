@@ -60,7 +60,7 @@ stock bool:Teleport_AllowVehicles(teleportid, bool:allow)
 {
     if(!Teleport_IsValid(teleportid))
         return false;
-    mysql_tquery_f(gMySQL, "UPDATE `teleports` SET allow_vehicles = '%d' WHERE id = '%d'", allow ? 1 : 0, Teleport_GetID(teleportid));
+    mysql_pquery_f(gMySQL, "UPDATE `teleports` SET allow_vehicles = '%d' WHERE id = '%d'", allow ? 1 : 0, Teleport_GetID(teleportid));
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), AllowVehicles, allow);
     return true;
 }
@@ -337,7 +337,6 @@ hook function Character_Enter(playerid)
         }
         else
         {
-            printf("Teleport Set Pos: %f - %f - %f", finalX, finalY, finalZ);
             Character_SetSafePosition(playerid, finalX, finalY, finalZ, finalInterior, finalWorld);
         }
         return 1;
@@ -404,7 +403,7 @@ stock bool:Teleport_Delete(teleportid)
     text = Text3D:map_get(TeleportsMap, Teleport_GetID(teleportid), ExitLabel);
     DestroyDynamic3DTextLabel(text);
 
-    mysql_tquery_f(gMySQL, "DELETE FROM `teleports` WHERE id = '%d'", Teleport_GetID(teleportid));
+    mysql_pquery_f(gMySQL, "DELETE FROM `teleports` WHERE id = '%d'", Teleport_GetID(teleportid));
 
     map_remove_deep(TeleportsMap, Teleport_GetID(teleportid));
     return true;       
@@ -476,7 +475,7 @@ stock bool:Teleport_SetEnterPosition(teleportid, Float:x, Float:y, Float:z, inte
 {
     if(!Teleport_IsValid(teleportid))
         return false;
-    mysql_tquery_f(gMySQL, "UPDATE teleports SET enter_x = '%f', enter_y = '%f', enter_z = '%f', enter_world = '%d', enter_interior = '%d' WHERE id = '%d'", x, y, z, world, interior, Teleport_GetID(teleportid));
+    mysql_pquery_f(gMySQL, "UPDATE teleports SET enter_x = '%f', enter_y = '%f', enter_z = '%f', enter_world = '%d', enter_interior = '%d' WHERE id = '%d'", x, y, z, world, interior, Teleport_GetID(teleportid));
     
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterX, x);
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterY, y);
@@ -513,7 +512,7 @@ stock bool:Teleport_SetExitPosition(teleportid, Float:x, Float:y, Float:z, inter
     if(!Teleport_IsValid(teleportid))
         return false;
 
-    mysql_tquery_f(gMySQL, "UPDATE teleports SET exit_x = '%f', exit_y = '%f', exit_z = '%f', exit_world = '%d', exit_interior = '%d' WHERE id = '%d'", x, y, z, world, interior, Teleport_GetID(teleportid));
+    mysql_pquery_f(gMySQL, "UPDATE teleports SET exit_x = '%f', exit_y = '%f', exit_z = '%f', exit_world = '%d', exit_interior = '%d' WHERE id = '%d'", x, y, z, world, interior, Teleport_GetID(teleportid));
     
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitX, x);
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitY, y);
@@ -549,7 +548,7 @@ stock bool:Teleport_SetFaction(teleportid, factionid)
 {
     if(!Teleport_IsValid(Teleport_GetID(teleportid)) || (factionid != INVALID_FACTION_ID && !Faction_IsValid(factionid)))
         return false;
-    mysql_tquery_f(gMySQL, "UPDATE teleports SET faction_id = '%d' WHERE id = '%d'", factionid, Teleport_GetID(teleportid));
+    mysql_pquery_f(gMySQL, "UPDATE teleports SET faction_id = '%d' WHERE id = '%d'", factionid, Teleport_GetID(teleportid));
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), Faction, factionid);
     return true;
 }
@@ -571,7 +570,7 @@ stock bool:Teleport_SetCharacter(teleportid, playerid)
     new id = 0;
     if(playerid != -1 && Character_IsLogged(playerid))
         id = Character_GetID(playerid);
-    mysql_tquery_f(gMySQL, "UPDATE teleports SET character_id = '%d' WHERE id = '%d'", id, Teleport_GetID(teleportid));
+    mysql_pquery_f(gMySQL, "UPDATE teleports SET character_id = '%d' WHERE id = '%d'", id, Teleport_GetID(teleportid));
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), Character, id);
     return true;
 }
@@ -599,7 +598,7 @@ stock bool:Teleport_SetName(teleportid, name[])
     new Iter:iter = Iter:map_iter_at(TeleportsMap, Teleport_GetID(teleportid));
 	iter_set_cells(iter, Name, name, 32);
 
-    mysql_tquery_f(gMySQL, "UPDATE teleports SET name = '%e' WHERE id = '%d'", name, Teleport_GetID(teleportid));
+    mysql_pquery_f(gMySQL, "UPDATE teleports SET name = '%e' WHERE id = '%d'", name, Teleport_GetID(teleportid));
 
     Teleport_CreatePickupAndLabel(Teleport_GetID(teleportid));
     return true;

@@ -82,8 +82,8 @@ stock Character_SendSMS(playerid, slot, number, const msg[])
     if(number == senderNumber)
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi inviare un SMS a te stesso."), 0;
 
-    mysql_tquery_f(gMySQL, "INSERT INTO `phone_sms` (number_owner, sender_number, addressee_number, message, created_at, state) VALUES('%d', '%d', '%d', '%e', '%d', '%d')", number, senderNumber, number, msg, gettime(), SMS_STATE_NOT_READ);
-    mysql_tquery_f(gMySQL, "INSERT INTO `phone_sms` (number_owner, sender_number, addressee_number, message, created_at, state) VALUES('%d', '%d', '%d', '%e', '%d', '%d')", senderNumber, senderNumber, number, msg, gettime(), SMS_STATE_READ);
+    mysql_pquery_f(gMySQL, "INSERT INTO `phone_sms` (number_owner, sender_number, addressee_number, message, created_at, state) VALUES('%d', '%d', '%d', '%e', '%d', '%d')", number, senderNumber, number, msg, gettime(), SMS_STATE_NOT_READ);
+    mysql_pquery_f(gMySQL, "INSERT INTO `phone_sms` (number_owner, sender_number, addressee_number, message, created_at, state) VALUES('%d', '%d', '%d', '%e', '%d', '%d')", senderNumber, senderNumber, number, msg, gettime(), SMS_STATE_READ);
     
     new name[32];
     if(PhoneBook_GetContactName(senderNumber, number, name))
@@ -291,7 +291,7 @@ stock Character_ReadMessage(playerid, slotid, messageid)
         
         info += str_format("========= CONTENUTO ==========\n\n%s", message);
 
-        mysql_tquery_f(gMySQL, "UPDATE `phone_sms` SET state = '%d' WHERE id = '%d'", SMS_STATE_READ, messageid);
+        mysql_pquery_f(gMySQL, "UPDATE `phone_sms` SET state = '%d' WHERE id = '%d'", SMS_STATE_READ, messageid);
         
         SelectedMessage[playerid] = messageid;
 
@@ -324,7 +324,7 @@ Dialog:Dialog_SelectMessageOption(playerid, response, listitem, inputtext[])
     new selectedMessage = SelectedMessage[playerid];
     SendClientMessage(playerid, COLOR_GREEN, "Hai cancellato il messaggio con successo.");
 
-    mysql_tquery_f(gMySQL, "DELETE FROM `phone_sms` WHERE id = '%d'", selectedMessage);
+    mysql_pquery_f(gMySQL, "DELETE FROM `phone_sms` WHERE id = '%d'", selectedMessage);
     return 1;
 }
 

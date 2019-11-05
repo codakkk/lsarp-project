@@ -28,7 +28,7 @@ stock Character_SetMoney(playerid, money)
 {
     PlayerMoney[playerid] = money;
     
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET money = '%d' WHERE id = '%d'", Character_GetMoney(playerid), Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET money = '%d' WHERE id = '%d'", Character_GetMoney(playerid), Character_GetID(playerid));
 
 	ResetPlayerMoney(playerid);
     GivePlayerMoney(playerid, PlayerMoney[playerid]);
@@ -71,7 +71,7 @@ stock Character_GetBank(playerid)
 stock Character_SetBank(playerid, money)
 {
     PlayerBank[playerid] = money;
-    mysql_tquery_f(gMySQL, "UPDATE `characters` SET bank = '%d' WHERE id = '%d'", Character_GetBank(playerid), Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `characters` SET bank = '%d' WHERE id = '%d'", Character_GetBank(playerid), Character_GetID(playerid));
     return 1;
 }
 
@@ -100,7 +100,7 @@ stock Character_ResetBank(playerid, reason[]="")
 		return 0;
 	PlayerMoney[playerid] = 0;
 
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET money = '0' WHERE id = '%d'", Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET money = '0' WHERE id = '%d'", Character_GetID(playerid));
 
 	ResetPlayerMoney(playerid);
 	return 1;

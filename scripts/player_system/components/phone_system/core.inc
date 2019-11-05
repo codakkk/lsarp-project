@@ -391,7 +391,7 @@ stock Character_GivePhone(playerid)
 {
     new number = Server_GeneratePhoneNumber(),
         result = Character_GiveItem(playerid, gItem_Phone, 1, number);
-    mysql_tquery_f(gMySQL, "INSERT INTO `phone_data` (character_id, created_at, number) VALUES('%d', '%d', '%d')", Character_GetID(playerid), gettime(), number);
+    mysql_pquery_f(gMySQL, "INSERT INTO `phone_data` (character_id, created_at, number) VALUES('%d', '%d', '%d')", Character_GetID(playerid), gettime(), number);
     CallLocalFunction(#OnCharacterLoadPhone, "dd", playerid, number);
     return result;
 }
@@ -400,7 +400,7 @@ stock Character_GiveAnonymousePhone(playerid)
 {
     new number = Server_GeneratePhoneNumber(),
         result = Character_GiveItem(playerid, gItem_Phone, 1, number);
-    mysql_tquery_f(gMySQL, "INSERT INTO `phone_data` (created_at, number) VALUES('%d', '%d')", gettime(), number);
+    mysql_pquery_f(gMySQL, "INSERT INTO `phone_data` (created_at, number) VALUES('%d', '%d')", gettime(), number);
     CallLocalFunction(#OnCharacterLoadPhone, "dd", playerid, number);
     return result;
 }
@@ -486,18 +486,18 @@ stock Character_StartCall(playerid, slotid, textNumber[])
     {
         if(Phone_IsBusy(entityInv, validSlotId))
         {
-            SendFormattedMessage(entityId, COLOR_GREEN, "[Cellulare %d - Slot %d] Qualcuno ha provato a chiamarti ma eri occupato.", number, validSlotId);
+            SendFormattedMessage(entityId, COLOR_GREEN, "[Cellulare %d - Slot %d] Qualcuno ha provato a chiamarti ma eri occupato.", number, validSlotId+1);
         }
         else
         {
             new name[32];
             if(PhoneBook_GetContactName(number, playerNumber, name))
             {
-                SendFormattedMessage(entityId, COLOR_GREEN, "[Cellulare %d - Slot %d] Stai ricevendo una chiamata da %s dal numero %d.", number, validSlotId, name, playerNumber);
+                SendFormattedMessage(entityId, COLOR_GREEN, "[Cellulare %d - Slot %d] Stai ricevendo una chiamata da %s dal numero %d.", number, validSlotId+1, name, playerNumber);
             }
             else
             {
-                SendFormattedMessage(entityId, COLOR_GREEN, "[Cellulare %d - Slot %d] Stai ricevendo una chiamata dal numero %d.", number, validSlotId, playerNumber);
+                SendFormattedMessage(entityId, COLOR_GREEN, "[Cellulare %d - Slot %d] Stai ricevendo una chiamata dal numero %d.", number, validSlotId+1, playerNumber);
             }
 
             if(PhoneBook_GetContactName(playerNumber, number, name))
@@ -575,7 +575,7 @@ stock Character_StopCall(playerid, slotid)
 
     RemovePlayerAttachedObject(playerid, 6);
     SetPlayerSpecialAction(playerid, SPECIAL_ACTION_STOPUSECELLPHONE);
-    ClearAnimations(playerid, 1);
+    ApplyAnimation(playerid, "CARRY", "crry_prtial", 2.0, 0, 0, 0, 0, 0);
     SendClientMessage(playerid, 0x8C8C8CFF, "[!] La chiamata è terminata.");
     return 1;
 }

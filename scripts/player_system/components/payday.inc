@@ -19,6 +19,15 @@ ptask OnPlayerPayDayMinute[60000](playerid) //
 
 stock Character_PayDay(playerid)
 {
+	new experiencePerLevel = (Character_GetLevel(playerid)+1) * 2;
+	Character_AddExperience(playerid, 1);
+
+	if(Character_GetExperience(playerid) > experiencePerLevel)
+	{
+		Character_IncreaseLevel(playerid, 1);
+	   	Character_SetExperience(playerid, 0);
+	}
+
 	new 
 		startBankMoney = Character_GetBank(playerid),
 		factionMoney = 0,
@@ -27,82 +36,23 @@ stock Character_PayDay(playerid)
 		newPlayerMoney = 0, 
 		interests = 0,
 		paycheck = 0,
-		experiencePerLevel = (Character_GetLevel(playerid)+1) * 2,
-		currentPremiumLevel = Account_GetPremiumLevel(playerid),
 		rentPrice = 0,
 		bool:kickedFromHouse = false
 	;
 
-	new House:rentHouse = Character_GetRentHouse(playerid);
-	if(House_IsValid(rentHouse))
-	{
-		rentPrice = Character_GetHouseRentPrice(playerid);
-		if(rentPrice > Character_GetBank(playerid))
-		{
-			kickedFromHouse = true;
-			rentPrice = 0;
-			Character_SetRentHouse(playerid, INVALID_HOUSE);
-			Character_SetHouseRentPrice(playerid, 0);
-		}
-		Character_GiveBank(playerid, -rentPrice, "rent_house_rent");
-		House_GiveMoney(rentHouse, rentPrice);
-	}
+	HandlePlayerHouseRent(playerid, rentPrice, kickedFromHouse);
+	
+	premiumMoney = GetPlayerMoneyByPremium(playerid);
+	paycheck += premiumMoney;
 
-	if(currentPremiumLevel > 0)
-	{
-		static const premiumPaycheck[] = {1000, 2000, 3000};
-		premiumMoney = premiumPaycheck[currentPremiumLevel-1];
-		paycheck += premiumMoney;
-		//SendFormattedMessage(playerid, COLOR_YELLOW, "Hai ricevuto $%d aggiuntivi come bonus Premium.", paycheck);
-	}
+	factionMoney = GetPlayerFactionSalary(playerid);
+	paycheck += factionMoney;
 
-	new factionid = Character_GetFaction(playerid);
-	if(Faction_IsValid(factionid))
-	{
-		new salary = Faction_GetRankSalary(factionid, Character_GetRank(playerid));
-		if(currentPremiumLevel > 1)
-		{
-			new percentage = currentPremiumLevel == 2 ? 25 : 50;
-			new value = (salary * percentage) / 100;
-			factionMoney += value;
-		}
+	newPlayerMoney = GetPlayerMoneyForLevel(playerid);
+	paycheck += newPlayerMoney;
 
-		factionMoney += salary;
-
-		paycheck += factionMoney;
-	}
-
-
-	if(Character_GetLevel(playerid) <= 3)
-	{
-		static const payCheck[] = {2000, 1000, 500};
-		new level = Character_GetLevel(playerid) - 1;
-		newPlayerMoney = payCheck[level];
-		paycheck += newPlayerMoney;
-	}
-
-	Character_AddExperience(playerid, 1);
-	if(Character_GetExperience(playerid) > experiencePerLevel)
-	{
-		Character_IncreaseLevel(playerid, 1);
-	   	Character_SetExperience(playerid, 0);
-	}
-
-	new List:refToList = Character_GetOwnedBuildingsList(playerid);
-	if(list_valid(refToList))
-	{
-		for_list(i : refToList)
-		{
-			new Building:building = Building:iter_get(i);
-			printf("Building: %d", Building_GetID(building));
-			if(Building_IsValid(building))
-			{
-				new price = Building_GetPrice(building)/100;
-				businessMoney = price;
-				paycheck += price;
-			}
-		}
-	}
+	businessMoney = GetPlayerBuildingMoney(playerid);
+	paycheck += businessMoney;
 
 	Character_AddPayCheck(playerid, paycheck);
 
@@ -119,16 +69,20 @@ stock Character_PayDay(playerid)
 	SendFormattedMessage(playerid, 0xB4B5B7FF, "Stipendio:  $%s", FormatNumber(paycheck));
 	SendClientMessage(playerid, -1, "|__________________|");
 	SendFormattedMessage(playerid, -1, "Nuovo Bilancio: $%s", FormatNumber(Character_GetBank(playerid)));
+	
 	if(factionMoney > 0)
 	{
 		new shortName[MAX_FACTION_SHORT_NAME];
-		Faction_GetShortName(factionid, shortName);
+		Faction_GetShortName(Character_GetFaction(playerid), shortName);
 		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s per il tuo lavoro %s nel conto stipendio.", FormatNumber(factionMoney), shortName);
 	}
+
 	if(businessMoney > 0)
 		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s per il tuo business.", FormatNumber(businessMoney));
+
 	if(premiumMoney > 0)
 		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s per il tuo premium.", FormatNumber(premiumMoney));
+
 	if(newPlayerMoney > 0)
 		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s perché sei un nuovo arrivato.", FormatNumber(newPlayerMoney));
 
@@ -139,4 +93,86 @@ stock Character_PayDay(playerid)
 	
     GameTextForPlayer(playerid, "~y~PayDay", 5000, 1);
 	return 1;
+}
+
+static HandlePlayerHouseRent(playerid, &price, &bool:isKicked)
+{
+	isKicked = false;
+	price = 0;
+	new House:rentHouse = Character_GetRentHouse(playerid);
+	if(House_IsValid(rentHouse))
+	{
+		price = Character_GetHouseRentPrice(playerid);
+		if(price > Character_GetBank(playerid))
+		{
+			isKicked = true;
+			price = 0;
+			Character_SetRentHouse(playerid, INVALID_HOUSE);
+			Character_SetHouseRentPrice(playerid, 0);
+		}
+		else
+		{
+			Character_GiveBank(playerid, -price, "rent_house_rent");
+			House_GiveMoney(rentHouse, price);
+		}
+	}
+}
+
+static GetPlayerFactionSalary(playerid)
+{
+	new money = 0;
+	new factionid = Character_GetFaction(playerid);
+	if(Faction_IsValid(factionid))
+	{
+		new salary = Faction_GetRankSalary(factionid, Character_GetRank(playerid));
+		/*if(currentPremiumLevel > 1)
+		{
+			new percentage = currentPremiumLevel == 2 ? 25 : 50;
+			new value = (salary * percentage) / 100;
+			money += value;
+		}*/
+
+		money += salary;
+	}
+	return money;
+}
+
+static GetPlayerMoneyForLevel(playerid)
+{
+	new money = 0;
+	if(Character_GetLevel(playerid) <= 3)
+	{
+		static const payCheck[] = {2000, 1000, 500};
+		new level = Character_GetLevel(playerid) - 1;
+		money = payCheck[level];
+	}
+	return money;
+}
+
+static GetPlayerBuildingMoney(playerid)
+{
+	if(Character_GetOwnedBuildingCount(playerid) <= 0)
+		return 0;
+	new money = 0;
+	for_player_building(building : playerid)
+	{
+		if(Building_IsValid(building))
+		{
+			new price = Building_GetPrice(building)/100;
+			money = price;
+		}
+	}
+	return money;
+}
+
+static GetPlayerMoneyByPremium(playerid)
+{
+	new currentPremiumLevel = Account_GetPremiumLevel(playerid);
+	new money = 0;
+	if(currentPremiumLevel > 0)
+	{
+		static const premiumPaycheck[] = {1000, 2000, 3000};
+		money = premiumPaycheck[currentPremiumLevel-1];
+	}
+	return money;
 }

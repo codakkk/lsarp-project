@@ -174,7 +174,7 @@ CMD:bonifico(playerid, params[])
             }
             else
             {
-                mysql_tquery_f(gMySQL, "UPDATE `characters` SET bank = '%d' WHERE id = '%d'", newBank, id);
+                mysql_pquery_f(gMySQL, "UPDATE `characters` SET bank = '%d' WHERE id = '%d'", newBank, id);
                 SendNotification(id, msg);
             }
             SendFormattedMessage(playerid, 0xCBCCCEFF, "Hai effettuato un bonifico a %s di $%s.", name, FormatNumber(money));
@@ -325,7 +325,7 @@ stock bool:ATM_SetPosition(atmid, Float:x, Float:y, Float:z, interior, world)
 
     SetDynamicObjectPos(ATM_GetObject(atmid), x, y, z);
 
-    mysql_tquery_f(gMySQL, "UPDATE `atm` SET pos_x = '%f', pos_y = '%f', pos_z = '%f', interior = '%d', world = '%d' WHERE id = '%d'", x, y, z, interior, world, ATM_GetID(atmid));
+    mysql_pquery_f(gMySQL, "UPDATE `atm` SET pos_x = '%f', pos_y = '%f', pos_z = '%f', interior = '%d', world = '%d' WHERE id = '%d'", x, y, z, interior, world, ATM_GetID(atmid));
     return true;
 }
 
@@ -349,7 +349,7 @@ stock bool:ATM_SetRotation(atmid, Float:rx, Float:ry, Float:rz)
     
     SetDynamicObjectRot(ATM_GetObject(atmid), rx, ry, rz);
     
-    mysql_tquery_f(gMySQL, "UPDATE `atm` SET rot_x = '%f', rot_y = '%f', rot_z = '%f' WHERE id = '%d'", rx, ry, rz, ATM_GetID(atmid));
+    mysql_pquery_f(gMySQL, "UPDATE `atm` SET rot_x = '%f', rot_y = '%f', rot_z = '%f' WHERE id = '%d'", rx, ry, rz, ATM_GetID(atmid));
     return true;
 }
 
@@ -389,7 +389,7 @@ stock ATM_GetObject(atmid)
 
 stock ATM_Delete(atmid)
 {
-    mysql_tquery_f(gMySQL, "DELETE FROM `atm` WHERE id = '%d'", ATM_GetID(atmid));
+    mysql_pquery_f(gMySQL, "DELETE FROM `atm` WHERE id = '%d'", ATM_GetID(atmid));
     Pickup_Destroy(ATM_GetPickup(atmid));
     DestroyDynamicObject(ATM_GetObject(atmid));
     map_remove_deep(AtmMap, ATM_GetID(atmid));

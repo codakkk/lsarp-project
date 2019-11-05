@@ -60,10 +60,7 @@ CMD:vdespawn(playerid, params[])
 	new vehicleid = GetPlayerVehicleID(playerid);
 	if(vehicleid == 0 || !Vehicle_IsValid(vehicleid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un veicolo.");
-	
-	printf("Before Count: %d", Iter_Count(Vehicle));
 	Vehicle_Despawn(vehicleid);
-	printf("After Count: %d", Iter_Count(Vehicle));
 
 	SendMessageToAdmins(false, COLOR_ADMINCMD, "AdmAlert: %s ha despawnato il veicolo id %d.", Account_GetName(playerid), vehicleid);
 	return 1;
@@ -221,7 +218,7 @@ CMD:serialban(playerid, params[])
 	GetPlayerIp(id, ip, sizeof(ip));
 	gpci(id, serial, sizeof(serial));
 
-	mysql_tquery_f(gMySQL, "INSERT INTO `bans` (ip, serial) VALUES('%e', '%e')", ip, serial);
+	mysql_pquery_f(gMySQL, "INSERT INTO `bans` (ip, serial) VALUES('%e', '%e')", ip, serial);
 
 	KickEx(id);
 	return 1;
@@ -244,7 +241,7 @@ CMD:banip(playerid, params[])
 	GetPlayerIp(id, ip, sizeof(ip));
 	gpci(playerid, serial, sizeof(serial));
 
-	mysql_tquery_f(gMySQL, "INSERT INTO `bans` (ip, serial) VALUES('%e', '%e')", ip, serial);
+	mysql_pquery_f(gMySQL, "INSERT INTO `bans` (ip, serial) VALUES('%e', '%e')", ip, serial);
 
 	KickEx(id);
 	
@@ -268,7 +265,7 @@ CMD:unbanip(playerid, params[])
 		}
 		else
 		{
-			SendClientMessage(playerid, COLOR_ERROR, "Non è stato questo Ip tra quelli bannati.");
+			SendClientMessage(playerid, COLOR_ERROR, "Questo IP non risulta bannato.");
 		}
 	}
 
@@ -329,8 +326,8 @@ CMD:setchopshop(playerid, params[])
 flags:settester(CMD_ADMIN);
 CMD:settester(playerid, params[])
 {
-	new id, lvl;
-	if(sscanf(params, "k<u>d", id, lvl))
+	new id;
+	if(sscanf(params, "k<u>", id))
 		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /settester <playerid/nome>");
 
 	if(!Character_IsLogged(id))
@@ -348,8 +345,8 @@ CMD:settester(playerid, params[])
 	}
 	else
 	{
-		SendFormattedMessage(id, COLOR_ADMINCMD, "AdmCmd: %s (%d) ti ha settato Tester.", Account_GetName(playerid), playerid, GetAdminLevelName(lvl));
-		SendFormattedMessage(playerid, COLOR_ADMINCMD, "%s (%d) è stato settato Tester.", Account_GetName(id), id, GetAdminLevelName(lvl));
+		SendFormattedMessage(id, COLOR_ADMINCMD, "AdmCmd: %s (%d) ti ha settato Tester.", Account_GetName(playerid), playerid);
+		SendFormattedMessage(playerid, COLOR_ADMINCMD, "%s (%d) è stato settato Tester.", Account_GetName(id), id);
 		SendMessageToAdmins(true, COLOR_ADMINCMD, "AdmAlert: %s (%d) ha settato %s (%d) Tester.", Account_GetName(playerid), playerid, Account_GetName(id), id);
 		Account_SetAdminLevel(id, 1);
 	}

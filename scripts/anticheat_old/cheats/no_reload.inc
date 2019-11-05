@@ -20,13 +20,13 @@ hook OnPlayerUpdate(playerid)
 }
 
 
-hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
+/*hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
 	if(GetServerTickRate() < 100)
 		return Y_HOOKS_CONTINUE_RETURN_1;
 	AntiCheat_NoReloadCheck(playerid, weaponid);
 	return Y_HOOKS_CONTINUE_RETURN_1;
-}
+}*/
 
 
 stock AntiCheat_NoReloadCheck(playerid, weaponid)

@@ -110,6 +110,6 @@ stock Character_SetLastChopShopTime(playerid, time)
 	if(!Character_IsLogged(playerid))
 		return 0;
 	PlayerLastChopShopTime[playerid] = time;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET last_chop_shop_time = '%d' WHERE id = '%d'", time, Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET last_chop_shop_time = '%d' WHERE id = '%d'", time, Character_GetID(playerid));
 	return 1;
 }

@@ -57,5 +57,5 @@ stock Character_GetPayCheck(playerid)
 
 static Internal_Save(playerid)
 {
-    mysql_tquery_f(gMySQL, "UPDATE `characters` SET paycheck = '%d' WHERE id = '%d'", PlayerPayCheck[playerid], Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `characters` SET paycheck = '%d' WHERE id = '%d'", PlayerPayCheck[playerid], Character_GetID(playerid));
 }

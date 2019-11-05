@@ -13,6 +13,7 @@ enum JobType
 {
     JOB_TYPE_NONE = 0,
     JOB_TYPE_TAXI = 1,
+    JOB_TYPE_MECHANIC = 2,
 };
 
 #include "taxi"
@@ -30,7 +31,8 @@ static enum E_JOB_DATA
 static JobInfo[][E_JOB_DATA] =
 {
     {"Nessuno", 0.0, 0.0, 0.0, JOB_TYPE_NONE},
-    {"Tassista", 0.0, 0.0, 0.0, JOB_TYPE_TAXI}
+    {"Tassista", 0.0, 0.0, 0.0, JOB_TYPE_TAXI},
+    {"Meccanico", 0.0, 0.0, 0.0, JOB_TYPE_MECHANIC}
 };
 
 static 
@@ -155,7 +157,7 @@ stock JobType:Character_GetJobType(playerid)
 stock Character_SetJobType(playerid, JobType:jobType)
 {
     PlayerJob{playerid} = jobType;
-    mysql_tquery_f(gMySQL, "UPDATE `characters` SET job_type = '%d' WHERE id = '%d'", _:jobType, Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `characters` SET job_type = '%d' WHERE id = '%d'", _:jobType, Character_GetID(playerid));
     return 1;
 }
 

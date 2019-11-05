@@ -62,7 +62,7 @@ stock Character_IsFactionOOCEnabled(playerid)
 stock Character_SetFactionDuty(playerid, bool:value)
 {
 	Bit_Set(CharacterBitState[e_pFactionDuty], playerid, value);
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET faction_duty = '%d' WHERE id = '%d'", value?1:0, Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET faction_duty = '%d' WHERE id = '%d'", value?1:0, Character_GetID(playerid));
 }
 
 stock Character_IsFactionDuty(playerid)

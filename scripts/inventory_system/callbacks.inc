@@ -18,8 +18,5 @@ stock Trigger_OnPlayerInvChange(playerid, slot_id)
 
 public OnPlayerInventoryItemUse(playerid, slot_id, item_id)
 {
-	#if defined DEBUG
-    	printf("inventory_callbacks.pwn/OnPlayerInvItem", playerid);
-	#endif
     return 1;
 }

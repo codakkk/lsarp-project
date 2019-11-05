@@ -9,12 +9,16 @@ CMD:aduty(playerid, params[])
 	{
 		Player_SetAdminDuty(playerid, false);
 		SetPlayerName(playerid, Character_GetOOCName(playerid));
-		//Character_SetHealth(playerid, 100);
-		//Character_SetArmour(playerid, 0);
+		
+		Character_SetHealth(playerid, 100);
+		Character_SetArmour(playerid, 0);
+		
 		SendMessageToAdmins(0, 0xFF6347FF, "AdmCmd: %s (%d) non è più in servizio.", Account_GetName(playerid), playerid);
 		
 		SetPlayerColor(playerid, LastColor[playerid]);
 		LastColor[playerid] = 0xFFFFFFFF;
+
+		Character_ResetDeathState(playerid);
 		Character_EnableSomeAntiCheats(playerid, 1);
 	}    
 	else
@@ -23,7 +27,9 @@ CMD:aduty(playerid, params[])
 			callcmd::sconosciuto(playerid, "");
 		
 		Character_SetMasked(playerid, false);
-		
+		Character_SetHealth(playerid, 100);
+		Character_SetArmour(playerid, 100);
+
 		Player_SetAdminDuty(playerid, true);
 		SetPlayerName(playerid, Account_GetName(playerid));
 		
@@ -85,7 +91,55 @@ CMD:check(playerid, params[])
 	GetPlayerIp(id, ip, sizeof(ip));
 	SendFormattedMessage(playerid, COLOR_GREEN, "L'IP del giocatore è %s", ip);
 	SendClientMessage(playerid, COLOR_GREEN, "Per l'inventario, digita /invcheck [playerid/partofname]");
+	SendClientMessage(playerid, COLOR_GREEN, "Per le case, digita /housecheck [playerid/partofname]");
+	SendClientMessage(playerid, COLOR_GREEN, "Per i biz, digita /bizcheck [playerid/partofname]");
     return 1;
+}
+
+flags:housecheck(CMD_JR_MODERATOR);
+CMD:housecheck(playerid, params[])
+{
+	new id;
+	if(sscanf(params, "k<u>", id))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /housecheck [playerid/partofname]");
+	
+	if(!Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+
+	if(Character_GetOwnedHouseCount(id) <= 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non possiede case.");
+	
+	SendFormattedMessage(playerid, 0xFF6347FF, "Le case di %s", Character_GetOOCName(id));
+
+	new List:houses = Character_GetOwnedHousesList(id);
+	for_list(i : houses)
+	{
+		SendFormattedMessage(playerid, 0xFF6347FF, "- %s", House_GetAddress(House:iter_get(i)));
+	}
+	return 1;
+}
+
+flags:bizcheck(CMD_JR_MODERATOR);
+CMD:bizcheck(playerid, params[])
+{
+	new id;
+	if(sscanf(params, "k<u>", id))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /bizcheck [playerid/partofname]");
+	
+	if(!Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+
+	if(Character_GetOwnedHouseCount(id) <= 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non possiede biz.");
+	
+	SendFormattedMessage(playerid, 0xFF6347FF, "I Biz di %s", Character_GetOOCName(id));
+
+	new List:buildings = Character_GetOwnedBuildingsList(id);
+	for_list(i : buildings)
+	{
+		SendFormattedMessage(playerid, 0xFF6347FF, "- %s", Building_GetAddress(Building:iter_get(i)));
+	}
+	return 1;
 }
 
 flags:invcheck(CMD_JR_MODERATOR);
@@ -109,6 +163,7 @@ CMD:randomweather(playerid, params[])
 {
 	Server_SetCurrentWeather(Server_GetNextWeather());
 	Server_UpdateWeather();
+	SendMessageToAdmins(0, COLOR_ADMIN, "AdmCmd: %s ha forzato un weather random.", Account_GetName(playerid));
 	return 1;
 }
 

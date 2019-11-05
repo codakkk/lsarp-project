@@ -24,7 +24,7 @@ hook OnCharacterLateLoad(playerid)
             strins(msg, "[NOTIFICA] ", 0);
             SendClientMessage(playerid, COLOR_ORANGE, msg);
         }
-        mysql_tquery_f(gMySQL, "DELETE FROM `notifications` WHERE character_id = '%d'", Character_GetID(playerid));
+        mysql_pquery_f(gMySQL, "DELETE FROM `notifications` WHERE character_id = '%d'", Character_GetID(playerid));
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `notifications` WHERE character_id = '%d'", Character_GetID(playerid));
     return 1;
@@ -34,6 +34,6 @@ stock bool:SendNotification(characterid, const msg[], GLOBAL_TAG_TYPES:...)
 {
     new s[256];
     format(s, sizeof(s), msg, ___(2));
-    mysql_tquery_f(gMySQL, "INSERT INTO `notifications` (character_id, message) VALUES('%d', '%e')", characterid, s);
+    mysql_pquery_f(gMySQL, "INSERT INTO `notifications` (character_id, message) VALUES('%d', '%e')", characterid, s);
     return true;
 }

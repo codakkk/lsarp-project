@@ -180,6 +180,7 @@ CMD:cura(playerid, params[])
 		if(!Character_IsFactionDuty(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non sei in servizio.");
 	}
+	
 	new id;
 	if(sscanf(params, "k<u>", id))
 		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /cura [playerid/partofname]");
@@ -251,14 +252,11 @@ CMD:megafono(playerid, params[])
 }
 alias:megafono("m");
 
-hook OnCharacterAccept(playerid, stringHash)
+hook OnCharacterTryAccept(playerid, type)
 {
-    if(stringHash != _I<perquisizione> && stringHash != _I<perq>)
+    if(type != REQUEST_TYPE_SEARCH)
 		return 0;
 	
-	if(!Request_IsPending(playerid, REQUEST_TYPE_SEARCH) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_SEARCH))
-	
-        return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di perquisizione attiva."), 0;
     if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_SEARCH), 5.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
 	new senderid = Request_GetSender(playerid, REQUEST_TYPE_SEARCH);

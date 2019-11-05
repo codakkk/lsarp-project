@@ -113,9 +113,6 @@ static LoadPhoneBook(phoneNumber)
             cache_get_value_name_int(i, "number", number);
             map_add_arr(map, number, data);
         }
-
-        
-
         printf("Loaded PhoneBook for number %d", phoneNumber);
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT id, name, number FROM `phonebook` WHERE number_owner = '%d'", phoneNumber);
@@ -126,7 +123,8 @@ static UnloadPhoneBook(phoneNumber)
 {
     if(!map_has_key(PhoneBooks, phoneNumber))
         return 0;
-    map_delete_deep(PhoneBook_Get(phoneNumber));
+    map_delete(PhoneBook_Get(phoneNumber));
+    map_remove_deep(PhoneBooks, phoneNumber);
     printf("Unloaded PhoneBook for number %d", phoneNumber);
     return 1;
 }
@@ -141,8 +139,6 @@ static ShowContactOptions(playerid, playerNumber, contactNumber)
 
 static Map:PhoneBook_Get(number)
 {
-    if(!map_has_key(PhoneBooks, number))
-        LoadPhoneBook(number);
     return Map:map_get(PhoneBooks, number);
 }
 
@@ -184,7 +180,7 @@ static bool:PhoneBook_DeleteContact(ownerNumber, number)
         return false;
     new id = map_get(phonebook, number, CONTACT_ID);
     if(id > 0)
-        mysql_tquery_f(gMySQL, "DELETE FROM `phonebook` WHERE id = '%d'", id);
+        mysql_pquery_f(gMySQL, "DELETE FROM `phonebook` WHERE id = '%d'", id);
     map_remove_deep(phonebook, number);
     return true;
 }
@@ -206,7 +202,7 @@ static bool:PhoneBook_SetContactName(ownerNumber, number, name[])
 		Iter:iter = Iter:map_iter_at(phonebook, number)
 	;
     iter_set_cells(iter, CONTACT_NAME, name, 32);
-    mysql_tquery_f(gMySQL, "UPDATE `phonebook` SET name = '%e' WHERE id = '%d'", name, id);
+    mysql_pquery_f(gMySQL, "UPDATE `phonebook` SET name = '%e' WHERE id = '%d'", name, id);
     return true;
 }
 

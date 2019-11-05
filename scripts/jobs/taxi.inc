@@ -179,18 +179,12 @@ static StopTaxi(driver, passenger)
     return 1;
 }
 
-hook OnCharacterAccept(playerid, hash)
+hook OnCharacterTryAccept(playerid, type)
 {
-    if(hash != _I<taxi>)
+    if(type != REQUEST_TYPE_TAXI)
         return 0;
     
-    if(!Request_IsPending(playerid, REQUEST_TYPE_TAXI))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta taxi attiva.");
-    
     new senderid = Request_GetSender(playerid, REQUEST_TYPE_TAXI);
-    
-    if(!Character_IsLogged(senderid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore che ti ha inviato la richiesta non è più online.");
 
     if(GetPlayerVehicleID(playerid) != GetPlayerVehicleID(senderid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nello stesso veicolo del giocatore che ti ha inviato la richiesta.");

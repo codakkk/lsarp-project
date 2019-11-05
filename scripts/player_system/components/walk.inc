@@ -36,7 +36,7 @@ hook OnCharacterLoad(playerid)
 
 static Internal_Save(playerid)
 {
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET walk_style = '%d' WHERE id = '%d'", PlayerWalkStyle[playerid], Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET walk_style = '%d' WHERE id = '%d'", PlayerWalkStyle[playerid], Character_GetID(playerid));
 	return 1;
 }
 

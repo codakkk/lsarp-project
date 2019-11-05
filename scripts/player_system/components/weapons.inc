@@ -1,8 +1,11 @@
 #include <YSI_Coding\y_hooks>
 
+static bool:HasLoadedWeapons[MAX_PLAYERS char] = {false, ...};
+
 hook OnCharacterClearData(playerid)
 {
 	ResetPlayerWeapons(playerid);
+	HasLoadedWeapons{playerid} = false;
 	return 1;
 }
 
@@ -18,20 +21,18 @@ hook OnCharacterLateLoad(playerid)
 	return 1;
 }
 
-/*ptask SavePlayerWeaponsTask[1000](playerid) 
+ptask SaveWeaponsEachTot[5000](playerid)
 {
 	if(!Character_IsLogged(playerid))
 		return 0;
 	Character_SaveWeapons(playerid);
 	return 1;
-}*/
+}
 
 stock Character_SaveWeapons(playerid)
 {
 	if(!Character_IsLogged(playerid))
 		return 0;
-	mysql_tquery(gMySQL, "START TRANSACTION;");
-	//Character_DeleteAllWeapons(playerid);
 	new query[255];
 	new weaponid, ammo;
 	for(new i = 0; i < 13; ++i)
@@ -51,26 +52,33 @@ stock Character_SaveWeapons(playerid)
 			Character_GetCachedWeaponBean(playerid, weaponid, ammo);
 		}
 		
-		if(i > 1 && i != 10 && ammo <= 0)
+		if(i > 1 && i != 10 && (ammo <= 0 || weaponid == 0))
 		{
 			format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE character_id = '%d' AND slot_id = '%d';", Character_GetID(playerid), i);
 		}
 		else
 		{
 			format(query, sizeof(query), "INSERT INTO `character_weapons` (character_id, slot_id, weapon_id, ammo) VALUES('%d', '%d', '%d', '%d') ON DUPLICATE KEY UPDATE weapon_id = VALUES(weapon_id), ammo = VALUES(ammo);", Character_GetID(playerid), i, weaponid, ammo);
-			printf("Saving weapon id %d with %d ammo for character id %d.", weaponid, ammo, Character_GetID(playerid));
+			//printf("Saving weapon id %d with %d ammo for character id %d.", weaponid, ammo, Character_GetID(playerid));
 		}
 		mysql_pquery(gMySQL, query);
 	}
-	mysql_tquery(gMySQL, "COMMIT;");
 	return 1;
 }
 
 stock Character_LoadWeapons(playerid)
 {
+	if(HasLoadedWeapons{playerid})
+		return;
+	HasLoadedWeapons{playerid} = true;
 	inline OnLoad()
 	{
-		new rows = cache_num_rows(), cid, w, a;
+		new rows = cache_num_rows(), cid;
+		if(rows <= 0)
+			return;
+		
+		new w, a;
+
 		for(new i = 0; i < rows; ++i)
 		{
 			cache_get_value_name_int(i, "character_id", cid);
@@ -80,13 +88,13 @@ stock Character_LoadWeapons(playerid)
 			
 			cache_get_value_name_int(i, "weapon_id", w);
 			cache_get_value_name_int(i, "ammo", a);
+
 			if(! (0 <= w <= 46))
 			{
 				printf("Character_LoadWeapons(%d) failed. invalid weapon id (id %d)", playerid, w);
 				continue;
 			}
 			ac_GivePlayerWeapon(playerid, w, a);
-			//Character_GiveWeapon(playerid, w, a);
 		}
 		printf("%d weapons loaded for player %d (DBID: %d).", rows, playerid, Character_GetID(playerid));
 	}
@@ -215,4 +223,56 @@ static TriggerSaveAfterDelay(playerid)
 timer SaveWeaponAfterDelay[500](playerid) 
 {
 	Character_SaveWeapons(playerid);
+}
+
+hook OnCharacterTryAccept(playerid, type)
+{
+	if(type != REQUEST_TYPE_WEAPON)
+		return 0;
+
+	if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_WEAPON), 5.0))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
+	
+	new slotid = Request_GetSlot(playerid, REQUEST_TYPE_WEAPON),
+		weaponid = Request_GetItem(playerid, REQUEST_TYPE_WEAPON),
+		tempWeapon = 0,
+		ammo = 0,
+		requestSender = Request_GetSender(playerid, REQUEST_TYPE_WEAPON);
+	GetPlayerWeaponData(requestSender, slotid, tempWeapon, ammo);
+	if(weaponid != tempWeapon || ammo == 0)
+	{
+		Request_Reset(playerid, REQUEST_TYPE_WEAPON);
+		Request_Reset(requestSender, REQUEST_TYPE_WEAPON);
+		SendClientMessage(playerid, COLOR_ERROR, "Non possiedi più l'arma. La richiesta è stata annullata.");
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non possiede più l'arma, pertanto non puoi più accettare.");	
+	}
+	new w, a;
+	Character_GetWeaponData(playerid, Weapon_GetSlot(weaponid), w, a);
+	if(w == 0 || a == 0)
+	{
+		Character_RemoveWeapon(requestSender, weaponid);
+		Character_GiveWeapon(playerid, weaponid, ammo);
+		
+		SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "Hai accettato l'arma (%s) con %d proiettili da %s.", Weapon_GetName(weaponid), ammo, Character_GetRolePlayName(requestSender));
+		SendFormattedMessage(requestSender, COLOR_ACCEPT_REQUEST, "%s (%d) ha accettato la tua arma.", Character_GetRolePlayName(playerid), playerid);
+		
+		Request_Reset(playerid, REQUEST_TYPE_WEAPON);
+		Request_Reset(requestSender, REQUEST_TYPE_WEAPON);
+	}
+	else if(Character_HasSpaceForItem(playerid, weaponid, ammo))
+	{
+		Character_RemoveWeapon(requestSender, weaponid);
+		Character_GiveItem(playerid, weaponid, 1, ammo);
+
+		SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "Hai accettato l'arma (%s) con %d proiettili da %s.", Weapon_GetName(weaponid), ammo, Character_GetRolePlayName(requestSender));
+		SendClientMessage(playerid, COLOR_ACCEPT_REQUEST, "L'arma è stata messa nell'inventario poiché lo slot è occupato.");
+
+		SendFormattedMessage(requestSender, COLOR_ACCEPT_REQUEST, "%s (%d) ha accettato la tua arma.", Character_GetRolePlayName(playerid), playerid);
+
+		Request_Reset(playerid, REQUEST_TYPE_WEAPON);
+		Request_Reset(requestSender, REQUEST_TYPE_WEAPON);
+	}
+	else
+		SendClientMessage(playerid, COLOR_ERROR, "Hai già un'arma e non hai abbastanza spazio nell'inventario.");
+	return 1;
 }

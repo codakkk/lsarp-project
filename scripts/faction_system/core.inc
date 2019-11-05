@@ -127,8 +127,8 @@ stock Faction_Delete(factionid)
 	if(!Faction_IsValid(factionid))
 		return 0;
 
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET faction = '%d', faction_rank = '0' WHERE faction = '%d'", INVALID_FACTION_ID, factionid);
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET faction = '%d' WHERE faction = '%d'", INVALID_FACTION_ID, factionid);
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET faction = '%d', faction_rank = '0' WHERE faction = '%d'", INVALID_FACTION_ID, factionid);
+	mysql_pquery_f(gMySQL, "UPDATE `buildings` SET faction = '%d' WHERE faction = '%d'", INVALID_FACTION_ID, factionid);
 	
 	for_building(building)
 	{
@@ -148,7 +148,7 @@ stock Faction_Delete(factionid)
 		}
 	}
 	
-	mysql_tquery_f(gMySQL, "DELETE FROM `factions` WHERE id = '%d'", factionid);
+	mysql_pquery_f(gMySQL, "DELETE FROM `factions` WHERE id = '%d'", factionid);
 
 	CallLocalFunction(#OnFactionDeleted, "d", factionid);
 
@@ -162,7 +162,6 @@ stock Faction_ShowList(playerid, edit = true)
 	for_map(i : Factions)
 	{
 		new factionid = iter_get_key(i);
-		printf("Faction id: %d", factionid);
 		Faction_GetName(factionid, name);
 		Faction_GetShortName(factionid, shortName);
 
@@ -258,7 +257,7 @@ stock Faction_SetName(factionid, name[])
 	iter_set_cells(it, Name, name, MAX_FACTION_NAME);
 	if(Faction_GetID(factionid) > 0)
 	{
-		mysql_tquery_f(gMySQL, "UPDATE `factions` SET name = '%e' WHERE id = '%d'", name, Faction_GetID(factionid));
+		mysql_pquery_f(gMySQL, "UPDATE `factions` SET name = '%e' WHERE id = '%d'", name, Faction_GetID(factionid));
 	}
 	return 1;
 }
@@ -289,7 +288,7 @@ stock Faction_SetShortName(factionid, name[])
 	iter_set_cells(it, ShortName, name, MAX_FACTION_SHORT_NAME);
 	if(Faction_GetID(factionid) > 0)
 	{
-		mysql_tquery_f(gMySQL, "UPDATE `factions` SET short_name = '%e' WHERE id = '%d'", name, Faction_GetID(factionid));
+		mysql_pquery_f(gMySQL, "UPDATE `factions` SET short_name = '%e' WHERE id = '%d'", name, Faction_GetID(factionid));
 	}
 	return 1;
 }
@@ -318,7 +317,7 @@ stock Faction_SetType(factionid, type)
 	map_set_cell(Factions, factionid, Type, type);
 	if(Faction_GetID(factionid) > 0)
 	{
-		mysql_tquery_f(gMySQL, "UPDATE `factions` SET type = '%d' WHERE id = '%d'", type, Faction_GetID(factionid));
+		mysql_pquery_f(gMySQL, "UPDATE `factions` SET type = '%d' WHERE id = '%d'", type, Faction_GetID(factionid));
 	}
 	return 1;
 }
@@ -352,7 +351,7 @@ stock Faction_SetSpawnPos(factionid, Float:x, Float:y, Float:z, interior, world)
 
 	if(Faction_GetID(factionid) > 0)
 	{
-		mysql_tquery_f(gMySQL, "UPDATE `factions` SET spawn_x = '%f', spawn_y = '%f', spawn_z = '%f', spawn_interior = '%d', spawn_world = '%d' WHERE id = '%d'", 
+		mysql_pquery_f(gMySQL, "UPDATE `factions` SET spawn_x = '%f', spawn_y = '%f', spawn_z = '%f', spawn_interior = '%d', spawn_world = '%d' WHERE id = '%d'", 
 		x, y, z, interior, world, Faction_GetID(factionid));
 	}
 	return 1;
@@ -386,7 +385,7 @@ stock Faction_SetColor(factionid, color)
 	map_set_cell(Factions, factionid, Color, color);
 
 	if(Faction_GetID(factionid) > 0)
-		mysql_tquery_f(gMySQL, "UPDATE `factions` SET color = '%d' WHERE id = '%d'", color, Faction_GetID(factionid));
+		mysql_pquery_f(gMySQL, "UPDATE `factions` SET color = '%d' WHERE id = '%d'", color, Faction_GetID(factionid));
 	return 1;
 }
 

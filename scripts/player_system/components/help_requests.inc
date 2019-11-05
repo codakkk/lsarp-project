@@ -326,7 +326,7 @@ static StaffRequest_Accept(playerid, requestid)
         PlayerRequestsCounter{owner}--;
 
         SelectedRequest[playerid] = 0;
-        mysql_tquery_f(gMySQL, "DELETE FROM `staff_requests` WHERE id = '%d'", requestid);
+        mysql_pquery_f(gMySQL, "DELETE FROM `staff_requests` WHERE id = '%d'", requestid);
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `staff_requests` WHERE id = '%d'", requestid);
     return 1;
@@ -364,7 +364,7 @@ static StaffRequest_Decline(playerid, requestid, const reason[])
 
         PlayerRequestsCounter{owner}--;
         SelectedRequest[playerid] = 0;
-        mysql_tquery_f(gMySQL, "DELETE FROM `staff_requests` WHERE id = '%d'", requestid);
+        mysql_pquery_f(gMySQL, "DELETE FROM `staff_requests` WHERE id = '%d'", requestid);
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `staff_requests` WHERE id = '%d'", requestid);
     return 1;
@@ -374,7 +374,7 @@ Dialog:Dialog_PlayerRequestView(playerid, response, listitem, inputtext[])
 {
     if(response)
     {
-        mysql_tquery_f(gMySQL, "DELETE FROM `staff_requests` WHERE id = '%d'", SelectedRequest[playerid]);
+        mysql_pquery_f(gMySQL, "DELETE FROM `staff_requests` WHERE id = '%d'", SelectedRequest[playerid]);
         SendClientMessage(playerid, COLOR_ORANGE, "Hai annullato la tua richiesta.");
         return 1;
     }
@@ -416,7 +416,7 @@ stock StaffRequest_Reset(playerid)
 {
     if(!Character_IsLogged(playerid))
         return 0;
-    mysql_tquery_f(gMySQL, "DELETE FROM `staff_requests` WHERE owner_id = '%d'", playerid);
+    mysql_pquery_f(gMySQL, "DELETE FROM `staff_requests` WHERE owner_id = '%d'", playerid);
     return 1;
 }
 

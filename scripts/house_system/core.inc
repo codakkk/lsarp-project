@@ -370,7 +370,7 @@ stock bool:House_SetOwner(House:house, playerid)
 
     House_CreateObjects(house);
 
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), House_GetID(house));
+    mysql_pquery_f(gMySQL, "UPDATE `houses` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), House_GetID(house));
     return true;
 }
 
@@ -388,7 +388,7 @@ stock House_ResetOwner(House:house)
 
     House_CreateObjects(house);
 
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET owner_id = '0' WHERE id = '%d'", House_GetID(house));
+    mysql_pquery_f(gMySQL, "UPDATE `houses` SET owner_id = '0' WHERE id = '%d'", House_GetID(house));
     
     return 1;
 }
@@ -427,7 +427,7 @@ stock House_SetEnterPosition(House:house, Float:x, Float:y, Float:z)
     var_set_cell(Variant:house, EnterY, y);
     var_set_cell(Variant:house, EnterZ, z);
 
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET enter_x = '%f', enter_y = '%f', enter_z = '%f' WHERE id = '%d'", x, y, z, House_GetID(house));
+    mysql_pquery_f(gMySQL, "UPDATE `houses` SET enter_x = '%f', enter_y = '%f', enter_z = '%f' WHERE id = '%d'", x, y, z, House_GetID(house));
     return 1;
 }
 
@@ -443,7 +443,7 @@ stock House_SetEnterInterior(House:house, interior)
 {
     var_set_cell(Variant:house, EnterInterior, interior);
 
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET enter_interior = '%d' WHERE id = '%d'", interior, House_GetID(house));
+    mysql_pquery_f(gMySQL, "UPDATE `houses` SET enter_interior = '%d' WHERE id = '%d'", interior, House_GetID(house));
     return 1;
 }
 
@@ -456,7 +456,7 @@ stock House_SetEnterWorld(House:house, world)
 {
     var_set_cell(Variant:house, EnterWorld, world);
 
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET enter_world = '%d' WHERE id = '%d'", world, House_GetID(house));
+    mysql_pquery_f(gMySQL, "UPDATE `houses` SET enter_world = '%d' WHERE id = '%d'", world, House_GetID(house));
     return 1;
 }
 
@@ -476,7 +476,7 @@ stock House_SetExitPosition(House:house, Float:x, Float:y, Float:z)
     var_set_cell(Variant:house, ExitY, y);
     var_set_cell(Variant:house, ExitZ, z);
 
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET exit_x = '%f', exit_y = '%f', exit_z = '%f' WHERE id = '%d'", x, y, z, House_GetID(house));
+    mysql_pquery_f(gMySQL, "UPDATE `houses` SET exit_x = '%f', exit_y = '%f', exit_z = '%f' WHERE id = '%d'", x, y, z, House_GetID(house));
     return 1;
 }
 
@@ -491,7 +491,7 @@ stock House_GetExitPosition(House:house, &Float:X, &Float:Y, &Float:Z)
 stock House_SetExitInterior(House:house, interior)
 {
     var_set_cell(Variant:house, ExitInterior, interior);
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET exit_interior = '%d' WHERE id = '%d'", interior, House_GetID(house));
+    mysql_pquery_f(gMySQL, "UPDATE `houses` SET exit_interior = '%d' WHERE id = '%d'", interior, House_GetID(house));
     return 1;
 }
 
@@ -512,7 +512,7 @@ stock bool:House_SetInterior(House:house, interiorType, interiorid)
     var_set_cell(Variant:house, InteriorType, interiorType);
     var_set_cell(Variant:house, InteriorID, interiorid);
 
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET interior_id = '%d', interior_type = '%d' WHERE id = '%d'", interiorid, interiorType, House_GetID(house));
+    mysql_pquery_f(gMySQL, "UPDATE `houses` SET interior_id = '%d', interior_type = '%d' WHERE id = '%d'", interiorid, interiorType, House_GetID(house));
     
     House_SetExitPosition(house, data[iHouseX], data[iHouseY], data[iHouseZ]);
     House_SetExitInterior(house, data[iHouseInt]);
@@ -536,7 +536,7 @@ stock House_SetPrice(House:house, price)
 
     House_CreateObjects(house);
 
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET price = '%d' WHERE id = '%d'", price, House_GetID(house));
+    mysql_pquery_f(gMySQL, "UPDATE `houses` SET price = '%d' WHERE id = '%d'", price, House_GetID(house));
     return 1;
 }
 
@@ -548,7 +548,7 @@ stock House_GetPrice(House:house)
 stock House_SetLocked(House:house, bool:lock)
 {
     var_set_cell(Variant:house, IsLocked, lock);
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET locked = '%d' WHERE id = '%d'", lock?1:0, House_GetID(house));
+    mysql_pquery_f(gMySQL, "UPDATE `houses` SET locked = '%d' WHERE id = '%d'", lock?1:0, House_GetID(house));
     return 1;
 }
 
@@ -571,7 +571,7 @@ stock House_GiveMoney(House:house, money)
 stock House_SetMoney(House:house, amount)
 {
     var_set_cell(Variant:house, Money, amount);
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET money = '%d' WHERE id = '%d'", amount, House_GetID(house));
+    mysql_pquery_f(gMySQL, "UPDATE `houses` SET money = '%d' WHERE id = '%d'", amount, House_GetID(house));
     return 1;
 }
 
@@ -583,7 +583,7 @@ stock Text3D:House_Get3DText(House:house)
 stock bool:House_SetRentable(House:house, bool:rentable)
 {
     var_set_cell(Variant:house, IsRentable, rentable);
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET is_rentable = '%d' WHERE id = '%d'", rentable?1:0, House_GetID(house));
+    mysql_pquery_f(gMySQL, "UPDATE `houses` SET is_rentable = '%d' WHERE id = '%d'", rentable?1:0, House_GetID(house));
     return true;
 }
 
@@ -595,7 +595,7 @@ stock bool:House_IsRentable(House:house)
 stock bool:House_SetRentPrice(House:house, price)
 {
     var_set_cell(Variant:house, RentPrice, price);
-    mysql_tquery_f(gMySQL, "UPDATE `houses` SET rent_price = '%d' WHERE id = '%d'", price, House_GetID(house));
+    mysql_pquery_f(gMySQL, "UPDATE `houses` SET rent_price = '%d' WHERE id = '%d'", price, House_GetID(house));
     return true;
 }
 

@@ -102,7 +102,7 @@ stock Inventory:Inventory_New(E_ENTITY_TYPE:entityType, entityId, space)
 	map_add(InventoriesMap[entityType], entityId, inventory);
 	list_add(InventoriesList, inventory);
 
-	printf("Inventory created for entity type %d id %d", _:entityType, entityId);
+	//printf("Inventory created for entity type %d id %d", _:entityType, entityId);
     return inventory;
 }
 
@@ -585,38 +585,26 @@ static Inventory_ShowInDialog(Inventory:inventory, playerid, const title[], cons
 		if(iter_sizeof(i) == 0 || tempItem[InvItem] == 0) // If no item
 		{
 			tempItem[InvItem] = tempItem[InvAmount] = tempItem[InvExtra] = 0;
-			string += @("{808080}Slot Libero\t{808080}--\t{808080}--\t--\n");
+			str_append(string, @("{808080}Slot Libero\t{808080}--\t{808080}--\t--\n"));
 		}
 		else
 		{
 			new itemid = tempItem[InvItem],
 				itemAmount = tempItem[InvAmount],
 				extra = tempItem[InvExtra][0];
-			
-			new String:s = str_format("{FFFFFF}%s\t{FFFFFF}%d\t{FFFFFF}%s\t", ServerItem_GetName(itemid), itemAmount, ServerItem_GetTypeName(itemid));
-			if(ServerItem_GetType(itemid) == ITEM_TYPE:ITEM_TYPE_WEAPON && (Weapon_RequireAmmo(itemid) || Weapon_CanBeDisassembled(itemid)))
-			{
-				if(extra == 0)
-					s += @("Vuota");
-				else
-					s += str_val(extra);
-			}
-			else if(itemid == gItem_Phone)
-			{
-				if(extra <= 0)
-					s += @("Nessun Numero");
-				else
-					s += str_val(extra);
-			}
-			else
-				s += @("--");
-			s += @("\n");
-			string += s;
+	
+			str_append_format(string, "{FFFFFF}%s\t{FFFFFF}%d\t{FFFFFF}%s\t%S\n", ServerItem_GetName(itemid), itemAmount, ServerItem_GetTypeName(itemid), GetItemExtraStr(itemid, itemAmount, extra));
 		}
 		slotid++;
 	}
 	Dialog_Open_s(playerid, dialog, DIALOG_STYLE_TABLIST_HEADERS, str_new(title), string, button1, button2);
 	return 1;
+}
+
+stock String:GetItemExtraStr(itemid, quantity, extra)
+{
+	#pragma unused itemid, quantity, extra
+	return @("--");
 }
 
 stock Inventory_InternalShowStr(Inventory:inventory, playerid, String:title, const dialog[] = "", const button1[] = "", const button2[] = "", bool:forceDialog = false)
@@ -682,11 +670,11 @@ stock Inventory_SaveInDatabase(Inventory:inventory, const databaseName[], const 
 		extra = Inventory_GetSlotExtra(inventory, i);
 		if(itemid == 0 || amount == 0)
 		{
-			mysql_tquery_f(gMySQL, "DELETE FROM `%e` WHERE %e = '%d' AND slot_id = '%d';", databaseName, entityKeyName, entityId, i);
+			mysql_pquery_f(gMySQL, "DELETE FROM `%e` WHERE %e = '%d' AND slot_id = '%d';", databaseName, entityKeyName, entityId, i);
 		}
 		else
 		{
-			mysql_tquery_f(gMySQL, 
+			mysql_pquery_f(gMySQL, 
 			"INSERT INTO `%e` (%e, slot_id, item, amount, extra) VALUES('%d', '%d', '%d', '%d', '%d') \
 			ON DUPLICATE KEY UPDATE \
 			item = VALUES(item), \

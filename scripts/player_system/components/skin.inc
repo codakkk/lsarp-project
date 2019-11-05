@@ -13,11 +13,11 @@ hook OnCharacterClearData(playerid)
 
 hook OnCharacterDisconnected(playerid, reason)
 {
-    mysql_tquery_f(gMySQL, "UPDATE `characters` SET last_skin = '%d' WHERE id = '%d'", GetPlayerSkin(playerid), Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `characters` SET last_skin = '%d' WHERE id = '%d'", GetPlayerSkin(playerid), Character_GetID(playerid));
     return 1;
 }
 
-hook OnCharacterSpawn(playerid)
+hook OnCharacterSpawned(playerid)
 {
     new skinid = PlayerLastSkin[playerid] > 0 ? PlayerLastSkin[playerid] : Character_GetSkin(playerid);
     if(skinid == 0)
@@ -45,7 +45,7 @@ static Internal_Save(playerid)
 {
     if(!Character_IsLogged(playerid))
         return 0;
-    mysql_tquery_f(gMySQL, "UPDATE `characters` SET skin = '%d' WHERE id = '%d'", Character_GetSkin(playerid), Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `characters` SET skin = '%d' WHERE id = '%d'", Character_GetSkin(playerid), Character_GetID(playerid));
     return 1;
 }
 

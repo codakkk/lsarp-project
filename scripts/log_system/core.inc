@@ -55,7 +55,7 @@ hook OnGameModeInit()
 
 stock Log(const playerName[], const giveplayerName[], const text[], extravar = 0)
 {
-	mysql_tquery_f(gMySQL, "INSERT INTO `logs` \
+	mysql_pquery_f(gMySQL, "INSERT INTO `logs` \
 						  (PlayerID, GivePlayerID, Text, ExtraVar, Time) \
 						  VALUES('%s', '%s', '%e', '%d', '%d')", playerName, 
 										giveplayerName, 
@@ -66,7 +66,7 @@ stock Log(const playerName[], const giveplayerName[], const text[], extravar = 0
 
 stock LogCharacter(playerid, issuerid, e_LOG_TYPE:type, const reason[] = "", extra = 0)
 {
-	mysql_tquery_f(gMySQL, "INSERT INTO `character_logs` \
+	mysql_pquery_f(gMySQL, "INSERT INTO `character_logs` \
 						  (account_id, character_id, issuer_account_id, issuer_character_id, type, reason, extra, created_at) \
 						  VALUES('%d', '%d', '%d', '%d', '%d', '%e', '%d', '%d')", 
 						  Account_GetID(playerid), Character_GetID(playerid), Account_GetID(issuerid), Character_GetID(issuerid), type, reason, extra, gettime());

@@ -149,9 +149,7 @@ CMD:gotovehicle(playerid, params[])
 
     new Float:x, Float:y, Float:z;
     GetVehiclePos(id, x, y, z);
-    SetPlayerPos(playerid, x, y, z+5.0);
-    SetPlayerInterior(playerid, 0);
-    Character_SetVirtualWorld(playerid, GetVehicleVirtualWorld(id)); 
+    Character_SetSafePosition(playerid, x, y, z+5.0, 0, GetVehicleVirtualWorld(id));
     return 1;
 }
 alias:gotovehicle("gotov");
@@ -185,7 +183,7 @@ CMD:apark(playerid, params[])
     new Float:x, Float:y, Float:z, Float:a;
     GetVehiclePos(vehicleid, x, y, z);
     GetVehicleZAngle(vehicleid, a);
-	printf("ZAngle: %f", a);
+
     Vehicle_Park(vehicleid, x, y, z, a);
 	if(Vehicle_GetOwnerID(vehicleid) > 0)
 	{
@@ -359,7 +357,7 @@ CMD:banofflineaccount(playerid, params[])
 			new id, e_name[MAX_PLAYER_NAME];
 			cache_get_value_index_int(0, 0, id);
 			cache_get_value_index(0, 1, e_name);
-			mysql_tquery_f(gMySQL, "UPDATE `accounts` SET banned = '1' WHERE id = '%d'", id);
+			mysql_pquery_f(gMySQL, "UPDATE `accounts` SET banned = '1' WHERE id = '%d'", id);
 			SendFormattedMessage(playerid, COLOR_ORANGE, "L'account \"%s\" è stato bannato.", e_name);
 			SendMessageToAdmins(true, COLOR_ORANGE, "AdmAlert: %s ha bannato l'account \"%s\".", Account_GetName(playerid), e_name);
 			Log(Account_GetName(playerid), e_name, "/banofflineaccount");
@@ -387,7 +385,7 @@ CMD:unbanaccount(playerid, params[])
 			new id, e_name[MAX_PLAYER_NAME];
 			cache_get_value_index_int(0, 0, id);
 			cache_get_value_index(0, 1, e_name);
-			mysql_tquery_f(gMySQL, "UPDATE `accounts` SET banned = '0', ban_expiry = '0' WHERE id = '%d'", id);
+			mysql_pquery_f(gMySQL, "UPDATE `accounts` SET banned = '0', ban_expiry = '0' WHERE id = '%d'", id);
 			SendFormattedMessage(playerid, COLOR_ORANGE, "L'account \"%s\" è stato sbannato.", e_name);
 			SendMessageToAdmins(true, COLOR_ORANGE, "AdmAlert: %s ha sbannato l'account \"%s\".", Account_GetName(playerid), e_name);
 			Log(Account_GetName(playerid), e_name, "/unbanaccount");
@@ -395,10 +393,10 @@ CMD:unbanaccount(playerid, params[])
 		}
 		else
 		{
-			SendFormattedMessage(playerid, COLOR_ERROR, "L'account non esiste.");
+			SendFormattedMessage(playerid, COLOR_ERROR, "L'account non esiste o è già sbannato.");
 		}
 	}
-	MySQL_TQueryInline(gMySQL, using inline FindAccount, "SELECT id, name FROM `accounts` WHERE LOWER(name) = LOWER('%e')", name);
+	MySQL_TQueryInline(gMySQL, using inline FindAccount, "SELECT id, name FROM `accounts` WHERE LOWER(name) = LOWER('%e') AND banned = '1'", name);
 	return 1;
 }
 
@@ -429,7 +427,7 @@ CMD:unbancharacter(playerid, params[])
 			new id, e_name[MAX_PLAYER_NAME];
 			cache_get_value_index_int(0, 0, id);
 			cache_get_value_index(0, 1, e_name);
-			mysql_tquery_f(gMySQL, "UPDATE `characters` SET banned = '0', ban_expiry = '0' WHERE id = '%d'", id);
+			mysql_pquery_f(gMySQL, "UPDATE `characters` SET banned = '0', ban_expiry = '0' WHERE id = '%d'", id);
 			SendFormattedMessage(playerid, COLOR_ORANGE, "Il personaggio \"%s\" è stato sbannato.", e_name);
 			SendMessageToAdmins(true, COLOR_ORANGE, "AdmAlert: %s ha sbannato il personaggio \"%s\".", Account_GetName(playerid), e_name);
 			Log(Account_GetName(playerid), e_name, "/unban");
@@ -462,7 +460,7 @@ stock BanCharacter(playerid, adminid, days, reason[])
 
 	Log(Account_GetName(adminid), Account_GetName(playerid), "BanCharacter", days);
 	LogCharacter(playerid, adminid, LOG_TYPE_BAN, reason, days);
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET banned = '1', ban_expiry = '%d' WHERE id = '%d'", banTime, Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET banned = '1', ban_expiry = '%d' WHERE id = '%d'", banTime, Character_GetID(playerid));
 
 	KickEx(playerid);
 	return 1;
@@ -470,7 +468,7 @@ stock BanCharacter(playerid, adminid, days, reason[])
 
 stock BanAccount(playerid, adminid, reason[])
 {
-	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET banned = '1' WHERE id = '%d'", Account_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `accounts` SET banned = '1' WHERE id = '%d'", Account_GetID(playerid));
 
 	SendFormattedMessage(playerid, COLOR_ORANGE, "Il tuo account (%s) è stato bannato da %s. Motivo: %s", Account_GetName(playerid), Account_GetName(adminid), reason);
 

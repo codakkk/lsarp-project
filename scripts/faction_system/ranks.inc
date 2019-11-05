@@ -152,7 +152,7 @@ stock Faction_AddRank(factionid, rankid, const name[], salary)
 	new result = Internal_AddRank(factionid, rankid, name, salary);
     if(result)
 	{
-		mysql_tquery_f(gMySQL, "INSERT INTO `faction_ranks` (faction_id, rank_id, name, salary) VALUES('%d', '%d', '%e', '%d')", factionid, rankid, name, salary);	
+		mysql_pquery_f(gMySQL, "INSERT INTO `faction_ranks` (faction_id, rank_id, name, salary) VALUES('%d', '%d', '%e', '%d')", factionid, rankid, name, salary);	
 	}
     return result;
 }
@@ -162,7 +162,7 @@ stock Faction_RemoveRank(factionid, rankid)
 	new result = Internal_RemoveRank(factionid, rankid);
 	if(result)
 	{
-		mysql_tquery_f(gMySQL, "DELETE FROM `faction_ranks` WHERE faction_id = '%d' AND rank_id = '%d'", factionid, rankid);
+		mysql_pquery_f(gMySQL, "DELETE FROM `faction_ranks` WHERE faction_id = '%d' AND rank_id = '%d'", factionid, rankid);
 	}
 	return result;
 }
@@ -200,7 +200,7 @@ stock Faction_SetRankName(factionid, rankid, name[])
     new Map:map = Faction_GetRanksMap(factionid);
     new Iter:it = map_iter_at(map, rankid);
     iter_set_cells(it, Name, name, MAX_FACTION_RANK_NAME);
-	mysql_tquery_f(gMySQL, "UPDATE `faction_ranks` SET name = '%e' WHERE faction_id = '%d' AND rank_id = '%d'", name, factionid, rankid);
+	mysql_pquery_f(gMySQL, "UPDATE `faction_ranks` SET name = '%e' WHERE faction_id = '%d' AND rank_id = '%d'", name, factionid, rankid);
     return 1;
 }
 
@@ -218,7 +218,7 @@ stock Faction_SetRankSalary(factionid, rankid, salary)
 		return 0;
     new Map:list = Faction_GetRanksMap(factionid);
     map_set_cell(list, rankid, Salary, salary);
-	mysql_tquery_f(gMySQL, "UPDATE `faction_ranks` SET salary = '%d' WHERE faction_id = '%d' AND rank_id = '%d'", salary, factionid, rankid);
+	mysql_pquery_f(gMySQL, "UPDATE `faction_ranks` SET salary = '%d' WHERE faction_id = '%d' AND rank_id = '%d'", salary, factionid, rankid);
 	return 1;
 }
 

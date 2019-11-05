@@ -189,9 +189,6 @@ Dialog:Dialog_DealershipVehicles(playerid, response, listitem, inputtext[])
 
     SelectedVehicle[playerid] = Vehicle_Create(vehicleModel, vx, vy, vz, va, 0, 0, 0, 0);
     
-	printf("%d", SelectedVehicle[playerid]);
-    //SetPlayerPos(playerid, vx, vy, vz);
-    
     PutPlayerInVehicle(playerid, SelectedVehicle[playerid], 0);
 
 	Character_SetVirtualWorld(playerid, playerid + 1);

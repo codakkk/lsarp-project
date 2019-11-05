@@ -35,7 +35,7 @@ stock Player_LoadOptions(playerid)
 	{
 		if(cache_num_rows() <= 0)
 		{
-			mysql_tquery_f(gMySQL, "INSERT INTO `account_options` (account_id, hotkeys, inv_mode, veh_mode) VALUES('%d', '%d', '%d', '%d')", Account_GetID(playerid), 0, 0, 0);
+			mysql_pquery_f(gMySQL, "INSERT INTO `account_options` (account_id, hotkeys, inv_mode, veh_mode) VALUES('%d', '%d', '%d', '%d')", Account_GetID(playerid), 0, 0, 0);
 			return 1;
 		}
 		new t;
@@ -55,7 +55,7 @@ stock Player_LoadOptions(playerid)
 
 stock Player_SaveOptions(playerid)
 {
-	mysql_tquery_f(gMySQL, 
+	mysql_pquery_f(gMySQL, 
 	"INSERT INTO `account_options` (account_id, hotkeys, inv_mode) VALUES('%d', '%d', '%d') \
 	ON DUPLICATE KEY UPDATE \
 	hotkeys = VALUES(hotkeys), \

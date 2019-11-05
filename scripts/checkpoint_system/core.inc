@@ -24,14 +24,12 @@ hook OnGameModeInit()
 hook OnPlayerEnterDynamicCP(playerid, checkpointid)
 {
     PlayerCheckPoint[playerid] = checkpointid;
-    printf("Player %d enters checkpoint %d", playerid, checkpointid);
     return 1;
 }
 
 hook OnPlayerLeaveDynamicCP(playerid, checkpointid)
 {
     PlayerCheckPoint[playerid] = -1;
-    printf("Player %d leaving checkpoint %d", playerid, checkpointid);
     return 1;
 }
 

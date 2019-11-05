@@ -278,7 +278,7 @@ stock Gate_SetFaction(gateid, factionid)
         return 0;
     map_set_cell(Gates, gateid, FactionID, Faction_GetID(factionid));
 
-    mysql_tquery_f(gMySQL, "UPDATE `gates` SET faction_id = '%d' WHERE id = '%d'", Faction_GetID(factionid), Gate_GetID(gateid));
+    mysql_pquery_f(gMySQL, "UPDATE `gates` SET faction_id = '%d' WHERE id = '%d'", Faction_GetID(factionid), Gate_GetID(gateid));
     return 1;
 }
 
@@ -295,7 +295,7 @@ stock Gate_SetOwner(gateid, playerid)
         return 0;
     map_set_cell(Gates, gateid, OwnerID, Character_GetID(playerid));
 
-    mysql_tquery_f(gMySQL, "UPDATE `gates` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), Gate_GetID(gateid));
+    mysql_pquery_f(gMySQL, "UPDATE `gates` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), Gate_GetID(gateid));
     return 1;
 }
 
@@ -312,7 +312,7 @@ stock Gate_ResetOwner(gateid)
         return 0;
     map_set_cell(Gates, gateid, OwnerID, 0);
 
-    mysql_tquery_f(gMySQL, "UPDATE `gates` SET owner_id = '0' WHERE id = '%d'", Gate_GetID(gateid));
+    mysql_pquery_f(gMySQL, "UPDATE `gates` SET owner_id = '0' WHERE id = '%d'", Gate_GetID(gateid));
     return 1;
 }
 
@@ -324,7 +324,7 @@ stock Gate_SetStartPos(gateid, Float:x, Float:y, Float:z)
     map_set_cell(Gates, gateid, StartY, y);
     map_set_cell(Gates, gateid, StartZ, z);
 
-    mysql_tquery_f(gMySQL, "UPDATE `gates` SET start_x = '%f', start_y = '%f', start_z = '%f' WHERE id = '%d'", 
+    mysql_pquery_f(gMySQL, "UPDATE `gates` SET start_x = '%f', start_y = '%f', start_z = '%f' WHERE id = '%d'", 
                             x, y, z, Gate_GetID(gateid));
     return 1;
 }
@@ -347,7 +347,7 @@ stock Gate_SetStartRot(gateid, Float:x, Float:y, Float:z)
     map_set_cell(Gates, gateid, StartRotY, y);
     map_set_cell(Gates, gateid, StartRotZ, z);
 
-    mysql_tquery_f(gMySQL, "UPDATE `gates` SET start_rot_x = '%f', start_rot_y = '%f', start_rot_z = '%f' WHERE id = '%d'", 
+    mysql_pquery_f(gMySQL, "UPDATE `gates` SET start_rot_x = '%f', start_rot_y = '%f', start_rot_z = '%f' WHERE id = '%d'", 
                             x, y, z, Gate_GetID(gateid));
     return 1;
 }
@@ -370,7 +370,7 @@ stock Gate_SetEndPos(gateid, Float:x, Float:y, Float:z)
     map_set_cell(Gates, gateid, EndY, y);
     map_set_cell(Gates, gateid, EndZ, z);
 
-    mysql_tquery_f(gMySQL, "UPDATE `gates` SET end_x = '%f', end_y = '%f', end_z = '%f' WHERE id = '%d'", 
+    mysql_pquery_f(gMySQL, "UPDATE `gates` SET end_x = '%f', end_y = '%f', end_z = '%f' WHERE id = '%d'", 
                             x, y, z, Gate_GetID(gateid));
     return 1;
 }
@@ -393,7 +393,7 @@ stock Gate_SetEndRot(gateid, Float:x, Float:y, Float:z)
     map_set_cell(Gates, gateid, EndRotY, y);
     map_set_cell(Gates, gateid, EndRotZ, z);
 
-    mysql_tquery_f(gMySQL, "UPDATE `gates` SET end_rot_x = '%f', end_rot_y = '%f', end_rot_z = '%f' WHERE id = '%d'", 
+    mysql_pquery_f(gMySQL, "UPDATE `gates` SET end_rot_x = '%f', end_rot_y = '%f', end_rot_z = '%f' WHERE id = '%d'", 
                             x, y, z, Gate_GetID(gateid));
     return 1;
 }

@@ -211,10 +211,10 @@ stock bool:Registry_Save(regid)
 
     data[E_REGISTRY_END_TIME] = gettime();
 
-    mysql_tquery_f(gMySQL, "INSERT INTO `phone_call_registry` (number_owner, call_to_number, call_by_number, call_start, call_end, state) \
+    mysql_pquery_f(gMySQL, "INSERT INTO `phone_call_registry` (number_owner, call_to_number, call_by_number, call_start, call_end, state) \
     VALUES('%d', '%d', '%d', '%d', '%d', '%d')", data[E_REGISTRY_CALLER_NUMBER], data[E_REGISTRY_RECEIVER_NUMBER], data[E_REGISTRY_CALLER_NUMBER], data[E_REGISTRY_START_TIME], data[E_REGISTRY_END_TIME], CALL_STATE_READ);
 
-    mysql_tquery_f(gMySQL, "INSERT INTO `phone_call_registry` (number_owner, call_to_number, call_by_number, call_start, call_end, state) \
+    mysql_pquery_f(gMySQL, "INSERT INTO `phone_call_registry` (number_owner, call_to_number, call_by_number, call_start, call_end, state) \
     VALUES('%d', '%d', '%d', '%d', '%d', '%d')", data[E_REGISTRY_RECEIVER_NUMBER], data[E_REGISTRY_RECEIVER_NUMBER], data[E_REGISTRY_CALLER_NUMBER], data[E_REGISTRY_START_TIME], data[E_REGISTRY_END_TIME], data[E_REGISTRY_RECEIVER_STATE]);
 
     map_remove(RegistryMap, regid);
@@ -239,8 +239,8 @@ Dialog:Dialog_LostPhoneCallRegister(playerid, response, listitem, inputtext[])
     
     SendClientMessage(playerid, COLOR_GREEN, "Hai eliminato l'elemento del registro.");
 
-    mysql_tquery_f(gMySQL, "UPDATE `phone_call_registry` SET state = '%d' WHERE id = '%d'", CALL_STATE_READ, SelectedRow[playerid]);
-    //mysql_tquery_f(gMySQL, "DELETE FROM `phone_call_registry` WHERE id = '%d'", SelectedRow[playerid]);
+    mysql_pquery_f(gMySQL, "UPDATE `phone_call_registry` SET state = '%d' WHERE id = '%d'", CALL_STATE_READ, SelectedRow[playerid]);
+    //mysql_pquery_f(gMySQL, "DELETE FROM `phone_call_registry` WHERE id = '%d'", SelectedRow[playerid]);
     Character_ShowLostCalls(playerid, Character_GetSelectedPhone(playerid));
     return 1;
 }
@@ -253,7 +253,7 @@ Dialog:Dialog_InPhoneCallRegister(playerid, response, listitem, inputtext[])
     
     SendClientMessage(playerid, COLOR_GREEN, "Hai eliminato l'elemento del registro.");
 
-    mysql_tquery_f(gMySQL, "DELETE FROM `phone_call_registry` WHERE id = '%d'", SelectedRow[playerid]);
+    mysql_pquery_f(gMySQL, "DELETE FROM `phone_call_registry` WHERE id = '%d'", SelectedRow[playerid]);
 
     Character_ShowInBoundCalls(playerid, Character_GetSelectedPhone(playerid));
     return 1;
@@ -267,7 +267,7 @@ Dialog:Dialog_OutPhoneCallRegister(playerid, response, listitem, inputtext[])
     
     SendClientMessage(playerid, COLOR_GREEN, "Hai eliminato l'elemento del registro.");
 
-    mysql_tquery_f(gMySQL, "DELETE FROM `phone_call_registry` WHERE id = '%d'", SelectedRow[playerid]);
+    mysql_pquery_f(gMySQL, "DELETE FROM `phone_call_registry` WHERE id = '%d'", SelectedRow[playerid]);
     Character_ShowOutBoundCalls(playerid, Character_GetSelectedPhone(playerid));
     return 1;
 }

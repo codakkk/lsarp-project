@@ -111,12 +111,12 @@ stock Faction_SetSkin(factionid, index, skinid)
     
     if(skinid == 0)
     {
-        mysql_tquery_f(gMySQL, "DELETE FROM `faction_skins` WHERE skin_id = '%d' AND faction_id = '%d'", list_get(temp, index), Faction_GetID(factionid));    
+        mysql_pquery_f(gMySQL, "DELETE FROM `faction_skins` WHERE skin_id = '%d' AND faction_id = '%d'", list_get(temp, index), Faction_GetID(factionid));    
         list_remove_deep(temp, index);
     }
     else
     {
-        mysql_tquery_f(gMySQL, "UPDATE `faction_skins` SET skin_id = '%d' WHERE faction_id = '%d' AND skin_id = '%d'", skinid, Faction_GetID(factionid), list_get(temp, index));
+        mysql_pquery_f(gMySQL, "UPDATE `faction_skins` SET skin_id = '%d' WHERE faction_id = '%d' AND skin_id = '%d'", skinid, Faction_GetID(factionid), list_get(temp, index));
         list_set(temp, index, skinid);
     }
     
@@ -131,7 +131,7 @@ stock Faction_RemoveSkin(factionid, skinid)
 		index = list_find(list, skinid);
 	if(index == -1)
 		return 0;
-	mysql_tquery_f(gMySQL, "DELETE FROM `faction_skins` WHERE skin_id = '%d' AND faction_id = '%d'", skinid, Faction_GetID(factionid));    
+	mysql_pquery_f(gMySQL, "DELETE FROM `faction_skins` WHERE skin_id = '%d' AND faction_id = '%d'", skinid, Faction_GetID(factionid));    
 	list_remove_deep(list, index);
 	return 1;
 }
@@ -148,7 +148,7 @@ stock Faction_AddSkin(factionid, skinid)
 	
 	list_add(skins, skinid);
 
-	mysql_tquery_f(gMySQL, "INSERT INTO `faction_skins` (faction_id, skin_id) VALUES('%d', '%d')", factionid, skinid);
+	mysql_pquery_f(gMySQL, "INSERT INTO `faction_skins` (faction_id, skin_id) VALUES('%d', '%d')", factionid, skinid);
 	return 1;
 }
 

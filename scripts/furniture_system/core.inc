@@ -126,8 +126,7 @@ static stock Internal_ValidateObjectPos(objectid, Float:newX, Float:newY, Float:
         linked = FurnitureCustomData[FURNITURE_LINKED_TO],
         Float:x, Float:y, Float:z
     ;
-    printf("Linked: %d - House id: %d", linked, linked - HOUSE_START_WORLD);
-    
+
     if(linked >= BUILDING_START_WORLD)
     {
         new Building:building = Building_Find(linked - BUILDING_START_WORLD);
@@ -283,7 +282,7 @@ Dialog:Dialog_CharacterFurnitures(playerid, response, listitem, inputtext[])
         listSize = list_size(FurnitureListItem[playerid]),
         selected = 0 <= slot < listSize ? list_get(FurnitureListItem[playerid], slot) : -1
     ;
-    printf("List Size: %d", listSize);
+
     list_delete(FurnitureListItem[playerid]);
 
     if(!response)
@@ -460,7 +459,10 @@ stock Furniture_Store(objectid, furnitureid, createdBy = -1, linked_to = -1)
 stock Furniture_Load(worldid)
 {
     if(Furniture_AreLoaded(worldid))
-        return printf("[Furniture] Furnitures already loaded for world %d.", worldid);
+    {
+        return 0;
+        //return printf("[Furniture] Furnitures already loaded for world %d.", worldid);
+    }
     
     map_add(Furnitures, worldid, list_new());
     inline OnLoad()
@@ -499,9 +501,6 @@ stock Furniture_Load(worldid)
             cache_get_value_name_int(i, "linked_to", FurnitureCustomData[FURNITURE_LINKED_TO]);
 
             new objectid = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, vw, interior);
-
-            if(IsOpenableDoor(modelid))
-                printf("Create object: %d - ID: %d", objectid, FurnitureCustomData[FURNITURE_DATABASE_ID]);
             
             Furniture_LoadTextures(objectid);
 
@@ -527,7 +526,7 @@ stock Furniture_AreLoaded(worldid)
 
 stock Furniture_SetObject(objectid, dbid)
 {
-    mysql_tquery_f(gMySQL, "UPDATE furnitures SET object_id = '%d' WHERE id = '%d'", objectid, dbid);
+    mysql_pquery_f(gMySQL, "UPDATE furnitures SET object_id = '%d' WHERE id = '%d'", objectid, dbid);
     return 1;
 }
 
@@ -627,7 +626,7 @@ stock Furniture_Update(objectid, playerid)
     GetDynamicObjectPos(objectid, tx, ty, tz);
     GetDynamicObjectRot(objectid, trx, try, trz);
 
-    mysql_tquery_f(gMySQL, "UPDATE furnitures SET \
+    mysql_pquery_f(gMySQL, "UPDATE furnitures SET \
             pos_x = '%f', pos_y = '%f', pos_z = '%f', \
             rot_x = '%f', rot_y = '%f', rot_z = '%f', \
             last_edit_by_account = '%d', last_edit_by_character = '%d' \
@@ -796,7 +795,7 @@ stock Internal_RemoveFurniture(worldid, objectid)
 
     if(FurnitureCustomData[FURNITURE_DATABASE_ID] > 0)
     {
-        mysql_tquery_f(gMySQL, "DELETE FROM furnitures WHERE id = '%d';", FurnitureCustomData[FURNITURE_DATABASE_ID]);
+        mysql_pquery_f(gMySQL, "DELETE FROM furnitures WHERE id = '%d';", FurnitureCustomData[FURNITURE_DATABASE_ID]);
     }
 
     new data[e_FurnitureCustomData];
@@ -860,7 +859,7 @@ stock Furniture_Rename(worldid, objectid, const name[])
     set(FurnitureCustomData[FURNITURE_NAME], name);
     Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
 
-    mysql_tquery_f(gMySQL, "UPDATE furnitures SET name = '%e' WHERE id = '%d'", name, FurnitureCustomData[FURNITURE_DATABASE_ID]);
+    mysql_pquery_f(gMySQL, "UPDATE furnitures SET name = '%e' WHERE id = '%d'", name, FurnitureCustomData[FURNITURE_DATABASE_ID]);
     return 1;
 }
 
@@ -888,7 +887,7 @@ stock Furniture_SetTexture(objectid, index, modelid, const txdName[], const text
     if(!IsValidDynamicObject(objectid) || index < 0 || index > 15)
         return 0;
     Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
-    mysql_tquery_f(gMySQL, "INSERT INTO `furniture_textures` \
+    mysql_pquery_f(gMySQL, "INSERT INTO `furniture_textures` \
 			(furniture_id, material_index, model_id, txd_name, texture_name, material_color) \
 			VALUES('%d', '%d', '%d', '%s', '%s', '%d') \
 			ON DUPLICATE KEY UPDATE \
@@ -910,7 +909,7 @@ stock Furniture_RemoveTextures(objectid)
         SetDynamicObjectMaterial(objectid, i, 19341, "invalid", "invalid");
     
     Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
-    mysql_tquery_f(gMySQL, "DELETE FROM furniture_textures WHERE furniture_id = '%d';", FurnitureCustomData[FURNITURE_DATABASE_ID]);
+    mysql_pquery_f(gMySQL, "DELETE FROM furniture_textures WHERE furniture_id = '%d';", FurnitureCustomData[FURNITURE_DATABASE_ID]);
     return 1;
 }
 

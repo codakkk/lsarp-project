@@ -77,7 +77,6 @@ CMD:uniforme(playerid, params[])
 
 	if(list_size(factionSkins) <= 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono uniformi disponibili.");
-	printf("Uniformi Size: %d", list_size(factionSkins));
 	if(sscanf(params, "d", uniform_id))
 	{
 		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /uniforme <id uniforme>");
@@ -86,7 +85,6 @@ CMD:uniforme(playerid, params[])
 		for(new i = 0, j = list_size(factionSkins); i < j; ++i)
 		{
 			new skinid = list_get(factionSkins, i);
-			printf("Skin id: %d", skinid);
 			if(skinid != 0)
 			{
 				SendFormattedMessage(playerid, COLOR_GREEN, "Skin: %d", skinid);
@@ -241,13 +239,11 @@ CMD:finvita(playerid, params[])
 	return 1;
 }
 
-hook OnCharacterAccept(playerid, stringHash)
+hook OnCharacterTryAccept(playerid, type)
 {
-    if(stringHash != _I<fazione> && stringHash != _I<faz> && stringHash != _I<faction>)
+    if(type != REQUEST_TYPE_FACTION)
 		return 0;
 	
-	if(!Request_IsPending(playerid, REQUEST_TYPE_FACTION) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_FACTION))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta fazione attiva.");
 	if(Faction_IsValid(Character_GetFaction(playerid)))
 		return SendClientMessage(playerid, COLOR_ERROR, "Fai già parte di una fazione.");
 	
@@ -345,7 +341,6 @@ Dialog:DialogFactionMembers(playerid, response, listitem, inputtext[])
 
 static Faction_GiveWeapons(playerid)
 {
-	printf("Type: %d", Faction_GetType(Character_GetFaction(playerid)));
 	if(Faction_GetType(Character_GetFaction(playerid)) == FACTION_TYPE_POLICE)
 	{
 		Character_GiveWeapon(playerid, WEAPON_NITESTICK, 1);

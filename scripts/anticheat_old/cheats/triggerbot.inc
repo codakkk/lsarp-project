@@ -18,16 +18,14 @@ hook OnPlayerUpdate(playerid)
         if(/*cameraMode == 53 || cameraMode == 7 ||*/ keys & KEY_FIRE)
         {
             PlayerAiming{playerid} = true;
-            printf("Aiming true");
         }
     }
     
     return 1;
 }
 
-hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
+/*hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
-    printf("Shot - TickRate: %d", GetServerTickRate());
     if(!PlayerAiming{playerid})
     {
         SendMessageToAdmins(true, COLOR_ERROR, "Il giocatore %s (%d) è sospetto di Triggerbot.", Character_GetOOCName(playerid), playerid);
@@ -35,4 +33,4 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
     }
     else PlayerAiming{playerid} = false;
     return 1;
-}
+}*/

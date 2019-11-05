@@ -277,13 +277,11 @@ Dialog:Dialog_SellVehicleToPlayer(playerid, response, listitem, inputtext[])
 	return 1;
 }
 
-hook OnCharacterAccept(playerid, stringHash)
+hook OnCharacterTryAccept(playerid, type)
 {
-    if(stringHash != _I<veicolo> && stringHash != _I<veh> && stringHash != _I<vehicle>)
+    if(type != REQUEST_TYPE_VEHICLE)
 		return 0;
-	
-	if(!Request_IsPending(playerid, REQUEST_TYPE_VEHICLE) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_VEHICLE))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta attiva.");
+
 	new 
 		senderid = Request_GetSender(playerid, REQUEST_TYPE_VEHICLE),
 		receiver = Request_GetReceiver(playerid, REQUEST_TYPE_VEHICLE),
@@ -394,7 +392,7 @@ stock Character_ShowVehicleList(showToPlayer, playerid, bool:forceTextOnly = fal
 	new rows = cache_num_rows();
 
 	if(rows <= 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "Nessun veicolo trovato.");
+		return SendClientMessage(showToPlayer, COLOR_ERROR, "Nessun veicolo trovato.");
 
 	for(new i = 0; i < rows; ++i)
 	{

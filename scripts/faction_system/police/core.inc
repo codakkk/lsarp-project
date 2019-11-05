@@ -47,7 +47,7 @@ hook OnGameModeInit()
     return 1;
 }
 
-hook OnCharacterSpawn(playerid)
+hook OnCharacterSpawned(playerid)
 {
 	if(Character_IsFactionDuty(playerid) && Faction_GetType(Character_GetFaction(playerid)) == FACTION_TYPE_POLICE)
 	{

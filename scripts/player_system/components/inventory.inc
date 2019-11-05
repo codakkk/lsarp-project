@@ -39,7 +39,6 @@ hook OnCharacterClearData(playerid)
 	return 1;
 }
 
-
 hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
 	if(Character_IsFactionDuty(playerid))
@@ -53,9 +52,7 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 		if(Character_HasSpaceForItem(playerid, weaponid, 1))
 		{
 			SendClientMessage(playerid, COLOR_GREEN, "Proiettili esauriti. L'arma è stata rimessa nell'inventario.");
-			//Character_AMe(playerid, "ripone l'arma nell'inventario.");
 			Character_GiveItem(playerid, weaponid, 1, 0, false);
-			Character_RemoveWeapon(playerid, weaponid);
 		}
 		else
 		{
@@ -66,11 +63,7 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 				GetVehiclePos(GetPlayerVehicleID(playerid), x, y, z);
 			else 
 			 	GetPlayerPos(playerid, x, y, z);
-			new result = Drop_Create(Character_GetOOCNameStr(playerid), x, y, z - 0.9, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, 0);
-			if(result != -1)
-			{
-				Character_RemoveWeapon(playerid, weaponid);
-			}
+			Drop_Create(Character_GetOOCNameStr(playerid), x, y, z - 0.9, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, 0);
 		}
 		if(Request_IsPending(playerid, REQUEST_TYPE_WEAPON) && Request_GetSlot(playerid, REQUEST_TYPE_WEAPON) == Weapon_GetSlot(weaponid) && Request_GetItem(playerid, REQUEST_TYPE_WEAPON) == weaponid)
 		{

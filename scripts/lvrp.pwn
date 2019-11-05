@@ -97,7 +97,8 @@
 #include <easyDialogs>
 #include <sa_zones>
 
-#define WC_DEBUG_SILENT false
+#define WC_DEBUG_SILENT true
+#define WC_DEBUG true
 #include <weapon-config>
 
 #include <utils\colors>
@@ -210,6 +211,10 @@ public OnGameModeInit()
 	Streamer_TickRate(30);
 	
 	CallLocalFunction(#OnGameModeLateInit, "");
+
+	SetRespawnTime(1);
+
+	printf("Public OnGameModeInit");
 	return 1;
 }
 
@@ -256,12 +261,16 @@ public OnPlayerPrepareDeath(playerid, animlib[32], animname[32], &anim_lock, &re
 
 public OnPlayerDamage(&playerid, &Float:amount, &issuerid, &weapon, &bodypart)
 {
-	if(Player_IsAdminDuty(playerid) && Account_GetAdminLevel(playerid) > 1)
+	printf("Damage0");
+	if(Player_IsAdminDuty(playerid))
 		return 0;
+	printf("Damage1");
 	if(Character_IsDead(playerid))
 		return 0;
+	printf("Damage2");
 	if(Character_IsInvincible(playerid))
 	{
+		printf("Invincible");
 		amount = 0.0;
 		return 0;
 	}
@@ -307,23 +316,16 @@ hook OnPlayerRequestSpawn(playerid)
     return 1;
 }
 
-hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ) 
+public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ) 
 {
 	if(IsPlayerNPC(playerid))
-		return Y_HOOKS_BREAK_RETURN_1;
-	
-	if( !( -1000.0 <= fX <= 1000.0 ) || !( -1000.0 <= fY <= 1000.0 ) || !( -1000.0 <= fZ <= 1000.0 ) )
-    {
-		#if defined DEBUG
-			//printf("Not in range");
-		#endif
-		return 0;
-	}
-	if(hittype == BULLET_HIT_TYPE_PLAYER && hitid != INVALID_PLAYER_ID && Player_IsAdminDuty(hitid))
+		return 1;
+
+	/*if(hittype == BULLET_HIT_TYPE_PLAYER && hitid != INVALID_PLAYER_ID && Player_IsAdminDuty(hitid))
 	{
 		return Y_HOOKS_BREAK_RETURN_0;
-	}
-	return Y_HOOKS_CONTINUE_RETURN_1;
+	}*/
+	return 1;
 }
 
 // Not Hooking it makes the OnPlayerWeaponShot not called.
@@ -550,8 +552,6 @@ hook OnPlayerDisconnect(playerid, reason)
 	
 	if(Character_IsLogged(playerid))
 	{
-		if(reason == 0)
-
 		CallLocalFunction(#OnCharacterDisconnected, "ii", playerid, reason);
 		CallLocalFunction(#OnCharacterClearData, "i", playerid);
 	}
@@ -562,11 +562,11 @@ hook OnPlayerDisconnect(playerid, reason)
 }
 
 // This is the last callback called after the hooks.
-hook OnPlayerConnect(playerid)
+public OnPlayerConnect(playerid)
 {
 	wait_ticks(1);
 	
-	SetPlayerScore(playerid, 0);
+	SetPlayerScore(playerid, 1);
 	SetPlayerColor(playerid, 0xFFFFFFFF);
 	
 	Account_SetLogged(playerid, false);
@@ -610,12 +610,6 @@ hook OnPlayerConnect(playerid)
 		return 0;
 	}
 
-	#if defined FAKE_LOGIN
-		Account_SetLogged(playerid, true);
-		Character_SetLogged(playerid, true);
-		SpawnPlayer(playerid);
-	#endif
-
 	new serial[41];
 	gpci(playerid, serial, sizeof(serial));
 
@@ -628,14 +622,6 @@ hook OnPlayerConnect(playerid)
 	}
 
 	cache_delete(cache);
-
-	/*new name[MAX_PLAYER_NAME];
-	GetPlayerName(playerid, name, sizeof(name));
-	for(new i = 0, j = strlen(name); i < j;++i)
-	{
-		if(name[i] == '_')
-			return SendClientMessage(playerid, COLOR_ERROR, "Il tuo nome account contiene caratteri non consentiti."), KickEx(playerid), 0;
-	}*/
 	return 1;
 }
 

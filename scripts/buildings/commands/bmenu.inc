@@ -118,7 +118,7 @@ static ShowSellBuildingDialog(playerid, Building:building)
         await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, @("Vendita Edificio"), str_format("Sei sicuro di voler vendere questo edificio (%s) per {85BB65}$%d{FFFFFF}?", name, price), @("Vendi"), @("Annulla"));
 
         if(!response[E_DIALOG_RESPONSE_Response]) break;
-        printf("%d - %d", Building_IsOwnable(building), Building_GetOwnerID(building));
+        
         if(!Building_IsOwned(building))
         {
             SendClientMessage(playerid, COLOR_ERROR, "Il biz non è acquistato, per tanto non puoi venderlo.");

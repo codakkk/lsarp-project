@@ -95,11 +95,6 @@ CMD:gethere(playerid, params[])
 	   vw = Character_GetVirtualWorld(playerid), int = GetPlayerInterior(playerid);
     
     GetPlayerPos(playerid, x, y, z);
-    
-    Streamer_UpdateEx(id, x, y, z, vw, int);
-    
-	Character_SetVirtualWorld(id, vw);
-    SetPlayerInterior(id, int);
 
     if(GetPlayerState(id) == PLAYER_STATE_DRIVER)
 	{
@@ -108,7 +103,7 @@ CMD:gethere(playerid, params[])
 		SetVehicleVirtualWorld(GetPlayerVehicleID(id), vw);
 	}
 	else
-    	SetPlayerPos(id, x+2, y, z );
+    	Character_SetSafePosition(id, x+2, y, z );
     return 1;
 }
 

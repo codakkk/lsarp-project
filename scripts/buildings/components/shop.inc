@@ -351,7 +351,7 @@ static Building_AddSellableItem(Building:building, itemid, price)
         return 0;
     
     map_add(Map:map_get(SellingItems, building), itemid, price);
-    mysql_tquery_f(gMySQL, "INSERT INTO `building_selling_items` (building_id, item_id, price) VALUES('%d', '%d', '%d')", Building_GetID(building), itemid, price);
+    mysql_pquery_f(gMySQL, "INSERT INTO `building_selling_items` (building_id, item_id, price) VALUES('%d', '%d', '%d')", Building_GetID(building), itemid, price);
     return 1;    
 }
 
@@ -361,7 +361,7 @@ static Building_SetSellableItemPrice(Building:building, itemid, newprice)
         return 0;
     new Map:items = Map:map_get(SellingItems, building);
     map_set(items, itemid, newprice);
-    mysql_tquery_f(gMySQL, "UPDATE `building_selling_items` SET price = '%d' WHERE building_id = '%d' AND item_id = '%d'", newprice, Building_GetID(building), newprice);
+    mysql_pquery_f(gMySQL, "UPDATE `building_selling_items` SET price = '%d' WHERE building_id = '%d' AND item_id = '%d'", newprice, Building_GetID(building), newprice);
     return 1;
 }
 
@@ -372,7 +372,7 @@ static Building_RemoveSellableItem(Building:building, itemid)
     
     new Map:items = Map:map_get(SellingItems, building);
     map_remove(items, itemid);
-    mysql_tquery_f(gMySQL, "DELETE FROM `building_selling_items` WHERE building_id = '%d' AND item_id = '%d'", Building_GetID(building), itemid);
+    mysql_pquery_f(gMySQL, "DELETE FROM `building_selling_items` WHERE building_id = '%d' AND item_id = '%d'", Building_GetID(building), itemid);
     return 1;    
 }
  

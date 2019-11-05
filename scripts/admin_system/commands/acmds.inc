@@ -19,8 +19,8 @@ CMD:acmds(playerid, params[])
 	if(Account_GetAdminLevel(playerid) >= 2)
 	{
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /a - /aduty - /goto - /gethere - /jetpack - /staff");
-		SendClientMessage(playerid, -1, "[MODERATORE JR]: /gotopos - /check - /invcheck - /freeze - /unfreeze");
-		SendClientMessage(playerid, -1, "[MODERATORE JR]: /masks - /n - /setweather - /settimeadd");
+		SendClientMessage(playerid, -1, "[MODERATORE JR]: /gotopos - /check - /invcheck - /housecheck - /bizcheck");
+		SendClientMessage(playerid, -1, "[MODERATORE JR]: /masks - /n - /setweather - /settimeadd - /freeze - /unfreeze");
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /resetdrugstats - /drugstats - /setvw - /kick - /aslap");
 		SendClientMessage(playerid, -1, "[MODERATORE JR]: /gotobuilding - /recon - /setinterior - /disablealerts");
 		

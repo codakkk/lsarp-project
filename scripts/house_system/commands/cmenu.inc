@@ -343,7 +343,7 @@ static HandleHouseRentActionOnPlayer(playerid, House:house, playerDatabaseId, li
                 break;
             }
         }
-        mysql_tquery_f(gMySQL, "UPDATE `characters` SET house_rent = '%d', house_rent_price = '0' WHERE id = '%d'", INVALID_HOUSE_ID, playerDatabaseId);
+        mysql_pquery_f(gMySQL, "UPDATE `characters` SET house_rent = '%d', house_rent_price = '0' WHERE id = '%d'", INVALID_HOUSE_ID, playerDatabaseId);
         SendClientMessage(playerid, COLOR_ORANGE, "Hai cacciato il giocatore da casa tua.");
         if(notified == false)
         {
@@ -392,9 +392,9 @@ static ShowChangeHouseRentPriceDialog(playerid, House:house)
     }
 }
 
-hook OnCharacterAccept(playerid, stringHash)
+hook OnCharacterTryAccept(playerid, type)
 {
-    if(stringHash != _I<casa>)
+    if(type != REQUEST_TYPE_HOUSE)
         return 0;
     
     new senderid = Request_GetSender(playerid, REQUEST_TYPE_HOUSE),

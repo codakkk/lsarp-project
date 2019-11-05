@@ -25,6 +25,7 @@
 #include <player_system\components\death_history>
 #include <player_system\components\inventory>
 #include <player_system\components\drop>
+#include <player_system\components\property>
 #include <player_system\components\payday>
 #include <player_system\components\interaction>
 #include <player_system\components\vehicle>
@@ -32,7 +33,6 @@
 #include <player_system\components\pickup>
 #include <player_system\components\jail>
 #include <player_system\components\animation>
-#include <player_system\components\property>
 #include <player_system\components\care>
 #include <player_system\components\options>
 #include <player_system\components\afk>
@@ -78,10 +78,9 @@ forward OnCharacterClearData(playerid); // Callbacks called when character's dat
 forward OnCharacterDisconnected(playerid, reason);
 
 forward OnCharacterSelected(playerid); // Called when a player select a character during login.
-forward OnCharacterSpawn(playerid); // Called when Character_Spawn is called.
 
-// Called when a character uses /accetta. A YHash is passed instead of char array.
-forward OnCharacterAccept(playerid, stringHash);
+// Called when a character uses /accetta. Type is REQUEST_TYPE_*.
+forward OnCharacterAccept(playerid, type);
 
 static enum E_PLAYER_DATA
 {
@@ -108,13 +107,13 @@ forward OnPlayerVirtualWorldChange(playerid, oldWorld, newWorld);
 
 hook OnGameModeInit()
 {
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET is_online = '0' WHERE 1");
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET is_online = '0' WHERE 1");
 	return 1;
 }
 
 hook OnGameModeExit()
 {
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET is_online = '0' WHERE 1");
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET is_online = '0' WHERE 1");
 	return 1;
 }
 
@@ -128,13 +127,13 @@ hook OnCharacterClearData(playerid)
 
 hook OnCharacterDisconnected(playerid, reason)
 {
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET is_online = '0' WHERE id = '%d'", Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET is_online = '0' WHERE id = '%d'", Character_GetID(playerid));
 	return 1;
 }
 
 hook OnCharacterLoad(playerid)
 {
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET is_online = '1' WHERE id = '%d'", Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET is_online = '1' WHERE id = '%d'", Character_GetID(playerid));
 	return 1;
 }
 
@@ -271,7 +270,7 @@ stock Character_GetFaction(playerid)
 stock Character_SetFaction(playerid, factionid)
 {
 	CharacterInfo[playerid][Faction] = factionid;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET faction = '%d' WHERE id = '%d'", factionid, Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET faction = '%d' WHERE id = '%d'", factionid, Character_GetID(playerid));
 }
 
 stock Character_GetRank(playerid)
@@ -282,7 +281,7 @@ stock Character_GetRank(playerid)
 stock Character_SetRank(playerid, rank)
 {
 	CharacterInfo[playerid][Rank] = rank;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET faction_rank = '%d' WHERE id = '%d'", rank, Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET faction_rank = '%d' WHERE id = '%d'", rank, Character_GetID(playerid));
 }
 
 stock House:Character_GetCurrentHouse(playerid)
@@ -334,26 +333,6 @@ stock Character_GetHouseID(playerid)
 	return Character_GetVirtualWorld(playerid) - HOUSE_START_WORLD;
 }
 
-stock Character_SetToJailPos(playerid)
-{
-	if(!Character_IsJailed(playerid))
-		return 0;
-	
-	PlayerTextDrawShow(playerid, JailTimePlayerText[playerid]);
-	
-	if(Character_IsICJailed(playerid))
-	{
-		SetPlayerInterior(playerid, IC_JAIL_INT);
-		Character_SetVirtualWorld(playerid, IC_JAIL_VW);
-		SetPlayerPos(playerid, IC_JAIL_X, IC_JAIL_Y, IC_JAIL_Z);
-		return 1;
-	}
-	
-	Character_SetVirtualWorld(playerid, 255+playerid);
-	SetPlayerInterior(playerid, OOC_JAIL_INT);
-	return SetPlayerPos(playerid, OOC_JAIL_X, OOC_JAIL_Y, OOC_JAIL_Z);
-}
-
 stock LoadCharacterResult(playerid)
 {
     new count, tmp;
@@ -396,7 +375,7 @@ stock LoadCharacterResult(playerid)
 			}
 			else
 			{
-				mysql_tquery_f(gMySQL, "UPDATE `characters` SET banned = '0', ban_expiry = '0' WHERE id = '%d'", Character_GetID(playerid));
+				mysql_pquery_f(gMySQL, "UPDATE `characters` SET banned = '0', ban_expiry = '0' WHERE id = '%d'", Character_GetID(playerid));
 			}
 		}
 
@@ -556,7 +535,7 @@ stock Character_SetLevel(playerid, level)
 {
 	CharacterInfo[playerid][Level] = level;
 	SetPlayerScore(playerid, level);
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET level = '%d' WHERE id = '%d'", level, Account_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET level = '%d' WHERE id = '%d'", level, Account_GetID(playerid));
 }
 
 stock Character_IncreaseLevel(playerid, amount)
@@ -572,7 +551,7 @@ stock Character_GetLevel(playerid)
 stock Character_SetExperience(playerid, exp)
 {
 	CharacterInfo[playerid][Experience] = exp;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET level = '%d' WHERE id = '%d'", exp, Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET level = '%d' WHERE id = '%d'", exp, Character_GetID(playerid));
 }
 
 stock Character_AddExperience(playerid, amount)
@@ -614,7 +593,7 @@ stock Float:Character_GetArmour(playerid)
 stock Character_AddMinutesPlayed(playerid, add)
 {
 	CharacterInfo[playerid][MinutesPlayed] += add;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET minutes_played = '%d' WHERE id = '%d'", Character_GetMinutesPlayed(playerid), Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET minutes_played = '%d' WHERE id = '%d'", Character_GetMinutesPlayed(playerid), Character_GetID(playerid));
 	return 1;
 }
 

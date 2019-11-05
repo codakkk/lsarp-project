@@ -81,7 +81,7 @@ stock bool:Character_SetMaxHealth(playerid, Float:max)
 		return false;
 	}
 	PlayerMaxHealth[playerid] = max;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET max_health = '%f' WHERE id = '%d'", max, Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET max_health = '%f' WHERE id = '%d'", max, Character_GetID(playerid));
 	return true;
 }
 
@@ -93,7 +93,7 @@ stock Float:Character_GetMaxHealth(playerid)
 stock bool:Character_SetMaxArmour(playerid, Float:max)
 {
 	PlayerMaxArmour[playerid] = max;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET max_armour = '%f' WHERE id = '%d'", max, Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET max_armour = '%f' WHERE id = '%d'", max, Character_GetID(playerid));
 	return true;
 }
 
@@ -105,6 +105,6 @@ stock Float:Character_GetMaxArmour(playerid)
 stock Character_AddUpgradePoints(playerid, points)
 {
     UpgradePoints[playerid] += points;
-    mysql_tquery_f(gMySQL, "UPDATE `characters` SET upgrade_points = '%d' WHERE id = '%d'", UpgradePoints[playerid], Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `characters` SET upgrade_points = '%d' WHERE id = '%d'", UpgradePoints[playerid], Character_GetID(playerid));
     return 1;
 }

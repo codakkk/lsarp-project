@@ -578,7 +578,6 @@ stock Character_LoadWearObjects(playerid)
         new 
             rows = cache_num_rows(),
             data[E_PLAYER_CUSTOM_OBJECT_DATA];
-        printf("Player %d loaded %d wear objects.", playerid, rows);
         for(new i = 0; i < rows; ++i)
         {
             if(i >= MAX_PLAYER_OBJECTS)
@@ -682,7 +681,7 @@ stock WearObject_GetModelId(PlayerObject:playerObject)
 stock WearObject_SetBone(PlayerObject:playerObject, boneid)
 {
     var_set_cell(Variant:playerObject, Bone, boneid);
-    mysql_tquery_f(gMySQL, "UPDATE character_wear_objects SET bone = '%d' WHERE id = '%d';", boneid, WearObject_GetID(playerObject));
+    mysql_pquery_f(gMySQL, "UPDATE character_wear_objects SET bone = '%d' WHERE id = '%d';", boneid, WearObject_GetID(playerObject));
 }
 
 stock WearObject_GetBone(PlayerObject:playerObject)
@@ -750,7 +749,7 @@ stock Character_IsWearing(playerid, PlayerObject:playerObject)
 stock WearObject_SetMaterialColor1(PlayerObject:playerObject, color)
 {
     var_set_cell(Variant:playerObject, MaterialColor1, color);
-    mysql_tquery_f(gMySQL, "UPDATE character_wear_objects SET mat_color_1 = '%d' WHERE id = '%d';", color, WearObject_GetID(playerObject));
+    mysql_pquery_f(gMySQL, "UPDATE character_wear_objects SET mat_color_1 = '%d' WHERE id = '%d';", color, WearObject_GetID(playerObject));
 }
 
 stock WearObject_GetMaterialColor1(PlayerObject:playerObject)
@@ -761,7 +760,7 @@ stock WearObject_GetMaterialColor1(PlayerObject:playerObject)
 stock WearObject_SetMaterialColor2(PlayerObject:playerObject, color)
 {
     var_set_cell(Variant:playerObject, MaterialColor2, color);
-    mysql_tquery_f(gMySQL, "UPDATE character_wear_objects SET mat_color_2 = '%d' WHERE id = '%d';", color, WearObject_GetID(playerObject));
+    mysql_pquery_f(gMySQL, "UPDATE character_wear_objects SET mat_color_2 = '%d' WHERE id = '%d';", color, WearObject_GetID(playerObject));
 }
 
 stock WearObject_GetMaterialColor2(PlayerObject:playerObject)
@@ -817,7 +816,7 @@ static bool:WearObject_Delete(playerid, PlayerObject:playerObject)
     }
     if(slotid != -1)
     {
-        mysql_tquery_f(gMySQL, "DELETE FROM character_wear_objects WHERE id = '%d'", WearObject_GetID(playerObject));
+        mysql_pquery_f(gMySQL, "DELETE FROM character_wear_objects WHERE id = '%d'", WearObject_GetID(playerObject));
         var_release(Variant:playerObject);
         list_remove(list, slotid);
     }

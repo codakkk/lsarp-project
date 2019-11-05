@@ -9,12 +9,6 @@ hook OnCharacterClearData(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-hook OnCharacterInjured(playerid)
-{
-	//Character_RemoveMask(playerid);
-	return Y_HOOKS_CONTINUE_RETURN_1;
-}
-
 hook OnCharacterSpawn(playerid)
 {
 	if(Character_IsAlive(playerid))
