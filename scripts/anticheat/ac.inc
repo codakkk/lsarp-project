@@ -6225,7 +6225,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 	forward ac_OnPlayerStateChange(playerid, newstate, oldstate);
 #endif
 
-#if defined OnPlayerWeaponShot
+/*#if defined OnPlayerWeaponShot
 	public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 	{
 		if(ACInfo[playerid][acKicked] > 0 || ACInfo[playerid][acDead]) return 0;
@@ -6649,6 +6649,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 		forward ac_OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ);
 	#endif
 #endif
+*/
 /*
 public OnVehicleMod(playerid, vehicleid, componentid)
 {

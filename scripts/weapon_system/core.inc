@@ -45,8 +45,8 @@ stock Weapon_InitializeType(weaponid, ammoItem, Float:damages, bool:canBeDisasse
 	WeaponInfo[weaponid][wAmmoItem] = ammoItem;
 	WeaponInfo[weaponid][wDamage] = damages;
 	WeaponInfo[weaponid][wCanBeDisassembled] = canBeDisassembled;
-	SetWeaponArmourRule(weaponid, affectArmour);
-	SetWeaponDamage(weaponid, DAMAGE_TYPE_STATIC, damages);
+	//SetWeaponArmourRule(weaponid, affectArmour);
+	//SetWeaponDamage(weaponid, DAMAGE_TYPE_STATIC, damages);
 }
 
 stock Float:Weapon_GetDamage(weaponid)

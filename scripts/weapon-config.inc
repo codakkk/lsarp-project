@@ -3528,13 +3528,14 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 			if (hittype == BULLET_HIT_TYPE_PLAYER) {
 				AddRejectedHit(playerid, damagedid, HIT_OUT_OF_RANGE, weaponid, _:length, _:s_WeaponRange[weaponid]);
 			}
-
+			printf("SHOT EXCEED MAX RANGE");
 			return 0;
 		}
 
 		if (hittype == BULLET_HIT_TYPE_PLAYER) {
 			if (IsPlayerInAnyVehicle(playerid) && GetPlayerVehicleID(playerid) == GetPlayerVehicleID(hitid)) {
 				AddRejectedHit(playerid, damagedid, HIT_SAME_VEHICLE, weaponid);
+				printf("HIT PLAYER IN VEHICLE STRANGE");
 				return 0;
 			}
 
@@ -3543,7 +3544,7 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 
 			if ((!in_veh && dist > 20.0) || dist > 50.0) {
 				AddRejectedHit(playerid, damagedid, HIT_TOO_FAR_FROM_SHOT, weaponid, _:dist);
-
+				printf("DIST?");
 				return 0;
 			}
 		}
@@ -3616,6 +3617,7 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 	if (hittype == BULLET_HIT_TYPE_VEHICLE) {
 		if (hitid < 0 || hitid > MAX_VEHICLES || !WC_IsValidVehicle(hitid)) {
 			AddRejectedHit(playerid, damagedid, HIT_INVALID_VEHICLE, weaponid, hitid);
+			printf("V_1");
 			return 0;
 		}
 
@@ -3624,6 +3626,7 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 		// Shouldn't be possible to damage the vehicle you're in
 		if (hitid == vehicleid) {
 			AddRejectedHit(playerid, damagedid, HIT_OWN_VEHICLE, weaponid);
+			printf("V_2");
 			return 0;
 		}
 

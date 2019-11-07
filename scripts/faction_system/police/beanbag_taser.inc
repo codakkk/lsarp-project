@@ -45,8 +45,6 @@ hook OnCharacterDutyChange(playerid, isOnDuty)
 
 hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
-    if(!Character_IsLogged(playerid))
-        return 1;
     if(Character_HasTaser(playerid) && weaponid == 23 && Character_IsFactionDuty(playerid))
     {
         ApplyAnimation(playerid, "COLT45", "colt45_reload", 4.1, 0, 0, 0, 0, 0);
