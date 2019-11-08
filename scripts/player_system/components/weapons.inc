@@ -36,6 +36,22 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 	return 1;
 }
 
+hook OnPlayerUpdate(playerid)
+{
+	static clientAmmo, clientWeapon, weaponSlot;
+	clientWeapon = GetPlayerWeapon(playerid);
+	if(GetPlayerState(playerid) != PLAYER_STATE_SPECTATING && clientWeapon != -1)
+	{
+		clientAmmo = GetPlayerAmmo(playerid);
+		weaponSlot = Weapon_GetSlot(clientWeapon);
+		if(Ammo[playerid][weaponSlot] != clientAmmo)
+		{
+			SetPlayerAmmo(playerid, clientWeapon, Ammo[playerid][weaponSlot]);
+		}
+	}
+	return 1;
+}
+
 ptask SaveWeaponsEachTot[5000](playerid)
 {
 	if(!Character_IsLogged(playerid))
