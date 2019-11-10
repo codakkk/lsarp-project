@@ -15,7 +15,7 @@ hook OnCharacterClearData(playerid)
 flags:tcmds(CMD_TESTER);
 CMD:tcmds(playerid, params[])
 {
-	SendClientMessage(playerid, -1, "[TESTER]: (/t)chat - /tduty - /lr - /goto - /gethere");
+	SendClientMessage(playerid, -1, "[TESTER]: (/t)chat - /tduty - /lr - /goto - /gethere - /jetpack");
 	SendClientMessage(playerid, -1, "[TESTER]: /kick - /freeze - /unfreeze - /setinterior - /setvw");
 	return 1;
 }

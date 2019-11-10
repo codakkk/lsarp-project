@@ -74,7 +74,7 @@ timer SpawnTest[10](playerid)
 	SpawnPlayer(playerid);
 }
 
-hook OnCharacterClearData(playerid)
+hook OnPlayerDisconnect(playerid)
 {
 
 	LoginAttempts{playerid} = 0;
@@ -98,7 +98,7 @@ hook OnCharacterClearData(playerid)
     return 1;
 }
 
-hook OnPlayerConnect(playerid)
+hook OnPlayerConnected(playerid)
 {
 	new name[MAX_PLAYER_NAME], bool:found = false;
     
@@ -119,7 +119,15 @@ hook OnPlayerConnect(playerid)
 		KickEx(playerid);
 		return 0;
 	}
+	return 1;
+}
 
+public OnPlayerRequestClass(playerid, classid)
+{
+	if(IsPlayerNPC(playerid))
+		return 1;
+	new name[MAX_PLAYER_NAME];
+	GetPlayerName(playerid, name, sizeof(name));
 	yield 1;
 	await mysql_aquery_s(gMySQL, str_format("SELECT password FROM `accounts` WHERE LOWER(name) = LOWER('%e')", name), true);
 
@@ -213,7 +221,7 @@ public OnPasswordCheck(playerid, bool:success)
 	else
 	{
 		LoginAttempts{playerid}++;
-		if(LoginAttempts{playerid} > MAX_LOGIN_ATTEMPTS)
+		if(LoginAttempts{playerid} >= MAX_LOGIN_ATTEMPTS)
 		{
 			KickEx(playerid);
 			return 0;
@@ -265,18 +273,6 @@ stock Account_SetEMail(playerid, email[])
 stock Account_GetEMail(playerid)
 {
 	return AccountEMail[playerid];
-}
-
-stock Account_GetPayDay(playerid)
-{
-	return AccountInfo[playerid][PayDay];
-}
-
-stock Account_AddPayDay(playerid, add)
-{
-	AccountInfo[playerid][PayDay] += add;
-	mysql_pquery_f(gMySQL, "UPDATE `accounts` SET payday = '%d' WHERE id = '%d'", Account_GetPayDay(playerid), Account_GetID(playerid));
-	return 1;
 }
 
 stock Account_SetLogged(playerid, bool:logged)

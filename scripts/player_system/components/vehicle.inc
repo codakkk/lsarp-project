@@ -405,12 +405,12 @@ stock Character_ShowVehicleList(showToPlayer, playerid, bool:forceTextOnly = fal
 		if(map_has_key(GetVehiclesMap(), dbid))
 			vehicleid = map_get(GetVehiclesMap(), dbid);
 
-		if(Player_HasVehModeEnabled(playerid) || forceTextOnly)
+		if(Player_HasVehModeEnabled(showToPlayer) || forceTextOnly)
 		{
 			if(vehicleid != 0)
-				SendFormattedMessage(playerid, COLOR_LIGHTBLUE, "[Slot %d] %s [%s] - Spawnato - ID: %d", i + 1, Vehicle_GetNameFromModel(modelid), plate, vehicleid);
+				SendFormattedMessage(showToPlayer, COLOR_LIGHTBLUE, "[Slot %d] %s [%s] - Spawnato - ID: %d", i + 1, Vehicle_GetNameFromModel(modelid), plate, vehicleid);
 			else
-				SendFormattedMessage(playerid, COLOR_LIGHTBLUE, "[Slot %d] %s [%s] - Non Spawnato", i + 1, Vehicle_GetNameFromModel(modelid), plate);
+				SendFormattedMessage(showToPlayer, COLOR_LIGHTBLUE, "[Slot %d] %s [%s] - Non Spawnato", i + 1, Vehicle_GetNameFromModel(modelid), plate);
 		}
 		else
 		{
@@ -422,7 +422,7 @@ stock Character_ShowVehicleList(showToPlayer, playerid, bool:forceTextOnly = fal
 	}
 
 	if(!Player_HasInvModeEnabled(playerid) && !forceTextOnly)
-		Dialog_Show_s(playerid, DialogNull, DIALOG_STYLE_LIST, @("Lista veicoli"), string, "Seleziona", "Chiudi");
+		Dialog_Show_s(showToPlayer, DialogNull, DIALOG_STYLE_LIST, @("Lista veicoli"), string, "Seleziona", "Chiudi");
 	return 1;
 }
 

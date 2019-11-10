@@ -54,6 +54,7 @@
 #include <a_samp>
 #include <formatnumber>
 #include <requests>
+#include <strlib>
 #include <sampmailjs>
 
 // Define this for some bugs related to MySQL_TQueryInline
@@ -97,8 +98,8 @@
 #include <easyDialogs>
 #include <sa_zones>
 
-#define WC_DEBUG_SILENT true
-#define WC_DEBUG true
+#define WC_DEBUG_SILENT false
+#define WC_DEBUG false
 #include <weapon-config>
 
 #include <utils\colors>
@@ -175,6 +176,7 @@ enum (<<= 1)
 #include <YSI_Coding\y_hooks> // Place hooks after this. Everything included before, gets hooked first
 
 forward OnCharacterDamageDone(playerid, Float:amount, issuerid, weaponid, bodypart);
+forward OnPlayerConnected(playerid);
 
 main()
 {
@@ -524,10 +526,13 @@ public OnPlayerCommandPerformed(playerid, cmd[], params[], result, flags)
 	return 1;
 }
 
-hook OnPlayerText(playerid, text[])
+forward OnCharacterSpeak(playerid, text[]);
+
+public OnPlayerText(playerid, text[])
 {
-	if(!Character_IsLogged(playerid) || isnull(text))
+	if(!Character_IsLogged(playerid) || isnull(text) || isempty(text))
 		return Y_HOOKS_BREAK_RETURN_0;
+	CallLocalFunction(#OnCharacterSpeak, "ds", playerid, text);
 	return Y_HOOKS_CONTINUE_RETURN_0;
 }
 
@@ -566,6 +571,14 @@ public OnPlayerConnect(playerid)
 {
 	wait_ticks(1);
 	
+	if(IsPlayerNPC(playerid))
+	{
+		SetPlayerScore(playerid, 1+random(10));
+		SetPlayerColor(playerid, 0xFFFFFFFF);
+		SetPlayerVirtualWorld(playerid, playerid + BUILDING_START_WORLD*2 + random(999));
+		return 1;
+	}
+
 	SetPlayerScore(playerid, 1);
 	SetPlayerColor(playerid, 0xFFFFFFFF);
 	
@@ -622,8 +635,12 @@ public OnPlayerConnect(playerid)
 	}
 
 	cache_delete(cache);
+
+	defer Cncted(playerid);
 	return 1;
 }
+
+timer Cncted[100](playerid) { CallLocalFunction(#OnPlayerConnected, "d", playerid); }
 
 public OnPlayerFinishedDownloading(playerid, virtualworld)
 {

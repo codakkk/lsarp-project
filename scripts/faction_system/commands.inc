@@ -114,7 +114,7 @@ CMD:fedit(playerid, params[])
 flags:afactioncmds(CMD_DEVELOPER);
 CMD:afactioncmds(playerid, params[])
 {
-	SendClientMessage(playerid, COLOR_GREEN, "[FAZIONI]: /fcreate - /fedit - /afactionskin - /afactionslist");
+	SendClientMessage(playerid, COLOR_GREEN, "[FAZIONI]: /fcreate - /fedit - /afactionskin - /afactionslist - /respawnfactionvehicles");
 	return 1;
 }
 

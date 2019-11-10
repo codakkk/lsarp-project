@@ -44,7 +44,7 @@ hook OnGameModeInit()
     for(new i = 0, j = sizeof(LicensesData); i < j; ++i)
     {
         Pickup_Create(1239, i, LicensesData[i][X], LicensesData[i][Y], LicensesData[i][Z], ELEMENT_TYPE_LICENSE, LicensesData[i][Interior], LicensesData[i][World]);
-        format(name, sizeof(name), "%s (/compra)", GetLicenseName(LicensesData[i][Type]));
+        format(name, sizeof(name), "%s\n(/compra)", GetLicenseName(LicensesData[i][Type]));
         CreateDynamic3DTextLabel(name, COLOR_BLUE, LicensesData[i][X], LicensesData[i][Y], LicensesData[i][Z], 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, LicensesData[i][World], LicensesData[i][Interior]);
     }
     return 1;

@@ -5,7 +5,7 @@
 flags:abuildingcmds(CMD_ADMIN);
 CMD:abuildingcmds(playerid, params[])
 {
-    SendClientMessage(playerid, -1, "[BUILDINGS]: /abcreate - /abedit");
+    SendClientMessage(playerid, -1, "[BUILDINGS]: /abcreate - /abedit - /abdelete");
     return 1;
 }
 

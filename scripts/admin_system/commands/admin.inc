@@ -95,7 +95,7 @@ CMD:giveitem(playerid, params[])
 			result = Character_GiveItem(id, itemid, quantity, extra);
 		if(result == INVENTORY_ADD_SUCCESS)
 		{
-			SendMessageToAdmins(0, COLOR_YELLOW, "AdmCmd: %s (%s) ha givato %s (Qnt: %d) a %s (%d).", 
+			SendMessageToAdmins(0, COLOR_ADMINCMD, "AdmCmd: %s (%s) ha givato %s (Qnt: %d) a %s (%d).", 
 			Account_GetName(playerid), Character_GetOOCName(playerid), ServerItem_GetName(itemid), quantity, Character_GetOOCName(id), id);
 		}
 		else if(result == INVENTORY_NO_SPACE)

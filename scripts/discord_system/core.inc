@@ -1,5 +1,4 @@
 #include <discord-connector>
-#include <strlib>
 #include <YSI_Coding\y_hooks>
 
 static 

@@ -32,8 +32,7 @@ CMD:acmds(playerid, params[])
 		SendClientMessage(playerid, -1, "[MODERATORE]: /bancharacter - /unbancharacter - /apark - /avplate - /aafactionkick");
 		SendClientMessage(playerid, -1, "[MODERATORE]: /aplacefurniture - /adeletefurniture - /atextureobject");
 		SendClientMessage(playerid, -1, "[MODERATORE]: /teleportcreate - /teleportedit - /gototeleport");
-		SendClientMessage(playerid, -1, "[MODERATORE]: /lzcreate - /lzedit - /alzrefreshall - /respawnfactionvehicles");
-		SendClientMessage(playerid, -1, "[MODERATORE]: /sethunger - /afactioncmds - /abuildingcmds - /adealershipcmds");
+		SendClientMessage(playerid, -1, "[MODERATORE]: /afactioncmds - /abuildingcmds - /adealershipcmds");
 		SendClientMessage(playerid, -1, "[MODERATORE]: /banaccount - /unbanaccount - /banofflineaccount - /resetinv");
 		
 	}

@@ -14,6 +14,14 @@ hook OnCharacterClearData(playerid)
 	return 1;
 }
 
+hook OnCharacterSpawn(playerid)
+{
+	ResetPlayerWeapons(playerid);
+	for(new i = 0; i < 13; ++i)
+		Weapon[playerid]{i} = Ammo[playerid][i] = 0;
+	return 1;
+}
+
 hook OnCharacterDisconnected(playerid, reason)
 {
 	Character_SaveWeapons(playerid);
@@ -32,23 +40,64 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 	if(Weapon[playerid]{slotid} != 0 && Ammo[playerid][slotid] != 0)
 	{
 		Ammo[playerid][slotid]--;
+		printf("Weapon ID: %d - Ammo: %d - AC Ammo: %d", weaponid, GetPlayerAmmo(playerid), Ammo[playerid][slotid]);
 	}
 	return 1;
 }
 
-hook OnPlayerUpdate(playerid)
+//hook OnPlayerUpdate(playerid)
+ptask UpdatePlayerWeaponAntiCheat[200](playerid) 
 {
+	if(!Character_IsLogged(playerid))
+		return 1;
+	//static ticks = 0;
+	
+	//ticks++;
+	//if(ticks%2 != 0)
+		//return 1;
+	
 	static clientAmmo, clientWeapon, weaponSlot;
+	static serverWeapon, serverAmmo;
 	clientWeapon = GetPlayerWeapon(playerid);
-	if(GetPlayerState(playerid) != PLAYER_STATE_SPECTATING && clientWeapon != -1)
+	if(GetPlayerState(playerid) != PLAYER_STATE_SPECTATING && clientWeapon != -1 && clientWeapon != 0)
 	{
-		clientAmmo = GetPlayerAmmo(playerid);
 		weaponSlot = Weapon_GetSlot(clientWeapon);
-		if(Ammo[playerid][weaponSlot] != clientAmmo)
+		clientAmmo = GetPlayerAmmo(playerid);
+		serverWeapon = Weapon[playerid]{weaponSlot};
+		serverAmmo = Ammo[playerid][weaponSlot];
+		
+		if(clientAmmo > serverAmmo + 6) // Six is just a threshold allowable of bullets desync
 		{
 			SetPlayerAmmo(playerid, clientWeapon, Ammo[playerid][weaponSlot]);
+			SetPlayerArmedWeapon(playerid, 0); // just to prevent weapon infinite ammo without being detected.
+			
+			printf("AC Timer: Weapon ID: %d - Ammo: %d - AC Ammo: %d", clientWeapon, clientAmmo, Ammo[playerid][weaponSlot]);
+		}
+		if(serverWeapon != clientWeapon)
+		{
+			Character_RemoveWeapon(playerid, clientWeapon);
+			GivePlayerWeapon(playerid, Weapon[playerid]{weaponSlot}, Ammo[playerid][weaponSlot]);
+			SetPlayerArmedWeapon(playerid, 0); // just to prevent weapon infinite ammo without being detected.
+			
+			printf("AC Timer: Weapon ID: %d - AC Weapon ID: %d", clientWeapon, Weapon[playerid]{weaponSlot});
 		}
 	}
+	return 1;
+}
+
+CMD:weapons(playerid, params[])
+{
+	new String:string = str_new(""), w, a;
+	for(new i = 0; i < 13; ++i)
+	{
+		GetPlayerWeaponData(playerid, i, w, a);
+
+		str_clear(string);
+		string = str_format("%d: GTA: %d - %d; SERVER: %d - %d", i, w, a, Weapon[playerid]{i}, Ammo[playerid][i]);
+
+		SendClientMessageStr(playerid, -1, string);
+	}
+
 	return 1;
 }
 
@@ -170,14 +219,14 @@ stock Character_RemoveWeapon(playerid, weaponid)
 	return 1;
 }
 
+
+
 stock Character_ResetWeapons(playerid)
 {
 	if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid) || !ResetPlayerWeapons(playerid))
 		return 0;
 	
-	new query[256];
-	format(query, sizeof(query), "DELETE FROM `character_weapons` WHERE character_id = '%d'", Character_GetID(playerid));
-	mysql_pquery(gMySQL, query);
+	mysql_pquery_f(gMySQL, "DELETE FROM `character_weapons` WHERE character_id = '%d'", Character_GetID(playerid));
 
 	for(new i = 0; i < 13; ++i)
 	{

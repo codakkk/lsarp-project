@@ -18,9 +18,20 @@ hook OnGameModeExit()
 	TextDrawDestroy(Clock);
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
-
+new PlayerText:HealthAsNumericTextDraw[MAX_PLAYERS];
 hook OnPlayerConnect(playerid)
 {
+	HealthAsNumericTextDraw[playerid] = CreatePlayerTextDraw(playerid, 578.333312, 68.029632, "100.0");
+	PlayerTextDrawLetterSize(playerid, HealthAsNumericTextDraw[playerid], 0.206999, 0.594962);
+	PlayerTextDrawTextSize(playerid, HealthAsNumericTextDraw[playerid], -103.666648, 36.918521);
+	PlayerTextDrawAlignment(playerid, HealthAsNumericTextDraw[playerid], 2);
+	PlayerTextDrawColor(playerid, HealthAsNumericTextDraw[playerid], -1);
+	PlayerTextDrawSetShadow(playerid, HealthAsNumericTextDraw[playerid], 0);
+	PlayerTextDrawSetOutline(playerid, HealthAsNumericTextDraw[playerid], 1);
+	PlayerTextDrawBackgroundColor(playerid, HealthAsNumericTextDraw[playerid], 51);
+	PlayerTextDrawFont(playerid, HealthAsNumericTextDraw[playerid], 1);
+	PlayerTextDrawSetProportional(playerid, HealthAsNumericTextDraw[playerid], 1);
+
 	TextDrawShowForPlayer(playerid, LoginScreenText);
 	return 1;
 }
@@ -87,4 +98,19 @@ stock HideClockTextDraw(playerid)
 stock SetClockTextDrawString(string[])
 {
 	return TextDrawSetString(Clock, string);
+}
+
+hook function SetHealthBarVisible(playerid, bool:toggle)
+{
+    if(toggle)
+        PlayerTextDrawShow(playerid, HealthAsNumericTextDraw[playerid]);
+    else
+        PlayerTextDrawHide(playerid, HealthAsNumericTextDraw[playerid]);
+    return 1;
+}
+
+hook function UpdateHealthBar(playerid, bool:force = true)
+{
+    PlayerTextDrawSetStringStr(playerid, HealthAsNumericTextDraw[playerid], str_format("%0.2f", Character_GetHealth(playerid)));
+	return continue(playerid, force);
 }

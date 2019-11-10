@@ -23,7 +23,8 @@
 		"pBlueG/SA-MP-MySQL",
 		"AGraber/pawn-plus-mysql",
 		"oscar-broman/SKY",
-		"AGraber/samp-async-dialogs"
+		"AGraber/samp-async-dialogs",
+		"AGraber/samp-compat"
 	],
 	"local": true,
 	"builds": [

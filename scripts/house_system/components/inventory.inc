@@ -79,7 +79,7 @@ stock House_ShowInventory(House:house, playerid)
 		data[SlotID] = -1;
 		map_add_arr(PlayerHouseInventory, playerid, data);
 	}
-	Inventory_ShowStr(inventory, playerid, str_format("Inventario Casa (%d/%d)", Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory)), Dialog_HouseInventory, "Avanti", "Chiudi");
+	Inventory_ShowStr(inventory, playerid, str_format("Inventario Casa (%d/%d)", Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory)), Dialog_HouseInventory, "Avanti", "Chiudi", .forceDialog = true);
 	return 1;
 }
 
@@ -105,7 +105,7 @@ Dialog:HouseInventoryAction(playerid, response, listitem, inputtext[])
 	{
 		if(itemid == 0)
 		{
-			Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", HouseInventoryDepSelectItem, "Seleziona", "Indietro");
+			Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", HouseInventoryDepSelectItem, "Seleziona", "Indietro", .forceDialog = true);
 		}
 		else
 		{
@@ -191,7 +191,7 @@ Dialog:HouseInventoryDepSelectItem(playerid, response, listitem, inputtext[])
 		if(!Inventory_HasSpaceForItem(Internal_GetInventory(playerid), itemid, amount))
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario della casa.");
-			return Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", HouseInventoryDepSelectItem, "Seleziona", "Indietro");
+			return Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", HouseInventoryDepSelectItem, "Seleziona", "Indietro", .forceDialog = true);
 		}
 		Inventory_AddItem(inventoryRef, itemid, amount, extra);
 		Character_DecreaseItemAmount(playerid, itemid, amount);

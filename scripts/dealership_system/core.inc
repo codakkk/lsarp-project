@@ -550,7 +550,24 @@ stock Dealership_ShowOptions(dealershipid, playerid)
 flags:adealershipcmds(CMD_ADMIN);
 CMD:adealershipcmds(playerid, params[])
 {
-	SendClientMessage(playerid, -1, "[DEALERSHIP]: /acreatedealership - /adealershipmenu");
+	SendClientMessage(playerid, -1, "[DEALERSHIP]: /acreatedealership - /adealershipmenu - /gotodealership");
+	return 1;
+}
+
+flags:gotodealership(CMD_JR_MODERATOR);
+CMD:gotodealership(playerid, params[])
+{
+	if(isempty(params) || isnull(params))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gotodealership [dealershipid]");
+	
+	new val = strval(params);	
+
+	if(!Dealership_IsValid(val))
+		return SendClientMessage(playerid, COLOR_ERROR, "La concessionaria inserita non esiste.");
+	
+	new Float:x, Float:y, Float:z;
+	Dealership_GetPosition(val, x, y, z);
+	Character_SetSafePosition(playerid, x, y, z, 0, Dealership_GetVirtualWorld(val));
 	return 1;
 }
 

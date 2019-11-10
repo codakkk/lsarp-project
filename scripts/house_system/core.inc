@@ -279,15 +279,15 @@ stock House_Delete(House:house)
     if(!House_IsValid(house))
         return 0;
 
-    new query[64];
-    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `houses` WHERE id = '%d'", House_GetID(house));
-    mysql_tquery(gMySQL, query);
+    new houseid = House_GetID(house);
+    mysql_pquery_f(gMySQL, "DELETE FROM `houses` WHERE id = '%d'", houseid);
 
     House_DestroyObjects(house);
 
     var_release(Variant:house);
+    var_delete(Variant:house);
 
-    map_remove_deep(Houses, House_GetID(house));
+    map_remove(Houses, houseid);
     return 1;
 }
 
@@ -297,6 +297,7 @@ stock bool:House_CreateObjects(House:house)
 	   return false;
 
     House_DestroyObjects(house);
+
     new 
 	   Float:x, Float:y, Float:z,
 	   Float:ex, Float:ey, Float:ez,

@@ -42,7 +42,7 @@ stock Checkpoint_Create(E_CHECKPOINT_TYPE:type, GLOBAL_TAG_TYPES:elementid, Floa
     data[CHECKPOINT_TYPE] = type;
     data[CHECKPOINT_ID] = _:elementid;
     Streamer_SetArrayData(STREAMER_TYPE_CP, checkpointid, E_STREAMER_EXTRA_ID, data);
-    return 1;
+    return checkpointid;
 }
 
 stock bool:Checkpoint_GetInfoOfType(checkpointid, E_CHECKPOINT_TYPE:requestedType, &GLOBAL_TAG_TYPES:id)

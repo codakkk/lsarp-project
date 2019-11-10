@@ -250,7 +250,7 @@ static const PlayerObjectsList[][E_OBJECTSLIST] =
 	{366, "Estintore", OBJECT_FIRE, BONE_RHAND},
 	{19330, "Elmetto giallo", OBJECT_FIRE, BONE_HEAD},
 	{19331, "Elmetto nero", OBJECT_FIRE, BONE_HEAD},
-	{11734, "Kit primo soccorso verde", OBJECT_FIRE, BONE_RHAND},
+	{11736, "Kit primo soccorso verde", OBJECT_FIRE, BONE_RHAND},
 	{11738, "Kit primo soccorso rosso", OBJECT_FIRE, BONE_RHAND},
 	{11747, "Bandana", 	OBJECT_FIRE, BONE_RHAND}
 };
@@ -364,12 +364,7 @@ CMD:oggetto(playerid, params[])
     new String:str = @("Oggetto\tStato\tSlot\nAggiungi Nuovo Oggetto\t \t \n"), count = 1;
     for_playerobjects(i : playerid)
     {
-        str += str_format("%d\t%s\t", count, WearObject_GetName(i));
-        if(Character_IsWearing(playerid, i))
-            str += @("{00FF00}Indossato{FFFFFF}");
-        else
-            str += @("{FF0000}Non Indossato{FFFFFF}");
-        str += @("\n");
+        str_append_format(str, "%d\t%s\t%s\n", count, WearObject_GetName(i), Character_IsWearing(playerid, i) ? ("{00FF00}Indossato{FFFFFF}") : ("{FF0000}Non Indossato{FFFFFF}"));
         count++;
     }
     Dialog_Show_s(playerid, Dialog_WearObjectList, DIALOG_STYLE_TABLIST_HEADERS, @("Lista oggetti"), str, "Avanti", "Chiudi");
@@ -463,6 +458,9 @@ Dialog:Dialog_WearObjectCategories(playerid, response, listitem, inputtext[])
     if(!response)
         return callcmd::oggetto(playerid, "");
     
+    if(listitem == 9 && Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questa categoria.");
+
     SelectedCategory{playerid} = listitem;
     WearObject_ShowCategory(playerid, listitem);   
     return 1;
@@ -550,7 +548,7 @@ stock WearObject_ShowCategory(playerid, category)
         String:str = @("");
     for(new i = 0, j = sizeof(PlayerObjectsList); i < j; ++i)
     {
-        if(PlayerObjectsList[i][Type] != category)
+        if(PlayerObjectsList[i][Type] != category || PlayerObjectsList[i][Object] == 0)
             continue;
         str += str_format("%s\n", PlayerObjectsList[i][oName]);
         list_add(CategoryIndex[playerid], i);
@@ -564,6 +562,7 @@ stock bool:WearObject_Remove(playerid, PlayerObject:playerObject)
     if(index != -1)
     {
         RemovePlayerAttachedObject(playerid, index);
+        var_set_cell(Variant:playerObject, Index, -1);
         mysql_pquery_f(gMySQL, "UPDATE `character_wear_objects` SET wearing = '0' WHERE id = '%d'", WearObject_GetID(playerObject));
         return true;
     }

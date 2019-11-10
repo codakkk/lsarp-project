@@ -1,6 +1,8 @@
 
 #include <YSI_Coding\y_hooks>
 
+#define MAX_CHARACTERS_IN_LOGIN		(9)
+
 static stock
     SelectedCharacter[MAX_PLAYERS],
     TempCharacterName[MAX_PLAYERS][MAX_PLAYER_NAME],
@@ -8,10 +10,10 @@ static stock
     DeleteCharacterCode[MAX_PLAYERS] = {0, ...};
 
 static
-	PlayerText:CharacterModelTextdraw[MAX_PLAYERS][9],
-    PlayerText:CharacterNameTextdraw[MAX_PLAYERS][9],
-    PlayerText:CharacterLevelTextdraw[MAX_PLAYERS][9],
-	PlayerText:CharacterStateTextdraw[MAX_PLAYERS][9]
+	PlayerText:CharacterModelTextdraw[MAX_PLAYERS][MAX_CHARACTERS_IN_LOGIN],
+    PlayerText:CharacterNameTextdraw[MAX_PLAYERS][MAX_CHARACTERS_IN_LOGIN],
+    PlayerText:CharacterLevelTextdraw[MAX_PLAYERS][MAX_CHARACTERS_IN_LOGIN],
+	PlayerText:CharacterStateTextdraw[MAX_PLAYERS][MAX_CHARACTERS_IN_LOGIN]
 ;
 
 hook OnAccountLogin(playerid)
@@ -57,80 +59,14 @@ timer PositionCamera[100](playerid)
 {
 	SetPlayerCameraPos(playerid, 2115.4441,2131.3276,32.3443);
     SetPlayerCameraLookAt(playerid, 2174.6531,2141.4639,16.6471);
+	printf("Camera set");
 	return 1;
 }
 
 hook OnPlayerConnect(playerid)
 {
-	//CheckAccount(playerid);
-
-	//TogglePlayerSpectating(playerid, true);
-	
-	
-
-    new 
-        i = 0,
-        Float:startX = 150.0000, 
-        Float:startY = 80.0000, 
-        Float:gapX = 105.0, 
-        Float:gapY = 105.0, 
-        Float:textStartX = startX + 2.5,
-        Float:textStartY = startY + 2.5;
-    for(new y = 0; y < 3; ++y)
-    {
-        for(new x = 0; x < 3; ++x)
-        {
-            i = x + y * 3;
-            CharacterModelTextdraw[playerid][i] = CreatePlayerTextDraw(playerid, startX + x * gapX, startY + y * gapY, "MODEL");
-            PlayerTextDrawFont(playerid, CharacterModelTextdraw[playerid][i], TEXT_DRAW_FONT_MODEL_PREVIEW );
-            PlayerTextDrawLetterSize(playerid, CharacterModelTextdraw[playerid][i], 0.5000, 1.0000);
-            PlayerTextDrawColor(playerid, CharacterModelTextdraw[playerid][i], -1);
-            PlayerTextDrawSetShadow(playerid, CharacterModelTextdraw[playerid][i], 0);
-            PlayerTextDrawSetOutline(playerid, CharacterModelTextdraw[playerid][i], 0);
-            PlayerTextDrawBackgroundColor(playerid, CharacterModelTextdraw[playerid][i], 0x000000AA);
-            PlayerTextDrawSetProportional(playerid, CharacterModelTextdraw[playerid][i], 1);
-            PlayerTextDrawTextSize(playerid, CharacterModelTextdraw[playerid][i], 100.0000, 100.0000);
-            PlayerTextDrawSetPreviewModel(playerid, CharacterModelTextdraw[playerid][i], 46);
-            PlayerTextDrawSetPreviewRot(playerid, CharacterModelTextdraw[playerid][i], 0.0000, 0.0000, 0.0000, 1.0000);
-            PlayerTextDrawSetSelectable(playerid, CharacterModelTextdraw[playerid][i], 0);
-
-            CharacterNameTextdraw[playerid][i] = CreatePlayerTextDraw(playerid, textStartX + x * gapX, textStartY + y * gapY, "Peppe Musicco");
-            PlayerTextDrawFont(playerid, CharacterNameTextdraw[playerid][i], 1);
-            PlayerTextDrawLetterSize(playerid, CharacterNameTextdraw[playerid][i], 0.1399, 0.8999);
-            PlayerTextDrawColor(playerid, CharacterNameTextdraw[playerid][i], -1);
-            PlayerTextDrawSetShadow(playerid, CharacterNameTextdraw[playerid][i], 0);
-            PlayerTextDrawSetOutline(playerid, CharacterNameTextdraw[playerid][i], 0);
-            PlayerTextDrawBackgroundColor(playerid, CharacterNameTextdraw[playerid][i], 255);
-            PlayerTextDrawSetProportional(playerid, CharacterNameTextdraw[playerid][i], 1);
-            PlayerTextDrawUseBox(playerid, CharacterNameTextdraw[playerid][i], 0);
-            PlayerTextDrawBoxColor(playerid, CharacterNameTextdraw[playerid][i], 0);
-            PlayerTextDrawTextSize(playerid, CharacterNameTextdraw[playerid][i], (201.5000 + (i * gapX)), 0.0000);
-
-            CharacterLevelTextdraw[playerid][i] = CreatePlayerTextDraw(playerid, textStartX + x * gapX, textStartY + y * gapY + 10.0, "Livello 100");
-            PlayerTextDrawFont(playerid, CharacterLevelTextdraw[playerid][i], 1);
-            PlayerTextDrawLetterSize(playerid, CharacterLevelTextdraw[playerid][i], 0.1399, 0.8999);
-            PlayerTextDrawColor(playerid, CharacterLevelTextdraw[playerid][i], -1);
-            PlayerTextDrawSetShadow(playerid, CharacterLevelTextdraw[playerid][i], 0);
-            PlayerTextDrawSetOutline(playerid, CharacterLevelTextdraw[playerid][i], 0);
-            PlayerTextDrawBackgroundColor(playerid, CharacterLevelTextdraw[playerid][i], 255);
-            PlayerTextDrawSetProportional(playerid, CharacterLevelTextdraw[playerid][i], 1);
-            PlayerTextDrawUseBox(playerid, CharacterLevelTextdraw[playerid][i], 0);
-            PlayerTextDrawBoxColor(playerid, CharacterLevelTextdraw[playerid][i], 0);
-            PlayerTextDrawTextSize(playerid, CharacterLevelTextdraw[playerid][i], (201.5000 + (i * gapX)), 0.0000);
-
-			CharacterStateTextdraw[playerid][i] = CreatePlayerTextDraw(playerid, textStartX + x * gapX, textStartY + y * gapY + 20.0, "");
-            PlayerTextDrawFont(playerid, CharacterStateTextdraw[playerid][i], 1);
-            PlayerTextDrawLetterSize(playerid, CharacterStateTextdraw[playerid][i], 0.1399, 0.8999);
-            PlayerTextDrawColor(playerid, CharacterStateTextdraw[playerid][i], -1);
-            PlayerTextDrawSetShadow(playerid, CharacterStateTextdraw[playerid][i], 0);
-            PlayerTextDrawSetOutline(playerid, CharacterStateTextdraw[playerid][i], 0);
-            PlayerTextDrawBackgroundColor(playerid, CharacterStateTextdraw[playerid][i], 255);
-            PlayerTextDrawSetProportional(playerid, CharacterStateTextdraw[playerid][i], 1);
-            PlayerTextDrawUseBox(playerid, CharacterStateTextdraw[playerid][i], 0);
-            PlayerTextDrawBoxColor(playerid, CharacterStateTextdraw[playerid][i], 0);
-            PlayerTextDrawTextSize(playerid, CharacterStateTextdraw[playerid][i], (201.5000 + (i * gapX)), 0.0000);
-        }
-    }
+	CreateCharactersTextdraw(playerid);
+	SetPlayerVirtualWorld(playerid, playerid);
 	return 1;
 }
 
@@ -173,8 +109,8 @@ stock Account_ShowCharactersList(playerid)
 		String:content = str_new(""), nameTemp[24], character_id = 0, skinid = 0, level = 1,
 		bool:isValidated = false, isBanned, banExpiry;
 
-	if(count > 9)
-		count = 9;
+	if(count > MAX_CHARACTERS_IN_LOGIN)
+		count = MAX_CHARACTERS_IN_LOGIN;
 
 	for(new i = 0; i < count; ++i)
 	{
@@ -249,4 +185,71 @@ stock Account_LoadCharacter(playerid, characterid)
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoadCharacter, "SELECT * FROM `characters` WHERE id = '%d'", characterid);
 	return 1;
+}
+
+static CreateCharactersTextdraw(playerid)
+{
+	new 
+        i = 0,
+        Float:startX = 150.0000, 
+        Float:startY = 80.0000, 
+        Float:gapX = 105.0, 
+        Float:gapY = 105.0, 
+        Float:textStartX = startX + 2.5,
+        Float:textStartY = startY + 2.5;
+    for(new y = 0; y < 3; ++y)
+    {
+        for(new x = 0; x < 3; ++x)
+        {
+            i = x + y * 3;
+            CharacterModelTextdraw[playerid][i] = CreatePlayerTextDraw(playerid, startX + x * gapX, startY + y * gapY, "MODEL");
+            PlayerTextDrawFont(playerid, CharacterModelTextdraw[playerid][i], TEXT_DRAW_FONT_MODEL_PREVIEW );
+            PlayerTextDrawLetterSize(playerid, CharacterModelTextdraw[playerid][i], 0.5000, 1.0000);
+            PlayerTextDrawColor(playerid, CharacterModelTextdraw[playerid][i], -1);
+            PlayerTextDrawSetShadow(playerid, CharacterModelTextdraw[playerid][i], 0);
+            PlayerTextDrawSetOutline(playerid, CharacterModelTextdraw[playerid][i], 0);
+            PlayerTextDrawBackgroundColor(playerid, CharacterModelTextdraw[playerid][i], 0x000000AA);
+            PlayerTextDrawSetProportional(playerid, CharacterModelTextdraw[playerid][i], 1);
+            PlayerTextDrawTextSize(playerid, CharacterModelTextdraw[playerid][i], 100.0000, 100.0000);
+            PlayerTextDrawSetPreviewModel(playerid, CharacterModelTextdraw[playerid][i], 46);
+            PlayerTextDrawSetPreviewRot(playerid, CharacterModelTextdraw[playerid][i], 0.0000, 0.0000, 0.0000, 1.0000);
+            PlayerTextDrawSetSelectable(playerid, CharacterModelTextdraw[playerid][i], 0);
+
+            CharacterNameTextdraw[playerid][i] = CreatePlayerTextDraw(playerid, textStartX + x * gapX, textStartY + y * gapY, "Peppe Musicco");
+            PlayerTextDrawFont(playerid, CharacterNameTextdraw[playerid][i], 1);
+            PlayerTextDrawLetterSize(playerid, CharacterNameTextdraw[playerid][i], 0.1399, 0.8999);
+            PlayerTextDrawColor(playerid, CharacterNameTextdraw[playerid][i], -1);
+            PlayerTextDrawSetShadow(playerid, CharacterNameTextdraw[playerid][i], 0);
+            PlayerTextDrawSetOutline(playerid, CharacterNameTextdraw[playerid][i], 0);
+            PlayerTextDrawBackgroundColor(playerid, CharacterNameTextdraw[playerid][i], 255);
+            PlayerTextDrawSetProportional(playerid, CharacterNameTextdraw[playerid][i], 1);
+            PlayerTextDrawUseBox(playerid, CharacterNameTextdraw[playerid][i], 0);
+            PlayerTextDrawBoxColor(playerid, CharacterNameTextdraw[playerid][i], 0);
+            PlayerTextDrawTextSize(playerid, CharacterNameTextdraw[playerid][i], (201.5000 + (i * gapX)), 0.0000);
+
+            CharacterLevelTextdraw[playerid][i] = CreatePlayerTextDraw(playerid, textStartX + x * gapX, textStartY + y * gapY + 10.0, "Livello 100");
+            PlayerTextDrawFont(playerid, CharacterLevelTextdraw[playerid][i], 1);
+            PlayerTextDrawLetterSize(playerid, CharacterLevelTextdraw[playerid][i], 0.1399, 0.8999);
+            PlayerTextDrawColor(playerid, CharacterLevelTextdraw[playerid][i], -1);
+            PlayerTextDrawSetShadow(playerid, CharacterLevelTextdraw[playerid][i], 0);
+            PlayerTextDrawSetOutline(playerid, CharacterLevelTextdraw[playerid][i], 0);
+            PlayerTextDrawBackgroundColor(playerid, CharacterLevelTextdraw[playerid][i], 255);
+            PlayerTextDrawSetProportional(playerid, CharacterLevelTextdraw[playerid][i], 1);
+            PlayerTextDrawUseBox(playerid, CharacterLevelTextdraw[playerid][i], 0);
+            PlayerTextDrawBoxColor(playerid, CharacterLevelTextdraw[playerid][i], 0);
+            PlayerTextDrawTextSize(playerid, CharacterLevelTextdraw[playerid][i], (201.5000 + (i * gapX)), 0.0000);
+
+			CharacterStateTextdraw[playerid][i] = CreatePlayerTextDraw(playerid, textStartX + x * gapX, textStartY + y * gapY + 20.0, "");
+            PlayerTextDrawFont(playerid, CharacterStateTextdraw[playerid][i], 1);
+            PlayerTextDrawLetterSize(playerid, CharacterStateTextdraw[playerid][i], 0.1399, 0.8999);
+            PlayerTextDrawColor(playerid, CharacterStateTextdraw[playerid][i], -1);
+            PlayerTextDrawSetShadow(playerid, CharacterStateTextdraw[playerid][i], 0);
+            PlayerTextDrawSetOutline(playerid, CharacterStateTextdraw[playerid][i], 0);
+            PlayerTextDrawBackgroundColor(playerid, CharacterStateTextdraw[playerid][i], 255);
+            PlayerTextDrawSetProportional(playerid, CharacterStateTextdraw[playerid][i], 1);
+            PlayerTextDrawUseBox(playerid, CharacterStateTextdraw[playerid][i], 0);
+            PlayerTextDrawBoxColor(playerid, CharacterStateTextdraw[playerid][i], 0);
+            PlayerTextDrawTextSize(playerid, CharacterStateTextdraw[playerid][i], (201.5000 + (i * gapX)), 0.0000);
+        }
+    }
 }

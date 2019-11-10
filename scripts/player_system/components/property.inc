@@ -55,6 +55,15 @@ hook OnCharacterLoad(playerid)
 	return 1;
 }
 
+hook OnBuildingDeleted(Building:building)
+{
+	foreach(new i : Player)
+	{
+		Character_RemoveOwnedBuilding(i, building);
+	}
+	return 1;
+}
+
 flags:affittacasa(CMD_ALIVE_USER);
 CMD:affittacasa(playerid, params[])
 {

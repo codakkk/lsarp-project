@@ -38,7 +38,7 @@ flags:sms(CMD_ALIVE_USER);
 CMD:sms(playerid, params[])
 {
     new slot, number[9], message[128];
-    if(sscanf(params, "ds[9]s[128]", slot, number, message))
+    if(sscanf(params, "k<slotid>s[9]s[128]", slot, number, message))
         return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /sms <slot> <numero/nome rubrica> <messaggio>");
     
     if(!Character_HasPhoneInSlot(playerid, slot))

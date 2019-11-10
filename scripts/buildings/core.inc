@@ -27,7 +27,7 @@ enum _:E_BUILDING_TYPE
 #define INVALID_BUILDING			(Building:VAR_NULL)
 
 //#define for_building(%0) for(new Iter:%0_iter=map_iter(GetBuildingsMap()),Building:%0=Building:iter_get_value(%0_iter);iter_inside(Iter:%0_iter);(iter_move_next(%0_iter) ? (%0=Building:iter_get_value(%0_iter)) : (%0=INVALID_BUILDING)))
-#define for_building(%0) for(new Iter:iter=map_iter(GetBuildingsMap()), Building:%0=Building:iter_get_value(iter);iter_inside(iter);%0=(iter_move_next(iter) != ITER_NULL ? (Building:iter_get_value(iter)) : (Building:0)))
+#define for_building(%0) for(new Iter:iter=map_iter(GetBuildingsMap()), Building:%0=(Building:iter_inside(iter) ? (Building:iter_get_value(iter)) : (Building:0));iter_inside(iter);%0=(iter_move_next(iter) != ITER_NULL ? (Building:iter_get_value(iter)) : (Building:0)))
 #define for_building_of<%1>(%0) for(new Iter:__iter=list_iter(GetBuildingsListByType(%1)), Building:%0=(iter_inside(__iter) ? (Building:iter_get_value(__iter)) : (Building:0));iter_inside(__iter);%0=(iter_move_next(__iter) != ITER_NULL ? (Building:iter_get_value(__iter)) : (Building:0)))
 
 #include <pickup_system\core>
@@ -504,9 +504,9 @@ stock Building_ResetOwner(Building:building)
 
 stock Building_Delete(Building:building)
 {
-    new query[64];
-    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `buildings` WHERE id = '%d'", Building_GetID(building));
-    mysql_tquery(gMySQL, query);
+	new buildingid = Building_GetID(building);
+
+    mysql_pquery_f(gMySQL, "DELETE FROM `buildings` WHERE id = '%d'", buildingid);
 
 	Building_DestroyElements(building);
 	
@@ -516,7 +516,7 @@ stock Building_Delete(Building:building)
 	var_release(Variant:building);
 	var_delete(Variant:building);
 
-	map_remove(Buildings, Building_GetID(building));
+	map_remove(Buildings, buildingid);
     return 1;
 }
 

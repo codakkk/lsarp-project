@@ -431,6 +431,8 @@ CMD:unbancharacter(playerid, params[])
 			SendFormattedMessage(playerid, COLOR_ORANGE, "Il personaggio \"%s\" è stato sbannato.", e_name);
 			SendMessageToAdmins(true, COLOR_ORANGE, "AdmAlert: %s ha sbannato il personaggio \"%s\".", Account_GetName(playerid), e_name);
 			Log(Account_GetName(playerid), e_name, "/unban");
+
+			Discord_SendBanMessage("L'admin **%s** ha _sbannato_ il personaggio **%s**.", Account_GetName(playerid), e_name);
 		}
 		else
 		{

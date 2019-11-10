@@ -467,11 +467,13 @@ CMD:gcreate(playerid, params[])
     }
     
     if(!isValid)
-        return SendClientMessage(playerid, COLOR_ERROR, "Modelli utilizzabili: 19912, 985");
+        return SendClientMessage(playerid, COLOR_ERROR, "Modelli utilizzabili: 19912, 985, 2933, 2990, 986, 971, 976, 19870, "), SendClientMessage(playerid, COLOR_ERROR, "19795, 19796, 6400, 2928, 9093, 19910, 988, 2909, 3036, 975, 969, 10149"), 0;
 
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
-    new gateid = Gate_Create(val, x, y, z);
+
+    new gateid = Gate_Create(val, x, y+5.0, z);
+
     if(gateid != -1)
         SendFormattedMessage(playerid, -1, "Cancello id %d con modello %d creato con successo. Usa /gedit %d per modificarlo.", gateid, val, gateid);
     else

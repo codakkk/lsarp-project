@@ -41,9 +41,7 @@ CMD:time(playerid, params[])
 {
 	new h, m, s;
 	gettime(h, m, s);
-	new String:str = str_format("~g~~w~%d:%d:%d~g~~w~~n~", h, m, s);
-	if(Character_GetJailTime(playerid) > 0)
-		str += str_format("Tempo jail rimanente: %d sec.", Character_GetJailTime(playerid));
+	new String:str = str_format("~g~~w~%02d:%02d:%02d", h, m, s);
 	GameTextForPlayerStr(playerid, str, 2000, 1);
 	Character_AMe(playerid, "controlla l'orario.");
 	return 1;

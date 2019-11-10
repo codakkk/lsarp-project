@@ -25,7 +25,7 @@ static bool:Character_ShowBizDialog(playerid)
         switch(response[E_DIALOG_RESPONSE_Listitem])
         {
             case 0: ToggleBuildingLockState(playerid, building);
-            case 1: Building_ShowInventory(building, playerid);
+            case 1: { Building_ShowInventory(building, playerid); break; }
             case 2: ShowBuildingDepositMoneyDialog(playerid, building);
             case 3: ShowBuildingWithdrawMoneyDialog(playerid, building);
             case 4: ShowSellBuildingDialog(playerid, building);

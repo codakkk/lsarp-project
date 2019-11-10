@@ -4054,7 +4054,7 @@ static IsPlayerPaused(playerid)
 	return (GetTickCount() - s_LastUpdate[playerid] > 2000);
 }
 
-static UpdateHealthBar(playerid, bool:force = false)
+stock UpdateHealthBar(playerid, bool:force = false)
 {
 	if (s_BeingResynced[playerid] || s_ForceClassSelection[playerid]) {
 		return;

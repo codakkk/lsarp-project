@@ -3,15 +3,26 @@
 
 #include <YSI_Coding\y_hooks>
 
+static PayDay[MAX_PLAYERS char];
+
+hook OnCharacterLoad(playerid)
+{
+	await mysql_aquery_s(gMySQL, str_format("SELECT payday FROM `characters` WHERE id = '%d'", Character_GetID(playerid)));
+	new v = 0;
+	cache_get_value_name_int(0, "payday", v);
+	PayDay{playerid} = v;
+	return 1;
+}
+
 ptask OnPlayerPayDayMinute[60000](playerid) // 
 {
 	if(!Character_IsLogged(playerid))
 		return 1;
-	Account_AddPayDay(playerid, 1);
+	Character_AddPayDay(playerid, 1);
 	Character_AddMinutesPlayed(playerid, 1);
-	if(Account_GetPayDay(playerid) >= 60) // Pay Day Time in minutes
+	if(Character_GetPayDay(playerid) >= 60) // Pay Day Time in minutes
 	{
-		Account_AddPayDay(playerid, -60);
+		Character_AddPayDay(playerid, -60);
 		Character_PayDay(playerid);
 	}
 	return 1;
@@ -175,4 +186,16 @@ static GetPlayerMoneyByPremium(playerid)
 		money = premiumPaycheck[currentPremiumLevel-1];
 	}
 	return money;
+}
+
+stock Character_GetPayDay(playerid)
+{
+	return PayDay{playerid};
+}
+
+stock Character_AddPayDay(playerid, add)
+{
+	PayDay{playerid} += add;
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET payday = '%d' WHERE id = '%d'", Character_GetPayDay(playerid), Character_GetID(playerid));
+	return 1;
 }

@@ -13,9 +13,9 @@ static const RewardInfo[][e_RewardData] =
 	{250, "Cambio Nome"},
 	{300, "Block PM"},
 	{300, "Block OOC"},
-	{500, "Premium Nerone (1 mese)"},
-	{750, "Premium Caligola (1 mese)"},
-	{1000, "Premium Giulio Cesare (1 mese)"},
+	{500, "Premium Bronze (1 mese)"},
+	{750, "Premium Silver (1 mese)"},
+	{1000, "Premium Gold (1 mese)"},
 	{500, "+1 Slot Personaggio"},
 	{50, "+1 Livello"}
 };

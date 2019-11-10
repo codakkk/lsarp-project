@@ -79,7 +79,7 @@ stock Building_ShowInventory(Building:building, playerid)
 		data[SlotID] = -1;
 		map_add_arr(PlayerBuildingInventory, playerid, data);
 	}
-	Inventory_ShowStr(inventory, playerid, str_format("Inventario Edificio (%d/%d)", Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory)), Dialog_BizInventory, "Avanti", "Chiudi");
+	Inventory_ShowStr(inventory, playerid, str_format("Inventario Edificio (%d/%d)", Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory)), Dialog_BizInventory, "Avanti", "Chiudi", .forceDialog = true);
 	return 1;
 }
 
@@ -107,7 +107,7 @@ Dialog:BuildingInventoryAction(playerid, response, listitem, inputtext[])
 	{
 		if(itemid == 0)
 		{
-			Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", BuildingInvDepSelectItem, "Seleziona", "Indietro");
+			Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", BuildingInvDepSelectItem, "Seleziona", "Indietro", .forceDialog = true);
 		}
 		else
 		{
@@ -194,7 +194,7 @@ Dialog:BuildingInvDepSelectItem(playerid, response, listitem, inputtext[])
 		if(!Inventory_HasSpaceForItem(Internal_GetInventory(playerid), itemid, amount))
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario dell'edificio.");
-			return Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", BuildingInvDepSelectItem, "Seleziona", "Indietro");
+			return Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", BuildingInvDepSelectItem, "Seleziona", "Indietro", .forceDialog = true);
 		}
 		Inventory_AddItem(inventoryRef, itemid, amount, 0);
 		Character_DecreaseItemAmount(playerid, itemid, amount);

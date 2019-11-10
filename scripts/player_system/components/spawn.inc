@@ -246,8 +246,6 @@ static Character_Spawn(playerid)
 	PreloadAnimations(playerid);
 
 	CallLocalFunction(#OnCharacterSpawn, "d", playerid);
-	
-	ResetPlayerWeapons(playerid);
 
 	Character_SetHealth(playerid, Character_GetMaxHealth(playerid));
 	Character_SetArmour(playerid, PlayerSpawnData[playerid][LastArmour]);
@@ -260,7 +258,8 @@ static Character_Spawn(playerid)
     {
 		Character_HandleFirstSpawn(playerid);
     }
-	new Float:x = DEFAULT_SPAWN_X, Float:y = DEFAULT_SPAWN_Y, Float:z = DEFAULT_SPAWN_Z, Float:a = 0.0;
+	new Float:x = DEFAULT_SPAWN_X, Float:y = DEFAULT_SPAWN_Y, Float:z = DEFAULT_SPAWN_Z, Float:a = 0.0,
+		world = 0, interior = 0;
 	if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_LAST && Character_IsLastPositionValid(playerid))
 	{
 		if(IsSpawned{playerid})
@@ -273,23 +272,29 @@ static Character_Spawn(playerid)
 			y = PlayerSpawnData[playerid][LastY];
 			z = PlayerSpawnData[playerid][LastZ];
 			a = PlayerSpawnData[playerid][LastA];
+			world = PlayerSpawnData[playerid][LastVirtualWorld];
+			interior = PlayerSpawnData[playerid][LastInterior];
 			PlayerSpawnData[playerid][LastX] = PlayerSpawnData[playerid][LastY] = PlayerSpawnData[playerid][LastZ] = 0.0;
 		}
 	}
 	else if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_HOUSE)
 	{
 		new House:house = House_Find(Character_GetSpawnPointID(playerid));
-		if(House_IsValid(house) && (House_GetOwnerID(house) == Character_GetID(playerid) || Character_GetRentHouse(playerid) == house))
+		if(House_IsValid(house) && (Character_DoesOwnHouse(playerid, house) || Character_GetRentHouse(playerid) == house))
 		{
 			House_GetEnterPosition(house, x, y, z);
+			world = House_GetEnterWorld(house);
+			interior = House_GetEnterInterior(house);
 		}
 	}
 	else if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_BUSINESS)
 	{
 		new Building:building = Building_Find(Character_GetSpawnPointID(playerid));
-		if(Building_IsValid(building) && Building_GetOwnerID(building) == Character_GetID(playerid))
+		if(Building_IsValid(building) && Character_DoesOwnBuilding(playerid, building))
 		{
 			Building_GetEnterPos(building, x, y, z);
+			world = Building_GetEnterWorld(building);
+			interior = Building_GetEnterInterior(building);
 		}
 	}
 	else if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_FACTION)
@@ -298,9 +303,12 @@ static Character_Spawn(playerid)
 		if(Faction_IsValid(factionid) && Faction_IsValidSpawnPosition(factionid))
 		{
 			Faction_GetSpawnPos(factionid, x, y, z);
+			world = Faction_GetSpawnWorld(factionid);
+			interior = Faction_GetSpawnInterior(factionid);
 		}
 	}
-	Character_SetSafePosition(playerid, x, y, z, 0, 0);
+
+	Character_SetSafePosition(playerid, x, y, z, interior, world);
 	SetPlayerFacingAngle(playerid, a);
 
 	CallLocalFunction(#OnCharacterSpawned, "d", playerid);
@@ -404,9 +412,4 @@ timer LoadCharacterDataAfterTime[200](playerid)
 {
 	CallLocalFunction("OnCharacterLateLoad", "d", playerid);
 	SetCameraBehindPlayer(playerid);
-}
-
-timer CallCharacterSpawned[100](playerid)
-{
-	CallLocalFunction(#OnCharacterSpawned, "d", playerid);
 }

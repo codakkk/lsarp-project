@@ -34,7 +34,7 @@ CMD:pubblicita(playerid, params[])
     {
         if(!Character_IsLogged(i) || NoAds{playerid})
             continue;
-        SendFormattedMessage(i, 0x33AA33FF, Account_GetAdminLevel(i) > 1 ? ("[Annuncio] %s (Pubblicato da: %s)") : ("[Annuncio] %s"), msg, Character_GetOOCName(playerid));
+        SendTwoLinesMessage(i, 0x33AA33FF, Account_GetAdminLevel(i) > 1 ? ("[Annuncio] %s (Pubblicato da: %s)") : ("[Annuncio] %s"), msg, Character_GetOOCName(playerid));
     }
 
     Character_GiveMoney(playerid, -price, "adv");

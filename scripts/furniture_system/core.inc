@@ -63,6 +63,15 @@ hook OnGameModeInit()
     return 1;
 }
 
+hook OnCharacterDisconnected(playerid, reason)
+{
+    if(EditObject_GetType(playerid) == EDIT_TYPE_BUYING_FURNITURE)
+    {
+        Furniture_CancelBuy(playerid);
+    }
+    return 1;
+}
+
 hook OnCharacterClearData(playerid)
 {
     FurniturePage{playerid} = 0;
@@ -70,16 +79,13 @@ hook OnCharacterClearData(playerid)
     FurnitureLinkedTo[playerid] = -1;
     ShowingLabelsForWorld[playerid] = -1;
     FurnitureWorldID[playerid] = -1;
+
     if(list_valid(FurnitureListItem[playerid]))
         list_delete(FurnitureListItem[playerid]);
+    
     if(Furniture_IsShowingInfo(playerid))
     {
         Furniture_DeleteLabels(playerid);
-    }
-
-    if(EditObject_GetType(playerid) == EDIT_TYPE_BUYING_FURNITURE)
-    {
-        Furniture_CancelBuy(playerid);
     }
     return 1;
 }
