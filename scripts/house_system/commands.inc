@@ -47,7 +47,7 @@ CMD:hinttypes(playerid, params[])
 	return 1;
 }
 
-flags:ahousecmds(CMD_JR_MODERATOR);
+flags:ahousecmds(CMD_ADMIN);
 CMD:ahousecmds(playerid, params[])
 {
     SendClientMessage(playerid, COLOR_WHITE, "[HOUSES]: /hcreate - /hedit");

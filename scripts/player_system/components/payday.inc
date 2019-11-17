@@ -1,4 +1,5 @@
 
+#include <jobs\core>
 #include <faction_system\core>
 
 #include <YSI_Coding\y_hooks>
@@ -45,6 +46,7 @@ stock Character_PayDay(playerid)
 		premiumMoney = 0,
 		businessMoney = 0,
 		newPlayerMoney = 0, 
+		jobMoney = 0,
 		interests = 0,
 		paycheck = 0,
 		rentPrice = 0,
@@ -64,6 +66,9 @@ stock Character_PayDay(playerid)
 
 	businessMoney = GetPlayerBuildingMoney(playerid);
 	paycheck += businessMoney;
+
+	jobMoney = GetPlayerMoneyByJob(playerid);
+	paycheck += jobMoney;
 
 	Character_AddPayCheck(playerid, paycheck);
 
@@ -96,6 +101,13 @@ stock Character_PayDay(playerid)
 
 	if(newPlayerMoney > 0)
 		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s perché sei un nuovo arrivato.", FormatNumber(newPlayerMoney));
+
+	if(jobMoney > 0)
+	{
+		new jobName[32];
+		Job_GetName(Character_GetJobType(playerid), jobName);
+		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s per il tuo lavoro da \"%s\".", FormatNumber(newPlayerMoney), jobName);
+	}
 
 	if(kickedFromHouse)
 		SendClientMessage(playerid, COLOR_ORANGE, "La casa di cui eri affittuario ti ha cacciato perché non hai pagato in tempo.");
@@ -153,7 +165,7 @@ static GetPlayerMoneyForLevel(playerid)
 	new money = 0;
 	if(Character_GetLevel(playerid) <= 3)
 	{
-		static const payCheck[] = {2000, 1000, 500};
+		static const payCheck[] = {4500, 3500, 2500};
 		new level = Character_GetLevel(playerid) - 1;
 		money = payCheck[level];
 	}
@@ -186,6 +198,13 @@ static GetPlayerMoneyByPremium(playerid)
 		money = premiumPaycheck[currentPremiumLevel-1];
 	}
 	return money;
+}
+
+static GetPlayerMoneyByJob(playerid)
+{
+	if(Character_GetJobType(playerid) == JOB_TYPE_MECHANIC)
+		return 1500;
+	return 0;
 }
 
 stock Character_GetPayDay(playerid)

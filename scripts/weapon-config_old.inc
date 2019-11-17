@@ -4187,7 +4187,7 @@ static WasPlayerInVehicle(playerid, time) {
 
 		for (new i = 0; i < sizeof(sc_VendingMachines); i++) {
 			#if WC_USE_STREAMER
-				s_VendingMachineObject[i] = CreateDynamicObject(
+				s_VendingMachineObject[i] = Server_CreateObject(
 					sc_VendingMachines[i][e_Model],
 					sc_VendingMachines[i][e_PosX],
 					sc_VendingMachines[i][e_PosY],

@@ -157,7 +157,7 @@ stock Gate_Create(modelid, Float:x, Float:y, Float:z)
     data[OwnerID] = 0;
     
     GateState{id} = false;
-    data[ObjectID] = CreateDynamicObject(data[ModelID], x, y, z, 0, 0, 0, -1, -1, -1, STREAMER_OBJECT_SD, STREAMER_OBJECT_DD);
+    data[ObjectID] = Server_CreateObject(data[ModelID], x, y, z, 0, 0, 0, -1, -1, -1, STREAMER_OBJECT_SD, STREAMER_OBJECT_DD);
     Streamer_SetIntData(STREAMER_TYPE_OBJECT, data[ObjectID], E_STREAMER_EXTRA_ID, id);
     
     map_add_arr(Gates, id, data);
@@ -211,7 +211,7 @@ stock Gate_LoadAll()
 
             cache_get_value_name_int(i, "owner_id", data[OwnerID]);
 
-            data[ObjectID] = CreateDynamicObject(data[ModelID], data[StartX], data[StartY], data[StartZ], data[StartRotX], data[StartRotY], data[StartRotZ], -1, -1, -1, STREAMER_OBJECT_SD, STREAMER_OBJECT_DD);
+            data[ObjectID] = Server_CreateObject(data[ModelID], data[StartX], data[StartY], data[StartZ], data[StartRotX], data[StartRotY], data[StartRotZ], -1, -1, -1, STREAMER_OBJECT_SD, STREAMER_OBJECT_DD);
 
             GateState{i} = false;
             

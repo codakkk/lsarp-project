@@ -40,21 +40,16 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 	if(Weapon[playerid]{slotid} != 0 && Ammo[playerid][slotid] != 0)
 	{
 		Ammo[playerid][slotid]--;
-		printf("Weapon ID: %d - Ammo: %d - AC Ammo: %d", weaponid, GetPlayerAmmo(playerid), Ammo[playerid][slotid]);
+		//printf("Weapon ID: %d - Ammo: %d - AC Ammo: %d", weaponid, GetPlayerAmmo(playerid), Ammo[playerid][slotid]);
 	}
 	return 1;
 }
 
 //hook OnPlayerUpdate(playerid)
-ptask UpdatePlayerWeaponAntiCheat[200](playerid) 
+ptask UpdatePlayerWeaponAntiCheat[50](playerid) 
 {
 	if(!Character_IsLogged(playerid))
 		return 1;
-	//static ticks = 0;
-	
-	//ticks++;
-	//if(ticks%2 != 0)
-		//return 1;
 	
 	static clientAmmo, clientWeapon, weaponSlot;
 	static serverWeapon, serverAmmo;
@@ -66,12 +61,26 @@ ptask UpdatePlayerWeaponAntiCheat[200](playerid)
 		serverWeapon = Weapon[playerid]{weaponSlot};
 		serverAmmo = Ammo[playerid][weaponSlot];
 		
+		if(weaponSlot == 7 && Account_GetAdminLevel(playerid) < 2)
+		{
+			Character_RemoveWeapon(playerid, clientWeapon);
+			ClearAnimations(playerid, 1);
+			KickEx(playerid);
+			SendMessageToAdmins(1, COLOR_ORANGE, "[ATTENZIONE] %s si è probabilmente givato un'arma tra Minigun, Flamethrower e lanciarazzi. (Kick automatico)", Character_GetOOCName(playerid));
+			return 0;
+		}
+
+		if(weaponSlot == 8 && clientAmmo < serverAmmo)
+		{
+			Ammo[playerid][weaponSlot] = clientAmmo;
+		}
+
 		if(clientAmmo > serverAmmo + 6) // Six is just a threshold allowable of bullets desync
 		{
 			SetPlayerAmmo(playerid, clientWeapon, Ammo[playerid][weaponSlot]);
 			SetPlayerArmedWeapon(playerid, 0); // just to prevent weapon infinite ammo without being detected.
-			
-			printf("AC Timer: Weapon ID: %d - Ammo: %d - AC Ammo: %d", clientWeapon, clientAmmo, Ammo[playerid][weaponSlot]);
+
+			//printf("AC Timer: Weapon ID: %d - Ammo: %d - AC Ammo: %d", clientWeapon, clientAmmo, Ammo[playerid][weaponSlot]);
 		}
 		if(serverWeapon != clientWeapon)
 		{
@@ -79,25 +88,9 @@ ptask UpdatePlayerWeaponAntiCheat[200](playerid)
 			GivePlayerWeapon(playerid, Weapon[playerid]{weaponSlot}, Ammo[playerid][weaponSlot]);
 			SetPlayerArmedWeapon(playerid, 0); // just to prevent weapon infinite ammo without being detected.
 			
-			printf("AC Timer: Weapon ID: %d - AC Weapon ID: %d", clientWeapon, Weapon[playerid]{weaponSlot});
+			//printf("AC Timer: Weapon ID: %d - AC Weapon ID: %d", clientWeapon, Weapon[playerid]{weaponSlot});
 		}
 	}
-	return 1;
-}
-
-CMD:weapons(playerid, params[])
-{
-	new String:string = str_new(""), w, a;
-	for(new i = 0; i < 13; ++i)
-	{
-		GetPlayerWeaponData(playerid, i, w, a);
-
-		str_clear(string);
-		string = str_format("%d: GTA: %d - %d; SERVER: %d - %d", i, w, a, Weapon[playerid]{i}, Ammo[playerid][i]);
-
-		SendClientMessageStr(playerid, -1, string);
-	}
-
 	return 1;
 }
 

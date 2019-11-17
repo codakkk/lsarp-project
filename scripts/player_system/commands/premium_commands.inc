@@ -1,6 +1,6 @@
 
 #include <YSI_Coding\y_hooks>
-hook OnCharacterLoad(playerid)
+hook OnCharacterLoaded(playerid)
 {
 	if(Account_GetPremiumLevel(playerid) > 0)
 	{

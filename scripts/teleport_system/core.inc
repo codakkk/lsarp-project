@@ -72,7 +72,7 @@ stock bool:Teleport_DoesAllowVehicles(teleportid)
     return map_get(TeleportsMap, Teleport_GetID(teleportid), AllowVehicles) > 0 ? true : false;
 }
 
-flags:teleportcreate(CMD_MODERATOR);
+flags:teleportcreate(CMD_ADMIN);
 CMD:teleportcreate(playerid, params[])
 {
     new name[32];
@@ -108,7 +108,7 @@ CMD:gototeleport(playerid, params[])
     return 1;
 }
 
-flags:teleportedit(CMD_MODERATOR);
+flags:teleportedit(CMD_ADMIN);
 CMD:teleportedit(playerid, p[])
 {
     new teleportid, command[16], params[256];
@@ -246,7 +246,10 @@ alias:teleportedit("tedit");
 
 stock bool:GetTeleportRightPosByPlayer(playerid, teleportid, &Float:finalX, &Float:finalY, &Float:finalZ, &finalInterior, &finalWorld)
 {
+    if(!Teleport_IsValid(teleportid))
+        return false;
     static Float:x, Float:y, Float:z, Float:ex, Float:ey, Float:ez;
+    x = y = z = ex = ey = ez = 0.0;
     new Float:range = IsPlayerInAnyVehicle(playerid) ? 4.0 : 1.5;
     Teleport_GetEnterPosition(teleportid, x, y, z);
     Teleport_GetExitPosition(teleportid, ex, ey, ez);
@@ -273,29 +276,10 @@ stock bool:GetTeleportRightPosByPlayer(playerid, teleportid, &Float:finalX, &Flo
 
 hook function Character_Enter(playerid)
 {
-    printf("[Character_Enter]: Teleport");
-    
-    new Float:finalX, Float:finalY, Float:finalZ, finalInterior, finalWorld;
+    static Float:finalX, Float:finalY, Float:finalZ, finalInterior, finalWorld;
 
-    new teleport = Character_GetCurrentTeleport(playerid);
-
-    if(Teleport_IsValid(teleport))
-    {
-        GetTeleportRightPosByPlayer(playerid, teleport, finalX, finalY, finalZ, finalInterior, finalWorld);
-    }
-    else if(!Teleport_IsValid(teleport) && IsPlayerInAnyVehicle(playerid))
-    {
-        new tempTeleport = 0;
-        for_map(i : TeleportsMap)
-        {
-            tempTeleport = iter_get_key(i);
-            if(GetTeleportRightPosByPlayer(playerid, teleport, finalX, finalY, finalZ, finalInterior, finalWorld))
-            {
-                teleport = tempTeleport;
-                break;
-            }
-        }
-    }
+    static teleport = 0;
+    teleport = Character_GetCurrentTeleport(playerid);
 
     if(Teleport_IsValid(teleport))
     {
@@ -318,6 +302,8 @@ hook function Character_Enter(playerid)
                     return SendClientMessage(playerid, COLOR_ERROR, "Non puoi entrare.");
             }
         }
+
+        GetTeleportRightPosByPlayer(playerid, teleport, finalX, finalY, finalZ, finalInterior, finalWorld);
 
         if(finalX == 0.0 && finalY == 0.0 && finalZ == 0.0)
             return continue(playerid);
@@ -347,12 +333,37 @@ hook function Character_Enter(playerid)
 
 stock Character_GetCurrentTeleport(playerid)
 {
-    new teleportid = 0, elementid, E_ELEMENT_TYPE:type;
-    if(Character_GetNearestPickup(playerid, elementid, type) && type == ELEMENT_TYPE_TELEPORT)
+    static teleportid = 0;
+    teleportid = 0;
+    //new Float:range = IsPlayerInAnyVehicle(playerid) ? 5.0 : 2.5;
+    if(IsPlayerInAnyVehicle(playerid))
     {
-        teleportid = elementid;
+        static Float:x, Float:y, Float:z, Float:ex, Float:ey, Float:ez, tempTeleport = 0;
+        tempTeleport = 0;
+        for_map(i : TeleportsMap)
+        {
+            tempTeleport = iter_get_key(i);
+            if(!Teleport_IsValid(tempTeleport))
+                continue;
+            Teleport_GetEnterPosition(tempTeleport, x, y, z);
+            if(IsPlayerInRangeOfPoint(playerid, 5.0, x, y, z) && Character_GetVirtualWorld(playerid) == Teleport_GetEnterWorld(tempTeleport))
+            {
+                teleportid = tempTeleport;
+            }
+            Teleport_GetExitPosition(tempTeleport, ex, ey, ez);
+            if(IsPlayerInRangeOfPoint(playerid, 5.0, ex, ey, ez) && Character_GetVirtualWorld(playerid) == Teleport_GetExitWorld(tempTeleport))
+            {
+                teleportid = tempTeleport;
+            }
+        }
     }
-    
+    else
+    {
+        static elementid, E_ELEMENT_TYPE:type;
+        Character_GetNearestPickup(playerid, elementid, type);
+        if(type == ELEMENT_TYPE_TELEPORT)
+            teleportid = elementid;
+    }
     return teleportid;
 }
 

@@ -85,7 +85,6 @@ hook OnCharacterClearData(playerid)
 hook OnCharacterDisconnected(playerid, reason)
 {
 	Internal_SavePos(playerid, reason == 0);
-	printf("Disconnected");
 	return 1;
 }
 
@@ -111,7 +110,7 @@ static Internal_SavePos(playerid, bool:isCrashed = false)
 		world = Character_GetVirtualWorld(playerid)
 	;
 
-	new bool:isSpawned = Character_IsAlive(playerid) && (isCrashed || SpawnPointType{playerid} == SPAWN_POINT_TYPE_LAST);
+	new bool:isSpawned = Character_IsAlive(playerid) && (isCrashed || SpawnPointType{playerid} == SPAWN_POINT_TYPE_LAST || Character_IsFactionDuty(playerid));
 
 	GetPlayerPos(playerid, x, y, z);
 	GetPlayerFacingAngle(playerid, a);
@@ -247,8 +246,15 @@ static Character_Spawn(playerid)
 
 	CallLocalFunction(#OnCharacterSpawn, "d", playerid);
 
-	Character_SetHealth(playerid, Character_GetMaxHealth(playerid));
+	new Float:lastHealth = PlayerSpawnData[playerid][LastHealth];
+	if(lastHealth <= 0.0)
+		lastHealth = 100.0;
+	
+	Character_SetHealth(playerid, lastHealth);
+	PlayerSpawnData[playerid][LastHealth] = 0.0;
+
 	Character_SetArmour(playerid, PlayerSpawnData[playerid][LastArmour]);
+	PlayerSpawnData[playerid][LastArmour] = 0.0;
 	
 	Character_FreezeForTime(playerid, 3000);
 
@@ -260,12 +266,10 @@ static Character_Spawn(playerid)
     }
 	new Float:x = DEFAULT_SPAWN_X, Float:y = DEFAULT_SPAWN_Y, Float:z = DEFAULT_SPAWN_Z, Float:a = 0.0,
 		world = 0, interior = 0;
-	if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_LAST && Character_IsLastPositionValid(playerid))
+	if(IsSpawned{playerid} /*(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_LAST || Character_IsFactionDuty(playerid))*/ && Character_IsLastPositionValid(playerid))
 	{
-		if(IsSpawned{playerid})
 		{
 			IsSpawned{playerid} = false;
-			Character_SetHealth(playerid, PlayerSpawnData[playerid][LastHealth]);
 			
 			mysql_pquery_f(gMySQL, "UPDATE `character_spawn_data` SET last_x = '0.0', last_y = '0.0', last_z = '0.0' WHERE character_id = '%d'", Character_GetID(playerid));
 			x = PlayerSpawnData[playerid][LastX];
@@ -285,6 +289,7 @@ static Character_Spawn(playerid)
 			House_GetEnterPosition(house, x, y, z);
 			world = House_GetEnterWorld(house);
 			interior = House_GetEnterInterior(house);
+			Character_SetHealth(playerid, Character_GetMaxHealth(playerid));
 		}
 	}
 	else if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_BUSINESS)
@@ -295,6 +300,7 @@ static Character_Spawn(playerid)
 			Building_GetEnterPos(building, x, y, z);
 			world = Building_GetEnterWorld(building);
 			interior = Building_GetEnterInterior(building);
+			Character_SetHealth(playerid, Character_GetMaxHealth(playerid));
 		}
 	}
 	else if(Character_GetSpawnPointType(playerid) == SPAWN_POINT_TYPE_FACTION)
@@ -306,6 +312,14 @@ static Character_Spawn(playerid)
 			world = Faction_GetSpawnWorld(factionid);
 			interior = Faction_GetSpawnInterior(factionid);
 		}
+	}
+
+	// just Safeness
+	if(x == 0 && y == 0 && z == 0)
+	{
+		x = DEFAULT_SPAWN_X;
+		y = DEFAULT_SPAWN_Y;
+		z = DEFAULT_SPAWN_Z;
 	}
 
 	Character_SetSafePosition(playerid, x, y, z, interior, world);

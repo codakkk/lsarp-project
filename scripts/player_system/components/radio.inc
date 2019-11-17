@@ -27,7 +27,9 @@ static Character_CreateRadioGZ(playerid, Float:range, frequency)
 
 	foreach(new i : Player)
 	{
-		if(Character_IsConnectedToFreq(i, frequency) == 0 || (GetTickCount() - Radio_GetMessageLastTick(i)) > 10000)
+		if(!Character_CanUseRadio(i))
+			continue;
+		if(!Character_IsConnectedToFreq(i, frequency) || (GetTickCount() - Radio_GetMessageLastTick(i)) > 10000)
 			continue;
 
 		GetPlayerPos(i, posX, posY, posZ);
@@ -100,9 +102,15 @@ stock Radio_GetMessageLastTick(playerid)
 	return RadioMessageLastTick[playerid];
 }
 
-stock Character_IsConnectedToFreq(playerid, frequency)
+stock bool:Character_CanUseRadio(playerid)
 {
-	return (!Character_HasItem(playerid, gItem_Radio) || Character_GetRadioFrequency(playerid) != frequency) ? 0 : 1;
+	new factionid = Character_GetFaction(playerid);
+	return Character_HasItem(playerid, gItem_Radio) || Faction_GetType(factionid) == FACTION_TYPE_POLICE;
+}
+
+stock bool:Character_IsConnectedToFreq(playerid, frequency)
+{
+	return Character_GetRadioFrequency(playerid) == frequency;
 }
 
 stock Radio_IsValidFrequency(frequency) 
@@ -127,7 +135,7 @@ flags:radiocmds(CMD_USER);
 CMD:radiocmds(playerid, params[])
 {
 	SendClientMessage(playerid, 0x33AA33FF, "|_________________________Radio Help_________________________|");
-	SendClientMessage(playerid, -1, "/setchannel - Imposta su quale frequenza vuoi comunicare. ((da rinominare, ora è /frequenza))");
+	SendClientMessage(playerid, -1, "/frequenza - Imposta su quale frequenza vuoi comunicare. ((da rinominare, ora è /frequenza))");
 	SendClientMessage(playerid, -1, "(/r)adio - Parla usando la radio nel channel che hai scelto.");
 	SendClientMessage(playerid, -1, "/rlow - Parla con tono basso alla radio.");
 	SendClientMessage(playerid, -1, "/rtrace - Divisione Investigativa LVMPD");
@@ -139,7 +147,7 @@ CMD:radiocmds(playerid, params[])
 flags:frequenza(CMD_ALIVE_USER);
 CMD:frequenza(playerid, params[])
 {
-	if(!Character_HasItem(playerid, gItem_Radio) && Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE)
+	if(!Character_CanUseRadio(playerid))
     	return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi una radio.");
 
     new inputFrequency;
@@ -147,8 +155,13 @@ CMD:frequenza(playerid, params[])
     if(sscanf(params, "d", inputFrequency))
     	return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USA: /(freq)uenza [numero] (0: SPENTA - 1/999).");
 
-	if(Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE && inputFrequency == 911)
-		return SendClientMessage(playerid, COLOR_ERROR, "Questa frequenza non puo' essere utilizzata poiché criptata.");
+	new factionid = Character_GetFaction(playerid);
+	if(inputFrequency == 911 || inputFrequency == 912 || inputFrequency == 913)
+	{
+		if(!Faction_IsValid(factionid) || Faction_GetType(factionid) != FACTION_TYPE_POLICE)
+			return SendClientMessage(playerid, COLOR_ERROR, "Questa frequenza non puo' essere utilizzata poiché criptata.");
+
+	}
 		
     if(!Character_SetRadioFrequency(playerid, inputFrequency))
     	return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /(freq)uenza <numero> (0: SPENTA - 1/999).");
@@ -164,7 +177,7 @@ alias:frequenza("freq");
 flags:radio(CMD_ALIVE_USER);
 CMD:radio(playerid, params[])
 {
-    if(!Character_HasItem(playerid, gItem_Radio, 1) && Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE)
+    if(!Character_CanUseRadio(playerid))
     	return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi una radio.");
 
     if(Character_GetRadioFrequency(playerid) <= 0)
@@ -187,7 +200,7 @@ alias:radio("r");
 flags:radiolow(CMD_ALIVE_USER);
 CMD:radiolow(playerid, params[])
 {
-    if(!Character_HasItem(playerid, gItem_Radio, 1) && Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE)
+    if(!Character_CanUseRadio(playerid))
     	return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi una radio.");
 
     if(Character_GetRadioFrequency(playerid) <= 0)
@@ -210,7 +223,7 @@ alias:radiolow("rlow");
 flags:rtrace(CMD_POLICE);
 CMD:rtrace(playerid, params[])
 {
-    if(!Character_HasItem(playerid, gItem_Radio, 1) && Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE)
+    if(!Character_CanUseRadio(playerid))
     	return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi una radio.");
 
     new inputFrequency;
@@ -234,7 +247,10 @@ stock SendMessageToRadio(issuerid, frequency, color, const msg[], GLOBAL_TAG_TYP
 {
     foreach(new i : Player)
 	{
-		if(Character_IsConnectedToFreq(i, frequency) == 0)
+		if(!Character_CanUseRadio(i))
+			continue;
+		
+		if(!Character_IsConnectedToFreq(i, frequency))
 			continue;
 
 		SendTwoLinesMessage(i, color, msg, ___4);

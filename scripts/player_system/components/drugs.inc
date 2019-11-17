@@ -38,7 +38,7 @@ static PlayerDrugAddictionInfo[MAX_PLAYERS][MAX_PLAYER_DRUGS][e_PlayerDrugAddict
 CMD:drugstats(playerid, params[])
 {
 	new id;
-	if(Account_GetAdminLevel(playerid) > 1)
+	if(Account_GetAdminLevel(playerid) > 2)
 	{
 		if(sscanf(params, "k<u>", id))
 			id = playerid;
@@ -49,7 +49,7 @@ CMD:drugstats(playerid, params[])
 	return 1;
 }
 
-flags:resetdrugstats(CMD_JR_MODERATOR);
+flags:resetdrugstats(CMD_MODERATOR);
 CMD:resetdrugstats(playerid, params[])
 {
 	new id;

@@ -99,7 +99,6 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
     {
         if(playertextid == CharacterModelTextdraw[playerid][i])
         {
-            printf("You clicked on Peppe %d", i);
             CancelSelectTextDraw(playerid);
             return 1;
         }

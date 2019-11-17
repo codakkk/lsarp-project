@@ -36,7 +36,11 @@ hook OnCharacterLoad(playerid)
 		PlayerHouseRent[playerid] = House_Find(hid);
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT house_rent, house_rent_price FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
+	return 1;
+}
 
+hook OnCharacterLoaded(playerid)
+{
 	for_building(building)
 	{
 		if(Building_GetOwnerID(building) == Character_GetID(playerid))
@@ -107,7 +111,7 @@ hook OnCharacterTryBuy(playerid)
 	}	
 	else if(Building_IsValid(building))
 	{
-		if(Building_IsOwned(building))
+		if(!Building_IsOwnable(building) || Building_GetOwnerID(building) > 0)
 			return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
 
 		yield 1;
@@ -200,7 +204,6 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 // Pref callcmd::entra(playerid, ""); instead of Character_Enter because the first makes some considerations.
 stock Character_Enter(playerid)
 {
-	printf("[Character_Enter]: Stock");
 	#pragma unused playerid
 	return 1;
 }

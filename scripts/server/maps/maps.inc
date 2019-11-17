@@ -9,8 +9,14 @@
 
 #include <server\maps\lsa_pwninteriors_28agosto>
 #include <server\maps\lsa_pwninteriors_28agosto_removes>*/
-
+#include <modelsize>
 #include <YSI_Coding\y_hooks>
+
+stock Server_CreateObject(modelid, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz, worldid = -1, interiorid = -1, playerid = -1, Float:streamdistance = 0.0, Float:drawdistance = 0.0)
+{
+	#pragma unused streamdistance, drawdistance
+	return CreateDynamicObject(modelid, x, y, z, rx, ry, rz, worldid, interiorid, playerid, 180 + GetColSphereRadius(modelid));
+}
 
 hook OnPlayerConnect(playerid)
 {
@@ -54,5 +60,6 @@ hook OnGameModeInit()
 	#include "Las_Venturas_Correctional_Facility_Exterior"
 	#include "Las_Venturas_Correctional_Facility_Interior"
 	#include "Las_Venturas_Repairs_Exterior"
+	#include "Cancelli_PD_Medic"
 return 1;
 }

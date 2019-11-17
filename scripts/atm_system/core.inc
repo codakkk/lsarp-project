@@ -92,7 +92,8 @@ CMD:atmid(playerid, params[])
 
 CMD:ritira(playerid, params[])
 {
-    if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_ATM) && Building_GetType(Character_GetBuilding(playerid, true)) != BUILDING_TYPE_BANK)
+    new Building:building = Character_GetBuilding(playerid, true);
+    if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_ATM) && (!Building_IsValid(building) || Building_GetType(building) != BUILDING_TYPE_BANK))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un atm o in banca.");
     new money;
     if(sscanf(params, "d", money))
@@ -112,7 +113,8 @@ CMD:ritira(playerid, params[])
 
 CMD:deposita(playerid, params[])
 {
-    if(Building_GetType(Character_GetBuilding(playerid, true)) != BUILDING_TYPE_BANK)
+    new Building:building = Character_GetBuilding(playerid, true);
+    if(!Building_IsValid(building) || Building_GetType(Character_GetBuilding(playerid, true)) != BUILDING_TYPE_BANK)
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'interno di una banca.");
     new money;
     if(sscanf(params, "d", money))
@@ -305,7 +307,7 @@ stock ATM_Create(Float:x, Float:y, Float:z, interior, world)
     data[RotZ] = 0.0;
     data[Interior] = interior;
     data[World] = world;
-    data[Object] = CreateDynamicObject(19324, x, y, z, 0.0, 0.0, 0.0, world, interior, -1);
+    data[Object] = Server_CreateObject(19324, x, y, z, 0.0, 0.0, 0.0, world, interior, -1);
 
     map_add_arr(AtmMap, id, data);
 
@@ -417,7 +419,7 @@ static ATM_LoadAll()
             cache_get_value_name_int(i, "interior", data[Interior]);
             cache_get_value_name_int(i, "world", data[World]);
 
-            data[Object] = CreateDynamicObject(19324, data[X], data[Y], data[Z], data[RotX], data[RotY], data[RotZ], data[World], data[Interior], -1);
+            data[Object] = Server_CreateObject(19324, data[X], data[Y], data[Z], data[RotX], data[RotY], data[RotZ], data[World], data[Interior], -1);
             data[Pickup] = Pickup_Create(1007, data[ID], data[X], data[Y], data[Z], ELEMENT_TYPE_ATM, data[World], data[Interior]);
             map_add_arr(AtmMap, data[ID], data);
 

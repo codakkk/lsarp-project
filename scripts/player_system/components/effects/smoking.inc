@@ -25,7 +25,11 @@ static
 
 hook OnCharacterClearData(playerid)
 {
-    Character_StopSmoking(playerid);
+    IsSmoking{playerid} = SMOKING_POSITION_NONE;
+    SmokingShots{playerid} = 0;
+    SmokingType{playerid} = SMOKING_TYPE_NONE;
+    DrugEffectTime{playerid} = 0;
+    LastShotTime[playerid] = 0;
     return 1;
 }
 

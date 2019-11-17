@@ -6,7 +6,7 @@
 // ADD POSSIBILITY TO INTERACT WITH PHONEBOOK USERS 
 
 forward OnCharacterLoadPhone(playerid, number);
-forward OnPhoneStopCall(number, Inventory:entityInv, entityId, E_ENTITY_TYPE:entityType, slotid);
+forward OnPhoneStopCall(number, Inventory:entityInv, entityId, EntityType:entityType, slotid);
 
 #include <inventory_system\core>
 #include "components\phonebook"
@@ -86,14 +86,18 @@ stock LoadPhone(playerid, number)
     return 1;
 }
 
-hook OnCharacterLateLoad(playerid)
+hook OnInventoryLoaded(Inventory:inventory)
 {
-    for(new i = 0, j = Character_GetInventorySize(playerid); i < j; ++i)
+    new EntityType:type = Inventory_GetEntityType(inventory), id = Inventory_GetEntityID(inventory);
+    if(type == ENTITY_TYPE_PLAYER && Character_IsLogged(id))
     {
-        if(Character_GetSlotItem(playerid, i) != gItem_Phone)
-            continue;
-        new number = Character_GetSlotExtra(playerid, i, 0);
-        LoadPhone(playerid, number);
+        for(new i = 0, j = Inventory_GetSpace(inventory); i < j; ++i)
+        {
+            if(Inventory_GetSlotItem(inventory, i) != gItem_Phone)
+                continue;
+            new number = Inventory_GetSlotExtra(inventory, i, 0);
+            LoadPhone(id, number);
+        }
     }
     return 1;
 }
@@ -134,7 +138,7 @@ hook OnCharacterDropItem(playerid, slotid)
 
 timer RingPhoneTimer[10000](number)
 {
-    static entityId, E_ENTITY_TYPE:entityType, entityPhoneSlotId;
+    static entityId, EntityType:entityType, entityPhoneSlotId;
     if(World_FindPhoneByNumber(number, entityType, entityId, entityPhoneSlotId))
     {
         //new Inventory:entityInv = Inventory_Get(entityType, entityId);
@@ -151,20 +155,23 @@ timer RingPhoneTimer[10000](number)
     }
 }
 
-//ptask OnCheckPlayerPhone[500](playerid) 
-hook OnPlayerUpdate(playerid)
+ptask OnCheckPlayerPhone[150](playerid) 
+//hook OnPlayerUpdate(playerid)
 {
     if(!Character_IsLogged(playerid))
+        return 1;
+    new Inventory:inventory = Character_GetInventory(playerid);
+    if(!Inventory_IsValid(inventory))
         return 1;
     if(!UsingPhone{playerid})
     {
         new itemid, number;
         for(new i = 0, j = Character_GetInventorySize(playerid); i < j; ++i)
         {
-            itemid = Character_GetSlotItem(playerid, i);
+            itemid = Inventory_GetSlotItem(inventory, i);
             if(itemid != gItem_Phone)
                 continue;
-            number = Phone_GetCallingNumber(Character_GetInventory(playerid), i);
+            number = Phone_GetCallingNumber(inventory, i);
             if(number != 0)
             {
                 UsingPhone{playerid} = true;
@@ -193,73 +200,76 @@ hook OnCharacterTalk(playerid, text[])
 
     new number = Phone_GetCallingNumber(Character_GetInventory(playerid), UsingPhoneSlotID[playerid]);
     
-    new entityId, E_ENTITY_TYPE:entityType, entityPhoneSlotId;
+    new entityId, EntityType:entityType, entityPhoneSlotId;
     
-    World_FindPhoneByNumber(number, entityType, entityId, entityPhoneSlotId);
-    printf("Slot: %d - Number: %d - Entity Type: %d - Entity id: %d", UsingPhoneSlotID[playerid], number, _:entityType, entityId);
-
-    new Inventory:entityInv = Inventory_Get(entityType, entityId);
-
-    new speakerMode = Phone_GetSpeakerPhone(entityInv, entityPhoneSlotId);
-
-    if(entityType == ENTITY_TYPE_DROP)
+    if(World_FindPhoneByNumber(number, entityType, entityId, entityPhoneSlotId))
     {
-        if(speakerMode)
-        {
-            new Float:x, Float:y, Float:z, String:str;
-            Drop_GetPosition(entityId, x, y, z);
-            
-            str = str_format("[Vivavoce] %s dice: %s", Character_GetRolePlayName(playerid), text);
-            
-            SendRangedMessageStr(5.0, x, y, z, Drop_GetVirtualWorld(entityId), Drop_GetInterior(entityId), str, -1, -1, -1, -1, -1);
-        }
-    }
-    else if(entityType == ENTITY_TYPE_PLAYER && Character_IsLogged(entityId))
-    {
-        if(speakerMode)
-            ProxDetectorStr(entityId, 10.0, str_format("[Vivavoce] %s dice: %s", Character_GetRolePlayName(playerid), text), COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false, true);
-        else
-            SendFormattedMessage(entityId, 0xFFFF00FF, "[Telefono] %s dice: %s", Character_GetRolePlayName(playerid), text);
-    }
-    else if(Character_GetEmergencyStatus(playerid) == 1)
-    {
-        if(strfind(text, "polizia", true) != -1)
-        {
-            PlayerEmergencyStatus{playerid} = 2;
-            SendClientMessage(playerid, COLOR_GREY, "[OPERATORE] Descriva l'emergenza in poche parole per il Las Venturas Police Department.");
-        }
-        else if(strfind(text, "medici", true) != -1)
-        {
-            PlayerEmergencyStatus{playerid} = 3;
-            SendClientMessage(playerid, COLOR_GREY, "[OPERATORE] Descriva l'emergenza in poche parole per il Las Venturas Medical Department.");
-        }
-        else SendClientMessage(playerid, COLOR_GREY, "[OPERATORE] Ci dica di cosa ha bisogno (polizia o medici).");
-    }
-    else if(Character_GetEmergencyStatus(playerid) >= 2)
-    {
-        SendClientMessage(playerid, COLOR_GREY, "[OPERATORE] La richiesta è stata presa in carico.");
-        SendFormattedMessage(playerid, COLOR_GREY, "Testo: %s", text);
+        new Inventory:entityInv = Inventory_Get(entityType, entityId);
 
-        new zone[32], Float:x, Float:y, Float:z;
-        GetPlayerPos(playerid, x, y, z);
-        Get2DZoneName(x, y, z, zone, sizeof(zone));
+        new speakerMode = Phone_GetSpeakerPhone(entityInv, entityPhoneSlotId);
 
-        new factionid, type = PlayerEmergencyStatus{playerid} == 2 ? FACTION_TYPE_POLICE : FACTION_TYPE_MEDICAL;
-        
-        new playerNumber = Character_GetUsingPhoneNumber(playerid);
+        if(Phone_GetCallingNumber(Inventory_Get(entityType, entityId), entityPhoneSlotId) == 0)
+            return 1;
 
-        for_map(i : GetFactionsMap())
+        if(entityType == ENTITY_TYPE_DROP)
         {
-            factionid = iter_get_key(i);
-            if(Faction_GetType(factionid) == type)
+            if(speakerMode)
             {
-                Faction_SendMessage(factionid, "** HQ: Chiamata al centralino");
-                Faction_SendMessage(factionid, "Chiamata da: %s - Numero: %d - Zona: %s", Character_GetRolePlayName(playerid), playerNumber, zone);
-                Faction_SendMessage(factionid, "Emergenza: %s", text);
+                new Float:x, Float:y, Float:z, String:str;
+                Drop_GetPosition(entityId, x, y, z);
+                
+                str = str_format("[Vivavoce] %s dice: %s", Character_GetRolePlayName(playerid), text);
+                
+                SendRangedMessageStr(5.0, x, y, z, Drop_GetVirtualWorld(entityId), Drop_GetInterior(entityId), str, -1, -1, -1, -1, -1);
             }
         }
+        else if(entityType == ENTITY_TYPE_PLAYER && Character_IsLogged(entityId))
+        {
+            if(speakerMode)
+                ProxDetectorStr(entityId, 10.0, str_format("[Vivavoce] %s dice: %s", Character_GetRolePlayName(playerid), text), COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false, true);
+            else
+                SendFormattedMessage(entityId, 0xFFFF00FF, "[Telefono] %s dice: %s", Character_GetRolePlayName(playerid), text);
+        }
+        else if(Character_GetEmergencyStatus(playerid) == 1)
+        {
+            if(strfind(text, "polizia", true) != -1)
+            {
+                PlayerEmergencyStatus{playerid} = 2;
+                SendClientMessage(playerid, COLOR_GREY, "[OPERATORE] Descriva l'emergenza in poche parole per il Las Venturas Police Department.");
+            }
+            else if(strfind(text, "medici", true) != -1)
+            {
+                PlayerEmergencyStatus{playerid} = 3;
+                SendClientMessage(playerid, COLOR_GREY, "[OPERATORE] Descriva l'emergenza in poche parole per il Las Venturas Medical Department.");
+            }
+            else SendClientMessage(playerid, COLOR_GREY, "[OPERATORE] Ci dica di cosa ha bisogno (polizia o medici).");
+        }
+        else if(Character_GetEmergencyStatus(playerid) >= 2)
+        {
+            SendClientMessage(playerid, COLOR_GREY, "[OPERATORE] La richiesta è stata presa in carico.");
+            SendFormattedMessage(playerid, COLOR_GREY, "Testo: %s", text);
 
-        Character_StopCall(playerid, UsingPhoneSlotID[playerid]);
+            new zone[32], Float:x, Float:y, Float:z;
+            GetPlayerPos(playerid, x, y, z);
+            Get2DZoneName(x, y, z, zone, sizeof(zone));
+
+            new factionid, type = PlayerEmergencyStatus{playerid} == 2 ? FACTION_TYPE_POLICE : FACTION_TYPE_MEDICAL;
+            
+            new playerNumber = Character_GetUsingPhoneNumber(playerid);
+
+            for_map(i : GetFactionsMap())
+            {
+                factionid = iter_get_key(i);
+                if(Faction_GetType(factionid) == type)
+                {
+                    Faction_SendMessage(factionid, "** HQ: Chiamata al centralino");
+                    Faction_SendMessage(factionid, "Chiamata da: %s - Numero: %d - Zona: %s", Character_GetRolePlayName(playerid), playerNumber, zone);
+                    Faction_SendMessage(factionid, "Emergenza: %s", text);
+                }
+            }
+
+            Character_StopCall(playerid, UsingPhoneSlotID[playerid]);
+        }
     }
     return 1;
 }
@@ -309,6 +319,9 @@ CMD:chiama(playerid, params[])
     if(sscanf(params, "k<slotid>s[9]", slot, norn))
         return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /chiama <slot> <numero/nome rubrica>");
 
+    if(!Character_HasPhoneInSlot(playerid, slot))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai un cellulare in questo slot.");
+
     Character_StartCall(playerid, slot, norn);
     return 1;
 }
@@ -335,7 +348,7 @@ CMD:rispondi(playerid, params[])
     Phone_SetRinging(playerInventory, slot, false);
     Phone_SetIncomingFromNumber(playerInventory, slot, 0);
 
-    new entityId, E_ENTITY_TYPE:entityType, entityPhoneSlotId;
+    new entityId, EntityType:entityType, entityPhoneSlotId;
     World_FindPhoneByNumber(Phone_GetCallingNumber(playerInventory, slot), entityType, entityId, entityPhoneSlotId);
 
     if(entityType == ENTITY_TYPE_PLAYER)
@@ -362,6 +375,8 @@ CMD:chiudi(playerid, params[])
     new slot;
     if(sscanf(params, "k<slotid>", slot))
         return SendClientMessage(playerid, COLOR_ERROR, "(/ch)iudi <slotid>");
+    if(!Character_HasPhoneInSlot(playerid, slot))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai un cellulare in questo slot.");
     Character_StopCall(playerid, slot);
     return 1;
 }
@@ -449,25 +464,22 @@ stock Character_StartCall(playerid, slotid, textNumber[])
         return 1;
     }
 
-    new entityId, E_ENTITY_TYPE:entityType, entityPhoneSlotId;
+    new entityId, EntityType:entityType, entityPhoneSlotId;
     
     if(!World_FindPhoneByNumber(number, entityType, entityId, entityPhoneSlotId))
     {
-        inline OnSearch()
+        await mysql_aquery_s(gMySQL, str_format("SELECT * FROM `phone_data` WHERE number = '%d'", number), true);
+        if(cache_num_rows() > 0)
         {
-            if(cache_num_rows() > 0)
-            {
-                SendClientMessage(playerid, COLOR_ERROR, "[Operatore] Il numero inserito non è al momento raggiungibile. Riprova più tardi.");
-                Registry_SetReceiverState(callid, CALL_STATE_NOT_READ);
-                Registry_Save(callid);
-            }
-            else
-            {
-                SendClientMessage(playerid, COLOR_ERROR, "[Operatore] Il numero inserito non esiste.");
-            }
-            Character_StopCall(playerid, slotid);
+            SendClientMessage(playerid, COLOR_ERROR, "[Operatore] Il numero inserito non è al momento raggiungibile. Riprova più tardi.");
+            Registry_SetReceiverState(callid, CALL_STATE_NOT_READ);
+            Registry_Save(callid);
         }
-        MySQL_TQueryInline(gMySQL, using inline OnSearch, "SELECT * FROM `phone_data` WHERE number = '%d'", number);
+        else
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "[Operatore] Il numero inserito non esiste.");
+        }
+        Character_StopCall(playerid, slotid);
         return 0;
     }
 
@@ -528,13 +540,13 @@ stock Character_StopCall(playerid, slotid)
 {
     new Inventory:playerInventory = Character_GetInventory(playerid);
     if(!Phone_IsBusy(playerInventory, slotid))
-        return 1;
+        return SendClientMessage(playerid, COLOR_ERROR, "Questo cellulare non ha una chiamata in corso.");
 
     new 
         playerNumber = Inventory_GetSlotExtra(playerInventory, slotid, 0),
         callingNumber = Phone_GetCallingNumber(playerInventory, slotid);
 
-    new entityId, E_ENTITY_TYPE:entityType, phoneSlotId;
+    new entityId, EntityType:entityType, phoneSlotId;
     if(World_FindPhoneByNumber(callingNumber, entityType, entityId, phoneSlotId))
     {
         new Inventory:entityInv = Inventory_Get(entityType, entityId);
@@ -585,7 +597,10 @@ stock Server_GeneratePhoneNumber()
     new number = 30000000 + random(9999999);
     new Cache:cache = mysql_query_f(gMySQL, true, "SELECT id WHERE number = '%d'", number);
     if(cache_num_rows() > 0)
+    {
+        cache_delete(cache);
         return Server_GeneratePhoneNumber();
+    }
     cache_delete(cache);
     return number;
 }
@@ -673,7 +688,7 @@ stock Character_FindByPhoneNumber(number)
     return p;
 }
 
-stock bool:World_FindPhoneByNumber(number, &E_ENTITY_TYPE:entityType, &entityId, &phoneSlotId)
+stock bool:World_FindPhoneByNumber(number, &EntityType:entityType, &entityId, &phoneSlotId)
 {
     return World_FindItem(gItem_Phone, number, entityType, entityId, phoneSlotId);
 }
@@ -863,7 +878,7 @@ static Character_ShowPhoneInfo(playerid, slotid)
     
     new number = Character_GetSlotExtra(playerid, slotid, 0);
 
-    await mysql_aquery_s(gMySQL, str_format("SELECT created_at FROM `phone_data` WHERE number = '%d'", number));
+    await mysql_aquery_s(gMySQL, str_format("SELECT created_at FROM `phone_data` WHERE number = '%d'", number), .parallel = true);
 
     if(cache_num_rows() <= 0)
         return SendClientMessage(playerid, COLOR_ERROR, "Il cellulare non ha un numero valido."), 0;

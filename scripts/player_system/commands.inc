@@ -178,10 +178,10 @@ CMD:aiuto(playerid, params[])
 	SendClientMessage(playerid, 0xCCE6E6FF, "_______________www.lv-rp.it_______________");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[ACCOUNT] /stats /inv /oggetto /hotkeys /lostitems /zpoints");
     SendClientMessage(playerid, 0xCCE6E6FF, "[GENERALE]: /luoghi /paga /time /compra /id /cellinfo /chiama /bussa /blindfold /sa /animlist");
-    SendClientMessage(playerid, 0xCCE6E6FF, "[GENERALE]: (/pub)blicita /documenti /report /stilechat /stilelotta /stilecamminata");
+    SendClientMessage(playerid, 0xCCE6E6FF, "[GENERALE]: (/pub)blicita /documenti /report /stilechat /stilelotta /stilecamminata /multe");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[CHAT]: (/w)hisper (/s)hout /me /b(OOC) /do /cw /low /pm(OOC) /r /melow /ame /dolow");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[BANCA]: /bilancio /ritira /deposita /bonifico /ritirastipendio");
-	SendClientMessage(playerid, 0xCCE6E6FF, "[HELP]: /cellcmds /casacmds (/v)ehicle /furniturecmds /invcmds /fcmds");
+	SendClientMessage(playerid, 0xCCE6E6FF, "[HELP]: /cellcmds /casacmds (/v)ehicle /furniturecmds /invcmds /fcmds /vcmds");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[HELP]: /radiocmds /businesscmds (/dom)anda /aiutami /aiuto");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[TOG/BLOCK]: /tog /tog (f)(hud)(pm)(ooc) /tog all /noads /blockb /blockpm /clearchat");
 	if(Account_GetAdminLevel(playerid) > 0)
@@ -291,7 +291,7 @@ CMD:lasciacarcere(playerid, params[])
 	Character_SetJailTime(playerid, 0);
 	Character_SetICJailed(playerid, false);
 
-	SetPlayerPos(playerid, 1175.41, -2065.55, 69.00);
+	SetPlayerPos(playerid, 957.2038, 2401.2576, 10.8203);
 	Character_SetVirtualWorld(playerid, 0);
 	SetPlayerInterior(playerid, 0);
 	SendClientMessage(playerid, -1, "Hai lasciato il carcere.");

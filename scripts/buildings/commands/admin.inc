@@ -14,7 +14,7 @@ CMD:gotobuilding(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "d", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gotobuilding [buildingid]");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: (/gotob)uilding [buildingid]");
     
     new Building:building = Building_Find(id);
 
@@ -28,6 +28,7 @@ CMD:gotobuilding(playerid, params[])
 	Character_SetVirtualWorld(playerid, Building_GetEnterWorld(building));
 	return 1;
 }
+alias:gotobuilding("gotob");
 
 flags:abcreate(CMD_ADMIN);
 CMD:abcreate(playerid, params[])
@@ -41,7 +42,7 @@ CMD:abcreate(playerid, params[])
     return 1;
 }
 
-flags:abdelete(CMD_DEVELOPER);
+flags:abdelete(CMD_ADMIN);
 CMD:abdelete(playerid, params[])
 {
     new id;

@@ -31,7 +31,6 @@ CMD:stilechat(playerid, params[])
 
 hook OnCharacterSpeak(playerid, text[])
 {
-	printf("%s", text);
 	if(Player_IsAdminDuty(playerid))
 	{
 		callcmd::b(playerid, text);

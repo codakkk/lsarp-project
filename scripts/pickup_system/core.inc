@@ -99,13 +99,14 @@ stock Pickup_GetInfo(pickupid, &GLOBAL_TAG_TYPES:id, &E_ELEMENT_TYPE:type)
 
 stock Character_GetNearestPickup(playerid, &GLOBAL_TAG_TYPES:elementid, &E_ELEMENT_TYPE:type)
 {
-    if(!IsPlayerConnected(playerid) || !Character_IsLogged(playerid) || LastPickup[playerid] == -1)
+    //printf("Last Pickup: %d", LastPickup[playerid]);
+    if(!Character_IsLogged(playerid) || LastPickup[playerid] == -1)
         return 0;
     
     new Float:x, Float:y, Float:z, pickupid = LastPickup[playerid];
     Pickup_GetPosition(pickupid, x, y, z);
 
-    if(GetPlayerDistanceFromPoint(playerid, x, y, z) >= 2.0)
+    if(GetPlayerDistanceFromPoint(playerid, x, y, z) > 3.0)
         return 0;
     
     return Pickup_GetInfo(pickupid, elementid, type);

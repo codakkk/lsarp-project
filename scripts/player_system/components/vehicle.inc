@@ -134,7 +134,7 @@ CMD:vehicle(playerid, params[])
 	}
 	else if(commandHash == _I<lista> || commandHash == _I<list>)
 	{
-		return Character_ShowVehicleList(playerid, playerid);
+		return Character_ShowVehicleList(playerid, playerid, true);
 	}
 	else if(commandHash == _I<spawn>)
 	{
@@ -172,7 +172,7 @@ CMD:vehicle(playerid, params[])
 		if(vehicleid <= 0)
 			return SendClientMessage(playerid, COLOR_ERROR, "(/v)eicolo respawn <vehicleid>");
 		
-		if(Vehicle_GetFaction(vehicleid) != Character_GetFaction(playerid))
+		if(!Faction_IsValid(Vehicle_GetFaction(vehicleid)) || Vehicle_GetFaction(vehicleid) != Character_GetFaction(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Il veicolo non fa parte della tua fazione.");
 		
 		new Float:x, Float:y, Float:z;
@@ -368,7 +368,6 @@ public LoadCharacterVehicle(playerid, slotid)
 	if(!canSpawn)
 		return 0;
 
-	printf("SELECT * FROM `vehicles` WHERE id = '%d'", id);
 	mysql_tquery_f_callback(gMySQL, #Vehicle_LoadAll, "", "SELECT * FROM `vehicles` WHERE id = '%d'", id);
 
 	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai spawnato il tuo veicolo (%s). Segui il checkpoint per trovarlo.", Vehicle_GetNameFromModel(modelid));
@@ -386,7 +385,7 @@ stock Character_ShowVehicleList(showToPlayer, playerid, bool:forceTextOnly = fal
 	new 
 		dbid, modelid, plate[9], vehicleid = 0,
 		String:string = str_new("");
-	
+	pawn_guard(string);
 	await mysql_aquery_s(gMySQL, str_format("SELECT id, model, plate FROM `vehicles` WHERE owner_id = '%d'", Character_GetID(playerid)));
 
 	new rows = cache_num_rows();
@@ -499,9 +498,15 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
 				Internal_UpdateFuelText(playerid, vehicleid);
 				TextDraw_ShowFuel(playerid, true);
 			}
-			if(Vehicle_GetOwnerID(vehicleid) > 0)
+			if(Player_IsAdminDuty(playerid) && Vehicle_GetOwnerID(vehicleid) > 0)
 			{
-				SendFormattedMessage(playerid, COLOR_GREEN, "(( Questo veicolo (%s) appartiene a %s ))", Vehicle_GetName(vehicleid), Vehicle_GetOwnerName(vehicleid));
+				await mysql_aquery_s(gMySQL, str_format("SELECT name FROM `characters` WHERE id = '%d'", Vehicle_GetOwnerID(vehicleid)), .parallel=true);
+				if(cache_num_rows() > 0)
+				{
+					new name[MAX_PLAYER_NAME];
+					cache_get_value_name(0, "name", name);
+					SendFormattedMessage(playerid, COLOR_GREEN, "(( Questo veicolo (%s) appartiene a %s ))", Vehicle_GetName(vehicleid), name);
+				}
 			}
 		}
 		SetPlayerArmedWeapon(playerid, 0);

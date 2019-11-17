@@ -79,6 +79,11 @@ static ShowHouseWithdrawMoneyDialog(playerid, House:house)
     new response[e_DIALOG_RESPONSE_INFO];
     for(;;)
     {
+        if(!Character_DoesOwnHouse(playerid, house))
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "Solo il proprietario puo' utilizzare questa funzionalità.");
+            break;
+        }
         await_arr(response) ShowPlayerAsyncDialog(playerid, DIALOG_STYLE_INPUT, "Deposita soldi", "Inserisci l'ammontare di soldi che vuoi depositare in casa.", "Deposita", "Annulla");
 
         if(!response[E_DIALOG_RESPONSE_Response]) break;
@@ -153,7 +158,7 @@ static ShowSellHouseToPlayerDialog(playerid, House:house)
         if(!response[E_DIALOG_RESPONSE_Response]) break;
 
         new id, price;
-        if(sscanf(response[E_DIALOG_RESPONSE_InputText], "k<u>d", id, price)) continue;
+        if(sscanf(response[E_DIALOG_RESPONSE_InputText], "k<u>d", id, price) || id == playerid) continue;
 
         if(price < 0 || price > Character_GetMoney(id)) 
         {
@@ -338,16 +343,17 @@ static HandleHouseRentActionOnPlayer(playerid, House:house, playerDatabaseId, li
             if(playerDatabaseId == Character_GetID(i))
             {
                 SendClientMessage(playerid, COLOR_ORANGE, "Il proprietario della casa di cui eri affittuario ti ha cacciato.");
-                Character_SetRentHouse(playerid, INVALID_HOUSE);
+                Character_SetRentHouse(i, INVALID_HOUSE);
+                Character_SetHouseRentPrice(i, 0);
                 notified = true;
                 break;
             }
         }
-        mysql_pquery_f(gMySQL, "UPDATE `characters` SET house_rent = '%d', house_rent_price = '0' WHERE id = '%d'", INVALID_HOUSE_ID, playerDatabaseId);
         SendClientMessage(playerid, COLOR_ORANGE, "Hai cacciato il giocatore da casa tua.");
         if(notified == false)
         {
             SendNotification(playerDatabaseId, "Il proprietario della casa di cui eri affittuario ti ha cacciato.");
+            mysql_pquery_f(gMySQL, "UPDATE `characters` SET house_rent = '%d', house_rent_price = '0' WHERE id = '%d'", INVALID_HOUSE_ID, playerDatabaseId);
         }
     }
 }

@@ -25,6 +25,7 @@ hook OnCharacterSpawned(playerid)
         skinid = 1;
         printf("No skin found for player id %d. Set skin id 1.");
     }
+    PlayerLastSkin[playerid] = 0;
     mysql_pquery_f(gMySQL, "UPDATE `characters` SET last_skin = '%d' WHERE id = '%d'", 0, Character_GetID(playerid));
     SetPlayerSkin(playerid, skinid);
     return 1;
@@ -61,4 +62,10 @@ stock Character_SetSkin(playerid, skinid)
 stock Character_GetSkin(playerid)
 {
     return PlayerSkin[playerid];
+}
+
+stock Character_SetTempSkin(playerid, skinid)
+{
+    mysql_pquery_f(gMySQL, "UPDATE `characters` SET last_skin = '%d' WHERE id = '%d'", skinid, Character_GetID(playerid));
+    return 1;
 }

@@ -200,21 +200,23 @@ stock LoadAccountData(playerid)
 forward OnPasswordCheck(playerid, bool:success);
 public OnPasswordCheck(playerid, bool:success)
 {
-	printf("OnPasswordCheck");
 	if(success)
 	{
+		new name[MAX_PLAYER_NAME];
+		GetPlayerName(playerid, name, sizeof(name));
+		
+
 		inline OnLoad()
 		{
+			//await mysql_aquery_s(gMySQL, str_format("SELECT * FROM `accounts` WHERE LOWER(name) = LOWER('%e')", name));
+			//printf("Success after query");
 			CheckForAccountStatus(playerid);
 			LoadAccountData(playerid);
 
 			Account_SetLogged(playerid, true);
 
 			CallLocalFunction(#OnAccountLogin, "d", playerid);
-			printf("Success");
 		}
-		new name[MAX_PLAYER_NAME];
-		GetPlayerName(playerid, name, sizeof(name));
 		MySQL_PQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `accounts` WHERE LOWER(name) = LOWER('%e')", name);
 
 	}

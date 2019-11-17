@@ -802,7 +802,7 @@ stock Building:Character_GetBuilding(playerid, bool:inside)
 	else
 	{
 		new Building:temp, E_ELEMENT_TYPE:type;
-		if(Character_GetNearestPickup(playerid, temp, type) && (type == ELEMENT_TYPE_BUILDING_ENTRANCE || type == ELEMENT_TYPE_BUILDING_EXIT))
+		if(Character_GetNearestPickup(playerid, temp, type) && (type == ELEMENT_TYPE_BUILDING_ENTRANCE))
 			building = temp;
 	}
 	return building;
@@ -835,12 +835,30 @@ CMD:businesscmds(playerid, params[])
 alias:businesscmds("bizcmds");
 
 hook function Character_Enter(playerid)
-{   
-	printf("[Character_Enter]: Building");
+{
 	if(IsPlayerInAnyVehicle(playerid))
 		return continue(playerid);
+		
 	new Building:building, E_ELEMENT_TYPE:type;
-    if(Character_GetNearestPickup(playerid, building, type) && Building_IsValid(building))
+	new ret = Character_GetNearestPickup(playerid, building, type);
+	if(!ret)
+	{
+		if(Character_GetNearBuildingID(playerid) > 0)
+		{
+			new Building:btest = Building_Find(Character_GetNearBuildingID(playerid));
+			if(Building_IsValid(btest))
+			{
+				new Float:x, Float:y, Float:z;
+				Building_GetExitPos(btest, x, y, z);
+				if(IsPlayerInRangeOfPoint(playerid, 3.0, x, y, z))
+				{
+					building = btest;
+					type = ELEMENT_TYPE_BUILDING_EXIT;
+				}
+			}
+		}
+	}
+    if(Building_IsValid(building))
     {
 		if(Building_IsLocked(building))
 			return GameTextForPlayer(playerid, "~r~Porta Chiusa", 5000, 1), 0;

@@ -184,7 +184,6 @@ stock Faction_ShowOptions(factionid, playerid)
 	if(!Faction_IsValid(factionid) || Account_GetAdminLevel(playerid) < 5)
 		return 0;
 	pAdminSelectedFaction{playerid} = factionid;
-	printf("Selected: %d", factionid);
 	new String:content = @("Modifica Nome\nModifica Acronimo\nModifica Tipo\nAggiungi Rank\nModifica Ranks\nModifica Skins\nSpawn (Posizione Corrente)\nColore\n{FF0000}Resetta Fazione{FFFFFF}");
 	Dialog_Show_s(playerid, Dialog_FactionActions, DIALOG_STYLE_LIST, Faction_GetNameStr(pAdminSelectedFaction{playerid}), content, "Avanti", "Indietro");
 	return 1;

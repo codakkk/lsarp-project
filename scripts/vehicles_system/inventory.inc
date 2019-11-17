@@ -14,7 +14,7 @@ hook OnCharacterClearData(playerid)
 
 stock Inventory:Vehicle_InitializeInventory(vehicleid)
 {
-    new Inventory:inv = Inventory_New(ENTITY_TYPE_VEHICLE, vehicleid, 2);
+    new Inventory:inv = Inventory_New(ENTITY_TYPE_VEHICLE, vehicleid, 10);
     return inv;
 }
 
@@ -38,9 +38,7 @@ stock Vehicle_IsValidSlot(vehicleid, slotid)
 stock bool:Vehicle_HasInventory(vehicleid)
 {
 	new Inventory:inv = Vehicle_GetInventory(vehicleid);
-	if(inv == Inventory:0)
-		return false;
-    return Inventory_IsValid(Vehicle_GetInventory(vehicleid));
+    return Inventory_IsValid(inv);
 }
 
 hook OnVehicleUnloaded(vehicleid)

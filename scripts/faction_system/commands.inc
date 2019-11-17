@@ -118,63 +118,7 @@ CMD:afactioncmds(playerid, params[])
 	return 1;
 }
 
-flags:setfaction(CMD_MODERATOR);
-CMD:setfaction(playerid, params[])
-{
-	new id, factionid, rankid;
-	if(sscanf(params, "k<u>dd", id, factionid, rankid))
-	{
-		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setfaction [playerid/partofname] <factionid> <rank (1 - 10)>");
-		SendClientMessage(playerid, COLOR_ERROR, "Usa /afactionslist per una lista completa.");
-		return 1;	
-	}
-	if(!Character_IsLogged(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
-
-	if(!Faction_IsValid(factionid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Fazione non valida. Usa /afactionslist per una lista completa.");
-
-	if(!Faction_HasRank(factionid, rankid))
-		return SendClientMessage(playerid, COLOR_ERROR, "Rank non valido.");
-	
-	Character_OffDuty(id);
-
-	Character_SetFaction(id, factionid);
-	Character_SetRank(id, rankid);
-
-	new name[MAX_FACTION_NAME], rankName[MAX_FACTION_RANK_NAME];
-	Faction_GetName(factionid, name);
-	Faction_GetRankName(factionid, rankid, rankName);
-
-	SendFormattedMessage(id, COLOR_GREEN, "%s (%d) ti ha settato nella fazione %s. Rank: %s", Account_GetName(playerid), playerid, name, rankName);
-	SendMessageToAdmins(0, COLOR_ADMINCMD, "AdmCmd: %s (%d) ha settato %s (%d) nella fazione %s. Rank: %s", Account_GetName(playerid), playerid, Character_GetOOCName(id), id, name, rankName);
-	return 1;
-}
-
-flags:afactionkick(CMD_MODERATOR);
-CMD:afactionkick(playerid, params[])
-{
-	new id;
-	if(sscanf(params, "k<u>", id))
-	{
-		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /afactionkick [playerid/partofname]");
-		return 1;	
-	}
-	if(!Character_IsLogged(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è connesso.");
-	if(!Faction_IsValid(Character_GetFaction(playerid)))
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è in una fazione.");
-	
-	Character_OffDuty(id);
-
-	Character_SetFaction(id, INVALID_FACTION_ID);
-	Character_SetRank(id, 0);
-	SendClientMessageStr(id, COLOR_GREEN, str_format("%s (%d) ti ha kickato dalla tua fazione.", Account_GetName(playerid), playerid));
-	SendMessageToAdminsStr(0, COLOR_YELLOW, str_format("AdmCmd: %s (%d) ha kickato %s (%d) dalla sua fazione.", Account_GetName(playerid), playerid, Character_GetOOCName(id), id));
-	return 1;
-}
-
-flags:afactionslist(CMD_MODERATOR);
+flags:afactionslist(CMD_DEVELOPER);
 CMD:afactionslist(playerid, params[])
 {
 	return Faction_ShowList(playerid, false);

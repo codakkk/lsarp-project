@@ -413,6 +413,8 @@ stock String:Item_GetDialogTitle(itemid, amount, extra)
 stock Character_GetSlotItem(playerid, slotid)
 {
 	new Inventory:playerInv = Character_GetInventory(playerid);
+	if(!Inventory_IsValid(playerInv))
+		return 0;
 	return Inventory_GetSlotItem(playerInv, slotid);
 }
 
@@ -491,9 +493,11 @@ stock Character_DropItem(playerid, slotid, amount)
 		return SendClientMessage(playerid, COLOR_ERROR, "Oggetto non valido o non hai abbastanza quantità.");
 	if(amount < 1 || amount > slotAmount)
 		return SendClientMessage(playerid, COLOR_ERROR, "La quantità inserita non è valida.");
+	
 	new Float:x, Float:y, Float:z;
 	GetPlayerPos(playerid, x, y, z);
 	GetXYInFrontOfPlayer(playerid, x, y, 1.5);
+
 	new result = Drop_Create(Character_GetOOCNameStr(playerid), x, y, z - 0.9, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), itemid, amount, extra, Inventory_GetSlotTempExtraMap(Character_GetInventory(playerid), slotid));
 	if(result != -1)
 	{

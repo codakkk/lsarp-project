@@ -10,7 +10,7 @@ stock Character_CharacterAMe(playerid, otherid, text[], GLOBAL_TAG_TYPES:...)
 
 stock Character_CharacterMe(playerid, otherid, text[], GLOBAL_TAG_TYPES:...)
 {
-    if(!Character_IsLogged(playerid) || strlen(text) > 256)
+    if(!Character_IsLogged(playerid) || !Character_IsLogged(otherid) || strlen(text) > 256)
 	   return 0;
     new 
 	   formattedText[256];

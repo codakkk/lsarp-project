@@ -189,6 +189,8 @@ Dialog:BuildingInvDepSelectItem(playerid, response, listitem, inputtext[])
 		itemid = Character_GetSlotItem(playerid, listitem),
 		amount = Character_GetSlotAmount(playerid, listitem)
 	;
+	if(itemid == 0)
+		return Internal_ShowBuildingSlotAction(playerid, Internal_GetSlotID(playerid));
 	if(ServerItem_IsUnique(itemid) || amount == 1)
 	{
 		if(!Inventory_HasSpaceForItem(Internal_GetInventory(playerid), itemid, amount))

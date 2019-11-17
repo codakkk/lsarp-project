@@ -34,7 +34,7 @@ hook OnPlayerStreamIn(playerid, forplayerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-flags:masks(CMD_JR_MODERATOR);
+flags:masks(CMD_MODERATOR);
 CMD:masks(playerid, params[])
 {
 	new c = 0;

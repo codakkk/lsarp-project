@@ -43,7 +43,6 @@
 
 #define CUSTOM_TAG_TYPES Building,House,JobType
 
-#define CreateDynamicObjectWithHighDD CreateDynamicObject
 
 #define FIXES_Single
 #define FIX_const 0
@@ -172,7 +171,7 @@ enum (<<= 1)
 #include <jobs\core>
 
 // ========== [ DIALOGS ] ==========
-#include <player_system\dialogs>
+
 #include <YSI_Coding\y_hooks> // Place hooks after this. Everything included before, gets hooked first
 
 forward OnCharacterDamageDone(playerid, Float:amount, issuerid, weaponid, bodypart);
@@ -263,16 +262,12 @@ public OnPlayerPrepareDeath(playerid, animlib[32], animname[32], &anim_lock, &re
 
 public OnPlayerDamage(&playerid, &Float:amount, &issuerid, &weapon, &bodypart)
 {
-	printf("Damage0");
 	if(Player_IsAdminDuty(playerid))
 		return 0;
-	printf("Damage1");
 	if(Character_IsDead(playerid))
 		return 0;
-	printf("Damage2");
 	if(Character_IsInvincible(playerid))
 	{
-		printf("Invincible");
 		amount = 0.0;
 		return 0;
 	}
@@ -531,9 +526,9 @@ forward OnCharacterSpeak(playerid, text[]);
 public OnPlayerText(playerid, text[])
 {
 	if(!Character_IsLogged(playerid) || isnull(text) || isempty(text))
-		return Y_HOOKS_BREAK_RETURN_0;
+		return 0;
 	CallLocalFunction(#OnCharacterSpeak, "ds", playerid, text);
-	return Y_HOOKS_CONTINUE_RETURN_0;
+	return 0;
 }
 
 hook OnPlayerDisconnect(playerid, reason)

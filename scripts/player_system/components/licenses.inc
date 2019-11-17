@@ -16,10 +16,10 @@ static enum E_DRIVE_LICENSE_I
 
 static LicensesData[][E_DRIVE_LICENSE_I] =
 {
-    {1723.3232, -1867.1775, 13.5705, -1, -1, LICENSE_TYPE_DRIVER, 3000},
-    {1723.3232, -1870.1775, 13.5705, -1, -1, LICENSE_TYPE_BOAT, 6000},
-    {1723.3232, -1873.1775, 13.5705, -1, -1, LICENSE_TYPE_FLY, 12000},
-    {1723.3232, -1876.1775, 13.5705, -1, -1, LICENSE_TYPE_WEAPON, 0}
+    {1165.6710,1346.9652,10.9219, -1, -1, LICENSE_TYPE_DRIVER, 3000},
+    {2293.9709,523.9048,1.7944, -1, -1, LICENSE_TYPE_BOAT, 6000},
+    {1319.0269,1250.9351,10.8203, -1, -1, LICENSE_TYPE_FLY, 12000}
+    //{1723.3232, -1876.1775, 13.5705, -1, -1, LICENSE_TYPE_WEAPON, 0}
 };
 
 static 
@@ -144,7 +144,7 @@ CMD:mostradocumenti(playerid, params[])
     SendFormattedMessage(id, -1, "- Patente nautica: %s", Character_HasBoatLicense(playerid) ? ("Si") : ("No"));
     SendFormattedMessage(id, -1, "- Patente di volo: %s", Character_HasFlyLicense(playerid) ? ("Si") : ("No"));
     SendFormattedMessage(id, -1, "- Porto d'armi: %s", Character_HasWeaponLicense(playerid) ? ("Si") : ("No"));
-    SendClientMessage(playerid, COLOR_GREEN, "___________________________________");
+    SendClientMessage(id, COLOR_GREEN, "___________________________________");
     return 1;
 }
 alias:mostradocumenti("md");

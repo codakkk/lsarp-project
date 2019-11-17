@@ -202,7 +202,7 @@ Dialog:Dialog_DealershipVehicles(playerid, response, listitem, inputtext[])
 
 	if(Player_HasHotKeysEnabled(playerid))
 	{
-		SendClientMessage(playerid, COLOR_GREEN, "Scegli il colore del veicolo. Usa le freccette o i tasti del mouse per scegliere (tieni premuto).");
+		SendClientMessage(playerid, COLOR_GREEN, "Scegli il colore del veicolo (/colore). Usa le freccette o i tasti del mouse per scegliere (tieni premuto).");
 		SendClientMessage(playerid, COLOR_GREEN, "Per acquistare il veicolo premi INVIO (oppure /compra).");
 		SendClientMessage(playerid, COLOR_GREEN, "Per annullare l'acquisto premi ALT (oppure /annulla).");
 	}
@@ -283,3 +283,19 @@ static Character_IsNearDealership(playerid, dealershipid)
 	Dealership_GetPosition(dealershipid, x, y, z);
 	return IsPlayerInRangeOfPoint(playerid, 5.0, x, y, z);
 }
+
+CMD:colore(playerid, params[])
+{
+	if(!Character_IsBuyingVehicle(playerid))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non stai acquistando un veicolo.");
+	new c1, c2;
+	if(sscanf(params, "dd", c1, c2))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /colore <colore 1> <colore 2>");
+	new vehicleid = GetPlayerVehicleID(playerid);
+	if(vehicleid <= 0)
+		return 1;
+	if(c1 < 0 || c1 >= sizeof(VehicleColorNum1) || c2 < 0 || c2 >= sizeof(VehicleColorNum2))
+		return SendClientMessage(playerid, COLOR_ERROR, "I colori vanno da 0 a 255.");
+	Vehicle_SetColors(vehicleid, c1, c2);
+	return 1;
+}	

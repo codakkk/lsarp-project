@@ -15,11 +15,12 @@ static
 
 hook OnCharacterClearData(playerid)
 {
-    callcmd::stoprifornimento(playerid, "");
-    /*stop Timer[playerid];
+    IsDoingGas[playerid] = INVALID_BUILDING;
+    Litres{playerid} = 0;
+    stop Timer[playerid];
+    if(Timer[playerid] != Timer:0)
+        stop Timer[playerid];
     Timer[playerid] = Timer:0;
-    IsDoingGas[playerid] = INVALID_BUILDING_ID;
-    Litres{playerid} = 0;*/
     return 1;
 }
 
@@ -76,8 +77,8 @@ CMD:rifornisci(playerid, params[])
     if(Vehicle_GetFuel(vehicleid) > 100.0 - PETROL_LITRE_DEF)
         return SendClientMessage(playerid, COLOR_ERROR, "Il veicolo ha già il massimo di benzina.");
 
-    if(GasStation_GetFuelState(building) < PETROL_LITRE_DEF)
-        return SendClientMessage(playerid, COLOR_ERROR, "La stazione di benzina non puo' rifornirti il veicolo poiché ha finito le risorse.");
+    //if(GasStation_GetFuelState(building) < PETROL_LITRE_DEF)
+        //return SendClientMessage(playerid, COLOR_ERROR, "La stazione di benzina non puo' rifornirti il veicolo poiché ha finito le risorse.");
 
     SendFormattedMessage(playerid, COLOR_GREEN, "Stai rifornendo il tuo veicolo. Il prezzo al litro è $%d (compreso di accise).", GasStation_GetFuelPrice(building));
     SendClientMessage(playerid, COLOR_GREEN, "Digita \"/stoprifornimento\" per fermarti.");
@@ -110,12 +111,12 @@ timer GetVehicleLitre[1000](playerid, vehicleid)
         return 1;
     }
     new Building:building = IsDoingGas[playerid];
-    if(GasStation_GetFuelState(building) <= PETROL_LITRE_DEF)
+    /*if(GasStation_GetFuelState(building) <= PETROL_LITRE_DEF)
     {
         SendClientMessage(playerid, COLOR_ERROR, "La stazione di benzina ha finito le proprie risorse.");
         callcmd::stoprifornimento(playerid, "");
         return 1;
-    }
+    }*/
     new Float:x, Float:y, Float:z;
     Building_GetEnterPos(building, x, y, z);
 
@@ -212,7 +213,6 @@ stock Float:GasStation_GetFuelState(Building:building)
 
 hook function Character_Enter(playerid)
 {
-    printf("[Character_Enter]: Gas Station");
     new Building:building, E_ELEMENT_TYPE:type;
     Character_GetNearestPickup(playerid, building, type);
     if(type == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_IsValid(building) && Building_GetType(building) == BUILDING_TYPE_GAS_STATION)

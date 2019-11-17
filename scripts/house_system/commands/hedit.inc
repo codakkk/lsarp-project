@@ -1,6 +1,6 @@
 
 #include <YSI_Coding\y_hooks>
-flags:hedit(CMD_JR_MODERATOR);
+flags:hedit(CMD_ADMIN);
 CMD:hedit(playerid, params[])
 {
     new houseid, command[16], value, value2;

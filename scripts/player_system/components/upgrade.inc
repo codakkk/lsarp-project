@@ -77,7 +77,6 @@ stock bool:Character_SetMaxHealth(playerid, Float:max)
 {
 	if(max < 100.0)
 	{
-		printf("Trying to set max health under 100.0");
 		return false;
 	}
 	PlayerMaxHealth[playerid] = max;

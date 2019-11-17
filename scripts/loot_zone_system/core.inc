@@ -579,7 +579,7 @@ stock bool:LootZone_Fill(lootzoneid)
 
 			LootZone_GetPosition(lootzoneid, x, y, z);
 			
-			new objectid = CreateDynamicObject(ServerItem_GetModelID(itemid), x + math_random_float(-1.0, 1.0) * 0.5, y  + math_random_float(-1.0, 1.0) * 0.5, z, 90.0, 0.0, 0.0, LootZone_GetVirtualWorld(lootzoneid), LootZone_GetInterior(lootzoneid));
+			new objectid = Server_CreateObject(ServerItem_GetModelID(itemid), x + math_random_float(-1.0, 1.0) * 0.5, y  + math_random_float(-1.0, 1.0) * 0.5, z, 90.0, 0.0, 0.0, LootZone_GetVirtualWorld(lootzoneid), LootZone_GetInterior(lootzoneid));
 			map_add(LootZone_GetObjectsMap(lootzoneid), itemid, objectid);
 		}
 	}

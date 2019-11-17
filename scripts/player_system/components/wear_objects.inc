@@ -460,6 +460,9 @@ Dialog:Dialog_WearObjectCategories(playerid, response, listitem, inputtext[])
     
     if(listitem == 9 && Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE)
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questa categoria.");
+    
+    if(listitem == 10 && Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_MEDICAL)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questa categoria.");
 
     SelectedCategory{playerid} = listitem;
     WearObject_ShowCategory(playerid, listitem);   
@@ -824,7 +827,7 @@ static bool:WearObject_Delete(playerid, PlayerObject:playerObject)
 
 static Internal_ShowCategories(playerid)
 {
-    return Dialog_Show(playerid, Dialog_WearObjectCategories, DIALOG_STYLE_LIST, "Categorie", "Oggetti vari\nBandane\nCappelli\nCappelli 2\nOrologi\nOcchiali\nElmetti\nMaschere\nExtra\nLSPD\nLSFD", "Avanti", "Indietro");
+    return Dialog_Show(playerid, Dialog_WearObjectCategories, DIALOG_STYLE_LIST, "Categorie", "Oggetti vari\nBandane\nCappelli\nCappelli 2\nOrologi\nOcchiali\nElmetti\nMaschere\nExtra\nLVMPD\nLVFD", "Avanti", "Indietro");
 }
 
 stock static PlayerObject:CreateWearObject(playerid, name[], modelid, bone, Float:x = 0.0, Float:y = 0.0, Float:z = 0.0, Float:rotx = 0.0, Float:roty = 0.0, Float:rotz = 0.0, Float:scalex = 1.0, Float:scaley = 1.0, Float:scalez = 1.0, matcolor1 = 0, matcolor2 = 0)

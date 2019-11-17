@@ -206,7 +206,7 @@ Dialog:Dialog_ChangeName(playerid, response, listitem, inputtext[])
 
 	// Must be static or breaks the inline functions
 	static characterName[MAX_PLAYER_NAME];
-
+	format(characterName, sizeof(characterName), "");
 	for(new i = 0, len = strlen(inputtext); i < len; ++i)
 	{
 		characterName[i] = (inputtext[i] == ' ') ? (characterName[i] = '_') : (characterName[i] = inputtext[i]); // () crashes compiler porca madonna
@@ -242,8 +242,6 @@ Dialog:Dialog_ChangeName(playerid, response, listitem, inputtext[])
 			KickEx(playerid);
 		}
 	}
-	// here '%e' AS new_name is used to pass newCharacterName to Inline function
-	
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT id FROM `characters` WHERE name = '%e'", characterName);
 	return 1;
 }

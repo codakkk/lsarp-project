@@ -1,6 +1,17 @@
 
 #include <YSI_Coding\y_hooks>
 
+hook function ShowJobCommands(playerid)
+{
+    if(Character_GetJobType(playerid) == JOB_TYPE_TAXI)
+    {
+        SendClientMessage(playerid, COLOR_YELLOW, "[MECCANICO] /ripara /vernicia");
+        return true;
+    }
+    return continue(playerid);
+}
+
+
 flags:ripara(CMD_ALIVE_USER);
 CMD:ripara(playerid, params[])
 {

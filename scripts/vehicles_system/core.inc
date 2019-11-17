@@ -64,7 +64,6 @@ static enum e_Bit1_VehicleData
 
 static BitArray:VehicleBitState[e_Bit1_VehicleData]<MAX_VEHICLES>;
 
-static VehicleOwnerName[MAX_VEHICLES][MAX_PLAYER_NAME];
 static Float:VehicleFuel[MAX_VEHICLES];
 
 static Map:VehiclesMap;
@@ -110,22 +109,40 @@ hook OnGameModeLateInit()
 	new query[256];
 	mysql_format(gMySQL, query, sizeof(query), "SELECT * FROM vehicles WHERE faction != '%d'", INVALID_FACTION_ID);
 	mysql_tquery(gMySQL, query, #Vehicle_LoadAll);
+	
+	mysql_format(gMySQL, query, sizeof(query), "SELECT * FROM vehicles WHERE job != '%d'", 0);
+	mysql_tquery(gMySQL, query, #Vehicle_LoadAll);
 	return 1;
 }
 
-hook OnVehicleMod(playerid, vehicleid, componentid)
+hook OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
 {
-	//RemoveVehicleComponent(vehicleid, componentid);
-	return 0;
+	if(ispassenger || Player_IsAdminDuty(playerid))
+		return 1;
+	if(vehicleid > 0)
+	{
+		new vehicleFaction = Vehicle_GetFaction(vehicleid);
+		if(Faction_IsValid(vehicleFaction) && Character_GetFaction(playerid) != Vehicle_GetFaction(vehicleid))
+		{
+			ClearAnimations(playerid, 1);
+			SendClientMessage(playerid, COLOR_ERROR, "Questo veicolo appartiene ad una fazione di cui non fai parte.");
+		}
+	}
+	return 1;
 }
 
-hook OnCharacterChangeName(playerid, newCharacterName[])
+hook OnPlayerStateChange(playerid, newstate, oldstate)
 {
-	foreach(new i : Vehicle)
+	if(Player_IsAdminDuty(playerid))
+		return 1;
+	if(oldstate != PLAYER_STATE_DRIVER && newstate == PLAYER_STATE_DRIVER)
 	{
-		if(Vehicle_GetOwnerID(i) == Character_GetID(playerid))
+		new vehicleid = GetPlayerVehicleID(playerid);
+		new vehicleFaction = Vehicle_GetFaction(vehicleid);
+		if(Faction_IsValid(vehicleFaction) && Character_GetFaction(playerid) != Vehicle_GetFaction(vehicleid))
 		{
-			Vehicle_SetOwnerName(i, newCharacterName);
+			RemovePlayerFromVehicle(playerid);
+			SendClientMessage(playerid, COLOR_ERROR, "Questo veicolo appartiene ad una fazione di cui non fai parte.");
 		}
 	}
 	return 1;
@@ -149,16 +166,7 @@ task OnVehicleUpdate[250]()
 			continue;
 		if(Vehicle_GetHealth(v) <= VEHICLE_MIN_HEALTH)
 		{
-			//new Float:x, Float:y, Float:z, Float:a;
-			
-			//GetVehiclePos(v, x, y, z);
-			//GetVehicleZAngle(v, a);
 			SetVehicleHealth(v, VEHICLE_MIN_HEALTH);
-			//Vehicle_SetDestroyed(v, true);
-			//Vehicle_Respawn(v);
-
-			//SetVehicleZAngle(v, a);
-			//SetVehiclePos(v, x, y, z);
 		}
 	}
 }
@@ -240,7 +248,6 @@ stock Vehicle_Create(modelid, Float:x, Float:y, Float:z, Float:rotation, color1,
 		return -1;
 	Vehicle_Reset(vehicleid);
 	VehicleInfo[vehicleid][OwnerID] = 0;
-	set(VehicleOwnerName[vehicleid], "");
 	VehicleInfo[vehicleid][Model] = modelid;
 	VehicleInfo[vehicleid][Color1] = color1;
 	VehicleInfo[vehicleid][Color2] = color2;
@@ -308,7 +315,6 @@ stock Vehicle_Reset(vehicleid)
 {
 	VehicleInfo[vehicleid][ID] = 0;
     VehicleInfo[vehicleid][OwnerID] = 0;
-    set(VehicleOwnerName[vehicleid], "");
     VehicleInfo[vehicleid][Model] = 0;
     VehicleInfo[vehicleid][Color1] = 0;
     VehicleInfo[vehicleid][Color2] = 0;
@@ -478,23 +484,6 @@ stock Vehicle_Delete(vehicleid)
 	return 1;
 }
 
-stock Vehicle_GetOwnerName(vehicleid)
-{
-	if(!Vehicle_IsValid(vehicleid) || Vehicle_GetOwnerID(vehicleid) == 0)
-	{
-		new name[MAX_PLAYER_NAME] = "Sconosciuto";
-		return name;
-	}
-	return VehicleOwnerName[vehicleid];
-}
-
-stock String:Vehicle_GetOwnerNameStr(vehicleid)
-{
-	if(!IsValidVehicle(vehicleid) || Vehicle_GetOwnerID(vehicleid) == 0)
-		return STRING_NULL;
-	return str_new(VehicleOwnerName[vehicleid]);
-}
-
 // TODO: This doesn't work neither
 stock Vehicle_GeneratePlate(vehicleid)
 {
@@ -538,16 +527,20 @@ stock Vehicle_Despawn(vehicleid)
 	return 1;
 }
 
-stock Vehicle_IsOwner(vehicleid, playerid, bool:onlyEffectiveOwner)
+stock bool:Vehicle_IsOwner(vehicleid, playerid, bool:onlyEffectiveOwner)
 {
 	if(Vehicle_GetOwnerID(vehicleid) == Character_GetID(playerid) || Player_IsAdminDuty(playerid))
-		return 1;
+		return true;
 	if(!onlyEffectiveOwner)
 	{
-		if(Faction_IsValid(Vehicle_GetFaction(vehicleid)) && Faction_IsValid(Character_GetFaction(playerid)) && Character_GetFaction(playerid) == Vehicle_GetFaction(vehicleid))
-			return 1;
+		new JobType:vehicleJob = Vehicle_GetJob(vehicleid), JobType:characterJob = Character_GetJobType(playerid);
+		if(vehicleJob != JOB_TYPE_NONE && characterJob != JOB_TYPE_NONE && vehicleJob == characterJob)
+			return true;
+		new vehicleFaction = Vehicle_GetFaction(vehicleid), characterFaction = Character_GetFaction(playerid);
+		if(Faction_IsValid(vehicleFaction) && Faction_IsValid(characterFaction) && characterFaction == vehicleFaction)
+			return true;
 	}
-	return 0;
+	return false;
 }
 
 forward Vehicle_LoadAll();
@@ -559,7 +552,7 @@ public Vehicle_LoadAll()
 	new Float:x, Float:y, Float:z, Float:a, color1, color2;
 	
 	count = cache_num_rows();
-
+	printf("Rows loaded: %d", count);
 	for(new i = 0; i < count; ++i)
 	{
 		alreadyLoaded = false;
@@ -623,18 +616,14 @@ public Vehicle_LoadAll()
 		Vehicle_SetDestroyed(vehicleid, false);
 		Vehicle_SetEngineStatus(vehicleid, false);
 		Vehicle_SetLocked(vehicleid, locked > 0 ? true : false);
-		
-		Vehicle_Reload(vehicleid);
 
 		SetVehicleHealth(vehicleid, health);
 		UpdateVehicleDamageStatus(vehicleid, VehicleDamages[vehicleid][E_DAMAGE_TYPE_PANELS], VehicleDamages[vehicleid][E_DAMAGE_TYPE_DOORS], VehicleDamages[vehicleid][E_DAMAGE_TYPE_LIGHTS], VehicleDamages[vehicleid][E_DAMAGE_TYPE_TIRES]);
 
-		if(ownerid > 0)
-		{
-			Vehicle_SetOwnerName(vehicleid, Character_GetNameFromDatabase(ownerid, true));
-		}
-
 		mysql_pquery_f(gMySQL, "UPDATE `vehicles` SET spawned = 1 WHERE id = '%d';", dbid);
+
+		if(Faction_IsValid(Vehicle_GetFaction(vehicleid)) || Vehicle_GetJob(vehicleid) != JOB_TYPE_NONE)
+			Vehicle_Repair(vehicleid);
 
 		map_add(VehiclesMap, VehicleInfo[vehicleid][ID], vehicleid);
 
@@ -708,11 +697,6 @@ stock Vehicle_SetFaction(vehicleid, factionid)
 	return 1;
 }
 
-stock Vehicle_SetOwnerName(vehicleid, const name[])
-{
-	set(VehicleOwnerName[vehicleid], name);
-}
-
 stock Vehicle_GetOwnerID(vehicleid)
 {
 	return VehicleInfo[vehicleid][OwnerID];
@@ -723,7 +707,6 @@ stock Vehicle_SetOwner(vehicleid, playerid)
 	if(!Vehicle_IsValid(vehicleid))
 		return 0;
 	VehicleInfo[vehicleid][OwnerID] = Character_GetID(playerid);
-	Vehicle_SetOwnerName(vehicleid, Character_GetOOCName(playerid));
 	if(Vehicle_GetID(vehicleid) != 0)
 		mysql_pquery_f(gMySQL, "UPDATE `vehicles` SET owner_id = '%d' WHERE id = '%d'", Vehicle_GetOwnerID(vehicleid), Vehicle_GetID(vehicleid));
 	return 1;
@@ -787,6 +770,9 @@ stock Vehicle_SetEngineStatus(vehicleid, bool:engineStatus)
     GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
     SetVehicleParamsEx(vehicleid, engineStatus ? VEHICLE_PARAMS_ON : VEHICLE_PARAMS_OFF, lights, alarm, doors, bonnet, boot, objective);
 	
+	if(IsABike(vehicleid))
+		SetVehicleParamsEx(vehicleid, VEHICLE_PARAMS_ON, lights, alarm, doors, bonnet, boot, objective);
+
 	if(Vehicle_GetID(vehicleid) != 0)
 		mysql_pquery_f(gMySQL, "UPDATE `vehicles` SET engine = '%d' WHERE id = '%d'", engineStatus?VEHICLE_PARAMS_ON : VEHICLE_PARAMS_OFF, Vehicle_GetID(vehicleid));
 
@@ -950,10 +936,9 @@ stock Vehicle_Reload(vehicleid)
 	{
 		Vehicle_Repair(vehicleid);
 	}
-	//Vehicle_UpdateLockState(vehicleid);
 	
-	ChangeVehicleColor(vehicleid, VehicleInfo[vehicleid][Color1], VehicleInfo[vehicleid][Color2]);
-	
+	if(IsABike(vehicleid))
+		Vehicle_SetEngineStatus(vehicleid, true);
 	return 1;
 }
 
@@ -1021,4 +1006,18 @@ stock Vehicle_SetSign(vehicleid, pos, const text[])
 		VehicleSign[vehicleid] = CreateDynamic3DTextLabel(text, COLOR_WHITE, x, y, z, 20.0, INVALID_PLAYER_ID, vehicleid, 1);
 	}
 	return 1;
+}
+
+stock Vehicle_GetSpeed(vehicleid)
+{
+	if(!Vehicle_IsValid(vehicleid))
+		return 0;
+	static
+        Float:x,
+        Float:y,
+        Float:z,
+        vel;
+    GetVehicleVelocity( vehicleid, x, y, z );
+    vel = floatround( floatsqroot( x*x + y*y + z*z ) * 180 );
+	return vel;
 }

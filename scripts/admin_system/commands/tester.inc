@@ -48,7 +48,7 @@ CMD:tchat(playerid, params[])
 	if(isnull(params) || strlen(params) > 128)
 		return SendClientMessage(playerid, COLOR_ERROR, "(/t)chat <testo>");
 	
-	SendMessageToTesters(0, 0xE9DE98FF, "[TESTER] %s (%s): %s", Account_GetName(playerid), Character_GetOOCName(playerid), params);
+	SendMessageToTesters(0, 0xE9DE98FF, "TesterChat: %s (%s): %s", Account_GetName(playerid), Character_GetOOCName(playerid), params);
 	return 1;
 }
 alias:tchat("t");

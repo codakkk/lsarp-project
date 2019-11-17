@@ -59,7 +59,6 @@ timer PositionCamera[100](playerid)
 {
 	SetPlayerCameraPos(playerid, 2115.4441,2131.3276,32.3443);
     SetPlayerCameraLookAt(playerid, 2174.6531,2141.4639,16.6471);
-	printf("Camera set");
 	return 1;
 }
 
@@ -74,7 +73,7 @@ hook OnCharacterClearData(playerid)
 {
     if(list_valid(Characters[playerid]))
 	{
-		list_delete_deep(Characters[playerid]);
+		list_delete(Characters[playerid]);
 	}
     return 1;
 }

@@ -270,7 +270,7 @@ stock Dealership_DeleteVehicle(dealershipid, slotid)
 
 stock Dealership_AddVehicle(dealershipid, modelid, price)
 {
-    if(!Dealership_IsValid(dealershipid) || Dealership_HasModel(dealershipid, modelid))
+    if(!Dealership_IsValid(dealershipid) || Dealership_HasModel(dealershipid, modelid) || !(400 <= modelid <= 611))
 	   return 0;
 	new data[e_DEALERSHIP_VEHICLE_DATA];
 	
@@ -327,6 +327,7 @@ stock Dealership_LoadAll()
 			cache_get_value_name_float(i, "vehicle_z", data[VehZ]);
 			cache_get_value_name_float(i, "vehicle_a", data[VehA]);
 			cache_get_value_name_int(i, "virtual_world", data[VirtualWorld]);
+			cache_get_value_name_int(i, "only_premium", data[OnlyPremium]);
 			
 			data[Vehicles] = list_new();
 			map_add_arr(Dealerships, data[ID], data);
@@ -355,7 +356,7 @@ static Dealership_LoadVehicles(dealershipid)
 			cache_get_value_name_int(i, "modelid", vehicleData[VehicleModel]);
 			cache_get_value_name_int(i, "price", vehicleData[VehiclePrice]);
 
-			if(vehicleData[VehicleModel] == 0 || vehicleData[VehiclePrice] < 0)
+			if(vehicleData[VehicleModel] <= 0 || vehicleData[VehiclePrice] < 0)
 				continue;
 			
 			list_add_arr(vehicles, vehicleData);
@@ -547,7 +548,7 @@ stock Dealership_ShowOptions(dealershipid, playerid)
 //
 //
 
-flags:adealershipcmds(CMD_ADMIN);
+flags:adealershipcmds(CMD_DEVELOPER);
 CMD:adealershipcmds(playerid, params[])
 {
 	SendClientMessage(playerid, -1, "[DEALERSHIP]: /acreatedealership - /adealershipmenu - /gotodealership");
@@ -707,9 +708,9 @@ Dialog:Dialog_DealershipAddVehicle(playerid, response, listitem, inputtext[])
 	
 	new modelid, price;
 
-    if(isnull(inputtext) || sscanf(inputtext, "k<vehicle>d", modelid, price) || price < 0)
+    if(isnull(inputtext) || sscanf(inputtext, "k<vehicle>d", modelid, price) || price < 0 || !(400 <= modelid <= 611))
     {
-	   return Dialog_Show(playerid, Dialog_DealershipAddVehicle, DIALOG_STYLE_INPUT, "Aggiungi Veicolo", "{FF0000}La stringa che hai inserito non è corretta!\n{FFFFFF}Inserisci il modello che vuoi inserire seguito dal prezzo!\n-- Esempi --\n- 522 50000\n- NRG 50000", "Aggiungi", "Indietro");
+	   return Dialog_Show(playerid, Dialog_DealershipAddVehicle, DIALOG_STYLE_INPUT, "Aggiungi Veicolo", "{FF0000}La stringa che hai inserito non è corretta o il modello inserito non è valido.\n{FFFFFF}Inserisci il modello che vuoi inserire seguito dal prezzo!\n-- Esempi --\n- 522 50000\n- NRG 50000", "Aggiungi", "Indietro");
     }
     if(Dealership_AddVehicle(SelectedDealership[playerid], modelid, price))
     	SendFormattedMessage(playerid, COLOR_GREEN, "Hai aggiunto %s (%d) per $%d alla concessionaria (%d).", Vehicle_GetNameFromModel(modelid), modelid, price, SelectedDealership[playerid]);

@@ -113,7 +113,7 @@ static LoadPhoneBook(phoneNumber)
             cache_get_value_name_int(i, "number", number);
             map_add_arr(map, number, data);
         }
-        printf("Loaded PhoneBook for number %d", phoneNumber);
+        //printf("Loaded PhoneBook for number %d", phoneNumber);
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT id, name, number FROM `phonebook` WHERE number_owner = '%d'", phoneNumber);
     return 1;
@@ -123,9 +123,12 @@ static UnloadPhoneBook(phoneNumber)
 {
     if(!map_has_key(PhoneBooks, phoneNumber))
         return 0;
-    map_delete(PhoneBook_Get(phoneNumber));
+    new Map:map = PhoneBook_Get(phoneNumber);
+    if(!map_valid(map))
+        return 0;
+    map_delete(map);
     map_remove_deep(PhoneBooks, phoneNumber);
-    printf("Unloaded PhoneBook for number %d", phoneNumber);
+    //printf("Unloaded PhoneBook for number %d", phoneNumber);
     return 1;
 }
 
@@ -139,6 +142,8 @@ static ShowContactOptions(playerid, playerNumber, contactNumber)
 
 static Map:PhoneBook_Get(number)
 {
+    if(!bool:map_has_key(PhoneBooks, number))
+        return Map:0;
     return Map:map_get(PhoneBooks, number);
 }
 
@@ -232,7 +237,7 @@ Dialog:Dialog_PhoneBook(playerid, response, listitem, inputtext[])
         return Character_ShowPhone(playerid, Character_GetSelectedPhoneSlot(playerid));
     
     SelectedContactNumber[playerid] = map_key_at(PhoneBook_Get(Character_GetSelectedPhone(playerid)), listitem);
-    printf("%d - %d", map_size(PhoneBook_Get(Character_GetSelectedPhone(playerid))), SelectedContactNumber[playerid]);
+    //printf("%d - %d", map_size(PhoneBook_Get(Character_GetSelectedPhone(playerid))), SelectedContactNumber[playerid]);
     return ShowContactOptions(playerid, Character_GetSelectedPhone(playerid), SelectedContactNumber[playerid]);
 }
 

@@ -7,29 +7,22 @@
 #define _included_INVENTORY_CORE 
 
 #include <inventory_system\server>
-
+#include <entity\core>
 #define for_inventory(%0:%1) for_list(%0:%1)
-//#define for_inventories(%0:%1) for(new E_ENTITY_TYPE:_____i = E_ENTITY_TYPE:0; _____i < E_ENTITY_TYPE; ++_____i) \
+
+forward OnInventoryLoaded(Inventory:inventory);
+
+//#define for_inventories(%0:%1) for(new EntityType:_____i = EntityType:0; _____i < EntityType; ++_____i) \
  //							   for_map(_____b:Inventory_GetMap(%0))
 #define Inventory_Show(%0,%1,%2,%3, Inventory_InternalShow(%0, %1, %2, #%3,
 #define Inventory_ShowStr(%0,%1,%2,%3, Inventory_InternalShowStr(%0, %1, %2, #%3,
 
 #define MAX_SLOT_EXTRA			(5)
 
-enum E_ENTITY_TYPE
-{
-    ENTITY_TYPE_NONE = 0,
-    ENTITY_TYPE_PLAYER = 1,
-    ENTITY_TYPE_HOUSE = 2,
-    ENTITY_TYPE_BUILDING = 3,
-	ENTITY_TYPE_VEHICLE = 4,
-    ENTITY_TYPE_DROP = 5,
-	ENTITY_TYPE_BAG = 6
-}
 
 static enum _:E_INVENTORY_DATA
 {
-	E_ENTITY_TYPE:EntityType,
+	EntityType:iEntityType,
 	EntityID,
 	List:Items
 };
@@ -63,10 +56,10 @@ static enum _:E_ITEM_DATA
 
 static 
 	List:InventoriesList,
-	Map:InventoriesMap[E_ENTITY_TYPE];
+	Map:InventoriesMap[EntityType];
 
 
-stock Map:Inventory_GetMap(E_ENTITY_TYPE:entityType)
+stock Map:Inventory_GetMap(EntityType:entityType)
 {
 	return InventoriesMap[entityType];
 }
@@ -75,14 +68,14 @@ stock Map:Inventory_GetMap(E_ENTITY_TYPE:entityType)
 
 hook OnGameModeInit()
 {
-	for(new E_ENTITY_TYPE:i = E_ENTITY_TYPE:0; i < E_ENTITY_TYPE; ++i)
+	for(new EntityType:i = EntityType:0; i < EntityType; ++i)
 	{
 		InventoriesMap[i] = map_new();
 	}
 	InventoriesList = list_new();
 }
 
-stock Inventory:Inventory_New(E_ENTITY_TYPE:entityType, entityId, space)
+stock Inventory:Inventory_New(EntityType:entityType, entityId, space)
 {
 	if(map_has_key(InventoriesMap[entityType], entityId))
 	{
@@ -95,7 +88,7 @@ stock Inventory:Inventory_New(E_ENTITY_TYPE:entityType, entityId, space)
 
 	new Inventory:inventory = Inventory:var_new_buf(E_INVENTORY_DATA);
 	var_acquire(Variant:inventory);
-	var_set_cell(Variant:inventory, EntityType, _:entityType);
+	var_set_cell(Variant:inventory, iEntityType, _:entityType);
 	var_set_cell(Variant:inventory, EntityID, entityId);
 	var_set_cell(Variant:inventory, Items, items);
 
@@ -113,23 +106,34 @@ stock bool:Inventory_IsValid(Inventory:inv)
 
 stock bool:Inventory_Delete(Inventory:inventory)
 {
-	map_remove_deep(InventoriesMap[Inventory_GetEntityType(inventory)], Inventory_GetEntityID(inventory));
-	var_release(Variant:inventory);
-	var_delete(Variant:inventory);
+	if(!Inventory_IsValid(inventory))
+		return false;
+	new EntityType:entityType = Inventory_GetEntityType(inventory);
+	new entityId = Inventory_GetEntityID(inventory);
+	new List:items = Inventory_GetItems(inventory);
+	
+	list_delete(items);
+	map_remove(InventoriesMap[entityType], entityId);
+	
 	new index = list_find(InventoriesList, inventory);
 	if(index != -1)
 		list_remove(InventoriesList, index);
+	
+	var_release(Variant:inventory);
+	var_delete(Variant:inventory);
 	return true;
 }
 
-stock Inventory:Inventory_Get(E_ENTITY_TYPE:entityType, entityId)
+stock Inventory:Inventory_Get(EntityType:entityType, entityId)
 {
+	if(!map_has_key(InventoriesMap[entityType], entityId))
+		return Inventory:0;
 	return Inventory:map_get(InventoriesMap[entityType], entityId);
 }
 
-stock E_ENTITY_TYPE:Inventory_GetEntityType(Inventory:inventory)
+stock EntityType:Inventory_GetEntityType(Inventory:inventory)
 {
-	return E_ENTITY_TYPE:var_get(Variant:inventory, EntityType);
+	return EntityType:var_get(Variant:inventory, iEntityType);
 }
 
 stock Inventory_GetEntityID(Inventory:inventory)
@@ -481,6 +485,8 @@ stock Inventory_GetItemAmount(Inventory:inventory, itemid)
 
 stock Inventory_GetSpace(Inventory:inventory)
 {
+	if(!Inventory_IsValid(inventory))
+		return 0;
     return list_size(Inventory_GetItems(inventory));
 }
 
@@ -636,23 +642,23 @@ stock Inventory_InternalShow(Inventory:inventory, playerid, const title[], const
 
 stock Inventory_LoadFromDatabase(Inventory:inventory, const databaseName[], const entityKeyName[], id)
 {
-	inline OnLoad()
+	await mysql_aquery_s(gMySQL, str_format("SELECT slot_id, item, amount, extra FROM `%e` WHERE %e = '%d' ORDER BY slot_id", databaseName, entityKeyName, id));
+
+	Inventory_Reset(inventory);
+	new rows = cache_num_rows(), 
+		slotid, itemid, amount, extra;
+	for(new i = 0; i < rows; ++i)
 	{
-		Inventory_Reset(inventory);
-		new rows = cache_num_rows(), 
-			slotid, itemid, amount, extra;
-		for(new i = 0; i < rows; ++i)
-		{
-			cache_get_value_name_int(i, "slot_id", slotid);
-			cache_get_value_name_int(i, "item", itemid);
-			cache_get_value_name_int(i, "amount", amount);
-			cache_get_value_name_int(i, "extra", extra);
-			if(itemid == 0 || amount == 0)
-				continue;
-			Inventory_SetItem(inventory, slotid, itemid, amount, extra);
-		}
+		cache_get_value_name_int(i, "slot_id", slotid);
+		cache_get_value_name_int(i, "item", itemid);
+		cache_get_value_name_int(i, "amount", amount);
+		cache_get_value_name_int(i, "extra", extra);
+		if(itemid == 0 || amount == 0)
+			continue;
+		Inventory_SetItem(inventory, slotid, itemid, amount, extra);
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT slot_id, item, amount, extra FROM `%e` WHERE %e = '%d' ORDER BY slot_id", databaseName, entityKeyName, id);
+	if(Inventory_IsValid(inventory))
+		CallLocalFunction(#OnInventoryLoaded, "d", _:inventory);
 	return true;
 }
 
@@ -786,7 +792,7 @@ stock bool:Inventory_HasSlotTempExtra(Inventory:inventory, slotid, key[])
 	return map_has_str_key(map, key);
 }
 
-stock bool:World_FindItem(itemid, extra, &E_ENTITY_TYPE:entityType, &entityId, &slotid)
+stock bool:World_FindItem(itemid, extra, &EntityType:entityType, &entityId, &slotid)
 {
 	entityId = 0;
 	entityType = ENTITY_TYPE_NONE;
@@ -796,6 +802,8 @@ stock bool:World_FindItem(itemid, extra, &E_ENTITY_TYPE:entityType, &entityId, &
 	for_list(i : InventoriesList)
 	{
 		new Inventory:inventory = Inventory:iter_get(i);
+		if(!Inventory_IsValid(inventory))
+			continue;
 		for_list(item : Inventory_GetItems(inventory))
 		{
 			iter_get_arr(item, data);

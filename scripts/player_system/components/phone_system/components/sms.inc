@@ -91,7 +91,7 @@ stock Character_SendSMS(playerid, slot, number, const msg[])
     else
         SendFormattedMessage(playerid, COLOR_YELLOW, "SMS inviato al numero %d. Testo: %s", number, msg);
 
-    new entityId, E_ENTITY_TYPE:entityType, phoneSlotId;
+    new entityId, EntityType:entityType, phoneSlotId;
     if(World_FindPhoneByNumber(number, entityType, entityId, phoneSlotId))
     {
         new Inventory:entityInv = Inventory_Get(entityType, entityId);
@@ -146,7 +146,7 @@ stock Character_ShowUnReadPhoneMess(playerid, slotid)
         {
             cache_get_value_name_int(i, "id", id);
             cache_get_value_name_int(i, "sender_number", sender);
-            cache_get_value_name_int(i, "createad_at", time);
+            cache_get_value_name_int(i, "created_at", time);
 
             TimestampToDate(time, year, month, day, hour, minute, second, 1);
             

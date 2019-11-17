@@ -16,7 +16,7 @@ enum JobType
     JOB_TYPE_MECHANIC = 2,
 };
 
-#include "taxi"
+#include <jobs\taxi>
 
 #include <YSI_Coding\y_hooks>
 
@@ -31,13 +31,15 @@ static enum E_JOB_DATA
 static JobInfo[][E_JOB_DATA] =
 {
     {"Nessuno", 0.0, 0.0, 0.0, JOB_TYPE_NONE},
-    {"Tassista", 0.0, 0.0, 0.0, JOB_TYPE_TAXI},
-    {"Meccanico", 0.0, 0.0, 0.0, JOB_TYPE_MECHANIC}
+    {"Tassista", 1909.5219,2350.9900,10.9799, JOB_TYPE_TAXI},
+    {"Meccanico", 1670.1516,2209.6016,10.8203, JOB_TYPE_MECHANIC}
 };
 
 static 
     JobType:PlayerJob[MAX_PLAYERS char] = {JOB_TYPE_NONE, ...},
     bool:JobDuty[MAX_PLAYERS char] = {false, ...};
+
+static JobType:VehicleJobType[MAX_VEHICLES char];
 
 hook OnScriptInit()
 {
@@ -48,6 +50,14 @@ hook OnScriptInit()
         Pickup_Create(1239, i, JobInfo[i][X], JobInfo[i][Y], JobInfo[i][Z], ELEMENT_TYPE_JOB, 0, 0);
         CreateDynamic3DTextLabel(JobInfo[i][Name], -1, JobInfo[i][X], JobInfo[i][Y], JobInfo[i][Z] + 0.4, 30.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, 0, 0, -1);
     }
+    return 1;
+}
+
+hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
+{
+    if(type != ELEMENT_TYPE_JOB)
+        return 1;
+    Player_InfoStr(playerid, str_format("-- ~y~%s~w~ --~n~Digita ~y~~h~/prendilavoro~w~ per prendere il lavoro", JobInfo[elementid][Name]), true, 2500);
     return 1;
 }
 
@@ -70,6 +80,37 @@ hook OnCharacterLoad(playerid)
     return 1;
 }
 
+hook OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
+{
+	if(ispassenger || Player_IsAdminDuty(playerid))
+		return 1;
+	if(vehicleid > 0)
+	{
+		new JobType:vehicleJob = Vehicle_GetJob(vehicleid);
+		if(vehicleJob != JOB_TYPE_NONE && Character_GetJobType(playerid) != vehicleJob)
+		{
+			ClearAnimations(playerid, 1);
+			SendClientMessage(playerid, COLOR_ERROR, "Questo veicolo appartiene ad un lavoro che non hai.");
+		}
+	}
+	return 1;
+}
+
+hook OnPlayerStateChange(playerid, newstate, oldstate)
+{
+    if(Player_IsAdminDuty(playerid))
+        return 1;
+	if(oldstate != PLAYER_STATE_DRIVER && newstate == PLAYER_STATE_DRIVER)
+	{
+		new JobType:vehicleJob = Vehicle_GetJob(GetPlayerVehicleID(playerid));
+		if(vehicleJob != JOB_TYPE_NONE && Character_GetJobType(playerid) != vehicleJob)
+		{
+			RemovePlayerFromVehicle(playerid);
+			SendClientMessage(playerid, COLOR_ERROR, "Questo veicolo appartiene ad un lavoro che non hai.");
+		}
+	}
+	return 1;
+}
 
 CMD:jobcmds(playerid, params[])
 {
@@ -103,7 +144,7 @@ CMD:jobduty(playerid, params[])
     {
         if(Character_EnterJobDuty(playerid))
         {
-            SendClientMessage(playerid, jobColor, "Sei entrato in servizio.");
+            SendClientMessage(playerid, jobColor, "[Lavoro] Sei entrato in servizio.");
             SetPlayerColor(playerid, jobColor);
             Character_SetJobDuty(playerid, true);
 
@@ -148,6 +189,47 @@ CMD:leavejob(playerid, params[])
     return 1;
 }
 alias:leavejob("lascialavoro");
+
+flags:respawnjobvehicles(CMD_MODERATOR);
+CMD:respawnjobvehicles(playerid, params[])
+{
+	new jobType;
+	if(sscanf(params, "d", jobType))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /respawnjobvehicles <factionid>");
+	
+	if(!(JOB_TYPE_NONE < JobType:jobType <= JobType))
+		return SendClientMessage(playerid, COLOR_ERROR, "Lavoro non valido.");
+
+	new bool:isOccupied = false;
+	foreach(new v : Vehicle)
+	{
+        if(Vehicle_GetJob(v) == JOB_TYPE_NONE)
+            continue;
+        
+		isOccupied = false;
+		foreach(new p : Player)
+		{
+			if(GetPlayerVehicleID(p) == v)
+			{
+				isOccupied = true;
+				break;
+			}
+		}
+		
+		if(isOccupied)
+			continue;
+		
+		if(Vehicle_GetJob(v) == JobType:jobType)
+		{
+			Vehicle_Respawn(v);
+		}
+	}
+
+	new name[32];
+	Job_GetName(JobType:jobType, name);
+	SendMessageToAdmins(0, COLOR_ORANGE, "AdmCmd: %s ha respawnato i veicoli del lavoro id %d (%s).", Account_GetName(playerid), jobType, name);
+	return 1;
+}
 
 stock JobType:Character_GetJobType(playerid)
 {
@@ -207,6 +289,7 @@ stock ShowJobCommands(playerid)
 stock Character_EnterJobDuty(playerid)
 {
     #pragma unused playerid
+    printf("Stock");
     return false;
 }
 
@@ -214,4 +297,65 @@ stock bool:Character_ExitJobDuty(playerid)
 {
     #pragma unused playerid
     return false;
+}
+
+hook OnVehicleLoaded(vehicleid)
+{
+    await mysql_aquery_s(gMySQL, str_format("SELECT job FROM `vehicles` WHERE id = '%d'", Vehicle_GetID(vehicleid)));
+    if(cache_num_rows() > 0)
+    {
+        new jobtype;
+        cache_get_value_name_int(0, "job", jobtype);
+        VehicleJobType{vehicleid} = JobType:jobtype;
+    }
+    return 1;
+}
+
+flags:setvehiclejob(CMD_MODERATOR);
+CMD:setvehiclejob(playerid, params[])
+{
+    new vehicleid, jobtype;
+    if(sscanf(params, "dd", vehicleid, jobtype))
+    {
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setvehiclejob <vehicleid> <jobtype>");
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "Tipi: 0: nessuno, 1: tassista, 2: meccanico.");
+        return 1;
+    }
+
+    if(!Vehicle_IsValid(vehicleid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Il veicolo inserito non esiste.");
+    
+    if(Vehicle_IsTemporary(vehicleid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su un veicolo temporaneo.");
+
+    if(Vehicle_GetOwnerID(vehicleid) != 0)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su un veicolo non proprietario.");
+
+    if(!(_:JOB_TYPE_NONE <= jobtype <= _:JobType))
+        return SendClientMessage(playerid, COLOR_ERROR, "Jobtype invalido.");
+
+    new name[32];
+    Job_GetName(JobType:jobtype, name);
+    Vehicle_SetJob(vehicleid, JobType:jobtype);
+    SendMessageToAdmins(1, COLOR_ADMIN, "AdmCmd: %s ha settato il lavoro \"%s\" al veicolo id %d.", Account_GetName(playerid), name, vehicleid);
+    return 1;
+}
+
+stock bool:Vehicle_SetJob(vehicleid, JobType:job)
+{
+    if(!Vehicle_IsValid(vehicleid))
+        return false;
+    VehicleJobType{vehicleid} = job;
+    if(Vehicle_GetID(vehicleid) > 0)
+    {
+        mysql_pquery_f(gMySQL, "UPDATE `vehicles` SET job = '%d' WHERE id = '%d'", _:job, Vehicle_GetID(vehicleid));
+    }
+    return true;
+}
+
+stock JobType:Vehicle_GetJob(vehicleid)
+{
+    if(!Vehicle_IsValid(vehicleid))
+        return JOB_TYPE_NONE;
+    return VehicleJobType{vehicleid};
 }

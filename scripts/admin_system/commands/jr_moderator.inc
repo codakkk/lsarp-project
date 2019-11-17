@@ -75,89 +75,6 @@ CMD:gotopos(playerid, params[])
     return 1;
 }
 
-flags:check(CMD_JR_MODERATOR);
-CMD:check(playerid, params[])
-{
-    new id;
-    if(sscanf(params, "k<u>", id))
-	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /check [playerid/partofname]");
-    if(id < 0 || id >= MAX_PLAYERS  || !Character_IsLogged(id))
-	   return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
-    Character_ShowStats(id, playerid);
-
-	Character_ShowVehicleList(playerid, id, true);
-
-	new ip[16];
-	GetPlayerIp(id, ip, sizeof(ip));
-	SendFormattedMessage(playerid, COLOR_GREEN, "L'IP del giocatore è %s", ip);
-	SendClientMessage(playerid, COLOR_GREEN, "Per l'inventario, digita /invcheck [playerid/partofname]");
-	SendClientMessage(playerid, COLOR_GREEN, "Per le case, digita /housecheck [playerid/partofname]");
-	SendClientMessage(playerid, COLOR_GREEN, "Per i biz, digita /bizcheck [playerid/partofname]");
-    return 1;
-}
-
-flags:housecheck(CMD_JR_MODERATOR);
-CMD:housecheck(playerid, params[])
-{
-	new id;
-	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /housecheck [playerid/partofname]");
-	
-	if(!Character_IsLogged(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
-
-	if(Character_GetOwnedHouseCount(id) <= 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non possiede case.");
-	
-	SendFormattedMessage(playerid, 0xFF6347FF, "Le case di %s", Character_GetOOCName(id));
-
-	new List:houses = Character_GetOwnedHousesList(id);
-	for_list(i : houses)
-	{
-		SendFormattedMessage(playerid, 0xFF6347FF, "- %s", House_GetAddress(House:iter_get(i)));
-	}
-	return 1;
-}
-
-flags:bizcheck(CMD_JR_MODERATOR);
-CMD:bizcheck(playerid, params[])
-{
-	new id;
-	if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /bizcheck [playerid/partofname]");
-	
-	if(!Character_IsLogged(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
-
-	if(Character_GetOwnedHouseCount(id) <= 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non possiede biz.");
-	
-	SendFormattedMessage(playerid, 0xFF6347FF, "I Biz di %s", Character_GetOOCName(id));
-
-	new List:buildings = Character_GetOwnedBuildingsList(id);
-	for_list(i : buildings)
-	{
-		SendFormattedMessage(playerid, 0xFF6347FF, "- %s", Building_GetAddress(Building:iter_get(i)));
-	}
-	return 1;
-}
-
-flags:invcheck(CMD_JR_MODERATOR);
-CMD:invcheck(playerid, params[])
-{
-    new id;
-    if(sscanf(params, "k<u>", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /invcheck [playerid/partofname]");
-    if(id < 0 || id >= MAX_PLAYERS  || !Character_IsLogged(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
-	new str[64], Inventory:inv = Character_GetInventory(id);
-	format(str, sizeof(str), "Inventario di %s (%d/%d)",  Character_GetOOCName(id), Inventory_GetUsedSpace(inv), Inventory_GetSpace(inv));
-	
-	Inventory_Show(inv, playerid, str, DialogNull, "Chiudi", "Chiudi");
-	// Inventory_ShowInChatStr(Character_GetInventory(id), playerid, Character_GetOOCNameStr(id));
-	return 1;
-}
-
 flags:randomweather(CMD_JR_MODERATOR);
 CMD:randomweather(playerid, params[])
 {
@@ -175,39 +92,6 @@ CMD:settimeadd(playerid, params[])
 		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /settimeadd <hour (0-24)>");
 	SendMessageToAdmins(true, COLOR_ADMINCMD, "%s ha utilizzato il comando /settimeadd. Ore aggiunte: %d", Account_GetName(playerid), w);
 	Server_SetTimeAdd(w);
-	return 1;
-}
-
-flags:setweather(CMD_JR_MODERATOR);
-CMD:setweather(playerid, params[])
-{
-	if(isnull(params))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setweather <weather id>");
-	new w = strval(params);
-	if(0 <= w <= 20)
-	{
-		Server_SetNextWeather(w);
-		Server_UpdateWeather();
-		SendMessageToAdmins(false, COLOR_ADMINCMD, "%s (%d) ha cambiato il tempo metereologico. ID: %d.", Account_GetName(playerid), playerid, w);
-	}
-	else 
-		SendClientMessage(playerid, COLOR_ERROR, "ID Errato.");
-	return 1;
-}
-
-flags:n(CMD_JR_MODERATOR);
-CMD:n(playerid, params[])
-{
-	if(isnull(params) || strlen(params) > 250)
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /n <testo>");
-	
-	new response[e_DIALOG_RESPONSE_INFO];
-	await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, @("Annuncio Globale"), str_format("Sei sicuro di voler inviare l'annuncio a tutti i giocatori online?\nTesto: %s", params), @("Annuncia"), @("Annulla"));
-	
-	if(response[E_DIALOG_RESPONSE_Response])
-	{
-		SendTwoLinesMessageToAllStr(0x6A5ACDFF, str_format("Admin %s: %s", Account_GetName(playerid), params));
-	}
 	return 1;
 }
 
@@ -265,7 +149,7 @@ CMD:a(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Hai disabilitato la chat mod.");
 	if(isnull(params) || strlen(params) > 128)
 		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /a <testo>");
-	SendMessageToAdmins(0, 0xE1A400FF, "[MOD-CHAT] %s (%s): %s", Account_GetName(playerid), Character_GetOOCName(playerid), params);
+	SendMessageToAdmins(0, 0xE1A400FF, "ModChat: %s (%s): %s", Account_GetName(playerid), Character_GetOOCName(playerid), params);
 	return 1;
 }
 

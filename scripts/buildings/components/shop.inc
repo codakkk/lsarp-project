@@ -8,9 +8,37 @@ static
 
 static SelectedItemID[MAX_PLAYERS char];
 
+static enum  E_SELLING_ITEMS
+{
+    CustomName[32],
+    ItemID,
+    Price,
+    Extra // used for duplicated items (like phones)
+};
+static StaticSellingItems[10][E_SELLING_ITEMS];
+
+static DefineSellableItem(const name[], itemid, price, extra = 0)
+{
+    static count = 0;
+    format(StaticSellingItems[count][CustomName], 32, name);
+    StaticSellingItems[count][ItemID] = itemid;
+    StaticSellingItems[count][Price] = price;
+    StaticSellingItems[count][Extra] = extra;
+    count++;
+}
+
 hook OnGameModeInit()
 {
     SellingItems = map_new();
+    DefineSellableItem("Mazza da baseball", WEAPON_BAT, 300);
+    DefineSellableItem("Spray can", WEAPON_SPRAYCAN, 400);
+    DefineSellableItem("Fotocamera", WEAPON_CAMERA, 500);
+    DefineSellableItem("Cellulare", gItem_Phone, 500);
+    DefineSellableItem("Cellulare (usa e getta)", gItem_Phone, 500, 1);
+    DefineSellableItem("Tanica piccola", gItem_SmallFuelTank, 150);
+    DefineSellableItem("Tanica media", gItem_MediumFuelTank, 250);
+    DefineSellableItem("Tanica grande", gItem_BigFuelTank, 700);
+    DefineSellableItem("Vestiti", gItem_Dress, 10);
 
     mysql_tquery_f(gMySQL, "CREATE TABLE IF NOT EXISTS `building_selling_items` ( \
                         `building_id` int(11) NOT NULL, \
@@ -68,10 +96,70 @@ hook OnCharacterTryBuy(playerid)
     if(Building_GetType(building) != BUILDING_TYPE_STORE)
         return 0;
 
-    if(!Building_CanSellItems(building))
+    new 
+        response[e_DIALOG_RESPONSE_INFO],
+        String:items = str_new("Oggetto\tPrezzo ($)\n");
+    
+    for(new i = 0, j = sizeof(StaticSellingItems); i < j; ++i)
+    {
+        if(!ServerItem_IsValid(StaticSellingItems[i][ItemID]))
+            continue;
+        printf("Name: %s - Price: %d - Index: %d", StaticSellingItems[i][CustomName], StaticSellingItems[i][Price], i);
+        str_append_format(items, "%s\t{85bb65}${FFFFFF}%d\n", StaticSellingItems[i][CustomName], StaticSellingItems[i][Price]);
+    }
+
+    pawn_guard(items);
+    yield 1;
+    for(;;)
+    {
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_TABLIST_HEADERS, @("Annuncio Globale"), items, @("Compra"), @("Chiudi"));
+        
+        if(!response[E_DIALOG_RESPONSE_Response])
+            break;
+
+        new listitem = response[E_DIALOG_RESPONSE_Listitem];
+        new itemid = StaticSellingItems[listitem][ItemID];
+        new price = StaticSellingItems[listitem][Price];
+        new extra = StaticSellingItems[listitem][Extra];
+
+        if(itemid <= 0)
+            continue;
+
+        if(Character_GetMoney(playerid) < price)
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi per acquistare l'oggetto.");
+            continue;
+        }
+
+        if(!Character_HasSpaceForItem(playerid, itemid, 1))
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario.");
+            continue;
+        }
+        
+        if(itemid == gItem_Phone)
+        {
+            if(extra == 0)
+                Character_GivePhone(playerid);
+            else if(extra == 1)
+                Character_GiveAnonymousePhone(playerid);
+        }
+        else
+        {
+            Character_GiveItem(playerid, itemid, 1);
+        }
+
+        Building_GiveMoney(building, price);
+        Character_GiveMoney(playerid, -price, "buy_item_247");
+
+        SendFormattedMessage(playerid, COLOR_ORANGE, "Hai acquistato \"%s\" per $%s.", StaticSellingItems[listitem][CustomName], FormatNumber(price));
+        break;
+    }
+
+    /*if(!Building_CanSellItems(building))
         return SendClientMessage(playerid, COLOR_ERROR, "Questo edificio non ha nulla da vendere.");
     
-    Building_ShowSellingItems(building, playerid);
+    Building_ShowSellingItems(building, playerid);*/
     return 1;
 }
 

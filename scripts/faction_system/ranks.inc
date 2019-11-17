@@ -308,7 +308,7 @@ Dialog:EditFactionRankSalary(playerid, response, listitem, inputtext[])
 {
 	if(!response) return Faction_ShowOptions(pAdminSelectedFaction{playerid}, playerid);
 	new salary = strval(inputtext);
-	if(salary <= 0)
+	if(salary < 0)
 		return Dialog_Show(playerid, EditFactionRankSalary, DIALOG_STYLE_INPUT, "Salario Rank", "{FF0000}Il salario inserito non è valido!{FFFFFF}\nInserisci il salario del rank.", "Modifica", "Annulla");
 	Faction_SetRankSalary(pAdminSelectedFaction{playerid}, SelectedRankId{playerid}, salary);
 	SendFormattedMessage(playerid, -1, "Hai cambiato il salario del rank. Nuovo salario: {85bb65}$%d{FFFFFF}", salary);
@@ -355,7 +355,7 @@ Dialog:Dialog_CreateFactionRank(playerid, response, listitem, inputtext[])
 	else if(TempRankCreationState{playerid} == 1)
 	{
 		TempRankSalary[playerid] = strval(inputtext);
-		if(TempRankSalary[playerid] <= 0)
+		if(TempRankSalary[playerid] < 0)
 			return Dialog_Show(playerid, Dialog_CreateFactionRank, DIALOG_STYLE_INPUT, "Faction Rank Salary", "{FF0000}Il salario inserito è troppo basso.{FFFFFF}\nInserisci il salario del rank.", "Continua", "Annulla");
 		TempRankCreationState{playerid} = 2;
 		return Dialog_Show(playerid, Dialog_CreateFactionRank, DIALOG_STYLE_INPUT, "Faction Rank Id", "Inserisci il rank id.\nRank ID: da 1 a 10", "Crea", "Annulla");

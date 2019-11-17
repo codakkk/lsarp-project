@@ -398,12 +398,12 @@ stock StaffRequest_Add(playerid, type, const text[])
         new id = cache_insert_id();
         if(type == REQUEST_TYPE_SUPPORTER)
         {
-            SendMessageToTesters(0, 0xe9de98ff, "[TESTER-REQ %d]: %s (%d) ha effettuato una richiesta: %s", id, Character_GetOOCName(playerid), playerid, temp);
+            SendMessageToTesters(0, 0xe9de98ff, "[TesterReq %d]: %s (%d) ha effettuato una richiesta: %s", id, Character_GetOOCName(playerid), playerid, temp);
             SendMessageToTesters(0, 0xE9DE98FF, "Digita /ar %d per accettare la richiesta.", id);
         }
         else
         {
-            SendMessageToAdmins(0, 0xEA7500FF, "[ADMIN-REQ %d]: %s (%d) chiede: %s", id, Character_GetOOCName(playerid), playerid, temp);
+            SendMessageToAdmins(0, 0xEA7500FF, "[AdminReq %d]: %s (%d) chiede: %s", id, Character_GetOOCName(playerid), playerid, temp);
             SendMessageToAdmins(0, 0xEA7500FF, "Digita /ar %d per accettare la richiesta.", id);
         }
     }

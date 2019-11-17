@@ -71,16 +71,14 @@
 #include <YSI_Coding\y_hooks>
 
 forward OnCharacterLoad(playerid); // Called when a Player select a character.
-forward OnCharacterLateLoad(playerid);
+forward OnCharacterLoaded(playerid); // Called just after each OnCharacterLoad are called.
+forward OnCharacterLateLoad(playerid); // Called after 1 second OnCharacterLoad is called.
 
 forward OnCharacterClearData(playerid); // Callbacks called when character's data (or account data) must/can be cleared.
 
 forward OnCharacterDisconnected(playerid, reason);
 
-forward OnCharacterSelected(playerid); // Called when a player select a character during login.
 
-// Called when a character uses /accetta. Type is REQUEST_TYPE_*.
-forward OnCharacterAccept(playerid, type);
 
 static enum E_PLAYER_DATA
 {
@@ -347,8 +345,16 @@ stock LoadCharacterResult(playerid)
 		cache_get_value_name_int(0, "faction", CharacterInfo[playerid][Faction]);
 		cache_get_value_name_int(0, "faction_rank", CharacterInfo[playerid][Rank]);
 		
-		cache_get_value_name_int(0, "faction_duty", tmp);
-		Character_SetFactionDuty(playerid, tmp ? true : false);
+		if(Faction_IsValid(Character_GetFaction(playerid)))
+		{
+			cache_get_value_name_int(0, "faction_duty", tmp);
+			Character_SetFactionDuty(playerid, tmp ? true : false);
+			SetPlayerColor(playerid, Faction_GetColor(Character_GetFaction(playerid)));
+		}
+		else
+		{
+			Character_SetFactionDuty(playerid, false);
+		}
 
 		new isBanned, banTime;
 		cache_get_value_name_int(0, "banned", isBanned);
@@ -429,6 +435,8 @@ stock Character_LoadData(playerid)
 		SetPlayerName(playerid, CharacterName[playerid]);
 		
 		CallLocalFunction(#OnCharacterLoad, "i", playerid);
+
+		CallLocalFunction(#OnCharacterLoaded, "i", playerid);
 		//TogglePlayerSpectating(playerid, 0);
 	}
 	else return KickEx(playerid);
@@ -600,4 +608,41 @@ stock Character_AddMinutesPlayed(playerid, add)
 stock Character_GetMinutesPlayed(playerid)
 {
 	return CharacterInfo[playerid][MinutesPlayed];
+}
+
+hook function bool:Entity_GetWorldPosition(EntityType:entityType, entityId, &Float:x, &Float:y, &Float:z)
+{
+	if(entityType != ENTITY_TYPE_PLAYER)
+		return bool:continue(_:entityType, entityId, x, y, z);
+	
+	new playerid = entityId;
+
+	if(!Character_IsLogged(playerid))
+		return false;
+
+	x = y = z = 0.0;
+
+	new world = Character_GetVirtualWorld(playerid);
+    if(world < HOUSE_START_WORLD)
+    {
+        GetPlayerPos(playerid, x, y, z);
+    }
+    else if(world < BUILDING_START_WORLD)
+    {
+        new House:house = House_Find(Character_GetHouseID(playerid));
+        if(House_IsValid(house))
+        {
+        	House_GetEnterPosition(house, x, y, z);
+		} 
+    }
+    else if(world >= BUILDING_START_WORLD)
+    {
+        new Building:building = Character_GetBuilding(playerid, true);
+        
+        if(Building_IsValid(building))
+        {
+        	Building_GetEnterPos(building, x, y, z);
+		}
+    }
+	return x != 0.0 && y != 0.0 && z != 0.0;
 }

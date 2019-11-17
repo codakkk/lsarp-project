@@ -89,7 +89,6 @@ stock bool:Character_CanUseHouseMenu(playerid, House:house, bool:onlyOwner = fal
 
 hook function Character_Enter(playerid)
 {
-    printf("[Character_Enter]: House");
     if(IsPlayerInAnyVehicle(playerid))
         return continue(playerid);
 

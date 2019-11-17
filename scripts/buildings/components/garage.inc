@@ -51,7 +51,6 @@ stock bool:Character_CanUseGarage(playerid)
 
 hook function Character_Enter(playerid)
 {
-    printf("[Character_Enter]: Garage");
     new vehicleid = GetPlayerVehicleID(playerid);
     new Float:range = Vehicle_IsValid(vehicleid) ? 5.0 : 1.5;
 
@@ -109,8 +108,6 @@ hook function Character_Enter(playerid)
         GameTextForPlayer(playerid, "~r~Chiuso", 5000, 1);
         return 0;
     }
-
-    printf("%f - %f - %f", finalX, finalY, finalZ);
 
     if(finalX == 0.0 && finalY == 0.0 && finalZ == 0.0)
         return 0;

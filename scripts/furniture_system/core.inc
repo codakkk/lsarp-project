@@ -392,7 +392,7 @@ Dialog:Dialog_SellFurniture(playerid, response, listitem, inputtext[])
 
 stock Furniture_CreateTemporary(modelid, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz, worldid, interior, linked_to)
 {
-    new objectid = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, worldid, interior);
+    new objectid = Server_CreateObject(modelid, x, y, z, rx, ry, rz, worldid, interior);
     FurnitureCustomData[FURNITURE_DATABASE_ID] = 0;
     FurnitureCustomData[FURNITURE_PRICE] = 0;
     FurnitureCustomData[FURNITURE_LINKED_TO] = linked_to;
@@ -506,7 +506,7 @@ stock Furniture_Load(worldid)
 
             cache_get_value_name_int(i, "linked_to", FurnitureCustomData[FURNITURE_LINKED_TO]);
 
-            new objectid = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, vw, interior);
+            new objectid = Server_CreateObject(modelid, x, y, z, rx, ry, rz, vw, interior);
             
             Furniture_LoadTextures(objectid);
 
@@ -652,8 +652,12 @@ stock Furniture_UpdateInfoList(playerid)
 {
     if(!Furniture_IsShowingInfo(playerid))
         return 0;
-    new world = Character_GetVirtualWorld(playerid),
-        List:furnitures = List:map_get(Furnitures, world);
+    new world = Character_GetVirtualWorld(playerid);
+    
+    if(!map_has_key(Furnitures, world))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando qui.");
+    
+    new List:furnitures = List:map_get(Furnitures, world);
     
     if(!list_valid(furnitures))
         return 0;
@@ -675,7 +679,7 @@ stock Furniture_UpdateInfoList(playerid)
 
     }
 
-    printf("Showing ids for world %d", ShowingLabelsForWorld[playerid]);
+    //printf("Showing ids for world %d", ShowingLabelsForWorld[playerid]);
 
     new text[128 + MAX_PLAYER_NAME], Text3D:labelid, index = 0;
     for_list(i : furnitures)
@@ -690,7 +694,7 @@ stock Furniture_UpdateInfoList(playerid)
         new Float:x, Float:y, Float:z;
         GetDynamicObjectPos(objectid, x, y, z);
         
-        format(text, sizeof(text), "%s\nID: %d\n(( Ultima Modifica Da: %s ))", FurnitureCustomData[FURNITURE_NAME], index, Character_GetNameFromDatabase(FurnitureCustomData[FURNITURE_LAST_EDIT_CHARACTER], true));
+        format(text, sizeof(text), "%s\n(( Ultima Modifica Da: %s ))", FurnitureCustomData[FURNITURE_NAME], Character_GetNameFromDatabase(FurnitureCustomData[FURNITURE_LAST_EDIT_CHARACTER], true));
         
         if(Account_GetAdminLevel(playerid) > 1 && Player_IsAdminDuty(playerid))
         {
@@ -884,6 +888,7 @@ stock Furniture_DeleteLabels(playerid)
         DestroyDynamic3DTextLabel(Text3D:iter_get(i));
     }
     list_delete(FurnitureLabels[playerid]);
+    FurnitureLabels[playerid] = List:0;
     ShowingLabelsForWorld[playerid] = -1;
     return 1;
 }

@@ -12,7 +12,7 @@ static
 
 hook OnGameModeInit()
 {
-	Weapon_InitializeType(WEAPON_SPRAYCAN, gItem_Empty, 0.0, false, false);
+	//Weapon_InitializeType(WEAPON_SPRAYCAN, gItem_Empty, 0.0, false, false);
 
 	Weapon_InitializeType(WEAPON_COLT45, gItem_LightAmmo, 25.0, true);
 	Weapon_InitializeType(WEAPON_SILENCED, gItem_LightAmmo, 30.0, true);
@@ -45,8 +45,8 @@ stock Weapon_InitializeType(weaponid, ammoItem, Float:damages, bool:canBeDisasse
 	WeaponInfo[weaponid][wAmmoItem] = ammoItem;
 	WeaponInfo[weaponid][wDamage] = damages;
 	WeaponInfo[weaponid][wCanBeDisassembled] = canBeDisassembled;
-	//SetWeaponArmourRule(weaponid, affectArmour);
-	//SetWeaponDamage(weaponid, DAMAGE_TYPE_STATIC, damages);
+	SetWeaponArmourRule(weaponid, affectArmour);
+	SetWeaponDamage(weaponid, DAMAGE_TYPE_STATIC, damages);
 }
 
 stock Float:Weapon_GetDamage(weaponid)

@@ -3,7 +3,7 @@
 flags:fcmds(CMD_USER);
 CMD:fcmds(playerid, params[])
 {
-	SendClientMessage(playerid, COLOR_SLATEBLUE, "/flascia - /servizio - /uniforme - /fcaccia - /finvita - /frank - /fmembri");
+	SendClientMessage(playerid, COLOR_SLATEBLUE, "/flascia - /fcaccia - /finvita - /frank - /fmembri");
 	new factionid = Character_GetFaction(playerid);
 	if(Faction_IsValid(factionid))
 	{
@@ -12,10 +12,11 @@ CMD:fcmds(playerid, params[])
 			SendClientMessage(playerid, COLOR_SLATEBLUE, "/manette - /trascina - /arresta - (/m)egafono - /vsign");
 			SendClientMessage(playerid, COLOR_SLATEBLUE, "/perquisisci - /servizio - (/d)ipartimento - /traccia");
 			SendClientMessage(playerid, COLOR_SLATEBLUE, "/ritiralicenza - /daiportodarmi - /beanbag - /taser - /mdc");
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "/servizio - /uniforme - /multa");
 		}
 		else if(Faction_GetType(factionid) == FACTION_TYPE_GOVERNMENT)
 		{
-			SendClientMessage(playerid, COLOR_SLATEBLUE, "/gov");
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "/servizio - /gov");
 		}
 	}
 	return 1;
@@ -45,7 +46,10 @@ CMD:servizio(playerid, params[])
 
 			Character_SetHealth(playerid, 100.0);
 
-			SetPlayerColor(playerid, COLOR_SLATEBLUE);
+			if(Faction_GetType(factionid) == FACTION_TYPE_POLICE)
+				SetPlayerColor(playerid, COLOR_SLATEBLUE);
+			else
+				SetPlayerColor(playerid, Faction_GetColor(factionid));
 			//Character_SetSelectingUniform(playerid, true);
 			new rankName[16];
 			Faction_GetRankName(factionid, Character_GetRank(playerid), rankName);
@@ -262,6 +266,9 @@ hook OnCharacterTryAccept(playerid, type)
 
 	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai accettato l'invito di %s. Adesso fai parte della fazione %s.", Character_GetRolePlayName(senderid), fname);
 	SendFormattedMessage(senderid, COLOR_ORANGE, "%s ha accettato il tuo invito in fazione.", Character_GetRolePlayName(playerid));
+	
+	Request_Reset(playerid, REQUEST_TYPE_FACTION);
+	Request_Reset(senderid, REQUEST_TYPE_FACTION);
 	return 1;
 }
 
