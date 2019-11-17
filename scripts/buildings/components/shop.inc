@@ -13,16 +13,18 @@ static enum  E_SELLING_ITEMS
     CustomName[32],
     ItemID,
     Price,
-    Extra // used for duplicated items (like phones)
+    Amount,
+    Extra // used for duplicated items (like phones) or quantity
 };
-static StaticSellingItems[10][E_SELLING_ITEMS];
+static StaticSellingItems[11][E_SELLING_ITEMS];
 
-static DefineSellableItem(const name[], itemid, price, extra = 0)
+static DefineSellableItem(const name[], itemid, price, amount = 1, extra = 0)
 {
     static count = 0;
     format(StaticSellingItems[count][CustomName], 32, name);
     StaticSellingItems[count][ItemID] = itemid;
     StaticSellingItems[count][Price] = price;
+    StaticSellingItems[count][Amount] = amount;
     StaticSellingItems[count][Extra] = extra;
     count++;
 }
@@ -30,15 +32,17 @@ static DefineSellableItem(const name[], itemid, price, extra = 0)
 hook OnGameModeInit()
 {
     SellingItems = map_new();
-    DefineSellableItem("Mazza da baseball", WEAPON_BAT, 300);
-    DefineSellableItem("Spray can", WEAPON_SPRAYCAN, 400);
-    DefineSellableItem("Fotocamera", WEAPON_CAMERA, 500);
-    DefineSellableItem("Cellulare", gItem_Phone, 500);
-    DefineSellableItem("Cellulare (usa e getta)", gItem_Phone, 500, 1);
-    DefineSellableItem("Tanica piccola", gItem_SmallFuelTank, 150);
-    DefineSellableItem("Tanica media", gItem_MediumFuelTank, 250);
-    DefineSellableItem("Tanica grande", gItem_BigFuelTank, 700);
-    DefineSellableItem("Vestiti", gItem_Dress, 10);
+    DefineSellableItem("Mazza da baseball", WEAPON_BAT, 300, .amount=1, .extra=1);
+    DefineSellableItem("Spray can", WEAPON_SPRAYCAN, 400, .amount=1, .extra=1000);
+    DefineSellableItem("Fotocamera", WEAPON_CAMERA, 500, .amount=1, .extra=100);
+    DefineSellableItem("Cellulare", gItem_Phone, 500, .amount=1);
+    DefineSellableItem("Cellulare (usa e getta)", gItem_Phone, 500, .amount=1, .extra=1);
+    DefineSellableItem("Tanica piccola", gItem_SmallFuelTank, 150, .amount=1);
+    DefineSellableItem("Tanica media", gItem_MediumFuelTank, 250, .amount=1);
+    DefineSellableItem("Tanica grande", gItem_BigFuelTank, 700, .amount=1);
+    DefineSellableItem("Vestiti", gItem_Dress, 10, .amount=1);
+    DefineSellableItem("Radio", gItem_Radio, 500, .amount=1);
+    DefineSellableItem("Sigarette", gItem_Cigarette, 50, .amount=10, .extra=1);
 
     mysql_tquery_f(gMySQL, "CREATE TABLE IF NOT EXISTS `building_selling_items` ( \
                         `building_id` int(11) NOT NULL, \
@@ -104,7 +108,6 @@ hook OnCharacterTryBuy(playerid)
     {
         if(!ServerItem_IsValid(StaticSellingItems[i][ItemID]))
             continue;
-        printf("Name: %s - Price: %d - Index: %d", StaticSellingItems[i][CustomName], StaticSellingItems[i][Price], i);
         str_append_format(items, "%s\t{85bb65}${FFFFFF}%d\n", StaticSellingItems[i][CustomName], StaticSellingItems[i][Price]);
     }
 
@@ -120,6 +123,7 @@ hook OnCharacterTryBuy(playerid)
         new listitem = response[E_DIALOG_RESPONSE_Listitem];
         new itemid = StaticSellingItems[listitem][ItemID];
         new price = StaticSellingItems[listitem][Price];
+        new amount = StaticSellingItems[listitem][Amount];
         new extra = StaticSellingItems[listitem][Extra];
 
         if(itemid <= 0)
@@ -146,7 +150,7 @@ hook OnCharacterTryBuy(playerid)
         }
         else
         {
-            Character_GiveItem(playerid, itemid, 1);
+            Character_GiveItem(playerid, itemid, amount, extra);
         }
 
         Building_GiveMoney(building, price);

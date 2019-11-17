@@ -126,40 +126,36 @@ stock Character_ShowUnReadPhoneMess(playerid, slotid)
         return 0;
     
     new playerNumber = Character_GetSlotExtra(playerid, slotid, 0);
+    await mysql_aquery_s(gMySQL, str_format("SELECT * FROM `phone_sms` WHERE number_owner = '%d' AND sender_number != '%d' AND state = '%d'", playerNumber, playerNumber, SMS_STATE_NOT_READ));
+    new rows = cache_num_rows();
 
-    inline OnLoad()
+    if(rows <= 0)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai messaggi non letti in questo cellulare.");
+
+    if(list_valid(MessagesList[playerid]))
+        list_clear(MessagesList[playerid]);
+    else
+        MessagesList[playerid] = list_new();
+    
+    new String:str = @("Numero/Nome\tInviato il\n");
+    new id, sender, time, year, month, day, hour, minute, second,
+        name[32];
+    for(new i = 0; i < rows; ++i)
     {
-        new rows = cache_num_rows();
+        cache_get_value_name_int(i, "id", id);
+        cache_get_value_name_int(i, "sender_number", sender);
+        cache_get_value_name_int(i, "created_at", time);
 
-        if(rows <= 0)
-            return SendClientMessage(playerid, COLOR_ERROR, "Non hai messaggi non letti in questo cellulare.");
-
-        if(list_valid(MessagesList[playerid]))
-            list_clear(MessagesList[playerid]);
-        else
-            MessagesList[playerid] = list_new();
+        TimestampToDate(time, year, month, day, hour, minute, second, 1);
         
-        new String:str = @("Numero/Nome\tInviato il\n");
-        new id, sender, time, year, month, day, hour, minute, second,
-            name[32];
-        for(new i = 0; i < rows; ++i)
-        {
-            cache_get_value_name_int(i, "id", id);
-            cache_get_value_name_int(i, "sender_number", sender);
-            cache_get_value_name_int(i, "created_at", time);
-
-            TimestampToDate(time, year, month, day, hour, minute, second, 1);
-            
-            if(PhoneBook_GetContactName(playerNumber, sender, name))
-                str += str_format("%s\t%d/%d/%d - %d:%d\n", name, day, month, year, hour, minute);
-            else
-                str += str_format("%d\t%d/%d/%d - %d:%d\n", sender, day, month, year, hour, minute);
-            list_add(MessagesList[playerid], id);
-        }
-
-        Dialog_Show_s(playerid, Dialog_ShowPhoneMessage, DIALOG_STYLE_TABLIST_HEADERS, @("Messaggi non letti"), str, "Visualizza", "Indietro");
+        if(PhoneBook_GetContactName(playerNumber, sender, name))
+            str += str_format("%s\t%d/%d/%d - %d:%d\n", name, day, month, year, hour, minute);
+        else
+            str += str_format("%d\t%d/%d/%d - %d:%d\n", sender, day, month, year, hour, minute);
+        list_add(MessagesList[playerid], id);
     }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `phone_sms` WHERE number_owner = '%d' AND sender_number != '%d' AND state = '%d'", playerNumber, playerNumber, SMS_STATE_NOT_READ);
+
+    Dialog_Show_s(playerid, Dialog_ShowPhoneMessage, DIALOG_STYLE_TABLIST_HEADERS, @("Messaggi non letti"), str, "Visualizza", "Indietro");
     return 1;
 }
 
@@ -300,7 +296,7 @@ stock Character_ReadMessage(playerid, slotid, messageid)
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `phone_sms` WHERE id = '%d'", messageid);
     return 1;
 }
-
+/*
 Dialog:Dialog_PhoneMessageOption(playerid, response, listitem, inputtext[])
 {
     if(!response)
@@ -340,4 +336,4 @@ Dialog:Dialog_ShowPhoneMessage(playerid, response, listitem, inputtext[])
     
     Character_ReadMessage(playerid, Character_GetSelectedPhoneSlot(playerid), id);
     return 1;
-}
+}*/

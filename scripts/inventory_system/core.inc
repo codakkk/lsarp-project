@@ -11,7 +11,7 @@
 #define for_inventory(%0:%1) for_list(%0:%1)
 
 forward OnInventoryLoaded(Inventory:inventory);
-
+forward OnInventoryChanged(Inventory:inventory);
 //#define for_inventories(%0:%1) for(new EntityType:_____i = EntityType:0; _____i < EntityType; ++_____i) \
  //							   for_map(_____b:Inventory_GetMap(%0))
 #define Inventory_Show(%0,%1,%2,%3, Inventory_InternalShow(%0, %1, %2, #%3,
@@ -152,7 +152,7 @@ stock bool:Inventory_Resize(Inventory:inventory, new_space)
     return true;
 }
 
-stock bool:Inventory_SetItem(Inventory:inventory, slotid, itemid, amount, extra, Map:tempExtra = Map:0)
+static bool:Inventory_SetItem(Inventory:inventory, slotid, itemid, amount, extra, Map:tempExtra = Map:0)
 {
     if((itemid != 0 && amount <= 0) || !ServerItem_IsValid(itemid) || slotid < 0 || slotid >= list_size(Inventory_GetItems(inventory)))
 	   return false;
@@ -255,6 +255,7 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra, Map:tempExtr
 		}
 		list_delete_deep(hasItemSlots);
 	}
+	CallLocalFunction(#OnInventoryChanged, "d", _:inventory);
 	//Inventory_Print(inventory);
 	return INVENTORY_ADD_SUCCESS;
 }

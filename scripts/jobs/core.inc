@@ -16,8 +16,8 @@ enum JobType
     JOB_TYPE_MECHANIC = 2,
 };
 
-#include <jobs\taxi>
-
+#include "taxi"
+#include <jobs\mechanic>
 #include <YSI_Coding\y_hooks>
 
 static enum E_JOB_DATA
@@ -142,7 +142,7 @@ CMD:jobduty(playerid, params[])
     }
     else
     {
-        if(Character_EnterJobDuty(playerid))
+        if(EnterJobDuty(playerid))
         {
             SendClientMessage(playerid, jobColor, "[Lavoro] Sei entrato in servizio.");
             SetPlayerColor(playerid, jobColor);
@@ -222,6 +222,7 @@ CMD:respawnjobvehicles(playerid, params[])
 		if(Vehicle_GetJob(v) == JobType:jobType)
 		{
 			Vehicle_Respawn(v);
+            Vehicle_SetFuel(v, 100.0);
 		}
 	}
 
@@ -286,11 +287,18 @@ stock ShowJobCommands(playerid)
     return 1;
 }
 
-stock Character_EnterJobDuty(playerid)
+stock EnterJobDuty(playerid)
 {
-    #pragma unused playerid
-    printf("Stock");
-    return false;
+    if(Character_GetJobType(playerid) != JOB_TYPE_TAXI)
+        return false;
+    new vehicleid = GetPlayerVehicleID(playerid);
+
+    if(!Character_IsValidJobVehicle(playerid, vehicleid))
+    {
+        SendClientMessage(playerid, COLOR_ERROR, "Devi essere su un tuo taxi o uno convenzionato per poter utilizzare questo comando.");
+        return false;
+    }
+    return true;
 }
 
 stock bool:Character_ExitJobDuty(playerid)

@@ -175,7 +175,7 @@ CMD:afk(playerid, params[])
 flags:aiuto(CMD_USER);
 CMD:aiuto(playerid, params[])
 {
-	SendClientMessage(playerid, 0xCCE6E6FF, "_______________www.lv-rp.it_______________");
+	SendClientMessage(playerid, COLOR_GREEN, "_______________www.lv-rp.it_______________");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[ACCOUNT] /stats /inv /oggetto /hotkeys /lostitems /zpoints");
     SendClientMessage(playerid, 0xCCE6E6FF, "[GENERALE]: /luoghi /paga /time /compra /id /cellinfo /chiama /bussa /blindfold /sa /animlist");
     SendClientMessage(playerid, 0xCCE6E6FF, "[GENERALE]: (/pub)blicita /documenti /report /stilechat /stilelotta /stilecamminata /multe");

@@ -117,7 +117,6 @@ CMD:giveitem(playerid, params[])
 		SendMessageToAdmins(0, COLOR_YELLOW, "AdmCmd: %s (%s) ha rimosso %s (Qnt: %d) a %s (%d).", 
 		Account_GetName(playerid), Character_GetOOCName(playerid), ServerItem_GetName(itemid), quantity, Character_GetOOCName(id), id);
 	}
-	//Inventory_Print(Character_GetInventory(id));
 	return 1;
 }
 
@@ -203,7 +202,6 @@ CMD:givevehicleitem(playerid, params[])
 	   SendMessageToAdmins(0, COLOR_YELLOW, "AdmCmd: %s (%s) ha rimosso %s (Qnt: %d) al veicolo %d.", 
 	   Account_GetName(playerid), Character_GetOOCName(playerid), ServerItem_GetName(itemid), quantity, id);
     }
-    //Inventory_Print(Character_GetInventory(id));
     return 1;
 }
 

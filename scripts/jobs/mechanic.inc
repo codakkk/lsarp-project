@@ -3,7 +3,7 @@
 
 hook function ShowJobCommands(playerid)
 {
-    if(Character_GetJobType(playerid) == JOB_TYPE_TAXI)
+    if(Character_GetJobType(playerid) == JOB_TYPE_MECHANIC)
     {
         SendClientMessage(playerid, COLOR_YELLOW, "[MECCANICO] /ripara /vernicia");
         return true;
@@ -11,6 +11,12 @@ hook function ShowJobCommands(playerid)
     return continue(playerid);
 }
 
+hook function EnterJobDuty(playerid)
+{
+    #pragma unused playerid
+    printf("mechanic");
+    return 0;
+}
 
 flags:ripara(CMD_ALIVE_USER);
 CMD:ripara(playerid, params[])
@@ -98,7 +104,7 @@ CMD:vernicia(playerid, params[])
         if(!Vehicle_IsValid(vehicleid))
             return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un veicolo.");
         
-        Character_DecreaseItemAmount(playerid, gItem_MechanicalComponents, MATERIALS_PER_SPRAY);
+        //Character_DecreaseItemAmount(playerid, gItem_MechanicalComponents, MATERIALS_PER_SPRAY);
         SendClientMessage(playerid, COLOR_GREEN, "Hai riverniciato il tuo veicolo.");
 
         Vehicle_SetColors(vehicleid, color1, color2);
@@ -146,7 +152,7 @@ static AcceptVehicleRepair(playerid)
     Character_GiveMoney(senderid, price, "repair");
 
     SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s ha accettato la tua richiesta di riparazione. Hai guadagnato $%d.", Character_GetRolePlayName(playerid), price);
-    SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "La riparazione ti è costata: %d materiali meccanici.", MATERIALS_PER_REPAIR);
+    //SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "La riparazione ti è costata: %d materiali meccanici.", MATERIALS_PER_REPAIR);
 
     SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "%s ha riparato il tuo veicolo (%s) per $%d.", Character_GetRolePlayName(senderid), Vehicle_GetName(vehicleid), price);
 
@@ -176,7 +182,7 @@ static AcceptVehicleSpray(playerid)
     Character_GiveMoney(senderid, price, "spray");
     
     SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s ha accettato la tua richiesta di verniciatura. Hai guadagnato $%d.", Character_GetRolePlayName(playerid), price);
-    SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "La verniciatura ti è costata: %d materiali meccanici.", MATERIALS_PER_SPRAY);
+    //SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "La verniciatura ti è costata: %d materiali meccanici.", MATERIALS_PER_SPRAY);
     SendFormattedMessage(playerid, COLOR_ACCEPT_REQUEST, "%s ha verniciato il tuo veicolo (%s) per $%d.", Character_GetRolePlayName(senderid), Vehicle_GetName(vehicleid), price);
     
     Vehicle_SetColors(vehicleid, color1, color2);

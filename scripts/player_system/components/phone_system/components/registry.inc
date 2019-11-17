@@ -18,9 +18,6 @@ enum _:E_REGISTRY_ROW
 
 static Map:RegistryMap; // <progressiveId, E_REGISTRY_ROW
 
-static 
-    List:Registry[MAX_PLAYERS],
-    SelectedRow[MAX_PLAYERS];
 
 hook OnGameModeInit()
 {
@@ -38,30 +35,33 @@ hook OnGameModeInit()
     return 1;
 }
 
-hook OnCharacterClearData(playerid)
-{
-    if(list_valid(Registry[playerid]))
-        list_delete_deep(Registry[playerid]);
-    SelectedRow[playerid] = 0;
-    return 1;
-}
-
 stock Character_ShowLostCalls(playerid, number)
 {
-    inline OnLoad()
-    {
-        new rows = cache_num_rows();
+    new String:string = str_new("");
 
+    new 
+        name[32], id, owner, callToNumber, callByNumber, callStart, callEnd,
+        year, month, day, hour, minute, second;
+    
+    new List:temp = list_new();
+    
+    pawn_guard(string);
+    new response[e_DIALOG_RESPONSE_INFO];
+    yield 1;
+    for(;;)
+    {
+        list_clear(temp);
+        str_clear(string);
+        str_append_format(string, "Utente\tData\n");
+
+        await mysql_aquery_s(gMySQL, str_format("SELECT * FROM `phone_call_registry` WHERE number_owner = '%d' AND state = '%d'", number, CALL_STATE_NOT_READ), .parallel=true);
+    
+        new rows = cache_num_rows();
         if(rows <= 0)
-            return SendClientMessage(playerid, COLOR_ERROR, "Il registro chiamate è vuoto.");
-        
-        new String:str = @("Utente\tData\n"), name[32], id, owner, callToNumber, callByNumber, callStart, callEnd,
-            year, month, day, hour, minute, second;
-        
-        if(list_valid(Registry[playerid]))
-            list_clear(Registry[playerid]);
-        else
-            Registry[playerid] = list_new();
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "Il registro chiamate è vuoto.");
+            break;
+        }
         
         for(new i = 0; i < rows; ++i)
         {
@@ -73,37 +73,57 @@ stock Character_ShowLostCalls(playerid, number)
             cache_get_value_name_int(i, "call_end", callEnd);
             
             if(PhoneBook_GetContactName(owner, callByNumber, name))
-                str += str_format("%s\t", name);
+                str_append_format(string, "%s\t", name);
             else
-                str += str_format("%d\t", callByNumber);
+                str_append_format(string, "%d\t", callByNumber);
             
             TimestampToDate(callStart, year, month, day, hour, minute, second, 0);
-            str += str_format("%d/%d/%d - %d:%d\n", day, month, year, hour, minute);
+            str_append_format(string, "%d/%d/%d - %d:%d\n", day, month, year, hour, minute);
 
-            list_add(Registry[playerid], id);
+            list_add(temp, id);
         }
-        Dialog_Show_s(playerid, Dialog_LostPhoneCallRegister, DIALOG_STYLE_TABLIST_HEADERS, @("Registro chiamate"), str, "Elimina", "Indietro");
+
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_TABLIST_HEADERS, str_format("Cellulare - %d - Registro chiamate", number), string, @("Leggi"), @("Indietro"));
+
+        if(!response[E_DIALOG_RESPONSE_Response]) break;
+
+        SendClientMessage(playerid, COLOR_GREEN, "La chiamata è stata spostata nelle chiamate in entrata.");
+        mysql_pquery_f(gMySQL, "UPDATE `phone_call_registry` SET state = '%d' WHERE id = '%d'", CALL_STATE_READ, list_get(temp, response[E_DIALOG_RESPONSE_Listitem]));
+        continue;
     }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `phone_call_registry` WHERE number_owner = '%d' AND state = '%d'", number, CALL_STATE_NOT_READ);
+
+    list_delete(temp);
     return 1;
 }
 
 stock Character_ShowInBoundCalls(playerid, number)
 {
-    inline OnLoad()
-    {
-        new rows = cache_num_rows();
+    new String:string = str_new("");
 
+    new 
+        name[32], id, owner, callToNumber, callByNumber, callStart, callEnd,
+        year, month, day, hour, minute, second;
+    
+    new List:temp = list_new();
+    
+    pawn_guard(string);
+    new response[e_DIALOG_RESPONSE_INFO];
+    yield 1;
+    for(;;)
+    {
+        list_clear(temp);
+        str_clear(string);
+        str_append_format(string, "Utente\tDurata\tData\n");
+
+        await mysql_aquery_s(gMySQL, str_format("SELECT * FROM `phone_call_registry` WHERE number_owner = '%d' AND call_by_number != '%d' AND state = '%d'", number, number, CALL_STATE_READ), .parallel=true);
+    
+        new rows = cache_num_rows();
         if(rows <= 0)
-            return SendClientMessage(playerid, COLOR_ERROR, "Il registro chiamate è vuoto.");
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "Il registro è vuoto.");
+            break;
+        }
         
-        if(list_valid(Registry[playerid]))
-            list_clear(Registry[playerid]);
-        else
-            Registry[playerid] = list_new();
-        
-        new String:str = @("Utente\tDurata (m:s)\tData\n"), name[32], id, owner, callToNumber, callByNumber, callStart, callEnd,
-            year, month, day, hour, minute, second;
         for(new i = 0; i < rows; ++i)
         {
             cache_get_value_name_int(i, "id", id);
@@ -114,41 +134,61 @@ stock Character_ShowInBoundCalls(playerid, number)
             cache_get_value_name_int(i, "call_end", callEnd);
             
             if(PhoneBook_GetContactName(owner, callByNumber, name))
-                str += str_format("%s\t", name);
+                str_append_format(string, "%s\t", name);
             else
-                str += str_format("%d\t", callToNumber);
-
+                str_append_format(string, "%d\t", callByNumber);
+            
             new time = callEnd - callStart;
             TimestampToDate(time, year, month, day, hour, minute, second, 0);
-            str += str_format("%d:%d\t", minute, second);
+            str_append_format(string, "%02d:%02d", minute, second);
 
             TimestampToDate(callStart, year, month, day, hour, minute, second, 0);
-            str += str_format("%d/%d/%d - %d:%d\n", day, month, year, hour, minute);
-
-            list_add(Registry[playerid], id);
+            str_append_format(string, "%d/%d/%d - %d:%d\n", day, month, year, hour, minute);
+            
+            list_add(temp, id);
         }
-        Dialog_Show_s(playerid, Dialog_InPhoneCallRegister, DIALOG_STYLE_TABLIST_HEADERS, @("Registro chiamate in entrata"), str, "Elimina", "Chiudi");
+
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_TABLIST_HEADERS, str_format("Cellulare - %d - Registro chiamate in entrata", number), string, @("{FF0000}Elimina{FFFFFF}"), @("Indietro"));
+
+        if(!response[E_DIALOG_RESPONSE_Response]) break;
+
+        SendClientMessage(playerid, COLOR_GREEN, "La chiamata è stata eliminata.");
+        mysql_pquery_f(gMySQL, "DELETE FROM `phone_call_registry` WHERE id = '%d'", list_get(temp, response[E_DIALOG_RESPONSE_Listitem]));
+        continue;
     }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `phone_call_registry` WHERE number_owner = '%d' AND call_by_number != '%d' AND state = '%d'", number, number, CALL_STATE_READ);
+
+    list_delete(temp);
     return 1;
 }
 
 stock Character_ShowOutBoundCalls(playerid, number)
 {
-    inline OnLoad()
-    {
-        new rows = cache_num_rows();
+    new String:string = str_new("");
 
+    new 
+        name[32], id, owner, callToNumber, callByNumber, callStart, callEnd,
+        year, month, day, hour, minute, second;
+    
+    new List:temp = list_new();
+    
+    pawn_guard(string);
+    new response[e_DIALOG_RESPONSE_INFO];
+    yield 1;
+    for(;;)
+    {
+        list_clear(temp);
+        str_clear(string);
+        str_append_format(string, "Utente\tDurata\tData\n");
+
+        await mysql_aquery_s(gMySQL, str_format("SELECT * FROM `phone_call_registry` WHERE number_owner = '%d' AND call_by_number = '%d' AND state = '%d'", number, number, CALL_STATE_READ), .parallel=true);
+    
+        new rows = cache_num_rows();
         if(rows <= 0)
-            return SendClientMessage(playerid, COLOR_ERROR, "Il registro chiamate è vuoto.");
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "Il registro è vuoto.");
+            break;
+        }
         
-        if(list_valid(Registry[playerid]))
-            list_clear(Registry[playerid]);
-        else
-            Registry[playerid] = list_new();
-        
-        new String:str = @("Utente\tDurata (m:s)\tData\n"), name[32], id, owner, callToNumber, callByNumber, callStart, callEnd,
-            year, month, day, hour, minute, second;
         for(new i = 0; i < rows; ++i)
         {
             cache_get_value_name_int(i, "id", id);
@@ -158,23 +198,32 @@ stock Character_ShowOutBoundCalls(playerid, number)
             cache_get_value_name_int(i, "call_start", callStart);
             cache_get_value_name_int(i, "call_end", callEnd);
             
-            if(PhoneBook_GetContactName(owner, callToNumber, name))
-                str += str_format("%s\t", name);
+            if(PhoneBook_GetContactName(owner, callByNumber, name))
+                str_append_format(string, "%s\t", name);
             else
-                str += str_format("%d\t", callToNumber);
-
+                str_append_format(string, "%d\t", callByNumber);
+            
             new time = callEnd - callStart;
             TimestampToDate(time, year, month, day, hour, minute, second, 0);
-            str += str_format("%d:%d\t", minute, second);
+            str_append_format(string, "%02d:%02d", minute, second);
 
             TimestampToDate(callStart, year, month, day, hour, minute, second, 0);
-            str += str_format("%d/%d/%d - %d:%d\n", day, month, year, hour, minute);
-
-            list_add(Registry[playerid], id);
+            str_append_format(string, "%d/%d/%d - %d:%d\n", day, month, year, hour, minute);
+            
+            
+            list_add(temp, id);
         }
-        Dialog_Show_s(playerid, Dialog_OutPhoneCallRegister, DIALOG_STYLE_TABLIST_HEADERS, @("Registro chiamate in uscita"), str, "Elimina", "Chiudi");
+
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_TABLIST_HEADERS, str_format("Cellulare - %d - Registro chiamate in uscita", number), string, @("{FF0000}Elimina{FFFFFF}"), @("Indietro"));
+
+        if(!response[E_DIALOG_RESPONSE_Response]) break;
+
+        SendClientMessage(playerid, COLOR_GREEN, "La chiamata è stata eliminata.");
+        mysql_pquery_f(gMySQL, "DELETE FROM `phone_call_registry` WHERE id = '%d'", list_get(temp, response[E_DIALOG_RESPONSE_Listitem]));
+        continue;
     }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `phone_call_registry` WHERE number_owner = '%d' AND call_by_number = '%d' AND state = '%d'", number, number, CALL_STATE_READ);
+
+    list_delete(temp);
     return 1;
 }
 
@@ -231,43 +280,12 @@ stock Phone_GetCallID(Inventory:inventory, slotid)
     return Inventory_GetSlotTempExtra(inventory, slotid, "call_id");
 }
 
-Dialog:Dialog_LostPhoneCallRegister(playerid, response, listitem, inputtext[])
-{
-    if(!response)
-        return Character_ShowPhone(playerid, Character_GetSelectedPhoneSlot(playerid));
-    SelectedRow[playerid] = list_get(Registry[playerid], listitem);
-    
-    SendClientMessage(playerid, COLOR_GREEN, "Hai eliminato l'elemento del registro.");
-
-    mysql_pquery_f(gMySQL, "UPDATE `phone_call_registry` SET state = '%d' WHERE id = '%d'", CALL_STATE_READ, SelectedRow[playerid]);
-    //mysql_pquery_f(gMySQL, "DELETE FROM `phone_call_registry` WHERE id = '%d'", SelectedRow[playerid]);
-    Character_ShowLostCalls(playerid, Character_GetSelectedPhone(playerid));
-    return 1;
-}
-
-Dialog:Dialog_InPhoneCallRegister(playerid, response, listitem, inputtext[])
-{
-    if(!response)
-        return Character_ShowPhone(playerid, Character_GetSelectedPhoneSlot(playerid));
-    SelectedRow[playerid] = list_get(Registry[playerid], listitem);
-    
-    SendClientMessage(playerid, COLOR_GREEN, "Hai eliminato l'elemento del registro.");
-
-    mysql_pquery_f(gMySQL, "DELETE FROM `phone_call_registry` WHERE id = '%d'", SelectedRow[playerid]);
-
-    Character_ShowInBoundCalls(playerid, Character_GetSelectedPhone(playerid));
-    return 1;
-}
-
 Dialog:Dialog_OutPhoneCallRegister(playerid, response, listitem, inputtext[])
 {
-    if(!response)
-        return Character_ShowPhone(playerid, Character_GetSelectedPhoneSlot(playerid));
-    SelectedRow[playerid] = list_get(Registry[playerid], listitem);
     
     SendClientMessage(playerid, COLOR_GREEN, "Hai eliminato l'elemento del registro.");
 
-    mysql_pquery_f(gMySQL, "DELETE FROM `phone_call_registry` WHERE id = '%d'", SelectedRow[playerid]);
-    Character_ShowOutBoundCalls(playerid, Character_GetSelectedPhone(playerid));
+    mysql_pquery_f(gMySQL, "DELETE FROM `phone_call_registry` WHERE id = '%d'", 0);
+    
     return 1;
 }

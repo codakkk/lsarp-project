@@ -1,6 +1,7 @@
 
-#include <jobs\core>
+
 #include <faction_system\core>
+#include <jobs\core>
 
 #include <YSI_Coding\y_hooks>
 
@@ -106,7 +107,7 @@ stock Character_PayDay(playerid)
 	{
 		new jobName[32];
 		Job_GetName(Character_GetJobType(playerid), jobName);
-		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s per il tuo lavoro da \"%s\".", FormatNumber(newPlayerMoney), jobName);
+		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s per il tuo lavoro da \"%s\".", FormatNumber(jobMoney), jobName);
 	}
 
 	if(kickedFromHouse)

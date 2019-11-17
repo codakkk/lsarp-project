@@ -460,6 +460,7 @@ CMD:respawnfactionvehicles(playerid, params[])
 		if(Vehicle_GetFaction(v) == factionid)
 		{
 			Vehicle_Respawn(v);
+			Vehicle_SetFuel(v, 100.0);
 		}
 	}
 

@@ -144,7 +144,7 @@ hook OnGameModeInit()
 
 	gItem_Radio = ServerItem_ManualInitializeItem(97, "Radio", ITEM_TYPE_GENERAL, 1212, 1);
 
-	gItem_Cigarette = ServerItem_ManualInitializeItem(98, "Sigarette", ITEM_TYPE_GENERAL, 1212, 1);
+	gItem_Cigarette = ServerItem_ManualInitializeItem(98, "Sigarette", ITEM_TYPE_GENERAL, 1212, 10);
 
 	gItem_Dress = ServerItem_ManualInitializeItem(99, "Vestito", ITEM_TYPE_GENERAL, 2846, 1);
 

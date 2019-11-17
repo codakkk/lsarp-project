@@ -1,6 +1,3 @@
-
-#include "core"
-
 #include <YSI_Coding\y_hooks>
 
 static 
@@ -86,11 +83,11 @@ timer EachSecondTaxiUpdate[1000](playerDoingTaxi, playerPassenger)
     }
 }
 
-hook function bool:Character_EnterJobDuty(playerid)
+hook function EnterJobDuty(playerid)
 {
     printf("Taxi 1");
     if(Character_GetJobType(playerid) != JOB_TYPE_TAXI)
-        return bool:continue(playerid);
+        return continue(playerid);
     printf("Taxi 2");
     new vehicleid = GetPlayerVehicleID(playerid);
 
@@ -106,10 +103,10 @@ hook function bool:Character_EnterJobDuty(playerid)
 
 hook function Character_ExitJobDuty(playerid)
 {
-    if(Character_GetJobType(playerid) != JOB_TYPE_TAXI)
-        return continue(playerid);
+    if(Character_GetJobType(playerid) == JOB_TYPE_TAXI)
+        return true;
     
-    return true;
+    return continue(playerid);
 }
 
 hook function ShowJobCommands(playerid)
@@ -238,7 +235,7 @@ hook OnCharacterTryAccept(playerid, type)
     return 1;
 }
 
-static bool:Character_IsValidJobVehicle(playerid, vehicleid)
+stock bool:Character_IsValidJobVehicle(playerid, vehicleid)
 {
     return (vehicleid > 0 && GetPlayerVehicleSeat(playerid) == 0 && (IsTaxiVehicle(vehicleid) || Vehicle_IsOwner(vehicleid, playerid, false) || Vehicle_GetJob(vehicleid) == JOB_TYPE_TAXI));
 }

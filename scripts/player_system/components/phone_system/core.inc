@@ -32,9 +32,7 @@ static enum
 
 static
     bool:UsingPhone[MAX_PLAYERS char],
-    UsingPhoneSlotID[MAX_PLAYERS],
-    SelectedPhone[MAX_PLAYERS char] = {-1, ...},
-    SelectedPhoneNumber[MAX_PLAYERS] = {0, ...}
+    UsingPhoneSlotID[MAX_PLAYERS]
 ;
 
 
@@ -67,8 +65,6 @@ hook OnCharacterClearData(playerid)
 {
     UsingPhone{playerid} = false;
     UsingPhoneSlotID[playerid] = -1;
-    SelectedPhone{playerid} = -1;
-    SelectedPhoneNumber[playerid] = 0;
     PlayerEmergencyStatus{playerid} = 0;
     return 1;
 }
@@ -155,18 +151,21 @@ timer RingPhoneTimer[10000](number)
     }
 }
 
-ptask OnCheckPlayerPhone[150](playerid) 
+//ptask OnCheckPlayerPhone[150](playerid) 
 //hook OnPlayerUpdate(playerid)
+hook OnInventoryChanged(Inventory:inventory)
 {
-    if(!Character_IsLogged(playerid))
+    static EntityType:entityType = ENTITY_TYPE_NONE, playerid = 0;
+    entityType = Inventory_GetEntityType(inventory);
+    playerid = Inventory_GetEntityID(inventory);
+
+    if(entityType != ENTITY_TYPE_PLAYER || !Character_IsLogged(playerid))
         return 1;
-    new Inventory:inventory = Character_GetInventory(playerid);
-    if(!Inventory_IsValid(inventory))
-        return 1;
+
     if(!UsingPhone{playerid})
     {
-        new itemid, number;
-        for(new i = 0, j = Character_GetInventorySize(playerid); i < j; ++i)
+        static itemid, number;
+        for(new i = 0, j = Inventory_GetSpace(inventory); i < j; ++i)
         {
             itemid = Inventory_GetSlotItem(inventory, i);
             if(itemid != gItem_Phone)
@@ -182,7 +181,7 @@ ptask OnCheckPlayerPhone[150](playerid)
         return 1;
     }
     // Dunno if it's safe
-    if(Character_GetSlotItem(playerid, UsingPhoneSlotID[playerid]) != gItem_Phone)
+    if(Inventory_GetSlotItem(inventory, UsingPhoneSlotID[playerid]) != gItem_Phone)
     {
         UsingPhone{playerid} = false;
         UsingPhoneSlotID[playerid] = -1;
@@ -230,45 +229,51 @@ hook OnCharacterTalk(playerid, text[])
             else
                 SendFormattedMessage(entityId, 0xFFFF00FF, "[Telefono] %s dice: %s", Character_GetRolePlayName(playerid), text);
         }
-        else if(Character_GetEmergencyStatus(playerid) == 1)
+    }
+    else 
+    {
+        switch(Character_GetEmergencyStatus(playerid))
         {
-            if(strfind(text, "polizia", true) != -1)
+            case 1:
             {
-                PlayerEmergencyStatus{playerid} = 2;
-                SendClientMessage(playerid, COLOR_GREY, "[OPERATORE] Descriva l'emergenza in poche parole per il Las Venturas Police Department.");
-            }
-            else if(strfind(text, "medici", true) != -1)
-            {
-                PlayerEmergencyStatus{playerid} = 3;
-                SendClientMessage(playerid, COLOR_GREY, "[OPERATORE] Descriva l'emergenza in poche parole per il Las Venturas Medical Department.");
-            }
-            else SendClientMessage(playerid, COLOR_GREY, "[OPERATORE] Ci dica di cosa ha bisogno (polizia o medici).");
-        }
-        else if(Character_GetEmergencyStatus(playerid) >= 2)
-        {
-            SendClientMessage(playerid, COLOR_GREY, "[OPERATORE] La richiesta è stata presa in carico.");
-            SendFormattedMessage(playerid, COLOR_GREY, "Testo: %s", text);
-
-            new zone[32], Float:x, Float:y, Float:z;
-            GetPlayerPos(playerid, x, y, z);
-            Get2DZoneName(x, y, z, zone, sizeof(zone));
-
-            new factionid, type = PlayerEmergencyStatus{playerid} == 2 ? FACTION_TYPE_POLICE : FACTION_TYPE_MEDICAL;
-            
-            new playerNumber = Character_GetUsingPhoneNumber(playerid);
-
-            for_map(i : GetFactionsMap())
-            {
-                factionid = iter_get_key(i);
-                if(Faction_GetType(factionid) == type)
+                if(strfind(text, "polizia", true) != -1)
                 {
-                    Faction_SendMessage(factionid, "** HQ: Chiamata al centralino");
-                    Faction_SendMessage(factionid, "Chiamata da: %s - Numero: %d - Zona: %s", Character_GetRolePlayName(playerid), playerNumber, zone);
-                    Faction_SendMessage(factionid, "Emergenza: %s", text);
+                    PlayerEmergencyStatus{playerid} = 2;
+                    SendClientMessage(playerid, COLOR_GREY, "[OPERATORE] Descriva l'emergenza in poche parole per il Las Venturas Police Department.");
                 }
+                else if(strfind(text, "medici", true) != -1)
+                {
+                    PlayerEmergencyStatus{playerid} = 3;
+                    SendClientMessage(playerid, COLOR_GREY, "[OPERATORE] Descriva l'emergenza in poche parole per il Las Venturas Medical Department.");
+                }
+                else SendClientMessage(playerid, COLOR_GREY, "[OPERATORE] Ci dica di cosa ha bisogno (polizia o medici).");
             }
+            case 2:
+            {
+                SendClientMessage(playerid, COLOR_GREY, "[OPERATORE] La richiesta è stata presa in carico.");
+                SendFormattedMessage(playerid, COLOR_GREY, "Testo: %s", text);
 
-            Character_StopCall(playerid, UsingPhoneSlotID[playerid]);
+                new zone[32], Float:x, Float:y, Float:z;
+                GetPlayerPos(playerid, x, y, z);
+                Get2DZoneName(x, y, z, zone, sizeof(zone));
+
+                new factionid, type = PlayerEmergencyStatus{playerid} == 2 ? FACTION_TYPE_POLICE : FACTION_TYPE_MEDICAL;
+                
+                new playerNumber = Character_GetUsingPhoneNumber(playerid);
+
+                for_map(i : GetFactionsMap())
+                {
+                    factionid = iter_get_key(i);
+                    if(Faction_GetType(factionid) == type)
+                    {
+                        Faction_SendMessage(factionid, "** HQ: Chiamata al centralino");
+                        Faction_SendMessage(factionid, "Chiamata da: %s - Numero: %d - Zona: %s", Character_GetRolePlayName(playerid), playerNumber, zone);
+                        Faction_SendMessage(factionid, "Emergenza: %s", text);
+                    }
+                }
+
+                Character_StopCall(playerid, UsingPhoneSlotID[playerid]);
+            }
         }
     }
     return 1;
@@ -542,12 +547,14 @@ stock Character_StopCall(playerid, slotid)
     if(!Phone_IsBusy(playerInventory, slotid))
         return SendClientMessage(playerid, COLOR_ERROR, "Questo cellulare non ha una chiamata in corso.");
 
-    new 
-        playerNumber = Inventory_GetSlotExtra(playerInventory, slotid, 0),
-        callingNumber = Phone_GetCallingNumber(playerInventory, slotid);
+    new incomingCall = Phone_GetIncomingFromNumber(playerInventory, slotid),
+        callingNumber = Phone_GetCallingNumber(playerInventory, slotid),
+        playerNumber = Inventory_GetSlotExtra(playerInventory, slotid, 0);
+
+    new checkOn = callingNumber == 0 ? incomingCall : callingNumber;
 
     new entityId, EntityType:entityType, phoneSlotId;
-    if(World_FindPhoneByNumber(callingNumber, entityType, entityId, phoneSlotId))
+    if(World_FindPhoneByNumber(checkOn, entityType, entityId, phoneSlotId))
     {
         new Inventory:entityInv = Inventory_Get(entityType, entityId);
         if(entityType == ENTITY_TYPE_PLAYER)
@@ -555,7 +562,7 @@ stock Character_StopCall(playerid, slotid)
             if(!Phone_IsOff(entityInv, phoneSlotId))
             {
                 new name[32];
-                if(PhoneBook_GetContactName(callingNumber, playerNumber, name))
+                if(PhoneBook_GetContactName(checkOn, playerNumber, name))
                     SendFormattedMessage(entityId, COLOR_GREEN, "%s ha chiuso la chiamata.", name);
                 else
                     SendFormattedMessage(entityId, COLOR_GREEN, "%d ha chiuso la chiamata.", playerNumber);
@@ -717,71 +724,99 @@ stock Character_ShowPhone(playerid, slotid)
 {
     if(!Character_HasPhoneInSlot(playerid, slotid))
         return 0;
-    SelectedPhone{playerid} = slotid;
-    SelectedPhoneNumber[playerid] = Character_GetSlotExtra(playerid, slotid, 0);
-    Dialog_Show_s(playerid, Dialog_UseCellPhone, DIALOG_STYLE_LIST, str_format("Cellulare - %d", SelectedPhoneNumber[playerid]), @("Info\nChiama\nSMS\nMessaggi non letti\nMessaggi in entrata\nMessaggi in uscita\nRegistro chiamate perse\nRegistro chiamate in entrata\nRegistro chiamate in uscita\nRubrica\nAggiungi contatto\nAccendi/Spegni"), "Seleziona", "Chiudi");
+    new playerNumber = Character_GetSlotExtra(playerid, slotid, 0);
+    new response[e_DIALOG_RESPONSE_INFO];
+    yield 1;
+    for(;;)
+    {
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_LIST, str_format("Cellulare - %d", playerNumber), @("Info\nChiama\nSMS\nMessaggi non letti\nMessaggi in entrata\nMessaggi in uscita\nRegistro chiamate perse\nRegistro chiamate in entrata\nRegistro chiamate in uscita\nRubrica\nAggiungi contatto\nAccendi/Spegni"), @("Seleziona"), @("Chiudi"));
+        
+        if(!response[E_DIALOG_RESPONSE_Response])
+            break;
+        
+        switch(response[E_DIALOG_RESPONSE_Listitem])
+        {
+            case 0: { Character_ShowPhoneInfo(playerid, slotid); continue; }
+            case 1: HandleCallFromDialog(playerid, slotid, playerNumber);
+            case 2: HandleSMSFromDialog(playerid, slotid, playerNumber);
+            case 3: return Character_ShowUnReadPhoneMess(playerid, slotid);
+            case 4: return Character_ShowInBoundPhoneMess(playerid, slotid);
+            case 5: return Character_ShowOutBoundPhoneMess(playerid, slotid);
+            case 6: Character_ShowLostCalls(playerid, playerNumber);
+            case 7: Character_ShowInBoundCalls(playerid, playerNumber);
+            case 8: Character_ShowOutBoundCalls(playerid, playerNumber);
+            case 9: Character_ShowPhoneBook(playerid, slotid);
+            case 10: AddContactDialog(playerid, slotid, playerNumber);
+            case 11: ChangePhoneStateDialog(playerid, slotid, playerNumber);
+        }
+    }
     return 1;
 }
 
-Dialog:Dialog_UseCellPhone(playerid, response, listitem, inputtext[])
+static HandleCallFromDialog(playerid, slotid, ownerNumber)
 {
-    if(!response || SelectedPhoneNumber[playerid] <= 0)
-        return 0;
-    
-    new slotid = SelectedPhone{playerid};
+    new response[e_DIALOG_RESPONSE_INFO];
+    yield 1;
+    for(;;)
+    {
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, str_format("Cellulare - %d", ownerNumber), @("Inserisci il numero di telefono che vuoi chiamare."), @("Chiama"), @("Indietro"));
 
-    if(!Character_HasPhoneInSlot(playerid, slotid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non hai un cellulare in questo slot.");
-    
-    if(listitem == 0)
-    {
-        Character_ShowPhoneInfo(playerid, slotid);
+        if(response[E_DIALOG_RESPONSE_Response])
+        {
+            if(strlen(response[E_DIALOG_RESPONSE_InputText]) <= 0)
+                continue;
+            Character_StartCall(playerid, slotid, response[E_DIALOG_RESPONSE_InputText]);
+        }
+
+        break;
     }
-    else if(listitem == 1)
+}
+
+static HandleSMSFromDialog(playerid, slotid, ownerNumber)
+{
+    new response[e_DIALOG_RESPONSE_INFO];
+    yield 1;
+    for(;;)
     {
-        Dialog_Show_s(playerid, Dialog_PhoneCall, DIALOG_STYLE_INPUT, str_format("Cellulare - %d", SelectedPhoneNumber[playerid]), @("Inserisci il numero di telefono che vuoi chiamare."), "Chiama", "Chiudi");
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, str_format("Cellulare - %d", ownerNumber), @("Inserisci il numero di telefono o il contatto in rubrica seguito dal testo del messaggio\nMax 128 caratteri."), @("Invia"), @("Indietro"));
+
+        if(response[E_DIALOG_RESPONSE_Response])
+        {
+            new number[9], msg[128];
+            if(sscanf(response[E_DIALOG_RESPONSE_InputText], "s[9]s[128]", number, msg))
+                continue;
+            new n = PhoneBook_ParseValue(ownerNumber, number);
+            Character_SendSMS(playerid, slotid, n, msg);
+
+        }
+        break;
     }
-    else if(listitem == 2)
+}
+
+static AddContactDialog(playerid, slotid, ownerNumber)
+{
+    new r[e_DIALOG_RESPONSE_INFO];
+    yield 1;
+    for(;;)
     {
-        Dialog_Show_s(playerid, Dialog_PhoneSMS, DIALOG_STYLE_INPUT, str_format("Cellulare - %d", SelectedPhoneNumber[playerid]), @("Inserisci il numero di telefono seguito dal messaggio che vuoi inviare.\n == Esempio ==\n 444123456 Ciao sono io!\n\n"), "Invia", "Chiudi");
+        await_arr(r) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, str_format("Cellulare - %d - Aggiungi numero in rubrica", ownerNumber), @("Inserisci il nome del nuovo contatto seguito dal numero del cellulare.\nEsempio: Peppe Rossi 444333221\n\n"), @("Crea Contatto"), @("Indietro"));
+        
+        if(!r[E_DIALOG_RESPONSE_Response])
+            break;
+        
+        new name[32], number;
+        if(sscanf(r[E_DIALOG_RESPONSE_InputText], "s[32]d", name, number))
+            continue;
+        
+        Character_AddToPhoneBook(playerid, slotid, number, name);
+        break;
     }
-    else if(listitem == 3)
-    {
-        return Character_ShowUnReadPhoneMess(playerid, slotid);
-    }
-    else if(listitem == 4)
-    {
-        return Character_ShowInBoundPhoneMess(playerid, slotid);
-    }
-    else if(listitem == 5)
-    {
-        return Character_ShowOutBoundPhoneMess(playerid, slotid);
-    }
-    else if(listitem == 6)
-    {
-        return Character_ShowLostCalls(playerid, SelectedPhoneNumber[playerid]);
-    }
-    else if(listitem == 7)
-    {
-        return Character_ShowInBoundCalls(playerid, SelectedPhoneNumber[playerid]);
-    }
-    else if(listitem == 8)
-    {
-        return Character_ShowOutBoundCalls(playerid, SelectedPhoneNumber[playerid]);
-    }
-    else if(listitem == 9)
-    {
-        return Character_ShowPhoneBook(playerid, slotid);
-    }
-    else if(listitem == 10)
-    {
-        return Dialog_Show(playerid, Dialog_PhoneBookAddNumber, DIALOG_STYLE_INPUT, "Aggiungi numero in rubrica", "Inserisci il numero seguito dal nome che vuoi aggiungere in rubrica.\n== Esempio ==\n44411234 Mario Rossi", "Aggiungi", "Indietro");
-    }
-    else if(listitem == 11)
-    {
-        Character_ChangePhoneState(playerid, slotid);
-    }
-    return 1;
+}
+
+static ChangePhoneStateDialog(playerid, slotid, ownerNumber)
+{
+    #pragma unused ownerNumber
+    Character_ChangePhoneState(playerid, slotid);
 }
 
 stock Character_ChangePhoneState(playerid, slotid)
@@ -797,30 +832,6 @@ stock Character_ChangePhoneState(playerid, slotid)
         SendClientMessage(playerid, COLOR_GREEN, "Hai acceso il cellulare.");
         LoadPhone(playerid, Character_GetSlotExtra(playerid, slotid, 0));
     }
-    return 1;
-}
-
-Dialog:Dialog_PhoneCall(playerid, response, listitem, inputtext[])
-{
-    if(!response)
-        return Character_ShowPhone(playerid, SelectedPhone{playerid});
-    Character_StartCall(playerid, SelectedPhone{playerid}, inputtext);
-    return 1;
-}
-
-Dialog:Dialog_PhoneSMS(playerid, response, listitem, inputtext[])
-{
-    if(!response)
-        return Character_ShowPhone(playerid, SelectedPhone{playerid});
-
-    if(!Character_HasPhoneInSlot(playerid, SelectedPhone{playerid}))
-        return 0;
-    
-    new number[9], msg[128];
-    if(sscanf(inputtext, "s[9]s[128]", number, msg))
-        return Dialog_Show_s(playerid, Dialog_PhoneSMS, DIALOG_STYLE_INPUT, str_format("Cellulare - %d", SelectedPhoneNumber[playerid]), @("{FF0000}Il formato inserito non è corretto.{FFFFFF}\nInserisci il numero di telefono seguito dal messaggio che vuoi inviare.\n == Esempio ==\n 444123456 Ciao sono io!\n\n"), "Invia", "Chiudi");
-    new n = PhoneBook_ParseValue(SelectedPhoneNumber[playerid], number);
-    Character_SendSMS(playerid, SelectedPhone{playerid}, n, msg);
     return 1;
 }
 
@@ -854,21 +865,6 @@ stock Character_GetUsingPhoneNumber(playerid)
     if(UsingPhoneSlotID[playerid] < 0)
         return 0;
     return Inventory_GetSlotExtra(Character_GetInventory(playerid), UsingPhoneSlotID[playerid], 0);
-}
-
-stock Character_GetSelectedPhoneSlot(playerid)
-{
-    return SelectedPhone{playerid};
-}
-
-stock Character_GetSelectedPhone(playerid)
-{
-    return SelectedPhoneNumber[playerid];
-}
-
-stock Character_SetSelectedPhone(playerid, number)
-{
-    SelectedPhoneNumber[playerid] = number;
 }
 
 static Character_ShowPhoneInfo(playerid, slotid)
