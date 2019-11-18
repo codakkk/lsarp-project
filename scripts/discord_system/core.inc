@@ -17,6 +17,10 @@ hook OnGameModeInit()
     return 1;
 }
 
+/*stock DCC_FindChannelById(const c[]) {}
+
+stock DCC_SendChannelMessage(DCC_Channel:t, msg[]){}*/
+
 stock Discord_SendMessage(DCC_Channel:channel, const msg[], GLOBAL_TAG_TYPES:...)
 {
     format(YSI_UNSAFE_HUGE_STRING, YSI_UNSAFE_HUGE_LENGTH, msg, ___(2));

@@ -62,7 +62,7 @@
 
 #include <player_system\components\spawn>
 
-#include <player_system\commands>
+#include <player_system\components\commands\core>
 
 // OTHERS
 
@@ -559,7 +559,7 @@ stock Character_GetLevel(playerid)
 stock Character_SetExperience(playerid, exp)
 {
 	CharacterInfo[playerid][Experience] = exp;
-	mysql_pquery_f(gMySQL, "UPDATE `characters` SET level = '%d' WHERE id = '%d'", exp, Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET experience = '%d' WHERE id = '%d'", exp, Character_GetID(playerid));
 }
 
 stock Character_AddExperience(playerid, amount)

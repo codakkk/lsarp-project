@@ -84,7 +84,8 @@ static ShowHouseWithdrawMoneyDialog(playerid, House:house)
             SendClientMessage(playerid, COLOR_ERROR, "Solo il proprietario puo' utilizzare questa funzionalità.");
             break;
         }
-        await_arr(response) ShowPlayerAsyncDialog(playerid, DIALOG_STYLE_INPUT, "Deposita soldi", "Inserisci l'ammontare di soldi che vuoi depositare in casa.", "Deposita", "Annulla");
+
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Ritira soldi"), str_format("Inserisci l'ammontare di soldi che vuoi ritirare dalla casa.\nDisponibile: %d", House_GetMoney(house)), @("Ritira"), @("Annulla"));
 
         if(!response[E_DIALOG_RESPONSE_Response]) break;
 
@@ -330,6 +331,7 @@ static ShowHouseRentersListDialog(playerid, House:house, page = 0)
     }
 
     list_delete_deep(PlayerRenters);
+    PlayerRenters = INVALID_LIST;
 }
 
 static HandleHouseRentActionOnPlayer(playerid, House:house, playerDatabaseId, listitem)

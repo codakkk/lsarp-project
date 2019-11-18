@@ -43,7 +43,7 @@ hook OnCharacterClearData(playerid)
 {
     if(list_valid(PlayerRequests[playerid]))
         list_delete_deep(PlayerRequests[playerid]);
-    PlayerRequests[playerid] = List:0;
+    PlayerRequests[playerid] = INVALID_LIST;
     PlayerRequestsCounter{playerid} = 0;
     PlayerRequestTime[playerid] = 0;
     CurrentRequestPage{playerid} = 0;

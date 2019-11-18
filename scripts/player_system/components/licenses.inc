@@ -247,6 +247,10 @@ Dialog:Dialog_LicenseBuy(playerid, response, listitem, inputtext[])
     
     if(Character_HasLicense(playerid, type))
         return SendClientMessage(playerid, COLOR_ERROR, "Possiedi già questa licenza.");
+    
+    if(price > Character_GetMoney(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai tutti questi soldi.");
+
     if(Character_SetLicense(playerid, type, true))
     {
         SendFormattedMessage(playerid, COLOR_GREEN, "Hai acquistato la licenza (%s) per $%d.", GetLicenseName(type), price);

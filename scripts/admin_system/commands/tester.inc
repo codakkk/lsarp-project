@@ -142,7 +142,7 @@ CMD:goto(playerid, params[])
     if(sscanf(params, "k<u>", id))
 	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /goto [playerid/partofname]");
     
-    if(id < 0 || id >= MAX_PLAYERS  || !Character_IsLogged(id))
+    if(!Character_IsLogged(id))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
 
 	if(id == playerid)
@@ -198,6 +198,9 @@ CMD:setvw(playerid, params[])
     if(sscanf(params, "k<u>d", id, vw))
 	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setvw <playerid/nome> <virtual world>");
 	
+	if(!Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+
 	Character_SetVirtualWorld(id, vw);
 
 	SendFormattedMessage(id, COLOR_GREEN, "L'admin %s ti ha settato il virtual world a %d.", Account_GetName(playerid), vw);
@@ -212,6 +215,9 @@ CMD:setinterior(playerid, params[])
     if(sscanf(params, "k<u>d", id, int))
 	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setinterior <playerid/nome> <interior>");
 	
+	if(!Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+
 	SetPlayerInterior(id, int);
 
 	SendFormattedMessage(id, COLOR_GREEN, "L'admin %s ti ha settato l'interior id %d.", Account_GetName(playerid), int);

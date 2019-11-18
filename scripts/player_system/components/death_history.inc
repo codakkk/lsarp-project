@@ -13,7 +13,8 @@ static List:LostItems[MAX_PLAYERS] = {List:0, ...};
 hook OnCharacterClearData(playerid)
 {
     if(list_valid(LostItems[playerid]))
-        list_delete_deep(LostItems[playerid]);
+        list_delete(LostItems[playerid]);
+    LostItems[playerid] = INVALID_LIST;
     return 1;
 }
 

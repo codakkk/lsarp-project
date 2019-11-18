@@ -572,3 +572,58 @@ CMD:setweather(playerid, params[])
 		SendClientMessage(playerid, COLOR_ERROR, "ID Errato.");
 	return 1;
 }
+
+flags:respawnjobvehicles(CMD_MODERATOR);
+CMD:respawnjobvehicles(playerid, params[])
+{
+	new jobType;
+	if(sscanf(params, "d", jobType))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /respawnjobvehicles <factionid>");
+	
+	if(!(JOB_TYPE_NONE < JobType:jobType <= JobType))
+		return SendClientMessage(playerid, COLOR_ERROR, "Lavoro non valido.");
+
+	new bool:isOccupied = false;
+	foreach(new v : Vehicle)
+	{
+        if(Vehicle_GetJob(v) == JOB_TYPE_NONE)
+            continue;
+        
+		isOccupied = false;
+		foreach(new p : Player)
+		{
+			if(GetPlayerVehicleID(p) == v)
+			{
+				isOccupied = true;
+				break;
+			}
+		}
+		
+		if(isOccupied)
+			continue;
+		
+		if(Vehicle_GetJob(v) == JobType:jobType)
+		{
+			Vehicle_Respawn(v);
+            Vehicle_SetFuel(v, 100.0);
+		}
+	}
+
+	new name[32];
+	Job_GetName(JobType:jobType, name);
+	SendMessageToAdmins(0, COLOR_ORANGE, "AdmCmd: %s ha respawnato i veicoli del lavoro id %d (%s).", Account_GetName(playerid), jobType, name);
+	return 1;
+}
+
+flags:setlevel(CMD_MODERATOR);
+CMD:setlevel(playerid, params[])
+{
+	new id, level;
+    if(sscanf(params, "k<u>d", id, level))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setlevel [playerid/partofname] [level]");
+    if(!Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+	Character_SetLevel(id, level);
+	SendMessageToAdmins(false, COLOR_ADMINCMD, "AdmCmd: %s ha settato il livello di %s a %d.", Account_GetName(playerid), Character_GetOOCName(id), level);
+	return 1;
+}

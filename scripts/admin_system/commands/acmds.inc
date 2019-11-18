@@ -31,7 +31,7 @@ CMD:acmds(playerid, params[])
 		SendClientMessage(playerid, -1, "[MODERATORE]: /vcreate - /vdelete - (/fix)veh - /gotov - /getvhere - /avcolor - /vfuel - /setvehiclejob");
 		SendClientMessage(playerid, -1, "[MODERATORE]: /bancharacter - /unbancharacter - /apark - /avplate - /afactionkick - /gototeleport");
 		SendClientMessage(playerid, -1, "[MODERATORE]: /aplacefurniture - /adeletefurniture - /atextureobject - /respawnjobvehicles");
-		SendClientMessage(playerid, -1, "[MODERATORE]: /afactioncmds - /abuildingcmds - /adealershipcmds");
+		SendClientMessage(playerid, -1, "[MODERATORE]: /afactioncmds - /abuildingcmds - /adealershipcmds - /setlevel");
 		SendClientMessage(playerid, -1, "[MODERATORE]: /banaccount - /unbanaccount - /banofflineaccount - /resetinv");
 		
 	}

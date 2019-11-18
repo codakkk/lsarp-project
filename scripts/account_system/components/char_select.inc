@@ -74,6 +74,7 @@ hook OnCharacterClearData(playerid)
     if(list_valid(Characters[playerid]))
 	{
 		list_delete(Characters[playerid]);
+		Characters[playerid] = INVALID_LIST;
 	}
     return 1;
 }

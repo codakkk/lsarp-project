@@ -108,7 +108,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 flags:recon(CMD_JR_MODERATOR);
 CMD:recon(playerid, params[])
 {
-    if(!isnull(params) && !strcmp(params, "off", true))
+    if(!isnull(params) && !strcmp(params, "off", true) && Character_IsLogged(SpectatingPlayer[playerid]))
     {
         PlayerTextDrawHide(playerid, ReconPlayerText[playerid]);
         PlayerSpectatePlayer(playerid, INVALID_PLAYER_ID);

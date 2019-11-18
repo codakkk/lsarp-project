@@ -169,7 +169,7 @@ CMD:annulla(playerid, params[])
 	{
 		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /annulla <text>");
 		SendClientMessage(playerid, COLOR_GREY, "Text: arma, oggetto, cure, (ripa)razione, (vern)iciatura, (perq)uisizione, ...");
-		SendClientMessage(playerid, COLOR_GREY, "... (edi)ficio (biz)");
+		SendClientMessage(playerid, COLOR_GREY, "... (edi)ficio (biz), centralino");
 		return 1;
 	}
 	

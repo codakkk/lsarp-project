@@ -111,10 +111,18 @@ stock bool:Inventory_Delete(Inventory:inventory)
 	new EntityType:entityType = Inventory_GetEntityType(inventory);
 	new entityId = Inventory_GetEntityID(inventory);
 	new List:items = Inventory_GetItems(inventory);
+
+	printf("Deleting inventory %d for entity %d id %d", _:inventory, _:entityType, entityId);
+	printf("Items List: %d", _:items);
 	
 	list_delete(items);
+
 	map_remove(InventoriesMap[entityType], entityId);
 	
+	printf("InventoriesMap entity removed.");
+	if(map_has_key(InventoriesMap[entityType], entityId))
+		printf("But entity is still present.");
+
 	new index = list_find(InventoriesList, inventory);
 	if(index != -1)
 		list_remove(InventoriesList, index);
@@ -254,6 +262,7 @@ stock Inventory_AddItem(Inventory:inventory, itemid, amount, extra, Map:tempExtr
 			}
 		}
 		list_delete_deep(hasItemSlots);
+		hasItemSlots = INVALID_LIST;
 	}
 	CallLocalFunction(#OnInventoryChanged, "d", _:inventory);
 	//Inventory_Print(inventory);

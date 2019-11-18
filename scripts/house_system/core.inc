@@ -60,7 +60,7 @@ static enum _:E_HOUSE_DATA
 static 
     Map:Houses;
 
-static SelectedPage[MAX_PLAYERS char], List:PlayerRenters[MAX_PLAYERS], SelectedRenter[MAX_PLAYERS];
+static SelectedPage[MAX_PLAYERS char], SelectedRenter[MAX_PLAYERS];
 
 stock Map:GetHousesMap()
 {
@@ -154,8 +154,6 @@ hook OnCharacterClearData(playerid)
 {
     SelectedPage{playerid} = 0;
     SelectedRenter[playerid] = 0;
-    if(list_valid(PlayerRenters[playerid]))
-        list_delete_deep(PlayerRenters[playerid]);
     return 1;
 }
 

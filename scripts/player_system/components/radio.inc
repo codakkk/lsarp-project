@@ -16,6 +16,15 @@ hook OnGameModeInit()
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
+hook OnCharacterLoad(playerid)
+{
+	await mysql_aquery_s(gMySQL, str_format("SELECT last_freq FROM `characters` WHERE id = '%d'", Character_GetID(playerid)));
+	cache_get_value_name_int(0, "last_freq", RadioFrequency[playerid]);
+	if(Character_GetRadioFrequency(playerid) > 0)
+		SendFormattedMessage(playerid, COLOR_BLUE, "Ti sei connesso alla frequenza %d.", Character_GetRadioFrequency(playerid));
+	return 1;
+}
+
 static Character_CreateRadioGZ(playerid, Float:range, frequency) 
 {
 	new 
@@ -70,6 +79,7 @@ stock Character_SetRadioFrequency(playerid, frequency)
     if(!Radio_IsValidFrequency(frequency))
         return 0;
 	RadioFrequency[playerid] = frequency;
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET last_freq = '%d' WHERE id = '%d'", frequency, Character_GetID(playerid));
     return 1;
 }
 
@@ -135,7 +145,7 @@ flags:radiocmds(CMD_USER);
 CMD:radiocmds(playerid, params[])
 {
 	SendClientMessage(playerid, 0x33AA33FF, "|_________________________Radio Help_________________________|");
-	SendClientMessage(playerid, -1, "/frequenza - Imposta su quale frequenza vuoi comunicare. ((da rinominare, ora è /frequenza))");
+	SendClientMessage(playerid, -1, "/frequenza - Imposta su quale frequenza vuoi comunicare.");
 	SendClientMessage(playerid, -1, "(/r)adio - Parla usando la radio nel channel che hai scelto.");
 	SendClientMessage(playerid, -1, "/rlow - Parla con tono basso alla radio.");
 	SendClientMessage(playerid, -1, "/rtrace - Divisione Investigativa LVMPD");

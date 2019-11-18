@@ -76,6 +76,10 @@ CMD:uniforme(playerid, params[])
 	if(!Character_IsFactionDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Puoi utilizzare questo comando solo se in servizio.");
 
+	new Building:building = Character_GetBuilding(playerid, true);
+	if(!Building_IsValid(building) || Building_GetFaction(building) != fid)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei nell'edificio della tua fazione.");
+	
 	new uniform_id,
 		List:factionSkins = Faction_GetSkins(fid);
 

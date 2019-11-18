@@ -313,6 +313,7 @@ hook OnCharacterClearData(playerid)
     SelectedCategory{playerid} = -1;
     if(list_valid(CategoryIndex[playerid]))
         list_delete_deep(CategoryIndex[playerid]);
+    CategoryIndex[playerid] = INVALID_LIST;
     for(new i = 0; i < 10; ++i)
         RemovePlayerAttachedObject(playerid, i);
     return 1;
@@ -487,6 +488,7 @@ Dialog:Dialog_WearObjectSelect(playerid, response, listitem, inputtext[])
 OnResponse:Dialog_WearObjectSelect(playerid, response, listitem, inputtext[])   
 {
     list_delete_deep(CategoryIndex[playerid]);
+    CategoryIndex[playerid] = INVALID_LIST;
     return 1;
 }
 
@@ -818,6 +820,7 @@ static bool:WearObject_Delete(playerid, PlayerObject:playerObject)
     }
     if(slotid != -1)
     {
+        WearObject_Remove(playerid, playerObject);
         mysql_pquery_f(gMySQL, "DELETE FROM character_wear_objects WHERE id = '%d'", WearObject_GetID(playerObject));
         var_release(Variant:playerObject);
         list_remove(list, slotid);

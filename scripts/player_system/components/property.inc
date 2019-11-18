@@ -22,6 +22,7 @@ hook OnCharacterClearData(playerid)
 	if(list_valid(CharacterHouses[playerid]))
 		list_delete(CharacterHouses[playerid]);
 
+	CharacterBuildings[playerid] = CharacterHouses[playerid] = INVALID_LIST;
 	PlayerHouseRent[playerid] = INVALID_HOUSE;
 	return 1;
 }

@@ -114,7 +114,6 @@ hook function ShowJobCommands(playerid)
     if(Character_GetJobType(playerid) == JOB_TYPE_TAXI)
     {
         SendClientMessage(playerid, COLOR_YELLOW, "[TAXI] /tassametro");
-        return true;
     }
     return continue(playerid);
 }

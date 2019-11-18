@@ -335,35 +335,35 @@ stock Character_GetCurrentTeleport(playerid)
 {
     static teleportid = 0;
     teleportid = 0;
-    //new Float:range = IsPlayerInAnyVehicle(playerid) ? 5.0 : 2.5;
-    if(IsPlayerInAnyVehicle(playerid))
+    new Float:range = IsPlayerInAnyVehicle(playerid) ? 5.0 : 2.5;
+    /*if(IsPlayerInAnyVehicle(playerid))
+    {*/
+    static Float:x, Float:y, Float:z, Float:ex, Float:ey, Float:ez, tempTeleport = 0;
+    tempTeleport = 0;
+    for_map(i : TeleportsMap)
     {
-        static Float:x, Float:y, Float:z, Float:ex, Float:ey, Float:ez, tempTeleport = 0;
-        tempTeleport = 0;
-        for_map(i : TeleportsMap)
+        tempTeleport = iter_get_key(i);
+        if(!Teleport_IsValid(tempTeleport))
+            continue;
+        Teleport_GetEnterPosition(tempTeleport, x, y, z);
+        if(IsPlayerInRangeOfPoint(playerid, range, x, y, z) && Character_GetVirtualWorld(playerid) == Teleport_GetEnterWorld(tempTeleport))
         {
-            tempTeleport = iter_get_key(i);
-            if(!Teleport_IsValid(tempTeleport))
-                continue;
-            Teleport_GetEnterPosition(tempTeleport, x, y, z);
-            if(IsPlayerInRangeOfPoint(playerid, 5.0, x, y, z) && Character_GetVirtualWorld(playerid) == Teleport_GetEnterWorld(tempTeleport))
-            {
-                teleportid = tempTeleport;
-            }
-            Teleport_GetExitPosition(tempTeleport, ex, ey, ez);
-            if(IsPlayerInRangeOfPoint(playerid, 5.0, ex, ey, ez) && Character_GetVirtualWorld(playerid) == Teleport_GetExitWorld(tempTeleport))
-            {
-                teleportid = tempTeleport;
-            }
+            teleportid = tempTeleport;
+        }
+        Teleport_GetExitPosition(tempTeleport, ex, ey, ez);
+        if(IsPlayerInRangeOfPoint(playerid, range, ex, ey, ez) && Character_GetVirtualWorld(playerid) == Teleport_GetExitWorld(tempTeleport))
+        {
+            teleportid = tempTeleport;
         }
     }
+    /*}
     else
     {
         static elementid, E_ELEMENT_TYPE:type;
         Character_GetNearestPickup(playerid, elementid, type);
         if(type == ELEMENT_TYPE_TELEPORT)
             teleportid = elementid;
-    }
+    }*/
     return teleportid;
 }
 

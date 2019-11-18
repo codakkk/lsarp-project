@@ -6,7 +6,6 @@ hook function ShowJobCommands(playerid)
     if(Character_GetJobType(playerid) == JOB_TYPE_MECHANIC)
     {
         SendClientMessage(playerid, COLOR_YELLOW, "[MECCANICO] /ripara /vernicia");
-        return true;
     }
     return continue(playerid);
 }

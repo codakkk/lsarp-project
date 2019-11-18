@@ -11,7 +11,7 @@ hook OnCharacterClearData(playerid)
 
 hook OnCharacterLoad(playerid)
 {
-    await mysql_aquery_s(gMySQL, str_format("SELECT employee_at FROM `characters` WHERE id = '%d'", Character_GetID(playerid)));
+    await mysql_aquery_s(gMySQL, str_format("SELECT employee_at FROM `characters` WHERE id = '%d'", Character_GetID(playerid)), .parallel=true);
     
     new buildingid = 0;
     cache_get_value_name_int(0, "employee_at", buildingid);

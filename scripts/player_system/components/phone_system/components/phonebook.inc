@@ -90,6 +90,7 @@ stock Character_ShowPhoneBook(playerid, slotid)
     }
 
     list_delete(temp);
+    temp = INVALID_LIST;
     return 1;
 }
 
@@ -312,16 +313,22 @@ static bool:PhoneBook_SetContactName(ownerNumber, number, name[])
     return true;
 }
 
-stock PhoneBook_GetContactName(ownerNumber, number, name[])
+stock bool:PhoneBook_GetContactName(ownerNumber, number, name[])
 {
     if(!map_has_key(PhoneBooks, ownerNumber))
-        return 0;
+        return false;
+    
     new Map:phonebook = PhoneBook_Get(ownerNumber);
     if(!map_has_key(phonebook, number))
-        return 0;
+    {
+        format(name, 32, "%d", number);
+        printf("%d", number);
+        return true;
+    }
     new Iter:iter = map_iter_at(phonebook, number);
     iter_get_md_arr(iter, {CONTACT_NAME}, name, 32);
-    return 1;
+    printf("Name: %s", name);
+    return true;
 }
 
 static bool:PhoneBook_HasContact(ownerNumber, number)

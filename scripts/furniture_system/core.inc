@@ -82,7 +82,7 @@ hook OnCharacterClearData(playerid)
 
     if(list_valid(FurnitureListItem[playerid]))
         list_delete(FurnitureListItem[playerid]);
-    
+    FurnitureListItem[playerid] = INVALID_LIST;
     if(Furniture_IsShowingInfo(playerid))
     {
         Furniture_DeleteLabels(playerid);
@@ -274,6 +274,7 @@ Dialog:Dialog_FurnitureBuy(playerid, response, listitem, inputtext[])
 {
     new selected = list_get(FurnitureListItem[playerid], listitem);
     list_delete(FurnitureListItem[playerid]);
+    FurnitureListItem[playerid] = INVALID_LIST;
     if(!response)
         return 0;
     SelectedFurniture[playerid] = selected;
@@ -290,6 +291,7 @@ Dialog:Dialog_CharacterFurnitures(playerid, response, listitem, inputtext[])
     ;
 
     list_delete(FurnitureListItem[playerid]);
+    FurnitureListItem[playerid] = INVALID_LIST;
 
     if(!response)
     {
@@ -888,7 +890,7 @@ stock Furniture_DeleteLabels(playerid)
         DestroyDynamic3DTextLabel(Text3D:iter_get(i));
     }
     list_delete(FurnitureLabels[playerid]);
-    FurnitureLabels[playerid] = List:0;
+    FurnitureLabels[playerid] = INVALID_LIST;
     ShowingLabelsForWorld[playerid] = -1;
     return 1;
 }

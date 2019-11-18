@@ -39,7 +39,11 @@ static
     JobType:PlayerJob[MAX_PLAYERS char] = {JOB_TYPE_NONE, ...},
     bool:JobDuty[MAX_PLAYERS char] = {false, ...};
 
-static JobType:VehicleJobType[MAX_VEHICLES char];
+static JobType:VehicleJobType[MAX_VEHICLES char] = {JOB_TYPE_NONE, ...};
+static 
+    JobType:RequestedService[MAX_PLAYERS char] = {JOB_TYPE_NONE, ...},
+    FollowingPlayer[MAX_PLAYERS] = {INVALID_PLAYER_ID, ...},
+    FollowingPlayerCP[MAX_PLAYERS] = {0, ...};
 
 hook OnScriptInit()
 {
@@ -61,10 +65,32 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, elementid, E_ELEMENT_TYPE:type)
     return 1;
 }
 
+hook OnCharacterDisconnected(playerid, reason)
+{
+    if(Character_IsLogged(FollowingPlayer[playerid]))
+    {
+        SendClientMessage(FollowingPlayer[playerid], COLOR_ORANGE, "[!] Il giocatore che doveva fornirti il servizio si è disconnesso.");
+    }
+    foreach(new i : Player)
+    {
+        if(FollowingPlayer[i] == playerid)
+        {
+            SendClientMessage(i, COLOR_ORANGE, "[!] Il giocatore a cui dovevi fornire il servizio non è più disponibile.");
+            break;
+        }
+    }
+    return 1;
+}
+
 hook OnCharacterClearData(playerid)
 {
     PlayerJob{playerid} = JOB_TYPE_NONE;
+    RequestedService{playerid} = JOB_TYPE_NONE;
+    FollowingPlayer[playerid] = INVALID_PLAYER_ID;
     JobDuty{playerid} = false;
+    if(IsValidDynamicCP(FollowingPlayerCP[playerid]))
+        DestroyDynamicCP(FollowingPlayerCP[playerid]);
+    FollowingPlayerCP[playerid] = 0;
     return 1;
 }
 
@@ -110,6 +136,18 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
 		}
 	}
 	return 1;
+}
+#include <YSI_Coding\y_hooks>
+ 
+
+hook OnPlayerEnterDynamicCP(playerid, checkpointid)
+{
+    if(FollowingPlayerCP[playerid] == checkpointid)
+    {
+        DestroyDynamicCP(FollowingPlayerCP[playerid]);
+        SendClientMessage(playerid, COLOR_ORANGE, "[!] Hai raggiunto il giocatore.");
+    }
+    return 1;
 }
 
 CMD:jobcmds(playerid, params[])
@@ -181,6 +219,12 @@ CMD:leavejob(playerid, params[])
     if(Character_IsJobDuty(playerid))
         Character_ExitJobDuty(playerid);
 
+    if(Character_IsLogged(FollowingPlayer[playerid]))
+    {
+        SendClientMessage(FollowingPlayer[playerid], COLOR_ORANGE, "[!] Il giocatore che doveva fornirti il servizio non è più disponibile.");
+        FollowingPlayer[playerid] = INVALID_PLAYER_ID;
+    }
+
     Character_SetJobType(playerid, JOB_TYPE_NONE);
 
     SendClientMessage(playerid, COLOR_ORANGE, "Hai lasciato il lavoro.");
@@ -190,46 +234,48 @@ CMD:leavejob(playerid, params[])
 }
 alias:leavejob("lascialavoro");
 
-flags:respawnjobvehicles(CMD_MODERATOR);
-CMD:respawnjobvehicles(playerid, params[])
+CMD:centralino(playerid, params[])
 {
-	new jobType;
-	if(sscanf(params, "d", jobType))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /respawnjobvehicles <factionid>");
-	
-	if(!(JOB_TYPE_NONE < JobType:jobType <= JobType))
-		return SendClientMessage(playerid, COLOR_ERROR, "Lavoro non valido.");
+    new JobType:jobType = Character_GetJobType(playerid);
+    if(jobType == JOB_TYPE_NONE || !Job_AllowContactCenter(jobType))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai un lavoro con centralino.");
+    
+    new id;
+    if(sscanf(params, "k<u>", id))
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /centralino <playerid/partofname>");
+    
+    if(!Character_IsLogged(id))
+        return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
 
-	new bool:isOccupied = false;
-	foreach(new v : Vehicle)
-	{
-        if(Vehicle_GetJob(v) == JOB_TYPE_NONE)
-            continue;
-        
-		isOccupied = false;
-		foreach(new p : Player)
-		{
-			if(GetPlayerVehicleID(p) == v)
-			{
-				isOccupied = true;
-				break;
-			}
-		}
-		
-		if(isOccupied)
-			continue;
-		
-		if(Vehicle_GetJob(v) == JobType:jobType)
-		{
-			Vehicle_Respawn(v);
-            Vehicle_SetFuel(v, 100.0);
-		}
-	}
+    if(Character_GetRequestedService(id) != jobType)
+        return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non ha richiesto questo servizio.");
 
-	new name[32];
-	Job_GetName(JobType:jobType, name);
-	SendMessageToAdmins(0, COLOR_ORANGE, "AdmCmd: %s ha respawnato i veicoli del lavoro id %d (%s).", Account_GetName(playerid), jobType, name);
-	return 1;
+    if(Character_IsLogged(FollowingPlayer[playerid]))
+        return SendClientMessage(playerid, COLOR_ERROR, "Hai già una richiesta di servizio attiva.");
+
+    SendClientMessage(id, COLOR_ORANGE, "[!] Un operatore ha accettato la tua richiesta.");
+    SendClientMessage(playerid, COLOR_ORANGE, "[!] Hai accettato la richiesta del servizio dell'utente. Usa /annullacentralino per annullarla.");
+
+    new Float:x, Float:y, Float:z;
+    Entity_GetWorldPosition(ENTITY_TYPE_PLAYER, id, x, y, z);
+    FollowingPlayerCP[playerid] = CreateDynamicCP(x, y, z, 2.5, 0, 0, playerid, 99999.0);
+
+    Character_SetRequestedService(id, JOB_TYPE_NONE);
+    return 1;
+}
+
+CMD:annullacentralino(playerid, params[])
+{
+    if(!Character_IsLogged(FollowingPlayer[playerid]))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di servizio attiva.");
+    
+    SendClientMessage(FollowingPlayer[playerid], COLOR_ORANGE, "[!] L'operatore ha annullato il servizio.");
+    SendClientMessage(playerid, COLOR_ORANGE, "Hai annullato la richiesta dell'utente.");
+
+    FollowingPlayer[playerid] = INVALID_PLAYER_ID;
+    DestroyDynamicCP(FollowingPlayerCP[playerid]);
+    FollowingPlayerCP[playerid] = 0;
+    return 1;
 }
 
 stock JobType:Character_GetJobType(playerid)
@@ -284,6 +330,8 @@ stock ShowJobCommands(playerid)
 {
     if(Character_GetJobType(playerid) == JOB_TYPE_NONE)
         return SendClientMessage(playerid, COLOR_ERROR, "Devi possedere un lavoro per poter utilizzare questo comando."), 0;
+    if(Job_AllowContactCenter(Character_GetJobType(playerid)))
+        SendClientMessage(playerid, COLOR_ORANGE, "[CENTRALINO]: /centralino /annullacentralino");
     return 1;
 }
 
@@ -366,4 +414,32 @@ stock JobType:Vehicle_GetJob(vehicleid)
     if(!Vehicle_IsValid(vehicleid))
         return JOB_TYPE_NONE;
     return VehicleJobType{vehicleid};
+}
+
+stock bool:SendMessageToJob(JobType:jobType, color, String:message)
+{
+    if(jobType == JOB_TYPE_NONE)
+        return false;
+    foreach(new i : Player)
+    {
+        if(!Character_IsLogged(i) || Character_GetJobType(i) != jobType || !Character_IsJobDuty(i))
+            continue;
+        SendTwoLinesMessageStr(i, color, message);
+    }
+    return true;
+}
+
+stock Character_SetRequestedService(playerid, JobType:type)
+{
+    RequestedService{playerid} = type;
+}
+
+stock JobType:Character_GetRequestedService(playerid)
+{
+    return RequestedService{playerid};
+}
+
+stock bool:Job_AllowContactCenter(JobType:jobType)
+{
+    return jobType == JOB_TYPE_TAXI || jobType == JOB_TYPE_MECHANIC;
 }
