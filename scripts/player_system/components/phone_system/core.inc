@@ -9,9 +9,11 @@ forward OnCharacterLoadPhone(playerid, number);
 forward OnPhoneStopCall(number, Inventory:entityInv, entityId, EntityType:entityType, slotid);
 
 #include <inventory_system\core>
+
 #include "components\phonebook"
 #include "components\registry"
 #include "components\sms"
+
 #include <YSI_Coding\y_hooks>
 
 #define POLICE_PHONE_NUMBER         (911)
@@ -73,9 +75,11 @@ hook OnCharacterClearData(playerid)
     return 1;
 }
 
+// MI STATE DOSSANDO PORCODDIO
+
 hook OnCharacterFirstSpawn(playerid)
 {
-    Character_GivePhone(playerid);
+    Character_GiveItem(playerid, gItem_Phone, 1, 0);
     SendClientMessage(playerid, COLOR_GREEN, "Ti è stato dato un cellulare. Usa /cellcmds per i comandi o (/inv)entario per gestirlo.");
     return 1;
 }
@@ -102,11 +106,22 @@ hook OnInventoryLoaded(Inventory:inventory)
     return 1;
 }
 
+hook OnInventoryUnload(Inventory:inventory)
+{
+    for(new i = 0, j = Inventory_GetSpace(inventory); i < j; ++i)
+    {
+        if(Inventory_GetSlotItem(inventory, i) != gItem_Phone)
+            continue;
+        Phone_SetRinging(inventory, i, false);
+    }
+    return 1;
+}
+
 hook OnCharacterGiveItem(playerid, itemid, amount, extra, Map:tempExtra)
 {
     if(itemid != gItem_Phone)
         return 0;
-    if(extra > 0)
+    if(extra > 1)
         LoadPhone(playerid, extra);
     return 1;
 }
@@ -138,10 +153,15 @@ hook OnCharacterDropItem(playerid, slotid)
 
 timer RingPhoneTimer[10000](number)
 {
-    static entityId, EntityType:entityType, entityPhoneSlotId;
-    if(World_FindPhoneByNumber(number, entityType, entityId, entityPhoneSlotId))
+    static Inventory:inventory, entityId, EntityType:entityType, slotid;
+    if(World_FindPhoneByNumber(number, inventory, entityType, entityId, slotid))
     {
-        //new Inventory:entityInv = Inventory_Get(entityType, entityId);
+        if(Phone_GetIncomingFromNumber(inventory, slotid) <= 0)
+        {
+            Phone_SetRinging(inventory, slotid, false);
+            printf("Ringing");
+            return;
+        }
         if(entityType == ENTITY_TYPE_PLAYER)
         {
             Character_Do(entityId, "Il cellulare comincia a squillare...");
@@ -165,6 +185,8 @@ hook OnInventoryChanged(Inventory:inventory)
 
     if(entityType != ENTITY_TYPE_PLAYER || !Character_IsLogged(playerid))
         return 1;
+
+    CheckNewPhoneIfAny(inventory);
 
     if(!UsingPhone{playerid})
     {
@@ -195,6 +217,44 @@ hook OnInventoryChanged(Inventory:inventory)
     return 1;   
 }
 
+static CheckNewPhoneIfAny(Inventory:inventory)
+{
+    static 
+        EntityType:entityType = ENTITY_TYPE_NONE,
+        entityId = 0, 
+        extra = 0
+    ; 
+    
+    entityType = Inventory_GetEntityType(inventory);
+    entityId = Inventory_GetEntityID(inventory);
+
+    if(entityType != ENTITY_TYPE_PLAYER || !Character_IsLogged(entityId))
+        return 0;
+
+    for(new i = 0, j = Inventory_GetSpace(inventory); i < j; ++i)
+    {
+        extra = Inventory_GetSlotExtra(inventory, i, 0);
+        if(Inventory_GetSlotItem(inventory, i) == gItem_Phone && (0 <= extra <= 1))
+        {
+            InitializePhone(entityId, i, extra == 1);
+        }
+    }
+    return 1;
+}
+
+static InitializePhone(playerid, slotid, bool:throwable)
+{
+    new number = Server_GeneratePhoneNumber();
+    Character_SetSlotExtra(playerid, slotid, 0, number);
+    if(throwable)
+        mysql_pquery_f(gMySQL, "INSERT INTO `phone_data` (created_at, number) VALUES('%d', '%d')", gettime(), number);
+    else
+        mysql_pquery_f(gMySQL, "INSERT INTO `phone_data` (character_id, created_at, number) VALUES('%d', '%d', '%d')", Character_GetID(playerid), gettime(), number);
+    
+    CallLocalFunction(#OnCharacterLoadPhone, "dd", playerid, number);
+    return 1;
+}
+
 hook OnCharacterTalk(playerid, text[])
 {
     if(!Character_IsInCall(playerid))
@@ -203,12 +263,10 @@ hook OnCharacterTalk(playerid, text[])
 
     new number = Phone_GetCallingNumber(Character_GetInventory(playerid), UsingPhoneSlotID[playerid]);
     
-    new entityId, EntityType:entityType, entityPhoneSlotId;
+    new Inventory:entityInv, entityId, EntityType:entityType, entityPhoneSlotId;
     
-    if(World_FindPhoneByNumber(number, entityType, entityId, entityPhoneSlotId))
+    if(World_FindPhoneByNumber(number, entityInv, entityType, entityId, entityPhoneSlotId))
     {
-        new Inventory:entityInv = Inventory_Get(entityType, entityId);
-
         new speakerMode = Phone_GetSpeakerPhone(entityInv, entityPhoneSlotId);
 
         if(Phone_GetCallingNumber(Inventory_Get(entityType, entityId), entityPhoneSlotId) == 0)
@@ -361,8 +419,8 @@ CMD:rispondi(playerid, params[])
     Phone_SetRinging(playerInventory, slot, false);
     Phone_SetIncomingFromNumber(playerInventory, slot, 0);
 
-    new entityId, EntityType:entityType, entityPhoneSlotId;
-    World_FindPhoneByNumber(Phone_GetCallingNumber(playerInventory, slot), entityType, entityId, entityPhoneSlotId);
+    new Inventory:inventory, entityId, EntityType:entityType, entityPhoneSlotId;
+    World_FindPhoneByNumber(Phone_GetCallingNumber(playerInventory, slot), inventory, entityType, entityId, entityPhoneSlotId);
 
     if(entityType == ENTITY_TYPE_PLAYER)
     {
@@ -413,24 +471,6 @@ CMD:vivavoce(playerid, params[])
     else
         SendClientMessage(playerid, COLOR_GREEN, "Hai disabilitato il vivavoce.");
     return 1;
-}
-
-stock Character_GivePhone(playerid)
-{
-    new number = Server_GeneratePhoneNumber(),
-        result = Character_GiveItem(playerid, gItem_Phone, 1, number);
-    mysql_pquery_f(gMySQL, "INSERT INTO `phone_data` (character_id, created_at, number) VALUES('%d', '%d', '%d')", Character_GetID(playerid), gettime(), number);
-    CallLocalFunction(#OnCharacterLoadPhone, "dd", playerid, number);
-    return result;
-}
-
-stock Character_GiveAnonymousePhone(playerid)
-{
-    new number = Server_GeneratePhoneNumber(),
-        result = Character_GiveItem(playerid, gItem_Phone, 1, number);
-    mysql_pquery_f(gMySQL, "INSERT INTO `phone_data` (created_at, number) VALUES('%d', '%d')", gettime(), number);
-    CallLocalFunction(#OnCharacterLoadPhone, "dd", playerid, number);
-    return result;
 }
 
 stock Character_StartCall(playerid, slotid, textNumber[])
@@ -510,9 +550,9 @@ stock Character_StartCall(playerid, slotid, textNumber[])
         return 1;
     }
 
-    new entityId, EntityType:entityType, entityPhoneSlotId;
+    new Inventory:inventory, entityId, EntityType:entityType, entityPhoneSlotId;
     
-    if(!World_FindPhoneByNumber(number, entityType, entityId, entityPhoneSlotId))
+    if(!World_FindPhoneByNumber(number, inventory, entityType, entityId, entityPhoneSlotId))
     {
         await mysql_aquery_s(gMySQL, str_format("SELECT * FROM `phone_data` WHERE number = '%d'", number), true);
         if(cache_num_rows() > 0)
@@ -583,10 +623,9 @@ stock Character_StopCall(playerid, slotid)
 
     new checkOn = callingNumber == 0 ? incomingCall : callingNumber;
 
-    new entityId, EntityType:entityType, phoneSlotId;
-    if(World_FindPhoneByNumber(checkOn, entityType, entityId, phoneSlotId))
+    new Inventory:entityInv, entityId, EntityType:entityType, phoneSlotId;
+    if(World_FindPhoneByNumber(checkOn, entityInv, entityType, entityId, phoneSlotId))
     {
-        new Inventory:entityInv = Inventory_Get(entityType, entityId);
         if(entityType == ENTITY_TYPE_PLAYER)
         {
             if(!Phone_IsOff(entityInv, phoneSlotId))
@@ -701,8 +740,8 @@ stock Phone_SetRinging(Inventory:inventory, slotid, bool:set)
     timer = Timer:0;
     if(set)
     {
-        RingPhoneTimer(number);
         timer = repeat RingPhoneTimer(number);
+        RingPhoneTimer(number);
     }
     Inventory_SetSlotTempExtra(inventory, slotid, "ring_timer", _:timer);
     return 1;
@@ -721,9 +760,9 @@ stock Character_FindByPhoneNumber(number)
     return p;
 }
 
-stock bool:World_FindPhoneByNumber(number, &EntityType:entityType, &entityId, &phoneSlotId)
+stock bool:World_FindPhoneByNumber(number, &Inventory:inventory, &EntityType:entityType, &entityId, &phoneSlotId)
 {
-    return World_FindItem(gItem_Phone, number, entityType, entityId, phoneSlotId);
+    return World_FindItem(gItem_Phone, number, inventory, entityType, entityId, phoneSlotId);
 }
 
 stock bool:Character_HasPhoneInSlot(playerid, slotid)

@@ -79,8 +79,8 @@ stock Character_PayDay(playerid)
 	SendFormattedMessage(playerid, -1, "SERVER TIME: %d:%d:%d", h, m, s);
     SendClientMessage(playerid, -1, "|__CONTO BANCARIO__|");
 	SendFormattedMessage(playerid, 0xB4B5B7FF, "Bilancio: $%s", FormatNumber(startBankMoney));
-	SendFormattedMessage(playerid, 0xB4B5B7FF, "Tasso di interesse: %f", 0.1);
-	SendFormattedMessage(playerid, 0xB4B5B7FF, "Interessi guadagnati: $%s", FormatNumber(interests));
+	//SendFormattedMessage(playerid, 0xB4B5B7FF, "Tasso di interesse: %f", 0.1);
+	//SendFormattedMessage(playerid, 0xB4B5B7FF, "Interessi guadagnati: $%s", FormatNumber(interests));
 	SendFormattedMessage(playerid, 0xB4B5B7FF, "Tasse pagate: -$%d", 0);
 	SendFormattedMessage(playerid, 0xB4B5B7FF, "Affitto: -$%s", FormatNumber(rentPrice));
 	SendFormattedMessage(playerid, 0xB4B5B7FF, "Stipendio:  $%s", FormatNumber(paycheck));
@@ -195,7 +195,7 @@ static GetPlayerMoneyByPremium(playerid)
 	new money = 0;
 	if(currentPremiumLevel > 0)
 	{
-		static const premiumPaycheck[] = {1000, 2000, 3000};
+		static const premiumPaycheck[] = {3000, 5000, 8000};
 		money = premiumPaycheck[currentPremiumLevel-1];
 	}
 	return money;

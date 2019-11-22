@@ -96,10 +96,8 @@ CMD:giveitem(playerid, params[])
 	{
 		new result, extra = 0;
 		
-		if(itemid == gItem_Phone)
-			result = Character_GivePhone(id);
-		else
-			result = Character_GiveItem(id, itemid, quantity, extra);
+		result = Character_GiveItem(id, itemid, quantity, extra);
+
 		if(result == INVENTORY_ADD_SUCCESS)
 		{
 			SendMessageToAdmins(0, COLOR_ADMINCMD, "AdmCmd: %s (%s) ha givato %s (Qnt: %d) a %s (%d).", 
@@ -452,9 +450,9 @@ CMD:afactionkick(playerid, params[])
 flags:vcreate(CMD_ADMIN);
 CMD:vcreate(playerid, params[])
 {
-	new model, c1, c2;
-	if(sscanf(params, "k<vehicle>D(0)D(0)", model, c1, c2))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /vcreate <modelid> <color1> <color2>");
+	new model, c1, c2, addsiren;
+	if(sscanf(params, "k<vehicle>D(0)D(0)D(0)", model, c1, c2, addsiren))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /vcreate <modelid> <color1> <color2> <opz: sirene>");
 	if (model < 400 || model > 611) 
 		return SendClientMessage(playerid, COLOR_WHITE, "L'id del modello deve andare da 400 a 611.");
 	new 
@@ -463,7 +461,7 @@ CMD:vcreate(playerid, params[])
 	Float:_z;
 	GetPlayerPos(playerid, _x, _y, _z);
 
-	new id = Vehicle_Create(model, _x, _y, _z, 0, c1, c2, 0, 0);
+	new id = Vehicle_Create(model, _x, _y, _z, 0, c1, c2, 0, addsiren);
 	if(id == -1)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non è stato possibile creare il veicolo.");
 	

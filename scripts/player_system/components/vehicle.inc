@@ -77,12 +77,11 @@ CMD:vehicle(playerid, params[])
 	{
     	if(vehicleid == 0 || GetPlayerState(playerid) != PLAYER_STATE_DRIVER || IsABike(vehicleid))	
         	return 0;
-		
-		if(!Vehicle_IsOwner(vehicleid, playerid, false))
-			return SendClientMessage(playerid, COLOR_ERROR, "Non hai le chiavi di questo veicolo.");
 
 		if(Vehicle_IsEngineOff(vehicleid))
 		{
+			if(!Vehicle_IsOwner(vehicleid, playerid, false))
+				return SendClientMessage(playerid, COLOR_ERROR, "Non hai le chiavi di questo veicolo.");
 			if(Vehicle_GetFuel(vehicleid) < 0.5)
 				return SendClientMessage(playerid, COLOR_ERROR, "Non c'è benzina nel veicolo.");
 			if(Vehicle_GetHealth(vehicleid) <= VEHICLE_MIN_HEALTH_FOR_ENGINE && !Player_IsAdminDuty(playerid))
@@ -208,7 +207,7 @@ CMD:vehicle(playerid, params[])
 		if(id > 0 && Character_IsNearVehicle(playerid, id)) vehicleid = id;
 		
 		if(vehicleid <= 0)
-			return SendClientMessage(playerid, COLOR_ERROR, "(/v)eicolo vendi <vehicleid (opzionale)>");
+			return SendClientMessage(playerid, COLOR_ERROR, "(/v)eicolo rottama <vehicleid (opzionale)>");
 		
 		if(!Vehicle_IsOwner(vehicleid, playerid, true))
 			return 0;

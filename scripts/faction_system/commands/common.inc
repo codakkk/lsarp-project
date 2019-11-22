@@ -35,8 +35,8 @@ CMD:servizio(playerid, params[])
 	if(!Character_IsAlive(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	
-	new Building:building = Character_GetBuilding(playerid, true);
-	if(Building_IsValid(building) && Building_GetFaction(building) == factionid)
+	new Building:building;
+	if(Character_TryGetBuilding(playerid, building) && Character_IsInsideBuilding(playerid, building) && Building_GetFaction(building) == factionid)
 	{
 		if(!Character_IsFactionDuty(playerid))
 		{
@@ -76,8 +76,8 @@ CMD:uniforme(playerid, params[])
 	if(!Character_IsFactionDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Puoi utilizzare questo comando solo se in servizio.");
 
-	new Building:building = Character_GetBuilding(playerid, true);
-	if(!Building_IsValid(building) || Building_GetFaction(building) != fid)
+	new Building:building;
+	if(!Character_TryGetBuilding(playerid, building) || !Character_IsInsideBuilding(playerid, building) || Building_GetFaction(building) != fid)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei nell'edificio della tua fazione.");
 	
 	new uniform_id,
@@ -352,11 +352,20 @@ Dialog:DialogFactionMembers(playerid, response, listitem, inputtext[])
 
 static Faction_GiveWeapons(playerid)
 {
-	if(Faction_GetType(Character_GetFaction(playerid)) == FACTION_TYPE_POLICE)
+	new factionid = Character_GetFaction(playerid);
+	if(!Faction_IsValid(factionid))
+		return 0;
+	if(Faction_GetType(factionid) == FACTION_TYPE_POLICE)
 	{
 		Character_GiveWeapon(playerid, WEAPON_NITESTICK, 1);
 		Character_GiveWeapon(playerid, WEAPON_SPRAYCAN, 1000);
 		Character_GiveWeapon(playerid, WEAPON_DEAGLE, 100);
 		Character_SetArmour(playerid, 100.0);
 	}
+	else if(Faction_GetType(factionid) == FACTION_TYPE_FIREFIGHTERS)
+	{
+		Character_GiveWeapon(playerid, WEAPON_SHOVEL, 1);
+		Character_GiveWeapon(playerid, WEAPON_FIREEXTINGUISHER, 1000);
+	}
+	return 1;
 }

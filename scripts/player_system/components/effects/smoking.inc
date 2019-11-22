@@ -167,3 +167,24 @@ static Character_CreateSmokingObject(playerid)
     }
     return 1;
 }
+
+flags:fuma(CMD_ALIVE_USER);
+CMD:fuma(playerid, params[])
+{
+    if(IsSmoking{playerid})
+        return SendClientMessage(playerid, COLOR_ERROR, "Stai già fumando.");
+    
+    new Inventory:inventory = Character_GetInventory(playerid),
+        slot = Inventory_GetFirstItem(inventory, gItem_Cigarette);
+    
+    if(slot == -1)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai una sigaretta nell'inventario.");
+    
+    if(!Character_CanInteract(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+    if(Request_IsPending(playerid, REQUEST_TYPE_ITEM))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'oggetto attiva.");
+    
+    Character_UseInventoryItem(playerid, slot);
+    return 1;
+}

@@ -14,8 +14,8 @@ static const RewardInfo[][e_RewardData] =
 	{300, "Block PM"},
 	{300, "Block OOC"},
 	{500, "Premium Bronze (1 mese)"},
-	{750, "Premium Silver (1 mese)"},
-	{1000, "Premium Gold (1 mese)"},
+	{1000, "Premium Silver (1 mese)"},
+	{1500, "Premium Gold (1 mese)"},
 	{500, "+1 Slot Personaggio"},
 	{50, "+1 Livello"}
 };
@@ -279,11 +279,11 @@ Dialog:Dialog_ZPointsBuyRewards(playerid, response, listitem, inputtext[])
 			//3600 seconds * 24 (hours) * 30 (days)
 			if(Account_GetPremiumLevel(playerid) == 1 && Account_GetPremiumExpiry(playerid) > gettime())
 			{
-                Account_SetPremiumExpiry(playerid, Account_GetPremiumExpiry(playerid) + 3600 * 24 * 30);
+                Account_SetPremiumExpiry(playerid, gettime() + Account_GetPremiumExpiry(playerid) + 3600 * 24 * 30);
 			}
 			else
 			{
-                Account_SetPremiumExpiry(playerid, 3600 * 24 * 30);
+                Account_SetPremiumExpiry(playerid, gettime() + 3600 * 24 * 30);
 				Account_SetPremiumLevel(playerid, 1);
 			}
 		}

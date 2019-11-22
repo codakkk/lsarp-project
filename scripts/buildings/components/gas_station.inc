@@ -62,10 +62,13 @@ CMD:setfuelprice(playerid, params[])
 flags:rifornisci(CMD_ALIVE_USER);
 CMD:rifornisci(playerid, params[])
 {
-    new Building:building = Character_GetNearGasStation(playerid);
-    if(!Building_IsValid(building))
+    new Building:building;
+    if(!Character_TryGetGasStation(playerid, building))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di una pompa di benzina."), 0;
     
+    if(Building_IsValid(IsDoingGas[playerid]))
+        return SendClientMessage(playerid, COLOR_ERROR, "Stai già facendo rifornimento.");
+
     new vehicleid = GetPlayerVehicleID(playerid);
 
     if(!Vehicle_IsValid(vehicleid) || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
@@ -104,28 +107,23 @@ CMD:stoprifornimento(playerid, params[])
 
 timer GetVehicleLitre[1000](playerid, vehicleid) 
 {
-    if(!Vehicle_IsValid(vehicleid))
+    new Float:x, Float:y, Float:z;
+
+    if(!Character_IsDoingGas(playerid) || (Building_GetEnterPos(IsDoingGas[playerid], x, y, z) && GetPlayerDistanceFromPoint(playerid, x, y, z) > GAS_STATION_MAX_RANGE))
     {
-        SendClientMessage(playerid, COLOR_ERROR, "Sei uscito dal veicolo ed hai fermato il rifornimento.");
+        SendClientMessage(playerid, COLOR_ERROR, "Sei uscito dal veicolo o ti sei allontanato dalla pompa di benzina.");
         callcmd::stoprifornimento(playerid, "");
         return 1;
     }
     new Building:building = IsDoingGas[playerid];
+    
     /*if(GasStation_GetFuelState(building) <= PETROL_LITRE_DEF)
     {
         SendClientMessage(playerid, COLOR_ERROR, "La stazione di benzina ha finito le proprie risorse.");
         callcmd::stoprifornimento(playerid, "");
         return 1;
     }*/
-    new Float:x, Float:y, Float:z;
-    Building_GetEnterPos(building, x, y, z);
-
-    if(GetPlayerDistanceFromPoint(playerid, x, y, z) > GAS_STATION_MAX_RANGE)
-    {
-        SendClientMessage(playerid, COLOR_ERROR, "Ti sei allontanato dalla stazione di benzina ed hai fermato il rifornimento.");
-        callcmd::stoprifornimento(playerid, "");
-        return 1;
-    }
+    
 
     new fuelPrice = GasStation_GetFuelPrice(building);
     new taxedPrice = GasStation_GetTaxedFuelPrice(building);
@@ -148,27 +146,25 @@ timer GetVehicleLitre[1000](playerid, vehicleid)
     return 1;
 }
 
-stock Building:Character_GetNearGasStation(playerid)
+static bool:Character_TryGetGasStation(playerid, &Building:building)
 {
-    new Building:ret = INVALID_BUILDING;
+    building = Building:0;
     new Float:x, Float:y, Float:z;
-    for_building(building)
+    for_building_of<BUILDING_TYPE_GAS_STATION>(b)
     {
-        if(Building_GetType(building) != BUILDING_TYPE_GAS_STATION)
-            continue;
-        Building_GetEnterPos(building, x, y, z);
+        Building_GetEnterPos(b, x, y, z);
         if(GetPlayerDistanceFromPoint(playerid, x, y, z) <= GAS_STATION_MAX_RANGE)
         {
-            ret = building;
+            building = b;
             break;
         }
     }
-    return ret;
+    return Building_IsValid(building);
 }
 
 stock Character_IsDoingGas(playerid)
 {
-    return IsPlayerInAnyVehicle(playerid) && IsDoingGas[playerid] != INVALID_BUILDING;
+    return IsPlayerInAnyVehicle(playerid) && Building_IsValid(IsDoingGas[playerid]);
 }
 
 stock bool:GasStation_SetFuelPrice(Building:building, newPrice)
@@ -223,7 +219,7 @@ hook function Character_Enter(playerid)
 hook function Building_ShowTypeMenu(Building:building, playerid)
 {
     if(Building_GetType(building) != BUILDING_TYPE_GAS_STATION)
-        return continue(playerid);
+        return continue(building, playerid);
     
     new fuelPrice = GasStation_GetFuelPrice(building);
     new taxedPrice = GasStation_GetTaxedFuelPrice(building);

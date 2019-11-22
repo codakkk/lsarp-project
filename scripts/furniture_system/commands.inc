@@ -10,17 +10,12 @@ CMD:furniturecmds(playerid, params[])
 flags:arredamento(CMD_ALIVE_USER);
 CMD:arredamento(playerid, params[])
 {
+    if(!Player_IsAdminDuty(playerid))
+        return 0;
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
     
-    new House:house = Character_CanFurnish(playerid, true);
-    
-    if(!House_IsValid(house))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di una casa arredabile.");
-    
-    Character_SetFurnitureLinkedTo(playerid, House_GetExitWorld(house));
-
-    Dialog_Show(playerid, Dialog_Furniture, DIALOG_STYLE_LIST, "Arredamento", "Mobili piazzati\nPiazza", "Avanti", "Chiudi");
+    Character_ShowFurnitureDialog(playerid);
     return 1;
 }
 alias:arredamento("arreda");
@@ -28,56 +23,59 @@ alias:arredamento("arreda");
 flags:furnitureid(CMD_ALIVE_USER);
 CMD:furnitureid(playerid, params[])
 {
+    if(!Player_IsAdminDuty(playerid))
+        return 0;
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
     
-    if(!House_IsValid(Character_CanFurnish(playerid, true)) && !Player_IsAdminDuty(playerid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di una casa arredabile.");
+    new bool:isExterior, EntityType:type, entityid;
+    new bool:result = Character_GetFurnitureWorld(playerid, isExterior, type, entityid, .onlyAllowed=true, .worldAllowed=true);
 
-    if(Furniture_IsShowingInfo(playerid))
-    {
-        Furniture_DeleteLabels(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Hai disabilitato le informazioni sui mobili.");
-    }
-    else
-    {
-        Furniture_CreateLabels(playerid);
+    if(!result)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di una casa arredabile che ti appartiene.");
+    
+    Character_ToggleFurnitureLabels(playerid, !Furniture_IsShowingLabels(playerid));
+    if(Furniture_IsShowingLabels(playerid))
         SendClientMessage(playerid, COLOR_GREEN, "Hai abilitato le informazioni sui mobili.");
-    }
+    else
+        SendClientMessage(playerid, COLOR_GREEN, "Hai disabilitato le informazioni sui mobili.");
     return 1;
 }
 alias:furnitureid("fid", "idmobili");
 
-flags:listaobject(CMD_ALIVE_USER);
+/*flags:listaobject(CMD_ALIVE_USER);
 CMD:listaobject(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
     
-    if(!House_IsValid(Character_CanFurnish(playerid)))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di una casa arredabile.");
+    new bool:isExterior, EntityType:type, entityid;
+    new bool:result = Character_GetNearbyFurnable(playerid, isExterior, type, entityid);
+
+    if(!result)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un edificio arredabile.");
     
     Character_ShowFurnitures(playerid, 0);
     return 1;
-}
+}*/
 
-flags:piazzaobject(CMD_ALIVE_USER);
+/*flags:piazzaobject(CMD_ALIVE_USER);
 CMD:piazzaobject(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
     
-    new House:house = Character_CanFurnish(playerid, true);
+    new bool:isExterior, EntityType:type, entityid;
+    new bool:result = Character_GetNearbyFurnable(playerid, isExterior, type, entityid);
 
-    if(!House_IsValid(house))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di una casa arredabile.");
+    if(!result)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un edificio arredabile.");
     
-    Character_SetFurnitureLinkedTo(playerid, House_GetExitWorld(house));
     Furniture_ShowCategoryList(playerid);
     return 1;
-}
+}*/
 
-flags:rinominaobject(CMD_ALIVE_USER);
+/*flags:rinominaobject(CMD_ALIVE_USER);
 CMD:rinominaobject(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
@@ -164,7 +162,7 @@ CMD:textureoggetto(playerid, params[])
     
     Furniture_SetTexture(objectid, index, modelid, txd, texture, -1);
     return 1;
-}
+}*/
 
 flags:aplacefurniture(CMD_MODERATOR);
 CMD:aplacefurniture(playerid, params[])
@@ -176,13 +174,17 @@ CMD:aplacefurniture(playerid, params[])
     if(sscanf(params, "d", modelid))
         return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /aplacefurniture <modelid>");
     
-    new worldid = Character_GetVirtualWorld(playerid), Float:x, Float:y, Float:z;
+    new EntityType:entityType = ENTITY_TYPE_NONE, entityid, bool:isExterior;
 
+    if(!Character_GetFurnitureWorld(playerid, isExterior, entityType, entityid, .onlyAllowed=false, .worldAllowed=true))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+
+    new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
 
-    new objectid = Furniture_CreateTemporary(modelid, x, y, z, 0.0, 0.0, 0.0, worldid, GetPlayerInterior(playerid), worldid);
-    Furniture_Store(objectid, modelid, playerid, worldid);
+    new objectid = Furniture_CreateTemporary(modelid, x, y, z, 0.0, 0.0, 0.0, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), isExterior, entityType, entityid);
 
+    Furniture_Store(objectid, playerid);
     EditObject_Start(playerid, EDIT_TYPE_FURNITURE, objectid, 0);
     return 1;
 }
@@ -193,10 +195,9 @@ CMD:adeletefurniture(playerid, params[])
     new objectid;
     if(sscanf(params, "d", objectid))
         return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /adeletefurniture <objectid>");
-    if(Furniture_RemoveByObjectID(objectid))
+    if(Furniture_Delete(objectid))
     {
         SendFormattedMessage(playerid, COLOR_GREEN, "Hai rimosso il mobile id %d.", objectid);
-        Furniture_UpdateInfoList(playerid);
     }
     else
     {

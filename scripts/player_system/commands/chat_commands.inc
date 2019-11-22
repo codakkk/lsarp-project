@@ -16,7 +16,7 @@ CMD:low(playerid, params[])
     if(isnull(params) || strlen(params) > 128) 
         return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /low <testo>");
     new String:string = str_format("%s dice a bassa voce: %s", Character_GetRolePlayName(playerid), params);
-    ProxDetectorStr(playerid, 5.0, string, 0x9d9d9dFF, 0x9d9d9dFF, 0x9d9d9dFF, 0x9d9d9dFF, 0x9d9d9dFF);
+    ProxDetectorStr(playerid, 2.5, string, 0x9d9d9dFF, 0x9d9d9dFF, 0x9d9d9dFF, 0x9d9d9dFF, 0x9d9d9dFF);
     return 1;
 }
 

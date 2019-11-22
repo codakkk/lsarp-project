@@ -27,17 +27,16 @@ static enum _:E_CHEAT_DATA
     LastAlert,
 };
 
-static 
-    Map:CheatData[MAX_PLAYERS];
+static Map:CheatData[MAX_PLAYERS];
 
 hook OnCharacterClearData(playerid)
 {
     if(map_valid(CheatData[playerid]))
-        map_delete_deep(CheatData[playerid]);
+        map_delete(CheatData[playerid]);
     return 1;
 }
 
-ptask LVRP_OnCheatTimer[10000](playerid) 
+/*ptask LVRP_OnCheatTimer[10000](playerid) 
 {
     if(!map_valid(CheatData[playerid]))
         return 0;
@@ -55,7 +54,7 @@ ptask LVRP_OnCheatTimer[10000](playerid)
         }
     }
     return 1;
-}
+}*/
 
 forward OnCheatDetected(playerid, ip_address[], type, code);
 public OnCheatDetected(playerid, ip_address[], type, code) 

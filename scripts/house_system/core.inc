@@ -10,7 +10,7 @@
 #define INVALID_HOUSE	    (House:0)
 #define HOUSE_START_WORLD 	(1000)
 
-#define for_house(%0) for(new Iter:iter=map_iter(GetHousesMap()), House:%0=House:iter_get_value(iter);iter_inside(iter);%0=(iter_move_next(iter) != ITER_NULL ? (House:iter_get_value(iter)) : (House:0)))
+#define for_house(%0) for(new Iter:iter=map_iter(GetHousesMap()), House:%0=(House:iter_inside(iter) ? (House:iter_get_value(iter)) : (House:0));iter_inside(iter);%0=(iter_move_next(iter) != ITER_NULL ? (House:iter_get_value(iter)) : (House:0)))
 
 #include <buildings\core>
 
@@ -28,7 +28,6 @@ static enum _:E_HOUSE_DATA
     ID,
 
     OwnerID,
-    OwnerName[MAX_PLAYER_NAME],
     Price,
     bool:IsLocked,
 	Money,
@@ -74,31 +73,14 @@ hook OnGameModeInit()
     return 1;
 }
 
-stock bool:Character_CanUseHouseMenu(playerid, House:house, bool:onlyOwner = false)
-{
-	if(!House_IsValid(house))
-		return false;
-	if(Player_IsAdminDuty(playerid))
-		return true;
-    if(!onlyOwner && Character_GetRentHouse(playerid) == house)
-        return true;
-    if(Character_DoesOwnHouse(playerid, house))
-        return true;
-	return false;
-}
-
 hook function Character_Enter(playerid)
 {
     if(IsPlayerInAnyVehicle(playerid))
         return continue(playerid);
 
-    new House:house = Character_GetHouse(playerid, false);
-    if(!House_IsValid(house))
-        house = Character_GetHouse(playerid, true);
-    
-    if(House_IsValid(house))
+    new House:house;
+    if(Character_TryGetHouse(playerid, house))
     {
-        
         new 
             Float:x = 0.0,
             Float:y = 0.0,
@@ -155,18 +137,6 @@ hook OnCharacterClearData(playerid)
     SelectedPage{playerid} = 0;
     SelectedRenter[playerid] = 0;
     return 1;
-}
-
-hook OnCharacterChangeName(playerid, newCharacterName[])
-{
-	for_house(house)
-	{
-		if(House_GetOwnerID(house) == Character_GetID(playerid))
-		{
-            var_set_cells(Variant:house, OwnerName, newCharacterName, MAX_PLAYER_NAME);
-		}
-	}
-	return 1;
 }
 
 hook OnPlayerEnterDynamicCP(playerid, checkpointid)
@@ -247,7 +217,6 @@ stock House_Create(Float:x, Float:y, Float:z, int, world, interiorType)
     var_acquire(Variant:house);
     var_set_cell(Variant:house, ID, id);
     var_set_cell(Variant:house, OwnerID, 0);
-    var_set_cells(Variant:house, OwnerName, "");
     var_set_cell(Variant:house, Price, 0);
     var_set_cell(Variant:house, EnterX, _:x);
     var_set_cell(Variant:house, EnterY, _:y);
@@ -344,7 +313,7 @@ stock bool:House_DestroyObjects(House:house)
     return true;
 }
 
-stock House_IsValid(House:house)
+stock bool:House_IsValid(House:house)
 {
     return var_valid(Variant:house);
 }
@@ -362,20 +331,19 @@ stock bool:House_SetOwner(House:house, playerid)
     House_ResetOwner(house);
 
     var_set_cell(Variant:house, OwnerID, Character_GetID(playerid));
-    var_set_cells(Variant:house, OwnerName, Character_GetOOCName(playerid));
 
     Character_AddOwnedHouse(playerid, house);
 
     House_CreateObjects(house);
 
     mysql_pquery_f(gMySQL, "UPDATE `houses` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), House_GetID(house));
+    Log("House_SetOwner", Character_GetOOCName(playerid), "set_owner", House_GetID(house));
     return true;
 }
 
 stock House_ResetOwner(House:house)
 {
     var_set_cell(Variant:house, OwnerID, 0);
-    var_set_cells(Variant:house, OwnerName, "");
 
     foreach(new i : Player)
 	{
@@ -387,7 +355,7 @@ stock House_ResetOwner(House:house)
     House_CreateObjects(house);
 
     mysql_pquery_f(gMySQL, "UPDATE `houses` SET owner_id = '0' WHERE id = '%d'", House_GetID(house));
-    
+    Log("House", "_SetOwner", "normal", House_GetID(house));
     return 1;
 }
 
@@ -404,19 +372,6 @@ stock House_IsOwned(House:house)
 stock bool:House_IsOwnable(House:house)
 {
     return House_GetOwnerID(house) <= 0;
-}
-
-stock bool:House_GetOwnerName(House:house, name[MAX_PLAYER_NAME])
-{
-    var_get_md_arr(Variant:house, {OwnerName}, name);
-    return true;
-}
-
-stock String:House_GetOwnerNameStr(House:house)
-{
-    new name[MAX_PLAYER_NAME];
-    House_GetOwnerName(house, name);
-    return str_new(name);
 }
 
 stock House_SetEnterPosition(House:house, Float:x, Float:y, Float:z)
@@ -640,7 +595,6 @@ stock House_LoadAll()
             var_acquire(Variant:house);
             var_set_cell(Variant:house, ID, data[ID]);
             var_set_cell(Variant:house, OwnerID, data[OwnerID]);
-            var_set_cells(Variant:house, OwnerName, data[OwnerName]);
             var_set_cell(Variant:house, Price, data[Price]);
 
             var_set_cell(Variant:house, EnterX, _:data[EnterX]);
@@ -668,23 +622,20 @@ stock House_LoadAll()
             
             CallLocalFunction(#OnHouseLoaded, "d", _:house);
         }
-        
-
-        for_house(house)
-        {
-            if(House_GetOwnerID(house) > 0)
-            {
-                new Cache:cache = mysql_query_f(gMySQL, true, "SELECT name FROM `characters` WHERE id = '%d'", House_GetID(house));
-                if(cache_num_rows() > 0)
-                {
-                    new name[MAX_PLAYER_NAME];
-                    cache_get_value_name(0, "name", name);
-                    var_set_cells(Variant:house, OwnerName, name);
-                }
-                cache_delete(cache);
-            }
-
-        }
     }
     MySQL_PQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `houses` ORDER BY id");
+}
+
+hook function bool:Entity_GetWorldPosition(EntityType:entityType, entityId, &Float:x, &Float:y, &Float:z)
+{
+	if(entityType != ENTITY_TYPE_HOUSE)
+		return bool:continue(entityType, entityId, x, y, z);
+	
+	new House:house = House_Find(entityId);
+
+	if(!House_IsValid(house))
+		return false;
+	
+	House_GetEnterPosition(house, x, y, z);
+	return true;
 }

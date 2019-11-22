@@ -92,7 +92,8 @@ CMD:gethere(playerid, params[])
 
 	new 
 	   Float:x, Float:y, Float:z,
-	   vw = Character_GetVirtualWorld(playerid), int = GetPlayerInterior(playerid);
+	   vw = Character_GetVirtualWorld(playerid), 
+	   int = GetPlayerInterior(playerid);
     
     GetPlayerPos(playerid, x, y, z);
 
@@ -103,7 +104,7 @@ CMD:gethere(playerid, params[])
 		SetVehicleVirtualWorld(GetPlayerVehicleID(id), vw);
 	}
 	else
-    	Character_SetSafePosition(id, x+2, y, z );
+    	Character_SetSafePosition(id, x+2, y, z, int, vw);
     return 1;
 }
 

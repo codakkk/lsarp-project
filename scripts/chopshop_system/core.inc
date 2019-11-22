@@ -96,7 +96,7 @@ stock ChopShop_Sell(playerid, vehicleid)
 stock ChopShop_RespawnVehicle(vehicleid)
 {
 	Vehicle_SetDestroyed(vehicleid, true);
-	SetVehicleToRespawn(vehicleid);
+	Vehicle_Respawn(vehicleid);
 	return 1;
 }
 

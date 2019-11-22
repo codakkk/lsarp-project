@@ -41,8 +41,6 @@
 	#warning LSARP_DEBUG is enabled. Care!!
 #endif
 
-#define CUSTOM_TAG_TYPES Building,House,JobType
-
 
 #define FIXES_Single
 #define FIX_const 0
@@ -75,6 +73,8 @@
 #include <SKY>
 #include <a_mysql>
 //#include <mysql_yinline_include>
+#define CUSTOM_TAG_TYPES Building,House,JobType
+
 #include <YSI_Coding\y_timers>
 #include <YSI_Coding\y_va>
 #include <YSI_Coding\y_inline>
@@ -83,6 +83,8 @@
 // For YSI and PawnPlus yield conflict.
 #undef yield
 #undef @@
+
+
 #include <Pawn.CMD>
 #include <streamer>
 #define PP_SYNTAX 1
@@ -131,7 +133,9 @@ enum (<<= 1)
 	CMD_ADMIN,
 	CMD_DEVELOPER,
 	CMD_RCON,
-	CMD_SLOW_MODE
+	CMD_SLOW_MODE,
+	CMD_PROPERTY_ROLE,
+	CMD_FACTION_ROLE
 }
 
 #include <anticheat\core>
@@ -211,10 +215,13 @@ public OnGameModeInit()
 
 	Streamer_TickRate(30);
 	
+	pp_public_min_index(0);
+
 	CallLocalFunction(#OnGameModeLateInit, "");
 
 	SetRespawnTime(1);
 
+	mysql_tquery_f(gMySQL, "ALTER TABLE `characters` ADD admin_role INT(11) DEFAULT '0'");
 	printf("Public OnGameModeInit");
 	return 1;
 }
@@ -474,7 +481,12 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 		}
 	}
 	
-	if(flags & CMD_TESTER && Account_GetAdminLevel(playerid) < 1)
+	if( (flags & CMD_PROPERTY_ROLE && Account_GetAdminRole(playerid) != ADMIN_ROLE_PROPERTY) || (flags & CMD_FACTION_ROLE && Account_GetAdminRole(playerid) != ADMIN_ROLE_FACTION))
+	{
+		if((1 < Account_GetAdminLevel(playerid) < 4))
+			return SendClientMessage(playerid, COLOR_ERROR, "Per poter utilizzare questo comando, necessiti del ruolo giusto."), 0;
+	}
+	else if(flags & CMD_TESTER && Account_GetAdminLevel(playerid) < 1)
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro dello staff.");
 		return 0;

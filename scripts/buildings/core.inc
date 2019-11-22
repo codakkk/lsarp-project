@@ -14,7 +14,7 @@ enum _:E_BUILDING_TYPE
 	BUILDING_TYPE_BANK = 4,
 	BUILDING_TYPE_ADS = 5,
 	BUILDING_TYPE_GAS_STATION = 6,
-
+	BUILDING_TYPE_PAYNSPRAY = 7,
 	// Insert here other types
 	BUILDING_TYPE_LAST
 }
@@ -39,6 +39,7 @@ enum _:E_BUILDING_TYPE
 #include "components\shop"
 #include "components\ads"
 #include "components\gas_station"
+#include "components\paynspray"
 #include "components\employee"
 
 #include "commands\admin"
@@ -68,7 +69,6 @@ static enum _:E_BUILDING_INFO
 	ExitWorld,
     Ownable,
     OwnerID,
-    OwnerName[MAX_PLAYER_NAME],
     Price,
     IsLocked,
 	Faction,
@@ -136,18 +136,6 @@ hook OnGameModeInit()
 	return 1;
 }
 
-hook OnCharacterChangeName(playerid, newCharacterName[])
-{
-	for_building(building)
-	{
-		if(Building_GetOwnerID(building) == Character_GetID(playerid))
-		{
-			var_set_cells(Variant:building, OwnerName, newCharacterName, MAX_PLAYER_NAME);
-		}
-	}
-	return 1;
-}
-
 stock Building:Building_Find(buildingid)
 {
 	if(!map_has_key(Buildings, buildingid))
@@ -166,7 +154,6 @@ stock Building_Create(Float:x, Float:y, Float:z, interior, world)
 		var_set_cell(Variant:building, ID, id);
 		var_set_cells(Variant:building, Name, "SET NAME");
 		var_set_cells(Variant:building, WelcomeText, "");
-		var_set_cells(Variant:building, OwnerName, "");
 		var_set_cell(Variant:building, EnterX, _:x);
 		var_set_cell(Variant:building, EnterY, _:y);
 		var_set_cell(Variant:building, EnterZ, _:z);
@@ -232,7 +219,6 @@ stock Building_LoadAll()
 			var_set_cell(Variant:building, ID, data[ID]);
 			var_set_cells(Variant:building, Name, data[Name]);
 			var_set_cells(Variant:building, WelcomeText, data[WelcomeText]);
-			var_set_cells(Variant:building, OwnerName, data[OwnerName]);
 			var_set_cell(Variant:building, EnterX, _:data[EnterX]);
 			var_set_cell(Variant:building, EnterY, _:data[EnterY]);
 			var_set_cell(Variant:building, EnterZ, _:data[EnterZ]);
@@ -292,23 +278,6 @@ stock Building_LoadAll()
 			CallLocalFunction(#OnBuildingLoaded, "d", _:building);
 		}
 		printf("%d buildings loaded.\n", count);
-
-		new ownerid;
-		for_building(building)
-		{
-			// DON'T USE CACHE FUNCTIONS AFTER THIS IF
-			ownerid = Building_GetOwnerID(building);
-			if(ownerid > 0)
-			{
-				new Cache:cache = mysql_query_f(gMySQL, true, "SELECT name FROM `characters` WHERE id = '%d'", ownerid);
-				if(cache_num_rows() <= 0)
-					continue;
-				new name[MAX_PLAYER_NAME];
-				cache_get_value_name(0, "name", name);
-				var_set_cells(Variant:building, OwnerName, name);
-				cache_delete(cache);
-			}
-		}
 	}
 
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `buildings`");
@@ -337,10 +306,12 @@ stock bool:Building_SetFloatData(Building:building, const key[], Float:value)
 	if(map_has_str_key(data, key))
 	{
 		map_str_set(data, key, value);
-		Building_SaveData(building);
-		return true;
 	}
-	map_str_add(data, key, value);
+	else
+	{
+		map_str_add(data, key, value);
+	}
+	Building_SaveData(building);
 	return true;
 }
 
@@ -350,10 +321,12 @@ stock bool:Building_SetIntData(Building:building, const key[], value)
 	if(map_has_str_key(data, key))
 	{
 		map_str_set(data, key, value);
-		Building_SaveData(building);
-		return true;
 	}
-	map_str_add(data, key, value);
+	else
+	{
+		map_str_add(data, key, value);
+	}
+	Building_SaveData(building);
 	return true;
 }
 
@@ -474,7 +447,6 @@ stock Building_SetOwner(Building:building, playerid)
 	Building_ResetOwner(building);
 
 	var_set_cell(Variant:building, OwnerID, Character_GetID(playerid));
-	var_set_cells(Variant:building, OwnerName, Character_GetOOCName(playerid));
 
 	Character_AddOwnedBuilding(playerid, building);
 
@@ -496,7 +468,6 @@ stock Building_ResetOwner(Building:building)
 	}
 
     var_set_cell(Variant:building, OwnerID, 0);
-	var_set_cells(Variant:building, OwnerName, "");
 
     Log("", "", "Building_ResetOwner", Building_GetID(building));
     return 1;
@@ -510,7 +481,7 @@ stock Building_Delete(Building:building)
 
 	Building_DestroyElements(building);
 	
-	// UPDATE OWNERID -> BUILDING_ID TO 0.
+	// UPDATES OWNERID -> BUILDING_ID TO 0.
     CallLocalFunction(#OnBuildingDeleted, "d", _:building);
 	
 	var_release(Variant:building);
@@ -578,12 +549,6 @@ stock Building_GetOwnerID(Building:building)
     return var_get(Variant:building, OwnerID);
 }
 
-stock Building_GetOwnerName(Building:building, name[MAX_PLAYER_NAME])
-{
-    var_get_md_arr(Variant:building, {OwnerName}, name);
-    return 1;
-}
-
 stock Building_IsLocked(Building:building)
 {
     return var_get(Variant:building, IsLocked);
@@ -627,12 +592,12 @@ stock Building_GetExitWorld(Building:building)
 	return var_get(Variant:building, ExitWorld);
 }
 
-stock Building_GetEnterPos(Building:building, &Float:x, &Float:y, &Float:z)
+stock bool:Building_GetEnterPos(Building:building, &Float:x, &Float:y, &Float:z)
 {
 	x = Float:var_get(Variant:building, EnterX);
 	y = Float:var_get(Variant:building, EnterY);
 	z = Float:var_get(Variant:building, EnterZ);
-	return 1;
+	return true;
 }
 
 stock Building_GetExitPos(Building:building, &Float:x, &Float:y, &Float:z)
@@ -773,39 +738,35 @@ stock Character_GetNearBuildingID(playerid)
 	return Character_GetVirtualWorld(playerid) - BUILDING_START_WORLD;
 }
 
-stock Building:Character_GetCurrentBuilding(playerid)
+stock bool:Character_TryGetBuilding(playerid, &Building:building)
 {
-	new Building:building = Character_GetBuilding(playerid, false);
-	if(Building_IsValid(building))
+	building = Building_Find(Character_GetNearBuildingID(playerid));
+	if(!Building_IsValid(building))
 	{
-		return building;
-	}
-	building = Character_GetBuilding(playerid, true);
-	if(Building_IsValid(building))
-	{
-		new Float:x, Float:y, Float:z, Float:ex, Float:ey, Float:ez;
-		Building_GetEnterPos(building, x, y, z);
-		Building_GetExitPos(building, ex, ey, ez);
-		if(IsPlayerInRangeOfPoint(playerid, 1.5, x, y, z) || IsPlayerInRangeOfPoint(playerid, 1.5, ex, ey, ez))
-			return building;
-	}
-	return Building:0;
-}
-
-stock Building:Character_GetBuilding(playerid, bool:inside)
-{
-	new Building:building = INVALID_BUILDING;
-	if(inside)
-	{
-		building = Building_Find(Character_GetNearBuildingID(playerid));
-	}
-	else
-	{
-		new Building:temp, E_ELEMENT_TYPE:type;
-		if(Character_GetNearestPickup(playerid, temp, type) && (type == ELEMENT_TYPE_BUILDING_ENTRANCE))
+		new Building:temp = Building:0, E_ELEMENT_TYPE:type;
+		if(Character_GetNearestPickup(playerid, temp, type) && (type == ELEMENT_TYPE_BUILDING_ENTRANCE) && Building_IsValid(temp))
 			building = temp;
 	}
-	return building;
+	return Building_IsValid(building);
+}
+
+stock bool:Character_IsInsideBuilding(playerid, Building:building)
+{
+	return (Character_GetVirtualWorld(playerid) - BUILDING_START_WORLD) == Building_GetID(building);
+}
+
+stock bool:Character_IsNearBuildingEnter(playerid, Building:building)
+{
+	new Float:x, Float:y, Float:z;
+	Building_GetEnterPos(building, x, y, z);
+	return IsPlayerInRangeOfPoint(playerid, 1.5, x, y, z) > 0;
+}
+
+stock bool:Character_IsNearBuildingExit(playerid, Building:building)
+{
+	new Float:x, Float:y, Float:z;
+	Building_GetExitPos(building, x, y, z);
+	return IsPlayerInRangeOfPoint(playerid, 1.5, x, y, z);
 }
 
 stock bool:Character_CanUseBuildingMenu(playerid, Building:building, minRank = 3)
@@ -817,14 +778,6 @@ stock bool:Character_CanUseBuildingMenu(playerid, Building:building, minRank = 3
 	if(Faction_IsValid(Character_GetFaction(playerid)) && Character_GetFaction(playerid) == Building_GetFaction(building) && Character_GetRank(playerid) <= minRank)
 		return true;
 	return false;
-}
-
-stock Building:Character_GetBusinessMenu(playerid)
-{
-	new Building:building = Character_GetCurrentBuilding(playerid);
-	if(Character_CanUseBuildingMenu(playerid, building))
-		return building;
-	return INVALID_BUILDING;
 }
 
 flags:businesscmds(CMD_ALIVE_USER);
@@ -917,4 +870,18 @@ SSCANF:building(string[])
 	if(ret > 0)
 		building = Building_Find(ret);
 	return _:building;
+}
+
+hook function bool:Entity_GetWorldPosition(EntityType:entityType, entityId, &Float:x, &Float:y, &Float:z)
+{
+	if(entityType != ENTITY_TYPE_BUILDING)
+		return bool:continue(entityType, entityId, x, y, z);
+	
+	new Building:building = Building_Find(entityId);
+
+	if(!Building_IsValid(building))
+		return false;
+	
+	Building_GetEnterPos(building, x, y, z);
+	return true;
 }

@@ -106,32 +106,37 @@ Dialog:Dialog_MDCSearchCharacter(playerid, response, listitem, inputtext[])
 
             sscanf(tempName, "p<_>s[24]s[24]", name, surname);
 
-            new String:end = str_format("{FFFFFF}==== SCHEDA DEL CITTADINO ====\n- Nome: %s\n- Cognome: %s\n\n==== Case ====\n\n", name, surname);
+            new String:end = str_new("");
+            str_append_format(end, "{FFFFFF}==== SCHEDA DEL CITTADINO ====\n- Nome: %s\n- Cognome: %s\n\n==== Case ====\n\n", name, surname);
 
             rentHouse = House_Find(temp);
             if(House_IsValid(rentHouse))
             {
-                end += str_format("- %s\n", House_GetAddress(rentHouse));
+                str_append_format(end, "- %s\n", House_GetAddress(rentHouse));
             }
 
             for_house(house)
             {
+                if(!House_IsValid(house))
+                    continue;
                 if(House_GetOwnerID(house) == id && rentHouse != house)
                 {
-                    end += str_format("{33AA33}%s{FFFFFF}\n", House_GetAddress(rentHouse));
+                    str_append_format(end, "{33AA33}%s{FFFFFF}\n", House_GetAddress(house));
                 }
             }
             
             end += @("\n==== Edifici (Biz) ====\n\n");
             for_building(building)
             {
+                if(!Building_IsValid(building))
+                    continue;
                 if(Building_GetOwnerID(building) == id)
                 {
-                    end += str_format("{33AA33}%S{FFFFFF}\n", Building_GetAddressStr(building));
+                    str_append_format(end, "{33AA33}%S{FFFFFF}\n", Building_GetAddressStr(building));
                 }
             } 
 
-            end += @("\n");
+            str_append_format(end, "\n");
 
             Dialog_Show_s(playerid, DialogNull, DIALOG_STYLE_MSGBOX, @("Scheda"), end, "Chiudi", "");
         }

@@ -22,8 +22,8 @@ hook OnCharacterLoad(playerid)
 flags:ritirastipendio(CMD_ALIVE_USER);
 CMD:ritirastipendio(playerid, params[])
 {
-	new Building:building = Character_GetBuilding(playerid, true);
-	if(!Building_IsValid(building) || Building_GetType(building) != BUILDING_TYPE_BANK)
+	new Building:building;
+	if(!Character_TryGetBuilding(playerid, building) || Building_GetType(building) != BUILDING_TYPE_BANK)
 		return SendClientMessage(playerid, COLOR_ERROR, "Questo comando può essere utilizzato solo in banca.");
 	new paycheck = Character_GetPayCheck(playerid);
 	if(paycheck <= 0)

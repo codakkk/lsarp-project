@@ -28,10 +28,9 @@ CMD:traccia(playerid, params[])
 
     new Float:x, Float:y, Float:z;
 
-    new entityId, EntityType:entityType, phoneSlotId;
-    if(World_FindPhoneByNumber(number, entityType, entityId, phoneSlotId))
+    new Inventory:entityInv, entityId, EntityType:entityType, phoneSlotId;
+    if(World_FindPhoneByNumber(number, entityInv, entityType, entityId, phoneSlotId))
     {
-        new Inventory:entityInv = Inventory_Get(entityType, entityId);
         
         if(Phone_IsOff(entityInv, phoneSlotId))
             return SendClientMessage(playerid, COLOR_ERROR, "[Trace] Il cellulare chiamato risulta spento.");

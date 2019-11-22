@@ -182,8 +182,6 @@ stock Character_ShowStats(playerid, targetid)
 		Float:x, Float:y, Float:z;
 
 	GetPlayerPos(playerid, x, y, z);
-	getdate(year, month, day);
-	gettime(hours, minutes, seconds);
 	
 	new factionName[MAX_FACTION_NAME] = "N/A", rankName[MAX_FACTION_RANK_NAME] = "N/A", jobName[32] = "";
 
@@ -210,13 +208,23 @@ stock Character_ShowStats(playerid, targetid)
 		format(timePlayed, sizeof(timePlayed), "%d min.", minutesPlayed);
 	}
 
-    SendFormattedMessage(targetid, 0x33AA33FF, "_____________________[Stats Help - %02d/%02d/%02d @ %02d:%02d:%02d]_____________________", day, month, year, hours, minutes, seconds);
-	SendFormattedMessage(targetid, 0xCCE6E6FF, "[Account] %s | Admin Level: [%d] | Premium Level: [%d] | E-Mail: %s", Account_GetName(playerid), Account_GetAdminLevel(playerid), Account_GetPremiumLevel(playerid), Account_GetEMail(playerid));
+	new String:string = str_format("[Account] %s | Admin Level: [%d] | E-Mail: %s ", Account_GetName(playerid), Account_GetAdminLevel(playerid), Account_GetEMail(playerid));
+
+	new expire = Account_GetPremiumExpiry(playerid);
+	if(expire > 0)
+	{
+		TimestampToDate(expire, year, month, day, hours, minutes, seconds, 1);
+		str_append_format(string, "| Premium Level: [%d] | Scadenza: [%02d/%02d/%02d %02d:%02d]", Account_GetPremiumLevel(playerid), day, month, year, hours, minutes);
+	}
+	getdate(year, month, day);
+	gettime(hours, minutes, seconds);
+    SendFormattedMessage(targetid, 0x33AA33FF, "____________________________________[Stats Help - %02d/%02d/%02d @ %02d:%02d:%02d]____________________________________", day, month, year, hours, minutes, seconds);
+	SendClientMessageStr(targetid, 0xCCE6E6FF, string);
 	SendFormattedMessage(targetid, 0xCCE6E6FF, "[Personaggio] Livello: [%d] | Esperienza: [%d] | Lavoro: [%s] | Fazione: [%s] | Rank: [%s]", Character_GetLevel(playerid), Character_GetExperience(playerid), jobName, factionName, rankName);
     SendFormattedMessage(targetid, 0xCCE6E6FF, "[Personaggio] HP: [%.2f] | Armatura: [%.2f] | Max HP: [%.2f] | Max AP: [%.2f] | Ore di gioco: [%s]", Character_GetHealth(playerid), Character_GetArmour(playerid), Character_GetMaxHealth(playerid), Character_GetMaxArmour(playerid), timePlayed);
 	SendFormattedMessage(targetid, 0xCCE6E6FF, "[Personaggio] Soldi: [$%s] | Banca: [$%s] | Stipendio: [$%s]", FormatNumber(Character_GetMoney(playerid)), FormatNumber(Character_GetBank(playerid)), FormatNumber(Character_GetPayCheck(playerid)));
     SendFormattedMessage(targetid, 0xCCE6E6FF, "[Altro] X: [%.2f] | Y: [%.2f] | Z: [%.2f] | Interior: [%d] | VW: [%d]", x, y, z, GetPlayerInterior(playerid), Character_GetVirtualWorld(playerid));
-    SendClientMessage(targetid, 0x33AA33FF,    "________________________________________________________________________________________");
+    SendClientMessage(targetid, 0x33AA33FF,    "_______________________________________________________________________________________________________");
     return 1;
 }
 
@@ -282,46 +290,47 @@ stock Character_SetRank(playerid, rank)
 	mysql_pquery_f(gMySQL, "UPDATE `characters` SET faction_rank = '%d' WHERE id = '%d'", rank, Character_GetID(playerid));
 }
 
-stock House:Character_GetCurrentHouse(playerid)
+stock bool:Character_TryGetHouse(playerid, &House:house)
 {
-	new House:house = Character_GetHouse(playerid, false);
+	house = House_Find(Character_GetHouseID(playerid));
 	if(!House_IsValid(house))
-		house = Character_GetHouse(playerid, true);
-	return house;
+	{
+		new checkpointid = Character_GetCheckpoint(playerid);
+		Checkpoint_GetInfoOfType(checkpointid, CHECKPOINT_TYPE_HOUSE, house);
+	}
+	return House_IsValid(house);
 }
 
-stock House:Character_GetHouse(playerid, bool:insideCheckToo = false)
+stock bool:Character_IsInsideHouse(playerid, House:house)
 {
-	new House:house = INVALID_HOUSE, House:temp = INVALID_HOUSE;
-	if(insideCheckToo)
-	{
-		temp = House_Find(Character_GetHouseID(playerid));
-		//if(Checkpoint_GetInfoOfType(Character_GetCheckpoint(playerid), CHECKPOINT_TYPE_HOUSE, temp) && House_IsValid(temp) && Character_GetVirtualWorld(playerid) == House_GetExitWorld(temp))
-		if(House_IsValid(temp))
-		{
-			house = temp;
-		}
-	}
-	if(!House_IsValid(house) && Checkpoint_GetInfoOfType(Character_GetCheckpoint(playerid), CHECKPOINT_TYPE_HOUSE, temp) && House_IsValid(temp) && Character_GetVirtualWorld(playerid) == House_GetEnterWorld(temp))
-	{
-		house = temp;
-	}
-	return house;
+	return (Character_GetVirtualWorld(playerid) - HOUSE_START_WORLD) == House_GetID(house);
 }
 
-stock House:Character_GetHouseMenu(playerid)
+stock bool:Character_IsNearHouseEnter(playerid, House:house)
 {
-	new House:house = Character_GetCurrentHouse(playerid);
-	if(House_IsValid(house))
-	{
-		if(Player_IsAdminDuty(playerid))
-			return house;
-		if(House_GetOwnerID(house) == Character_GetID(playerid))
-			return house;
-		if(house == Character_GetRentHouse(playerid))
-			return house;
-	}
-	return INVALID_HOUSE;
+	new Float:x, Float:y, Float:z;
+	House_GetEnterPosition(house, x, y, z);
+	return IsPlayerInRangeOfPoint(playerid, 1.5, x, y, z) > 0;
+}
+
+stock bool:Character_IsNearHouseExit(playerid, House:house)
+{
+	new Float:x, Float:y, Float:z;
+	House_GetExitPosition(house, x, y, z);
+	return IsPlayerInRangeOfPoint(playerid, 1.5, x, y, z) > 0;
+}
+
+stock bool:Character_CanUseHouseMenu(playerid, House:house, bool:onlyOwner = false)
+{
+	if(!House_IsValid(house))
+		return false;
+	if(Player_IsAdminDuty(playerid))
+		return true;
+    if(!onlyOwner && Character_GetRentHouse(playerid) == house)
+        return true;
+    if(Character_DoesOwnHouse(playerid, house))
+        return true;
+	return false;
 }
 
 stock Character_GetHouseID(playerid)
@@ -637,9 +646,8 @@ hook function bool:Entity_GetWorldPosition(EntityType:entityType, entityId, &Flo
     }
     else if(world >= BUILDING_START_WORLD)
     {
-        new Building:building = Character_GetBuilding(playerid, true);
-        
-        if(Building_IsValid(building))
+        new Building:building;
+        if(Character_TryGetBuilding(playerid, building))
         {
         	Building_GetEnterPos(building, x, y, z);
 		}

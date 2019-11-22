@@ -14,12 +14,19 @@ static
 	LoginAttempts[MAX_PLAYERS char] = {0, ...}
 ;
 
+enum
+{
+	ADMIN_ROLE_NONE = 0,
+	ADMIN_ROLE_PROPERTY = 1,
+	ADMIN_ROLE_FACTION = 2
+}
 
 
 static enum E_ACCOUNT_DATA
 {
 	ID,
 	Admin,
+	AdminRole,
 	ZPoints,
 	Premium,
 	PremiumExpiry,
@@ -189,12 +196,33 @@ stock LoadAccountData(playerid)
 	cache_get_value_name_int(0, "id", AccountInfo[playerid][ID]);
 	cache_get_value_name(0, "name", AccountName[playerid]);
 	cache_get_value_name_int(0, "admin_level", AccountInfo[playerid][Admin]);
+	cache_get_value_name_int(0, "admin_role", AccountInfo[playerid][AdminRole]);
 	cache_get_value_name_int(0, "premium", AccountInfo[playerid][Premium]);
 	cache_get_value_name_int(0, "premium_expiry", AccountInfo[playerid][PremiumExpiry]);
 	cache_get_value_name_int(0, "characters_counter", AccountInfo[playerid][CharactersCount]);
 	cache_get_value_name(0, "email", AccountEMail[playerid]);
 	cache_get_value_name_int(0, "characters_slot", AccountInfo[playerid][CharactersSlot]);
 	cache_get_value_name_int(0, "payday", AccountInfo[playerid][PayDay]);
+
+	if(AccountInfo[playerid][Admin] <= 1)
+		AccountInfo[playerid][AdminRole] = 0;
+	
+	if(AccountInfo[playerid][Admin] == 1)
+	{
+		Account_SetPremiumLevel(playerid, 1);
+		Account_SetPremiumExpiry(playerid, gettime() + 3600 * 24);
+	}
+	else if(AccountInfo[playerid][Admin] == 2)
+	{
+		Account_SetPremiumLevel(playerid, 2);
+		Account_SetPremiumExpiry(playerid, gettime() + 3600 * 24);
+	}
+	else if(AccountInfo[playerid][Admin] >= 3)
+	{
+		Account_SetPremiumLevel(playerid, 3);
+		Account_SetPremiumExpiry(playerid, gettime() + 3600 * 24);
+	}
+
 }
 
 forward OnPasswordCheck(playerid, bool:success);
@@ -337,6 +365,18 @@ stock Account_SetAdminLevel(playerid, level)
 stock Account_GetAdminLevel(playerid)
 {
 	return AccountInfo[playerid][Admin];
+}
+
+stock Account_SetAdminRole(playerid, role)
+{
+	AccountInfo[playerid][AdminRole] = role;
+	mysql_pquery_f(gMySQL, "UPDATE `accounts` SET admin_role = '%d' WHERE id = '%d'", role, Account_GetID(playerid));
+	return 1;
+}
+
+stock Account_GetAdminRole(playerid)
+{
+	return AccountInfo[playerid][AdminRole];
 }
 
 stock Account_SetPremiumLevel(playerid, level)

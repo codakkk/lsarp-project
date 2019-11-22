@@ -11,8 +11,8 @@ static bool:Character_ShowBizDialog(playerid)
     new response[e_DIALOG_RESPONSE_INFO];
     for(;;)
     {
-        new Building:building = Character_GetCurrentBuilding(playerid);
-        if(!Building_IsValid(building) || !Character_CanUseBuildingMenu(playerid, building))
+        new Building:building;
+        if(!Character_TryGetBuilding(playerid, building) || !Character_CanUseBuildingMenu(playerid, building))
         {
             SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno di un tuo biz.");
             break;

@@ -23,9 +23,9 @@ hook OnPlayerStreamIn(playerid, forplayerid)
 {
 	if(Character_IsMasked(playerid))
 	{
-		if(Player_IsAdminDuty(playerid))
+		if(Player_IsAdminDuty(forplayerid))
 		{
-			SetPlayerMarkerForPlayer(forplayerid, playerid, (Player_IsAdminDuty(playerid)) ? 0xFFFF00AA : 0xFFFFFF00);
+			SetPlayerMarkerForPlayer(forplayerid, playerid, (Player_IsAdminDuty(forplayerid)) ? 0xFFFF00AA : 0xFFFFFF00);
 			ShowPlayerNameTagForPlayer(forplayerid, playerid, true);
 		}
 		else ShowPlayerNameTagForPlayer(forplayerid, playerid, false);

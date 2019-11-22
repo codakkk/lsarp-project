@@ -8546,7 +8546,7 @@ static ac_IsVehicleSeatOccupied(vehicleid, seat)
 #endif
 #undef AC_USE_CASINOS
 
-static ac_IsCompatible(modelid, componentid)
+static stock ac_IsCompatible(modelid, componentid)
 {
 	if(400 <= modelid <= 611)
 	{

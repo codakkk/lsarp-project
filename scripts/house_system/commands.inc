@@ -63,20 +63,27 @@ CMD:casacmds(playerid, params[])
 flags:bussa(CMD_ALIVE_USER);
 CMD:bussa(playerid, params[])
 {
-	new House:house = Character_GetHouse(playerid, false);
-	new Building:building = Character_GetBuilding(playerid, false);
+	new House:house;
+	new Building:building;
 
-	if(!House_IsValid(house) && !Building_IsValid(building))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata di un biz o di una casa.");
-
-	new world = House_IsValid(house) ? House_GetExitWorld(house) : Building_GetExitWorld(building);
-
-	foreach(new p : Player)
+	if(Character_TryGetBuilding(playerid, building) && Character_IsNearBuildingEnter(playerid, building))
 	{
-		if(Character_GetVirtualWorld(p) == world)
-			SendClientMessage(p, COLOR_PURPLE, "** Qualcuno sta bussando alla porta di casa. **");
+		Character_AMe(playerid, "bussa alla porta.");
+		foreach(new p : Player)
+		{
+			if(Character_IsLogged(p) && Character_GetVirtualWorld(p) == Building_GetExitWorld(building))
+				SendClientMessage(p, COLOR_PURPLE, "** Qualcuno sta bussando alla porta di casa. **");
+		}
 	}
-	Character_AMe(playerid, "bussa alla porta.");
+	else if(Character_TryGetHouse(playerid, house) && Character_IsNearHouseEnter(playerid, house))
+	{
+		Character_AMe(playerid, "bussa alla porta.");
+		foreach(new p : Player)
+		{
+			if(Character_IsLogged(p) && Character_GetVirtualWorld(p) == House_GetExitWorld(house))
+				SendClientMessage(p, COLOR_PURPLE, "** Qualcuno sta bussando alla porta di casa. **");
+		}
+	}
 	return 1;
 }
 
@@ -86,42 +93,28 @@ CMD:dshout(playerid, params[])
 	if(isnull(params) || strlen(params) <= 0)
 		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: (/ds)hout [testo]");
 	
-	new House:house = Character_GetHouse(playerid, false);
-	new Building:building = Character_GetBuilding(playerid, false);
+	new House:house, Building:building, 
+		Float:x, Float:y, Float:z, 
+		bool:isInside, world, interior;
 
-	if(House_IsValid(house) || Building_IsValid(building))
+	if(!GetHouseOrBuildingData(playerid, building, house, isInside, x, y, z, world, interior))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita di un edificio.");	
+
+	
+	callcmd::shout(playerid, params);
+
+	if(isInside)
 	{
-		new world = House_IsValid(house) ? House_GetExitWorld(house) : Building_GetExitWorld(building);
-		foreach(new p : Player)
-		{
-			if(Character_GetVirtualWorld(p) == world)
-				SendFormattedMessage(p, -1, "[Porta] %s grida: %s!", Character_GetRolePlayName(playerid), params);
-		}
-		callcmd::shout(playerid, params);
+		SendRangedMessageStr(20.0, x, y, z, world, interior, str_format("[Porta] %s grida: %s", Character_GetRolePlayName(playerid), params), COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false);
 	}
 	else
 	{
-		house = Character_GetHouse(playerid, true);
-		building = Character_GetBuilding(playerid, true);
-
-		if(!House_IsValid(house) && !Building_IsValid(building))
-			return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita di un biz o di una casa.");
-		
-		new Float:x, Float:y, Float:z, world, interior;
-		if(House_IsValid(house))
+		new String:str = str_format("[Porta] %s grida: %s!", Character_GetRolePlayName(playerid), params);
+		foreach(new p : Player)
 		{
-			House_GetEnterPosition(house, x, y, z);
-			world = House_GetEnterWorld(house);
-			interior = House_GetEnterInterior(house);
+			if(Character_GetVirtualWorld(p) == world)
+				SendClientMessageStr(p, -1, str);
 		}
-		else
-		{
-			Building_GetEnterPos(building, x, y, z);
-			world = Building_GetEnterWorld(building);
-			interior = Building_GetEnterInterior(building);
-		}
-		callcmd::shout(playerid, params);
-		SendRangedMessageStr(20.0, x, y, z, world, interior, str_format("[Porta] %s grida: %s", Character_GetRolePlayName(playerid), params), COLOR_FADE1, COLOR_FADE2, COLOR_FADE3, COLOR_FADE4, COLOR_FADE5, false);
 	}
 	return 1;
 }
@@ -133,44 +126,75 @@ CMD:ddo(playerid, params[])
 	if(isnull(params) || strlen(params) <= 0)
 		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /ddo [testo]");
 	
-	new House:house = Character_GetHouse(playerid, false);
-	new Building:building = Character_GetBuilding(playerid, false);
+	new House:house, Building:building, 
+		Float:x, Float:y, Float:z, 
+		bool:isInside, world, interior;
 
-	if(House_IsValid(house) || Building_IsValid(building))
+	if(!GetHouseOrBuildingData(playerid, building, house, isInside, x, y, z, world, interior))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita di un edificio.");	
+
+	
+	callcmd::do(playerid, params);
+
+	if(isInside)
 	{
-		new world = House_IsValid(house) ? House_GetExitWorld(house) : Building_GetExitWorld(building);
-		foreach(new p : Player)
-		{
-			if(Character_GetVirtualWorld(p) == world)
-				SendFormattedMessage(p, -1, "* [Porta] %s (( %s ))", params, Character_GetRolePlayName(playerid));
-		}
-		callcmd::do(playerid, params);
+		SendRangedMessageStr(20.0, x, y, z, world, interior, str_format("* [Porta] %s (( %s ))", params, Character_GetRolePlayName(playerid)), COLOR_INTERACTION, COLOR_INTERACTION, COLOR_INTERACTION, COLOR_INTERACTION, COLOR_INTERACTION, false);
 	}
 	else
 	{
-		house = Character_GetHouse(playerid, true);
-		building = Character_GetBuilding(playerid, true);
-
-		if(!House_IsValid(house) && !Building_IsValid(building))
-			return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'uscita di un biz o di una casa.");
-		
-		new Float:x, Float:y, Float:z, world, interior;
-		if(House_IsValid(house))
+		new String:str = str_format("* [Porta] %s (( %s ))", params, Character_GetRolePlayName(playerid));
+		foreach(new p : Player)
 		{
-			House_GetEnterPosition(house, x, y, z);
-			world = House_GetEnterWorld(house);
-			interior = House_GetEnterInterior(house);
+			if(Character_GetVirtualWorld(p) == world)
+				SendClientMessageStr(p, -1, str);
+		}
+	}
+	return 1;
+}
+
+static bool:GetHouseOrBuildingData(playerid, &Building:building, &House:house, &bool:isInside, &Float:x, &Float:y, &Float:z, &world, &interior)
+{
+	if(Character_TryGetHouse(playerid, house))
+	{
+		if(Character_IsInsideHouse(playerid, house))
+		{
+			if(Character_IsNearHouseExit(playerid, house))
+			{
+				isInside = true;
+				world = House_GetEnterWorld(house);
+				interior = House_GetEnterInterior(house);
+				House_GetEnterPosition(house, x, y, z);
+				return true;
+			}
 		}
 		else
 		{
-			Building_GetEnterPos(building, x, y, z);
-			world = Building_GetEnterWorld(building);
-			interior = Building_GetEnterInterior(building);
+			isInside = false;
+			world = House_GetExitWorld(house);
+			interior = House_GetExitInterior(house);
+			return true;
 		}
-		
-		callcmd::do(playerid, params);
-
-		SendRangedMessageStr(20.0, x, y, z, world, interior, str_format("* [Porta] %s (( %s ))", params, Character_GetRolePlayName(playerid)), COLOR_INTERACTION, COLOR_INTERACTION, COLOR_INTERACTION, COLOR_INTERACTION, COLOR_INTERACTION, false);
 	}
-	return 1;
+	else if(Character_TryGetBuilding(playerid, building))
+	{
+		if(Character_IsInsideBuilding(playerid, building))
+		{
+			if(Character_IsNearBuildingEnter(playerid, building))
+			{
+				isInside = true;
+				world = Building_GetEnterWorld(building);
+				interior = Building_GetEnterInterior(building);
+				Building_GetEnterPos(building, x, y, z);
+				return true;
+			}
+		}
+		else
+		{
+			isInside = false;
+			world = Building_GetExitWorld(building);
+			interior = Building_GetExitInterior(building);
+			return true;
+		}
+	}
+	return false;
 }

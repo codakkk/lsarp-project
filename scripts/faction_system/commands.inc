@@ -7,7 +7,7 @@ CMD:dipartimento(playerid, params[])
 
 	new factionid = Character_GetFaction(playerid), shortName[MAX_FACTION_SHORT_NAME], rankName[MAX_FACTION_RANK_NAME];
 	
-	if(Faction_GetType(factionid) != FACTION_TYPE_POLICE && Faction_GetType(factionid) != FACTION_TYPE_MEDICAL)
+	if(Faction_GetType(factionid) != FACTION_TYPE_POLICE && Faction_GetType(factionid) != FACTION_TYPE_MEDICAL && Faction_GetType(factionid) != FACTION_TYPE_FIREFIGHTERS)
 		return 0;
 	
 	if(!Character_IsFactionDuty(playerid))
@@ -19,7 +19,7 @@ CMD:dipartimento(playerid, params[])
 	foreach(new i : Player)
 	{
 		factionid = Character_GetFaction(i);
-		if(Faction_GetType(factionid) == FACTION_TYPE_POLICE || Faction_GetType(factionid) == FACTION_TYPE_MEDICAL)
+		if(Faction_GetType(factionid) == FACTION_TYPE_POLICE || Faction_GetType(factionid) == FACTION_TYPE_MEDICAL || Faction_GetType(factionid) == FACTION_TYPE_FIREFIGHTERS)
 		{
 			SendFormattedMessage(i, 0xF07A7AFF, "[%s] %s %s dice: %s", shortName, rankName, Character_GetOOCName(playerid), params);
 		}

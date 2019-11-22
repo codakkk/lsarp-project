@@ -483,8 +483,10 @@ stock Character_DropItem(playerid, slotid, amount)
 {
 	if(Request_IsPending(playerid, REQUEST_TYPE_ITEM))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi gettare un oggetto se hai una richiesta attiva.");
+	
 	if(IsPlayerInAnyVehicle(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando all'interno di un veicolo.");
+		
 	new 
 		itemid = Character_GetSlotItem(playerid, slotid),
 		slotAmount = Character_GetSlotAmount(playerid, slotid),

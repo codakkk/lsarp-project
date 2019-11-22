@@ -40,6 +40,8 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 	if(Weapon[playerid]{slotid} != 0 && Ammo[playerid][slotid] != 0)
 	{
 		Ammo[playerid][slotid]--;
+		if(Ammo[playerid][slotid] <= 0)
+			Character_RemoveWeapon(playerid, weaponid);
 		//printf("Weapon ID: %d - Ammo: %d - AC Ammo: %d", weaponid, GetPlayerAmmo(playerid), Ammo[playerid][slotid]);
 	}
 	return 1;

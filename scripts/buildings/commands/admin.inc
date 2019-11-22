@@ -30,7 +30,7 @@ CMD:gotobuilding(playerid, params[])
 }
 alias:gotobuilding("gotob");
 
-flags:abcreate(CMD_ADMIN);
+flags:abcreate(CMD_ADMIN | CMD_PROPERTY_ROLE);
 CMD:abcreate(playerid, params[])
 {
     
@@ -42,7 +42,7 @@ CMD:abcreate(playerid, params[])
     return 1;
 }
 
-flags:abdelete(CMD_ADMIN);
+flags:abdelete(CMD_ADMIN | CMD_PROPERTY_ROLE);
 CMD:abdelete(playerid, params[])
 {
     new id;
@@ -65,14 +65,14 @@ CMD:abdelete(playerid, params[])
 }
 
 
-flags:abedit(CMD_ADMIN);
+flags:abedit(CMD_ADMIN | CMD_PROPERTY_ROLE);
 CMD:abedit(playerid, p[])
 {
     new id, command[16], params[256];
     if(sscanf(p, "ds[16]S()[256]", id, command, params))
     {
 	    SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit [buildingid] [pos - interior - price - lock - rmowner - name - type - ..");
-        SendClientMessage(playerid, COLOR_COMMAND_ERROR, ".. faction - exit - ownable - welcometext]");
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, ".. faction - exit - ownable - welcometext - setowner]");
         return 0;
     }
     
@@ -113,6 +113,15 @@ CMD:abedit(playerid, p[])
             SendFormattedMessage(playerid, COLOR_GREEN, "Non è stato possibile eseguire il comando sul building %d.", id);
         }
     }
+    /*else if(!strcmp(command, "rmowner", true))
+    {
+        new id;
+	    if(sscanf(params, "k<d>", id))
+            return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit [buildingid] [setowner] [playerid/partofname]");
+	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato  il proprietario del building %d.", id);
+       Building_ResetOwner(building);
+       Log(Account_GetName(playerid), "none", "/abedit rmowner", id);
+    }*/
     else if(!strcmp(command, "rmowner", true))
     {
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai resettato il proprietario del building %d.", id);
@@ -144,7 +153,7 @@ CMD:abedit(playerid, p[])
         if(sscanf(params, "d", type))
         {
             SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit <buildingid> type <typeid>");
-            SendClientMessage(playerid, COLOR_ERROR, "0: Store, 1: Paycheck, 2: Garage, 3: Complex, 4: Banca, 5: Pubblicità, 6: Benzina");
+            SendClientMessage(playerid, COLOR_ERROR, "0: Store, 1: Paycheck, 2: Garage, 3: Complex, 4: Banca, 5: Pubblicità, 6: Benzina, 7: Pay'n'Spray");
             return 0;
         }
 

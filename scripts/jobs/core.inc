@@ -253,6 +253,9 @@ CMD:centralino(playerid, params[])
     if(Character_IsLogged(FollowingPlayer[playerid]))
         return SendClientMessage(playerid, COLOR_ERROR, "Hai già una richiesta di servizio attiva.");
 
+    if(IsValidDynamicCP(FollowingPlayerCP[playerid]))
+        DestroyDynamicCP(FollowingPlayerCP[playerid]);
+
     SendClientMessage(id, COLOR_ORANGE, "[!] Un operatore ha accettato la tua richiesta.");
     SendClientMessage(playerid, COLOR_ORANGE, "[!] Hai accettato la richiesta del servizio dell'utente. Usa /annullacentralino per annullarla.");
 
@@ -337,16 +340,23 @@ stock ShowJobCommands(playerid)
 
 stock EnterJobDuty(playerid)
 {
-    if(Character_GetJobType(playerid) != JOB_TYPE_TAXI)
-        return false;
-    new vehicleid = GetPlayerVehicleID(playerid);
-
-    if(!Character_IsValidJobVehicle(playerid, vehicleid))
+    if(Character_GetJobType(playerid) == JOB_TYPE_TAXI)
     {
-        SendClientMessage(playerid, COLOR_ERROR, "Devi essere su un tuo taxi o uno convenzionato per poter utilizzare questo comando.");
-        return false;
+        new vehicleid = GetPlayerVehicleID(playerid);
+
+        if(!Character_IsValidJobVehicle(playerid, vehicleid))
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "Devi essere su un tuo taxi o uno convenzionato per poter utilizzare questo comando.");
+            return false;
+        }
+        return true;
     }
-    return true;
+    else if(Character_GetJobType(playerid) == JOB_TYPE_MECHANIC)
+    {
+        return true;
+
+    }
+    return false;
 }
 
 stock bool:Character_ExitJobDuty(playerid)

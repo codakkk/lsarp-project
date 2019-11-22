@@ -1,5 +1,7 @@
 
 #include "disablecheckpoints"
+#include "admins"
+#include "leanin"
 
 #include <player_system\commands\chat_commands>
 #include <player_system\commands\premium_commands>
@@ -55,86 +57,59 @@ alias:time("orario");
 flags:tog(CMD_USER);
 CMD:tog(playerid, params[])
 {
-	if(!isnull(params))
+	if(isnull(params))
 	{
-
-		if(!strcmp(params, "fchat", true))
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /tog <fchat - hud - pm - ooc - pchat>");
+		if(Account_GetAdminLevel(playerid) > 1)
+			SendClientMessage(playerid, COLOR_GREY, "Admin: cheat");
+		return 1;
+	}
+	new hash = YHash(params);
+	if(hash == _I<fchat>)
+	{
+		if(Character_GetFaction(playerid) == INVALID_FACTION_ID)
+			return SendClientMessage(playerid, COLOR_ERROR, "Non fai parte di una fazione.");
+		Character_SetFactionOOCEnabled(playerid, !Character_IsFactionOOCEnabled(playerid));
+		if(Character_IsFactionOOCEnabled(playerid))
+			SendClientMessage(playerid, COLOR_GREEN, "Hai attivato la chat fazione OOC.");
+		else
+			SendClientMessage(playerid, COLOR_GREEN, "Hai disattivato la chat fazione OOC.");
+	}
+	else if(hash == _I<hud>)
+	{
+		Player_SetHUDEnabled(playerid, !Player_HasHUDEnabled(playerid));
+		if(Player_HasHUDEnabled(playerid))
 		{
-			if(Character_GetFaction(playerid) == INVALID_FACTION_ID)
-				return SendClientMessage(playerid, COLOR_ERROR, "Non fai parte di una fazione.");
-			Character_SetFactionOOCEnabled(playerid, !Character_IsFactionOOCEnabled(playerid));
-			if(Character_IsFactionOOCEnabled(playerid))
-				SendClientMessage(playerid, COLOR_GREEN, "Hai attivato la chat fazione OOC.");
-			else
-				SendClientMessage(playerid, COLOR_GREEN, "Hai disattivato la chat fazione OOC.");
-			return 1;
+			SetHealthBarVisible(playerid, true);
+			if(IsPlayerInAnyVehicle(playerid) && GetPlayerVehicleSeat(playerid) == 0 && !IsABike(GetPlayerVehicleID(playerid)))
+				TextDraw_ShowFuel(playerid, true);
 		}
-		else if(!strcmp(params, "hud", true))
+		else
 		{
-			Player_SetHUDEnabled(playerid, !Player_HasHUDEnabled(playerid));
-			if(Player_HasHUDEnabled(playerid))
-			{
-				SetHealthBarVisible(playerid, true);
-				if(IsPlayerInAnyVehicle(playerid) && GetPlayerVehicleSeat(playerid) == 0 && !IsABike(GetPlayerVehicleID(playerid)))
-					TextDraw_ShowFuel(playerid, true);
-			}
-			else
-			{
-				SetHealthBarVisible(playerid, false);
-				TextDraw_ShowFuel(playerid, false);
-			}
-			return 1;
-		}
-		else if(!strcmp(params, "pm", true))
-		{
-			callcmd::blockpm(playerid, "all");
-			return 1;
-		}
-		else if(!strcmp(params, "ooc", true))
-		{
-			callcmd::blockb(playerid, "all");
-			return 1;
-		}
-		else if(!strcmp(params, "cheat", true))
-		{
-			Player_SetCheatAlertsEnabled(playerid, !Player_HasCheatAlertsEnabled(playerid));
-			if(Player_HasCheatAlertsEnabled(playerid))
-				SendClientMessage(playerid, COLOR_GREEN, "Hai abilitato gli avvisi cheat.");
-			else
-				SendClientMessage(playerid, COLOR_GREEN, "Hai disattivato gli avvisi cheat.");
-			return 1;
+			SetHealthBarVisible(playerid, false);
+			TextDraw_ShowFuel(playerid, false);
 		}
 	}
-
-	SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /tog <fchat - hud - pm - ooc>");
-	if(Account_GetAdminLevel(playerid) > 1)
-		SendClientMessage(playerid, COLOR_GREY, "Admin: cheat");
+	else if(hash == _I<pm>)
+	{
+		callcmd::blockpm(playerid, "all");
+	}
+	else if(hash == _I<ooc>)
+	{
+		callcmd::blockb(playerid, "all");
+	}
+	else if(hash == _I<pchat>)
+	{
+		Player_SetPremiumAlertsEnabled(playerid, !Player_HasPremiumAlertsEnabled(playerid));
+		SendClientMessage(playerid, COLOR_GREEN, Player_HasPremiumAlertsEnabled(playerid)?("Hai abilitato gli avvisi premium.") : ("Hai disattivato gli avvisi premium."));
+	}
+	else if(hash == _I<cheat> && Account_GetAdminLevel(playerid) > 1)
+	{
+		Player_SetCheatAlertsEnabled(playerid, !Player_HasCheatAlertsEnabled(playerid));
+		SendClientMessage(playerid, COLOR_GREEN, Player_HasCheatAlertsEnabled(playerid)?("Hai abilitato gli avvisi cheat.") : ("Hai disattivato gli avvisi cheat."));
+	}
 	return 1;
 }
-
-/*flags:domanda(CMD_USER);
-CMD:domanda(playerid, params[])
-{
-    if(isnull(params))
-	   return SendClientMessage(playerid, COLOR_ERROR, "(/dom)anda <testo>");
-    new seconds = (Account_GetPremiumLevel(playerid) > 0) ? 10 : 30;
-    if(GetTickCount() - LastAdminQuestionTime[playerid] < 1000 * seconds)
-	   return SendFormattedMessage(playerid, COLOR_ERROR, "Puoi inviare una domanda ogni %d secondi.", seconds);
-    if(Account_GetPremiumLevel(playerid) > 0)
-    {
-	   SendMessageToAdmins(0, COLOR_ORANGE, "(( [PREMIUM] %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);
-	   SendClientMessage(playerid, -1, "La domanda è stata inviata ai moderatori online. Attendi.");
-	   SendClientMessage(playerid, -1, "Essendo un utente Premium, la tua domanda avrà maggiore priorità.");
-    }
-    else
-    {
-	   SendMessageToAdmins(0, COLOR_ORANGE, "(( %s (%d) chiede: %s ))", Character_GetOOCName(playerid), playerid, params);
-	   SendClientMessage(playerid, -1, "La domanda è stata inviata ai moderatori online. Attendi.");
-    }
-    LastAdminQuestionTime[playerid] = GetTickCount();
-    return 1;
-}
-alias:domanda("dom");*/
 
 flags:report(CMD_USER);
 CMD:report(playerid, params[])
@@ -181,7 +156,8 @@ CMD:aiuto(playerid, params[])
 	SendClientMessage(playerid, COLOR_GREEN, "_______________www.lv-rp.it_______________");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[ACCOUNT] /stats /inv /oggetto /hotkeys /lostitems /zpoints");
     SendClientMessage(playerid, 0xCCE6E6FF, "[GENERALE]: /luoghi /paga /time /compra /id /cellinfo /chiama /bussa /blindfold /sa /animlist");
-    SendClientMessage(playerid, 0xCCE6E6FF, "[GENERALE]: (/pub)blicita /documenti /report /stilechat /stilelotta /stilecamminata /multe /disablecheckpoints");
+    SendClientMessage(playerid, 0xCCE6E6FF, "[GENERALE]: (/pub)blicita /documenti /report /stilechat /stilelotta /stilecamminata /multe");
+	SendClientMessage(playerid, 0xCCE6E6FF, "[GENERALE]: /disablecheckpoints /admins /testers /leanin");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[CHAT]: (/w)hisper (/s)hout /me /b(OOC) /do /cw /low /pm(OOC) /r /melow /ame /dolow");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[BANCA]: /bilancio /ritira /deposita /bonifico /ritirastipendio");
 	SendClientMessage(playerid, 0xCCE6E6FF, "[HELP]: /cellcmds /casacmds (/v)ehicle /furniturecmds /invcmds /fcmds /vcmds");

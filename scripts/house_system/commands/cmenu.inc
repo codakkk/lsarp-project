@@ -18,8 +18,8 @@ stock bool:Character_ShowHouseDialog(playerid)
     new response[e_DIALOG_RESPONSE_INFO];
     for(;;)
     {
-        new House:house = Character_GetHouseMenu(playerid);
-        if(!House_IsValid(house))
+        new House:house;
+        if(!Character_TryGetHouse(playerid, house) || !Character_CanUseHouseMenu(playerid, house, false))
         {
             SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno di casa tua.");
             break;
@@ -137,7 +137,7 @@ static ShowSellHouseDialog(playerid, House:house)
         Character_GiveMoney(playerid, sellPrice, "Dialog_HouseSell");
         SendFormattedMessage(playerid, COLOR_GREEN, "Hai venduto la tua casa per $%d.", sellPrice);
 
-        House_RemoveAllfurnitures(house);
+        //House_RemoveAllfurnitures(house);
         House_ResetOwner(house);
         break;
     }
@@ -431,72 +431,3 @@ hook OnCharacterTryAccept(playerid, type)
     Request_Reset(senderid, REQUEST_TYPE_HOUSE);
     return 1;
 }
-
-/*
-Dialog:Dialog_House(playerid, response, listitem, inputtext[])
-{
-    if(!response)
-	   return 0;
-    
-	new House:house = Character_GetHouseMenu(playerid);
-
-	if(!House_IsValid(house))
-	   return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno della tua casa.");
-
-
-
-	switch(listitem)
-	{
-		case 0: // Apri/Chiudi Porta
-		{
-			
-		}
-		case 1: // Show Inv
-		{
-			House_ShowInventory(house, playerid);
-		}
-		case 2: // Deposita Soldi
-		{
-			return Dialog_Show(playerid, Dialog_HouseDeposit, DIALOG_STYLE_INPUT, "Deposita soldi", "Inserisci l'ammontare di soldi che vuoi depositare in casa.", "Deposita", "Annulla");
-		}
-		case 3: // Ritira Soldi
-		{
-			return Dialog_Show(playerid, Dialog_HouseWithdraw, DIALOG_STYLE_INPUT, "Ritira soldi", "Inserisci l'ammontare di soldi che vuoi ritirare dalla casa.\n{00FF00}Cassa: $%d{FFFFFF}", "Ritira", "Annulla", House_GetMoney(house));
-		}
-		case 4: // Vendi 
-		{
-			return Dialog_Show(playerid, Dialog_HouseSell, DIALOG_STYLE_MSGBOX, "Vendi", "Sei sicuro di voler vendere la tua casa per {00FF00}$%d{FFFFFF}\nUna volta venduta, tutti i mobili verranno rimossi.", "Vendi", "Annulla", House_GetPrice(house)/2);
-		}
-		case 5: // Vendi a giocatore
-		{
-			return 1;
-			//return Dialog_Show(playerid, Dialog_SellHouseToPlayer, DIALOG_STYLE_MSGBOX, "Vendi", "Sei sicuro di voler vendere la tua casa per {00FF00}$%d{FFFFFF}\nUna volta venduta, tutti i mobili verranno rimossi.", "Vendi", "Annulla", House_GetPrice(house)/2);;
-		}
-		case 6: // Cambia interior
-		{
-			if(Character_GetHouseID(playerid) > 0)
-				return SendClientMessage(playerid, COLOR_ERROR, "Devi essere all'esterno della casa per poter cambiare interior.");
-			
-			
-		}
-		case 7: // Affittuari
-		{
-			House_ShowRentersList(house, playerid);
-		}
-		case 8:
-		{
-			House_SetRentable(house, !House_IsRentable(house));
-			if(House_IsRentable(house))
-				SendFormattedMessage(playerid, COLOR_ORANGE, "Hai messo la tua casa in affitto per $%s.", FormatNumber(House_GetRentPrice(house)));
-			else
-				SendClientMessage(playerid, COLOR_ORANGE, "La tua casa non è più in affitto.");
-		}
-		case 9:
-		{
-			Dialog_Show(playerid, Dialog_HouseSetRentPrice, DIALOG_STYLE_INPUT, "Affitto", "Inserisci il prezzo dell'affito.", "Imposta", "Indietro");
-		}
-	}
-    return 1;
-}
-
-*/

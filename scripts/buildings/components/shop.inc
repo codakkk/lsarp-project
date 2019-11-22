@@ -16,7 +16,7 @@ static enum  E_SELLING_ITEMS
     Amount,
     Extra // used for duplicated items (like phones) or quantity
 };
-static StaticSellingItems[11][E_SELLING_ITEMS];
+static StaticSellingItems[11][E_SELLING_ITEMS]; // should be removed
 
 static DefineSellableItem(const name[], itemid, price, amount = 1, extra = 0)
 {
@@ -93,11 +93,8 @@ hook OnPlayerEnterBuilding(playerid, Building:building)
 
 hook OnCharacterTryBuy(playerid)
 {
-    new Building:building = Character_GetBuilding(playerid, true);
-    if(!Building_IsValid(building))
-        return 0;
-    
-    if(Building_GetType(building) != BUILDING_TYPE_STORE)
+    new Building:building;
+    if(!Character_TryGetBuilding(playerid, building) || !Character_IsInsideBuilding(playerid, building) || Building_GetType(building) != BUILDING_TYPE_STORE)
         return 0;
 
     new 
@@ -115,8 +112,7 @@ hook OnCharacterTryBuy(playerid)
     yield 1;
     for(;;)
     {
-        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_TABLIST_HEADERS, @("Annuncio Globale"), items, @("Compra"), @("Chiudi"));
-        
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_TABLIST_HEADERS, @("24/7"), items, @("Compra"), @("Chiudi"));        
         if(!response[E_DIALOG_RESPONSE_Response])
             break;
 
@@ -141,17 +137,7 @@ hook OnCharacterTryBuy(playerid)
             continue;
         }
         
-        if(itemid == gItem_Phone)
-        {
-            if(extra == 0)
-                Character_GivePhone(playerid);
-            else if(extra == 1)
-                Character_GiveAnonymousePhone(playerid);
-        }
-        else
-        {
-            Character_GiveItem(playerid, itemid, amount, extra);
-        }
+        Character_GiveItem(playerid, itemid, amount, extra);
 
         Building_GiveMoney(building, price);
         Character_GiveMoney(playerid, -price, "buy_item_247");
@@ -191,10 +177,8 @@ Dialog:Dialog_BuildingSellingItems(playerid, response, listitem, inputtext[])
 {
     if(!response)
         return 0;
-    
-    new Building:building = Character_GetBuilding(playerid, true);
-    
-    if(!Building_IsValid(building))
+    new Building:building;
+    if(!Character_TryGetBuilding(playerid, building))
         return 0;
 
     new Map:items = Map:map_get(SellingItems, building);
@@ -222,9 +206,9 @@ Dialog:Dialog_BuildingSellingItems(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_BuyBuildingItem(playerid, response, listitem, inputtext[])
 {
-    new Building:building = Character_GetBuilding(playerid, true);
+    new Building:building;
     
-    if(!Building_IsValid(building) || !Building_CanSellItems(building))
+    if(!Character_TryGetBuilding(playerid, building) || !Building_CanSellItems(building))
         return 0;
     
     if(!response)
@@ -279,8 +263,8 @@ Dialog:Dialog_BuyBuildingItem(playerid, response, listitem, inputtext[])
 
 stock Character_EditSellableItems(playerid)
 {
-    new Building:building = Character_GetCurrentBuilding(playerid);
-    if(!Building_IsValid(building))
+    new Building:building;
+    if(!Character_TryGetBuilding(playerid, building))
         return SendClientMessage(playerid, COLOR_ERROR, "Devi essere vicino il business per utilizzare quest'opzione.");
     if(!Building_CanSellItems(building))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare quest'opzione su questo tipo di edificio.");
@@ -290,9 +274,9 @@ stock Character_EditSellableItems(playerid)
 
 Dialog:Dialog_EditSellableItems(playerid, response, listitem, inputtext[])
 {
-    new Building:building = Character_GetCurrentBuilding(playerid);
+    new Building:building;
     
-    if(!Building_IsValid(building))
+    if(!Character_TryGetBuilding(playerid, building))
         return 0;
     
     if(!response)
@@ -308,9 +292,9 @@ Dialog:Dialog_EditSellableItems(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_EditSellableItemList(playerid, response, listitem, inputtext[])
 {
-    new Building:building = Character_GetCurrentBuilding(playerid);
+    new Building:building;
 
-    if(!Building_IsValid(building))
+    if(!Character_TryGetBuilding(playerid, building))
         return 0;
     
     if(!response)
@@ -327,8 +311,8 @@ Dialog:Dialog_EditSellableItemList(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_EditSellableItem(playerid, response, listitem, inputtext[])
 {
-    new Building:building = Character_GetCurrentBuilding(playerid);
-    if(!Building_IsValid(building))
+    new Building:building;
+    if(!Character_TryGetBuilding(playerid, building))
         return 0;
     if(!response)
         return Character_EditSellableItems(playerid);
@@ -347,9 +331,9 @@ Dialog:Dialog_EditSellableItem(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_EditSellableItemPrice(playerid, response, listitem, inputtext[])
 {
-    new Building:building = Character_GetCurrentBuilding(playerid);
+    new Building:building;
 
-    if(!Building_IsValid(building))
+    if(!Character_TryGetBuilding(playerid, building))
         return 0;
 
     if(!response)
@@ -377,9 +361,9 @@ Dialog:Dialog_EditSellableItemPrice(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_EditSellableItemRemove(playerid, response, listitem, inputtext[])
 {
-    new Building:building = Character_GetCurrentBuilding(playerid);
+    new Building:building;
 
-    if(!Building_IsValid(building))
+    if(!Character_TryGetBuilding(playerid, building))
         return 0;
 
     if(!response)
@@ -393,9 +377,9 @@ Dialog:Dialog_EditSellableItemRemove(playerid, response, listitem, inputtext[])
 
 Dialog:Dialog_AddSellableItem(playerid, response, listitem, inputtext[])
 {
-    new Building:building = Character_GetCurrentBuilding(playerid);
+    new Building:building;
 
-    if(!Building_IsValid(building))
+    if(!Character_TryGetBuilding(playerid, building))
         return 0;
     
     if(!response)

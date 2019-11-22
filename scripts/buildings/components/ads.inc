@@ -14,8 +14,8 @@ hook OnCharacterClearData(playerid)
 flags:pubblicita(CMD_ALIVE_USER);
 CMD:pubblicita(playerid, params[])
 {
-    new Building:building = Character_GetBuilding(playerid, true);
-    if(!Building_IsValid(building) || Building_GetType(building) != BUILDING_TYPE_ADS)
+    new Building:building;
+    if(!Character_TryGetBuilding(playerid, building) || !Character_IsInsideBuilding(playerid, building) || Building_GetType(building) != BUILDING_TYPE_ADS)
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'interno di un ufficio pubblicitario.");
     
     new msg[160];

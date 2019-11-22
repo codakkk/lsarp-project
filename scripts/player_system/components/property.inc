@@ -1,5 +1,14 @@
 
+/*
+
+	Relying on the fact that the lists (CharacterBuildings/CharacterHouses) are handled by House_/Building_ is bad.
+	Should I make a check on each property?
+
+
+*/
+
 #define for_player_building(%0:%1) for(new Iter:__iter=list_iter(Character_GetOwnedBuildingsList(%1)), Building:%0=(iter_inside(__iter) ? (Building:iter_get(__iter)) : (Building:0));iter_inside(__iter);%0=(iter_move_next(__iter) != ITER_NULL ? (Building:iter_get(__iter)) : (Building:0)))
+#define for_player_house(%0:%1) for(new Iter:__iter=list_iter(Character_GetOwnedHousesList(%1)), House:%0=(iter_inside(__iter) ? (House:iter_get(__iter)) : (INVALID_HOUSE));iter_inside(__iter);%0=(iter_move_next(__iter) != ITER_NULL ? (House:iter_get(__iter)) : (INVALID_HOUSE)))
 
 #include <house_system\core>
 #include <pickup_system\core>
@@ -29,14 +38,12 @@ hook OnCharacterClearData(playerid)
 
 hook OnCharacterLoad(playerid)
 {
-	inline OnLoad()
-	{
-		new hid = 0;
-		cache_get_value_name_int(0, "house_rent", hid);
-		cache_get_value_name_int(0, "house_rent_price", PlayerHouseRentPrice[playerid]);
-		PlayerHouseRent[playerid] = House_Find(hid);
-	}
-	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT house_rent, house_rent_price FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
+	await mysql_aquery_s(gMySQL, str_format("SELECT house_rent, house_rent_price FROM `characters` WHERE id = '%d'", Character_GetID(playerid)), .parallel=true);
+	
+	new hid = 0;
+	cache_get_value_name_int(0, "house_rent", hid);
+	cache_get_value_name_int(0, "house_rent_price", PlayerHouseRentPrice[playerid]);
+	PlayerHouseRent[playerid] = House_Find(hid);
 	return 1;
 }
 
@@ -74,8 +81,8 @@ CMD:affittacasa(playerid, params[])
 {
 	if(Character_HasRentHouse(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Sei già affittuario di una casa.");
-	new House:house = Character_GetCurrentHouse(playerid);
-	if(House_IsValid(house))
+	new House:house;
+	if(Character_TryGetHouse(playerid, house))
 	{
 		if(!House_IsRentable(house))
 			return SendClientMessage(playerid, COLOR_ERROR, "Questa casa non è in affitto.");		
@@ -95,10 +102,10 @@ hook OnCharacterTryBuy(playerid)
 {
 	static response[e_DIALOG_RESPONSE_INFO];
 
-	new House:house = Character_GetHouse(playerid, false);
-	new Building:building = Character_GetBuilding(playerid, false);
+	new House:house;
+	new Building:building;
 	
-	if(House_IsValid(house))
+	if(Character_TryGetHouse(playerid, house) && !Character_IsInsideHouse(playerid, house))
 	{
 		if(!House_IsOwnable(house))
 			return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
@@ -110,7 +117,7 @@ hook OnCharacterTryBuy(playerid)
 			Character_BuyHouse(playerid, house);
 		}
 	}	
-	else if(Building_IsValid(building))
+	else if(Character_TryGetBuilding(playerid, building) && !Character_IsInsideBuilding(playerid, building))
 	{
 		if(!Building_IsOwnable(building) || Building_GetOwnerID(building) > 0)
 			return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
@@ -149,11 +156,9 @@ CMD:myhouses(playerid, params[])
 
 CMD:mybiz(playerid, params[])
 {
-	if(Character_GetOwnedHouseCount(playerid) == 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi uno o più businesses.");
-	SendClientMessage(playerid, 0xFF6347FF, "I business che possiedi sono:");
 	if(Character_GetOwnedBuildingCount(playerid) <= 0)
 		return SendClientMessage(playerid, 0xFF6347FF, "Non possiedi uno o più biz.");
+	SendClientMessage(playerid, 0xFF6347FF, "I business che possiedi sono:");
 	for_list(i : CharacterBuildings[playerid])
 	{
 		SendFormattedMessage(playerid, 0xFF6347FF, "- %s", Building_GetAddress(Building:iter_get(i)));

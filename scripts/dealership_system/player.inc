@@ -188,7 +188,7 @@ Dialog:Dialog_DealershipVehicles(playerid, response, listitem, inputtext[])
 	Dealership_GetVehicleSpawnPos(dealershipid, vx, vy, vz, va);
 
     SelectedVehicle[playerid] = Vehicle_Create(vehicleModel, vx, vy, vz, va, 0, 0, 0, 0);
-    
+    Vehicle_SetPrice(SelectedVehicle[playerid], vehiclePrice);
     PutPlayerInVehicle(playerid, SelectedVehicle[playerid], 0);
 
 	Character_SetVirtualWorld(playerid, playerid + 1);

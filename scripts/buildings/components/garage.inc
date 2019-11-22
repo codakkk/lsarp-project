@@ -61,7 +61,7 @@ hook function Character_Enter(playerid)
     
     if(!IsPlayerInAnyVehicle(playerid))
     {
-        building = Character_GetCurrentBuilding(playerid);
+        Character_TryGetBuilding(playerid, building);
     }
     else
     {

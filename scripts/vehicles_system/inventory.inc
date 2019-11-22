@@ -304,7 +304,7 @@ Dialog:ABC(playerid, response, listitem, inputtext[])
 			SendClientMessage(playerid, COLOR_ERROR, "Il veicolo non ha abbastanza spazio nell'inventario.");
 		return 1;
 	}
-	if(Character_DecreaseItemAmount(playerid, itemid, amount))
+	if(Character_DecreaseSlotAmount(playerid, slotid, amount))
 	{
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai depositato %d %s nel veicolo.", amount, ServerItem_GetName(itemid));
 		Vehicle_GiveItem(vehicleid, itemid, amount, extra);

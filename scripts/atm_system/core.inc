@@ -92,8 +92,8 @@ CMD:atmid(playerid, params[])
 
 CMD:ritira(playerid, params[])
 {
-    new Building:building = Character_GetBuilding(playerid, true);
-    if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_ATM) && (!Building_IsValid(building) || Building_GetType(building) != BUILDING_TYPE_BANK))
+    new Building:building;
+    if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_ATM) && (!Character_TryGetBuilding(playerid, building) || Building_GetType(building) != BUILDING_TYPE_BANK))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un atm o in banca.");
     new money;
     if(sscanf(params, "d", money))
@@ -113,8 +113,8 @@ CMD:ritira(playerid, params[])
 
 CMD:deposita(playerid, params[])
 {
-    new Building:building = Character_GetBuilding(playerid, true);
-    if(!Building_IsValid(building) || Building_GetType(Character_GetBuilding(playerid, true)) != BUILDING_TYPE_BANK)
+    new Building:building;
+    if(!Character_TryGetBuilding(playerid, building) || !Character_IsInsideBuilding(playerid, building) || Building_GetType(building) != BUILDING_TYPE_BANK)
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'interno di una banca.");
     new money;
     if(sscanf(params, "d", money))
@@ -134,8 +134,10 @@ CMD:deposita(playerid, params[])
 
 CMD:bonifico(playerid, params[])
 {
-    if(Building_GetType(Character_GetBuilding(playerid, true)) != BUILDING_TYPE_BANK)
+    new Building:building;
+    if(!Character_TryGetBuilding(playerid, building) || !Character_IsInsideBuilding(playerid, building) || Building_GetType(building) != BUILDING_TYPE_BANK)
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'interno di una banca.");
+    
     new n[24], money;
     if(sscanf(params, "s[24]d", n, money))
     {
@@ -196,8 +198,8 @@ CMD:bonifico(playerid, params[])
 
 CMD:bilancio(playerid, params[])
 {
-    new Building:building = Character_GetBuilding(playerid, true);
-    if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_ATM) && (!Building_IsValid(building) || Building_GetType(building) != BUILDING_TYPE_BANK))
+    new Building:building;
+    if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_ATM) && (!Character_TryGetBuilding(playerid, building) || !Character_IsInsideBuilding(playerid, building) || Building_GetType(building) != BUILDING_TYPE_BANK))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un atm o in banca.");
     Character_AMe(playerid, "verifica il suo bilancio bancario.");
     SendFormattedMessage(playerid, 0xCBCCCEFF, "Sul tuo conto bancario possiedi $%d.", Character_GetBank(playerid));

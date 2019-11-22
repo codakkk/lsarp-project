@@ -11,7 +11,10 @@
 #define for_inventory(%0:%1) for_list(%0:%1)
 
 forward OnInventoryLoaded(Inventory:inventory);
+forward OnInventoryUnload(Inventory:inventory);
 forward OnInventoryChanged(Inventory:inventory);
+forward OnInventoryUnloaded(EntityType:entityType, entityid);
+
 //#define for_inventories(%0:%1) for(new EntityType:_____i = EntityType:0; _____i < EntityType; ++_____i) \
  //							   for_map(_____b:Inventory_GetMap(%0))
 #define Inventory_Show(%0,%1,%2,%3, Inventory_InternalShow(%0, %1, %2, #%3,
@@ -108,8 +111,12 @@ stock bool:Inventory_Delete(Inventory:inventory)
 {
 	if(!Inventory_IsValid(inventory))
 		return false;
+	
 	new EntityType:entityType = Inventory_GetEntityType(inventory);
 	new entityId = Inventory_GetEntityID(inventory);
+
+	CallLocalFunction(#OnInventoryUnload, "d", _:inventory);
+
 	new List:items = Inventory_GetItems(inventory);
 
 	printf("Deleting inventory %d for entity %d id %d", _:inventory, _:entityType, entityId);
@@ -129,6 +136,8 @@ stock bool:Inventory_Delete(Inventory:inventory)
 	
 	var_release(Variant:inventory);
 	var_delete(Variant:inventory);
+
+	CallLocalFunction(#OnInventoryUnloaded, "dd", _:entityType, entityId);
 	return true;
 }
 
@@ -449,6 +458,21 @@ stock List:Inventory_HasItemBySlots(Inventory:inventory, itemid)
 			list_add(list, i);
 	}
 	return list;
+}
+
+// Returns -1 for no slot.
+stock Inventory_GetFirstItem(Inventory:inventory, itemid)
+{
+	new result = -1;
+	for(new i = 0, j = Inventory_GetSpace(inventory); i < j; ++i)
+	{
+		if(itemid == Inventory_GetSlotItem(inventory, i))
+		{
+			result = i;
+			break;
+		}
+	}
+	return result;
 }
 
 stock bool:Inventory_IsSlotUsed(Inventory:inventory, slotid)
@@ -802,8 +826,9 @@ stock bool:Inventory_HasSlotTempExtra(Inventory:inventory, slotid, key[])
 	return map_has_str_key(map, key);
 }
 
-stock bool:World_FindItem(itemid, extra, &EntityType:entityType, &entityId, &slotid)
+stock bool:World_FindItem(itemid, extra, &Inventory:inventory, &EntityType:entityType, &entityId, &slotid)
 {
+	inventory = Inventory:0;
 	entityId = 0;
 	entityType = ENTITY_TYPE_NONE;
 	new bool:found = false, index = 0;
@@ -811,17 +836,18 @@ stock bool:World_FindItem(itemid, extra, &EntityType:entityType, &entityId, &slo
 	data[InvItem] = data[InvAmount] = 0;
 	for_list(i : InventoriesList)
 	{
-		new Inventory:inventory = Inventory:iter_get(i);
-		if(!Inventory_IsValid(inventory))
+		new Inventory:temp = Inventory:iter_get(i);
+		if(!Inventory_IsValid(temp))
 			continue;
-		for_list(item : Inventory_GetItems(inventory))
+		for_list(item : Inventory_GetItems(temp))
 		{
 			iter_get_arr(item, data);
 			if(iter_sizeof(item) != 0 && data[InvItem] == itemid && data[InvExtra][0] == extra && data[InvAmount] > 0)
 			{
 				found = true;
-				entityType = Inventory_GetEntityType(inventory);
-				entityId = Inventory_GetEntityID(inventory);
+				inventory = temp;
+				entityType = Inventory_GetEntityType(temp);
+				entityId = Inventory_GetEntityID(temp);
 				slotid = index;
 				break;
 			}

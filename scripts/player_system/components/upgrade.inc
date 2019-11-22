@@ -30,7 +30,11 @@ hook OnCharacterLoad(playerid)
 CMD:upgrade(playerid, params[])
 {
     if(isnull(params) || strlen(params) <= 0)
-        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /upgrade [vita - armatura]");
+    {
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /upgrade [vita - armatura]");
+        SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "Attualmente hai %d punti a disposizione.", UpgradePoints[playerid]);
+        return 1;
+    }
     
     if(UpgradePoints[playerid] <= 0)
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza punti.");
@@ -68,7 +72,7 @@ CMD:upgrade(playerid, params[])
 
         Character_SetMaxArmour(playerid, current);
 
-        SendFormattedMessage(playerid, COLOR_GREEN, "Hai aumentato i tuoi punti salute massimi. Punti upgrade rimanenti: %d.", UpgradePoints[playerid]);
+        SendFormattedMessage(playerid, COLOR_GREEN, "Hai aumentato i tuoi punti armatura massimi. Punti upgrade rimanenti: %d.", UpgradePoints[playerid]);
     }
     return 1;
 }

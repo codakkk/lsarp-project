@@ -1,4 +1,4 @@
-#include <discord-connector>
+//#include <discord-connector>
 #include <YSI_Coding\y_hooks>
 
 static 
@@ -17,9 +17,16 @@ hook OnGameModeInit()
     return 1;
 }
 
-/*stock DCC_FindChannelById(const c[]) {}
+stock DCC_Channel:DCC_FindChannelById(const c[]) 
+{
+    #pragma unused c
+    return DCC_Channel:0;
+}
 
-stock DCC_SendChannelMessage(DCC_Channel:t, msg[]){}*/
+stock DCC_SendChannelMessage(DCC_Channel:t, msg[])
+{ 
+    #pragma unused t, msg 
+}
 
 stock Discord_SendMessage(DCC_Channel:channel, const msg[], GLOBAL_TAG_TYPES:...)
 {

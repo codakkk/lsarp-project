@@ -79,10 +79,9 @@ stock Character_SendSMS(playerid, slot, number, const msg[])
     else
         SendFormattedMessage(playerid, COLOR_YELLOW, "SMS inviato al numero %d. Testo: %s", number, msg);
 
-    new entityId, EntityType:entityType, phoneSlotId;
-    if(World_FindPhoneByNumber(number, entityType, entityId, phoneSlotId))
+    new Inventory:entityInv, entityId, EntityType:entityType, phoneSlotId;
+    if(World_FindPhoneByNumber(number, entityInv, entityType, entityId, phoneSlotId))
     {
-        new Inventory:entityInv = Inventory_Get(entityType, entityId);
         if(!Phone_IsOff(entityInv, phoneSlotId))
         {
             if(entityType == ENTITY_TYPE_PLAYER)
@@ -165,7 +164,6 @@ stock Character_ShowRegistry(playerid, slotid, bool:sentByPlayer, smsState = SMS
             TimestampToDate(time, year, month, day, hour, minute, second, 1);
             
             new show = sentByPlayer ? addressee : sender;
-            printf("Show: %d", show);
             PhoneBook_GetContactName(playerNumber, show, name);
 
             str_append_format(string, "%s\t%d/%d/%d - %d:%d\n", name, day, month, year, hour, minute);

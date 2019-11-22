@@ -214,10 +214,9 @@ ptask OnPlayerVehicleCheck[1000 + 1](playerid)
 	return 1;
 }
 
-// TODO: Write a Vehicle_LoadAll that loads factions vehicles
-
 hook OnVehicleSpawn(vehicleid)
 {
+	SetVehicleNumberPlate(vehicleid, VehicleInfo[vehicleid][Plate]);
 	Vehicle_Reload(vehicleid);
 	return 1;
 }
@@ -233,7 +232,7 @@ stock Vehicle_Respawn(vehicleid)
 	SetVehicleToRespawn(vehicleid);
 	Vehicle_SetEngineStatus(vehicleid, false);
 	Vehicle_SetLightState(vehicleid, false);
-	Vehicle_SetFuel(vehicleid, 100.0);
+	Vehicle_SetFuel(vehicleid, Vehicle_GetFuel(vehicleid));
 	SetVehicleZAngle(vehicleid, VehicleInfo[vehicleid][A]);
 	SetVehiclePos(vehicleid, VehicleInfo[vehicleid][X], VehicleInfo[vehicleid][Y], VehicleInfo[vehicleid][Z]);
 	SetVehicleVirtualWorld(vehicleid, VehicleInfo[vehicleid][World]);
@@ -275,26 +274,27 @@ stock Vehicle_InsertInDatabase(vehicleid)
 
 	GetVehiclePos(vehicleid, x, y, z);
 	GetVehicleZAngle(vehicleid, a);
-	inline OnInsert()
-	{
-		VehicleInfo[vehicleid][ID] = cache_insert_id();
-		VehicleInfo[vehicleid][Model] = GetVehicleModel(vehicleid);
-		VehicleInfo[vehicleid][X] = x;
-		VehicleInfo[vehicleid][Y] = y;
-		VehicleInfo[vehicleid][Z] = z;
-		VehicleInfo[vehicleid][A] = a;
-		Vehicle_SetLocked(vehicleid, false);
-		//Vehicle_UpdateLockState(vehicleid);
-		Vehicle_SetTemporary(vehicleid, false);
-		Vehicle_InitializeInventory(vehicleid);
-		Vehicle_GeneratePlate(vehicleid);
-
-		map_add(VehiclesMap, VehicleInfo[vehicleid][ID], vehicleid);
-	}
-	MySQL_TQueryInline(gMySQL, using inline OnInsert, "INSERT INTO `vehicles` (owner_id, model, color_1, color_2, x, y, z, angle, locked, faction, price, last_health, max_health) \
+	new String:query = str_format("INSERT INTO `vehicles` (owner_id, model, color_1, color_2, x, y, z, angle, locked, faction, price, last_health, max_health) \
 		VALUES('%d', '%d', '%d', '%d', '%f', '%f', '%f', '%f', '0', '%d', '%d', '999.0', '%f')",
 		Vehicle_GetOwnerID(vehicleid), GetVehicleModel(vehicleid), Vehicle_GetColor1(vehicleid), Vehicle_GetColor2(vehicleid), x, y, z, a, Vehicle_GetFaction(vehicleid),
 		Vehicle_GetPrice(vehicleid), Vehicle_GetMaxHealth(vehicleid));
+	
+	await mysql_aquery_s(gMySQL, query, .parallel=true);
+	
+	
+	VehicleInfo[vehicleid][ID] = cache_insert_id();
+	VehicleInfo[vehicleid][Model] = GetVehicleModel(vehicleid);
+	VehicleInfo[vehicleid][X] = x;
+	VehicleInfo[vehicleid][Y] = y;
+	VehicleInfo[vehicleid][Z] = z;
+	VehicleInfo[vehicleid][A] = a;
+	Vehicle_SetLocked(vehicleid, false);
+	Vehicle_SetFuel(vehicleid, 100.0);
+	Vehicle_SetTemporary(vehicleid, false);
+	Vehicle_InitializeInventory(vehicleid);
+	Vehicle_GeneratePlate(vehicleid);
+
+	map_add(VehiclesMap, VehicleInfo[vehicleid][ID], vehicleid);
 	return 1;
 }
 
@@ -549,7 +549,7 @@ public Vehicle_LoadAll()
 	new 
 		count = 0, dbid = 0, modelid = 0, ownerid = 0, locked = 0,
 		Float:health = 0.0, bool:alreadyLoaded = false;
-	new Float:x, Float:y, Float:z, Float:a, color1, color2;
+	new Float:x, Float:y, Float:z, Float:a, color1, color2, factionid;
 	
 	count = cache_num_rows();
 	printf("Rows loaded: %d", count);
@@ -575,26 +575,31 @@ public Vehicle_LoadAll()
 
 		if(alreadyLoaded)	
 			continue;
+
 		cache_get_value_name_float(i, "x", x);
 		cache_get_value_name_float(i, "y", y);
 		cache_get_value_name_float(i, "z", z);
 		cache_get_value_name_float(i, "angle", a);
 		cache_get_value_name_int(i, "color_1", color1);
 		cache_get_value_name_int(i, "color_2", color2);
+		cache_get_value_name_int(i, "faction", factionid);
+		
+		new addsiren = (Faction_IsValid(factionid) && Faction_GetType(factionid) == FACTION_TYPE_POLICE);
 
-		new vehicleid = Vehicle_Create(modelid, x, y, z, a, color1, color2, -1);
+		new vehicleid = Vehicle_Create(modelid, x, y, z, a, color1, color2, -1, addsiren);
 		
 		VehicleInfo[vehicleid][ID] = dbid;
 		VehicleInfo[vehicleid][OwnerID] = ownerid;
 		VehicleInfo[vehicleid][Color1] = color1;
 		VehicleInfo[vehicleid][Color2] = color2;
+		VehicleInfo[vehicleid][Faction] = factionid;
 
 		cache_get_value_name_int(i, "world", VehicleInfo[vehicleid][World]);
 		
 		cache_get_value_name_int(i, "locked", locked);
 		
 		cache_get_value_name_float(i, "fuel", VehicleFuel[vehicleid]);	  
-		cache_get_value_name_int(i, "faction", VehicleInfo[vehicleid][Faction]);
+		
 		cache_get_value_name_int(i, "last_chop_shop_time", VehicleInfo[vehicleid][LastChopShopTime]);
 		cache_get_value_name(i, "plate", VehicleInfo[vehicleid][Plate]);
 		cache_get_value_name_int(i, "price", VehicleInfo[vehicleid][Price]);
@@ -607,11 +612,15 @@ public Vehicle_LoadAll()
 		cache_get_value_name_int(i, "lights", VehicleDamages[vehicleid][E_DAMAGE_TYPE_LIGHTS]);
 		cache_get_value_name_int(i, "tires", VehicleDamages[vehicleid][E_DAMAGE_TYPE_TIRES]);
 		
+		SetVehicleNumberPlate(vehicleid, VehicleInfo[vehicleid][Plate]);
+		ChangeVehicleColor(vehicleid, color1, color2);
+
+		SetVehicleToRespawn(vehicleid);
+
 		SetVehicleZAngle(vehicleid, a);
 		SetVehiclePos(vehicleid, x, y, z);
 		SetVehicleVirtualWorld(vehicleid, VehicleInfo[vehicleid][World]);
-		
-		ChangeVehicleColor(vehicleid, color1, color2);
+
 
 		Vehicle_SetDestroyed(vehicleid, false);
 		Vehicle_SetEngineStatus(vehicleid, false);
@@ -906,9 +915,6 @@ stock Vehicle_Reload(vehicleid)
 {
 	if(!Vehicle_IsValid(vehicleid))
 		return 0;
-	
-	SetVehicleNumberPlate(vehicleid, VehicleInfo[vehicleid][Plate]);
-	SetVehicleToRespawn(vehicleid);
 
 	Vehicle_ResetStats(vehicleid);
 	

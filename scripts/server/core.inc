@@ -12,7 +12,8 @@ static enum E_SERVER_INFO
 	GovernamentBank,
 	ExcisesOnFuel,
 	TaxOnAds,
-	TaxOnVehicles
+	TaxOnVehicles,
+	TaxOnRepairs,
 }
 
 static ServerInfo[E_SERVER_INFO];
@@ -22,6 +23,7 @@ hook OnGameModeInit()
 	Server_SetExcisesOnFuel(5);
 	Server_SetTaxOnAds(1);
 	Server_SetTaxOnVehicles(1);
+	Server_SetTaxOnRepairs(2);
 	Server_SetGovernamentBank(0);
 	return 1;
 }
@@ -59,6 +61,16 @@ stock Server_GetExcisesOnFuel()
 stock Server_SetExcisesOnFuel(value)
 {
 	ServerInfo[ExcisesOnFuel] = value;
+}
+
+stock Server_GetTaxOnRepairs()
+{
+	return ServerInfo[TaxOnRepairs];
+}
+
+stock Server_SetTaxOnRepairs(value)
+{
+	ServerInfo[TaxOnRepairs] = value;
 }
 
 stock Server_GetTaxOnAds()

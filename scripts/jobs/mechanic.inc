@@ -5,7 +5,7 @@ hook function ShowJobCommands(playerid)
 {
     if(Character_GetJobType(playerid) == JOB_TYPE_MECHANIC)
     {
-        SendClientMessage(playerid, COLOR_YELLOW, "[MECCANICO] /ripara /vernicia");
+        SendClientMessage(playerid, COLOR_YELLOW, "[MECCANICO] /ripara /vernicia /rimorchia");
     }
     return continue(playerid);
 }
@@ -120,6 +120,38 @@ CMD:vernicia(playerid, params[])
     return 1;
 }
 
+CMD:rimorchia(playerid, params[])
+{
+    if(Character_GetJobType(playerid) != JOB_TYPE_MECHANIC || !Character_IsJobDuty(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei un meccanico in servizio.");
+    
+	new vehicleid = GetPlayerVehicleID(playerid),
+		Float:x, Float:y, Float:z,
+		Float:vx, Float:vy, Float:vz;
+
+	if(!Character_IsInTowTruck(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un Tow Truck.");
+
+	if(IsTrailerAttachedToVehicle(vehicleid))
+        return DetachTrailerFromVehicle(vehicleid);
+
+	GetPlayerPos(playerid, x, y, z);
+
+	foreach(new i : Vehicle)
+	{
+		if(!Vehicle_IsValid(i))continue;
+
+		GetVehiclePos(i, vx, vy, vz);
+
+		if((floatabs(x - vx) < 7.0) && (floatabs(y - vy) < 7.0) && (floatabs(z - vz) < 7.0) && i != vehicleid)
+		{
+			AttachTrailerToVehicle(i, vehicleid); 
+            break;
+		}
+	}
+	return 1;
+}
+
 hook OnCharacterTryAccept(playerid, type)
 {
     if(type == REQUEST_TYPE_VEHICLE_SPRAY)
@@ -189,4 +221,10 @@ static AcceptVehicleSpray(playerid)
     Request_Reset(playerid, REQUEST_TYPE_VEHICLE_SPRAY);
     Request_Reset(senderid, REQUEST_TYPE_VEHICLE_SPRAY);
     return 1;
+}
+
+static Character_IsInTowTruck(playerid)
+{
+    new vehicleid = GetPlayerVehicleID(playerid);
+    return Vehicle_IsValid(vehicleid) && Vehicle_GetModel(vehicleid) == 525;
 }

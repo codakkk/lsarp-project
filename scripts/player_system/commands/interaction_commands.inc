@@ -86,8 +86,10 @@ CMD:paga(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
 	if(!Character_IsAlive(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo giocatore.");
+	
 	Character_GiveMoney(playerid, -amount);
 	Character_GiveMoney(id, amount);
+
 	Character_AMe(playerid, "prende dei soldi e li da a %s.", Character_GetRolePlayName(id));
 	SendFormattedMessage(id, -1, "{cbccce}%s ti ha dato {8fbc8f}$%s{cbccce}.", Character_GetRolePlayName(playerid), FormatNumber(amount));
 	SendFormattedMessage(playerid, -1, "{cbccce}Hai dato {8fbc8f}$%s{cbccce} a %s.", FormatNumber(amount), Character_GetRolePlayName(id));
