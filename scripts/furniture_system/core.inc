@@ -239,22 +239,30 @@ stock Character_ShowFurnitureDialog(playerid)
         if(!response[E_DIALOG_RESPONSE_Response]) break;
 
         if(response[E_DIALOG_RESPONSE_Listitem] == 0)
-            ShowPlacedFurnituresDialog(playerid, isExterior, entityType, entityid);
+        {
+            if(ShowPlacedFurnituresDialog(playerid, isExterior, entityType, entityid))
+                break;
+        }
         else
-            ShowFurnituresCategoriesDialog(playerid, isExterior, entityType, entityid);
+        {
+            if(ShowFurnituresCategoriesDialog(playerid, isExterior, entityType, entityid))
+                break;
+        }
     }
     return true;
 }
 
-static ShowPlacedFurnituresDialog(playerid, bool:isExterior, EntityType:type, entity)
+static bool:ShowPlacedFurnituresDialog(playerid, bool:isExterior, EntityType:type, entity)
 {
     new 
         response[e_DIALOG_RESPONSE_INFO],
-        count = 0,
+        size = 0,
         startIndex = 0,
         lastIndex = 0,
         objectid = 0,
-        page = 0
+        page = 0,
+        counter = 0,
+        bool:ret = false
     ;
 
     new String:string = str_new("");
@@ -264,8 +272,8 @@ static ShowPlacedFurnituresDialog(playerid, bool:isExterior, EntityType:type, en
     yield 1;
     for(;;)
     {
-        count = list_size(furnitures);
-        if(count == 0)
+        size = list_size(furnitures);
+        if(size == 0)
         {
             SendClientMessage(playerid, COLOR_ERROR, "Non ci sono mobili piazzati.");
             break;
@@ -274,22 +282,26 @@ static ShowPlacedFurnituresDialog(playerid, bool:isExterior, EntityType:type, en
         startIndex = page * MAX_FURNITURE_PER_PAGE;
         lastIndex = (startIndex + MAX_FURNITURE_PER_PAGE);
 
-        if(lastIndex > count)
-            lastIndex = count;
+        if(lastIndex > size)
+            lastIndex = size;
 
         str_clear(string);
-
+        printf("Start: %d - Last: %d - Size: %d",  startIndex, lastIndex, size);
+        counter = 0;
         for(new i = startIndex; i < lastIndex; ++i)
         {
             objectid = list_get(furnitures, i);
             Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
             
-            if(FurnitureCustomData[FURNITURE_IS_EXTERIOR] != isExterior)
-                continue;
-            
             new modelid = Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_MODEL_ID);
-            str_append_format(string, "%s [Model ID: %d]\n", FurnitureCustomData[FURNITURE_NAME], modelid);
+            str_append_format(string, "%s [ObjectID: %d - Model ID: %d]\n", FurnitureCustomData[FURNITURE_NAME], objectid, modelid);
+            counter++;
         }
+
+        if(page > 0)
+            str_append_format(string, "<<< Pagina %d\n", page + 1);
+        if(size > page * MAX_FURNITURE_PER_PAGE + MAX_FURNITURE_PER_PAGE)
+            str_append_format(string, ">>> Pagina %d\n", page + 2);
 
         await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_LIST, @("Arredamento"), string, @("Avanti"), @("Chiudi"));
     
@@ -298,24 +310,35 @@ static ShowPlacedFurnituresDialog(playerid, bool:isExterior, EntityType:type, en
         new listitem = response[E_DIALOG_RESPONSE_Listitem];
 
         // handle pages 
-
-        if(listitem == lastIndex)
+        new normalized = lastIndex - startIndex;
+        if(page > 0)
         {
-            page--;
-            continue;
+            if(listitem == normalized)
+            {
+                page--;
+                continue;
+            }
+            listitem--;
         }
-        if(listitem == lastIndex)
+        if(size > page * MAX_FURNITURE_PER_PAGE + MAX_FURNITURE_PER_PAGE)
         {
-            page++;
-            continue;
+            if(listitem == normalized)
+            {
+                page++;
+                continue;
+            }
+            listitem--;
         }        
-        HandleFurnitureOption(playerid, startIndex + listitem, furnitures);
+        ret = true;
+        if(HandleFurnitureOption(playerid, startIndex + listitem, furnitures))
+            break;
     }
+    return ret;
 }
 
 static HandleFurnitureOption(playerid, index, List:furnitures)
 {
-    new 
+    new bool:ret = false,
         response[e_DIALOG_RESPONSE_INFO];
     new String:string = str_new("Sposta\nRinomina\nRimuovi\nResetta Textures\n");
     if(Account_GetAdminLevel(playerid) > 1)
@@ -350,6 +373,7 @@ static HandleFurnitureOption(playerid, index, List:furnitures)
                 }
                 SendClientMessage(playerid, COLOR_WHITE, "Premi {FF6347}ESC{FFFFFF} per annullare e {FF6347}SPAZIO{FFFFFF} per spostare la visuale. Clicca sul {FF6347}FLOPPY{FFFFFF} per salvare.");
                 EditObject_Start(playerid, EDIT_TYPE_FURNITURE, objectid, FurnitureCustomData[FURNITURE_DATABASE_ID]);
+                ret = true;
                 break;
             }
             case 1:
@@ -376,21 +400,26 @@ static HandleFurnitureOption(playerid, index, List:furnitures)
             }
         }
     }
-    return 1;
+    return ret;
 }
 
 static HandleRenameFurnitureDialog(playerid, objectid)
 {
+    new String:error = str_new("");
     new response[e_DIALOG_RESPONSE_INFO];
+    pawn_guard(error);
     yield 1;
     for(;;)
     {
-        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Rinomina mobile"), @("Inserisci il nuovo nome per il mobile:"), @("Rinomina"), @("Indietro"));
-    
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Rinomina mobile"), error + @("\n") + @("{FFFFFF}Inserisci il nuovo nome per il mobile:"), @("Rinomina"), @("Indietro"));
+        str_clear(error);
         if(!response[E_DIALOG_RESPONSE_Response]) break;
 
-        if(strlen(response[E_DIALOG_RESPONSE_InputText]) < 4 || strlen(response[E_DIALOG_RESPONSE_InputText]) > 63)
+        if(strlen(response[E_DIALOG_RESPONSE_InputText]) < 3 || strlen(response[E_DIALOG_RESPONSE_InputText]) > 63)
+        {
+            str_append_format(error, "{FF0000}Il nome inserito è troppo lungo o troppo corto.");
             continue;
+        }
     
         if(Furniture_Rename(objectid, response[E_DIALOG_RESPONSE_InputText]))
         {
@@ -420,7 +449,7 @@ static HandleGotoFurniture(playerid, objectid)
 
 static ShowFurnituresCategoriesDialog(playerid, bool:isExterior, EntityType:belongsToType, belongsToId)
 {
-    new response[e_DIALOG_RESPONSE_INFO];
+    new response[e_DIALOG_RESPONSE_INFO], ret = false;
     yield 1;
     new String:info = @("Inserisci ID Manualmente\nMura e scale\nTavoli per cucine e salotti\nSedie da uffici e da cucina\nLetti singoli e matrimoniali\nDivani e poltrone\nDecorazioni\nElettronica\nVario\nCucina\nBagno\nBottiglie, bicchieri e tazze\nPorte\nVasi\nPoster e graffiti\nContenitori rifiuti\nVestiti\nBombole e barili\nOggetti per il mare\nQuadri\nScatole\nColonne\nCibo\nUtensili\nMeccanica\nSpeciali\nLavagne");
     pawn_guard(info);
@@ -435,17 +464,17 @@ static ShowFurnituresCategoriesDialog(playerid, bool:isExterior, EntityType:belo
 
         if(listitem == 0)
         {
-            HandleManualFurnitureIDDialog(playerid, isExterior, belongsToType, belongsToId);
+            ret = HandleManualFurnitureIDDialog(playerid, isExterior, belongsToType, belongsToId);
             break;
         }
         else
         {
             listitem = listitem-1; 
-            
-            ShowCategoryFurnitureDialog(playerid, listitem, isExterior, belongsToType, belongsToId);
+            ret = ShowCategoryFurnitureDialog(playerid, listitem, isExterior, belongsToType, belongsToId);
             break;
         }
     }
+    return ret;
 }
 
 static HandleManualFurnitureIDDialog(playerid, bool:isExterior, EntityType:belongsToType, belongsToId)
@@ -463,21 +492,24 @@ static HandleManualFurnitureIDDialog(playerid, bool:isExterior, EntityType:belon
             continue;
 
         Furniture_StartBuy(playerid, objectid, isExterior, belongsToType, belongsToId);
+        break;
     }
 }
 
-static ShowCategoryFurnitureDialog(playerid, categoryid, bool:isExterior, EntityType:belongsToType, belongsToId)
+static bool:ShowCategoryFurnitureDialog(playerid, categoryid, bool:isExterior, EntityType:belongsToType, belongsToId)
 {
-    new response[e_DIALOG_RESPONSE_INFO];
+    new response[e_DIALOG_RESPONSE_INFO], bool:ret = false;
     yield 1;
     new String:info = str_new("Mobile\n");
     pawn_guard(info);
     new name[64];
 
+    new List:list = list_new();
     for(new i = 0, j = sizeof(BuyableFurnitures); i < j; ++i)
     {
         if(BuyableFurniture_GetCategory(i) != categoryid)
             continue;
+        list_add(list, i);
         BuyableFurniture_GetName(i, name);
         str_append_format(info, "%s\n", name);
     }
@@ -491,9 +523,12 @@ static ShowCategoryFurnitureDialog(playerid, categoryid, bool:isExterior, Entity
         if(!response[E_DIALOG_RESPONSE_Response]) break;
 
         listitem = response[E_DIALOG_RESPONSE_Listitem];
-        Furniture_StartBuy(playerid, BuyableFurniture_GetModel(listitem), isExterior, belongsToType, belongsToId);
+        Furniture_StartBuy(playerid, BuyableFurniture_GetModel(list_get(list, listitem)), isExterior, belongsToType, belongsToId);
+        ret = true;
         break;
     }
+    list_delete(list);
+    return ret;
 }
 
 stock Furniture_CreateTemporary(modelid, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz, worldid, interior, bool:isExterior, EntityType:belongsToType, entityid)
@@ -511,7 +546,7 @@ stock Furniture_CreateTemporary(modelid, Float:x, Float:y, Float:z, Float:rx, Fl
 // CreatedBy = -1 means that Server created it.
 stock Furniture_Store(objectid, createdBy = -1)
 {
-    if(Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData) && FurnitureCustomData[FURNITURE_DATABASE_ID] == 0)
+    if(Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData) && FurnitureCustomData[FURNITURE_DATABASE_ID] <= 0)
     {
         new
             Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz,
@@ -798,6 +833,7 @@ stock bool:Furniture_AddToWorld(objectid)
     Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
     if(Furniture_AreLoaded(FurnitureCustomData[FURNITURE_BELONGS_TO_TYPE], FurnitureCustomData[FURNITURE_BELONGS_TO_ID]))
     {
+        printf("AddToWorld. Loaded. Type: %d - ID: %d - Exterior: %d", _:FurnitureCustomData[FURNITURE_BELONGS_TO_TYPE], FurnitureCustomData[FURNITURE_BELONGS_TO_ID], FurnitureCustomData[FURNITURE_IS_EXTERIOR] ? 1 : 0);
         new List:list = Furniture_GetByEntityFilter(FurnitureCustomData[FURNITURE_BELONGS_TO_TYPE], FurnitureCustomData[FURNITURE_BELONGS_TO_ID], FurnitureCustomData[FURNITURE_IS_EXTERIOR]);
         list_add(list, objectid);
         

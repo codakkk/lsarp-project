@@ -206,23 +206,6 @@ stock LoadAccountData(playerid)
 
 	if(AccountInfo[playerid][Admin] <= 1)
 		AccountInfo[playerid][AdminRole] = 0;
-	
-	if(AccountInfo[playerid][Admin] == 1)
-	{
-		Account_SetPremiumLevel(playerid, 1);
-		Account_SetPremiumExpiry(playerid, gettime() + 3600 * 24);
-	}
-	else if(AccountInfo[playerid][Admin] == 2)
-	{
-		Account_SetPremiumLevel(playerid, 2);
-		Account_SetPremiumExpiry(playerid, gettime() + 3600 * 24);
-	}
-	else if(AccountInfo[playerid][Admin] >= 3)
-	{
-		Account_SetPremiumLevel(playerid, 3);
-		Account_SetPremiumExpiry(playerid, gettime() + 3600 * 24);
-	}
-
 }
 
 forward OnPasswordCheck(playerid, bool:success);

@@ -1,7 +1,5 @@
 #include <YSI_Coding\y_hooks>
 
-//  PlayerText
-static PlayerText:ReconPlayerText[MAX_PLAYERS];
 
 static 
     SpectatingPlayer[MAX_PLAYERS] = {INVALID_PLAYER_ID, ...},
@@ -11,27 +9,13 @@ static
     //RestoreAmmos[MAX_PLAYERS][13]
 ;
 
-hook OnPlayerConnect(playerid)
-{
-    ReconPlayerText[playerid] = CreatePlayerTextDraw(playerid, 320.000000, 340.000000, "_");
-	PlayerTextDrawBackgroundColor(playerid, ReconPlayerText[playerid], 255);
-	PlayerTextDrawAlignment(playerid, ReconPlayerText[playerid], 2); // 2 Means centered.
-	PlayerTextDrawFont(playerid, ReconPlayerText[playerid], 1);
-	PlayerTextDrawLetterSize(playerid, ReconPlayerText[playerid], 0.400000, 1.600000);
-	PlayerTextDrawColor(playerid, ReconPlayerText[playerid], -1);
-	PlayerTextDrawSetOutline(playerid, ReconPlayerText[playerid], 1);
-	PlayerTextDrawSetProportional(playerid, ReconPlayerText[playerid], 1);
-	PlayerTextDrawSetSelectable(playerid, ReconPlayerText[playerid], 0);
-    return 1;
-}
-
 hook OnCharacterClearData(playerid)
 {
     foreach(new i : Player)
     {
         if(Player_GetSpectatingPlayer(i) == playerid)
         {
-            SendFormattedMessage(playerid, COLOR_ERROR, "L'utente (%s - ID: %d) che stavi reconnando si è disconnesso", Character_GetOOCName(playerid), playerid);
+            SendFormattedMessage(playerid, COLOR_ERROR, "L'utente (%s - ID: %d) che stavi reconnando si è disconnesso.", Character_GetOOCName(playerid), playerid);
             callcmd::recon(i, "off");
         }
     }
@@ -40,13 +24,6 @@ hook OnCharacterClearData(playerid)
     RestoreArmour[playerid] = 0.0;
     return 1;
 }
-
-hook OnCharacterSpawn(playerid)
-{
-    PlayerTextDrawHide(playerid, ReconPlayerText[playerid]);
-    return 1;
-}
-
 hook OnPlayerInteriorChange(playerid, newinteriorid, oldinteriorid)
 {
     foreach(new i : Player)
@@ -63,6 +40,8 @@ hook OnPlyVirtualWorldChange(playerid, oldWorld, newWorld)
 {
     foreach(new i : Player)
     {
+        if(i == playerid)
+            continue;
         if(GetPlayerState(i) == PLAYER_STATE_SPECTATING && Player_GetSpectatingPlayer(i) == playerid)
         {
             Character_SetVirtualWorld(i, newWorld);
@@ -85,32 +64,12 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
     }
 }
 
-hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
-{
-    if(GetPlayerState(playerid) == PLAYER_STATE_SPECTATING && SpectatingPlayer[playerid] != INVALID_PLAYER_ID)
-    {
-        if(PRESSED(KEY_RIGHT))
-        {
-            return Recon(playerid, FindNextReconnableID(playerid));       
-        }
-        else if(PRESSED(KEY_LEFT))
-        {
-            return Recon(playerid, FindPrevReconnableID(playerid));
-        }
-        else if(PRESSED(KEY_SPRINT))
-        {
-            return Recon(playerid, Player_GetSpectatingPlayer(playerid));
-        }
-    }
-    return 1;
-}
-
 flags:recon(CMD_JR_MODERATOR);
 CMD:recon(playerid, params[])
 {
     if(!isnull(params) && !strcmp(params, "off", true) && Character_IsLogged(SpectatingPlayer[playerid]))
     {
-        PlayerTextDrawHide(playerid, ReconPlayerText[playerid]);
+        
         PlayerSpectatePlayer(playerid, INVALID_PLAYER_ID);
 	    PlayerSpectateVehicle(playerid, INVALID_VEHICLE_ID);
 		TogglePlayerSpectating(playerid, false);
@@ -192,9 +151,6 @@ static bool:Recon(playerid, id)
     //if(SpectatingPlayer[playerid] != id)
         //SendFormattedMessage(playerid, COLOR_GREEN, "Stai reconnando %s (%d).", Character_GetOOCName(id), id);
     
-    PlayerTextDrawSetStringStr(playerid, ReconPlayerText[playerid], str_format("~g~ID~w~: %d~n~~g~Account~w~: %s~n~~g~Personaggio~w~: %s~n~Usa ~g~~k~~GO_LEFT~~w~ o ~g~~k~~GO_RIGHT~~w~ per cambiare giocatore.~n~Usa ~g~~k~~KEY_SPRINT~~w~ in caso di bug.", id, Account_GetName(id), Character_GetOOCName(id)));
-    PlayerTextDrawShow(playerid, ReconPlayerText[playerid]);
-
     SpectatingPlayer[playerid] = id;
     return true;
 }

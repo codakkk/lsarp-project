@@ -35,7 +35,7 @@ stock Character_PayDay(playerid)
 	new experiencePerLevel = (Character_GetLevel(playerid)+1) * 2;
 	Character_AddExperience(playerid, 1);
 
-	if(Character_GetExperience(playerid) > experiencePerLevel)
+	if(Character_GetExperience(playerid) >= experiencePerLevel)
 	{
 		Character_IncreaseLevel(playerid, 1);
 	   	Character_SetExperience(playerid, 0);
@@ -183,7 +183,7 @@ static GetPlayerBuildingMoney(playerid)
 		if(Building_IsValid(building))
 		{
 			new price = Building_GetPrice(building)/100;
-			money = price;
+			money += price;
 		}
 	}
 	return money;

@@ -480,10 +480,14 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 			return 0;
 		}
 	}
-	
-	if( (flags & CMD_PROPERTY_ROLE && Account_GetAdminRole(playerid) != ADMIN_ROLE_PROPERTY) || (flags & CMD_FACTION_ROLE && Account_GetAdminRole(playerid) != ADMIN_ROLE_FACTION))
+	if(flags & CMD_PROPERTY_ROLE && (1 < Account_GetAdminLevel(playerid) < 4))
 	{
-		if((1 < Account_GetAdminLevel(playerid) < 4))
+		if(Account_GetAdminRole(playerid) != ADMIN_ROLE_PROPERTY)
+			return SendClientMessage(playerid, COLOR_ERROR, "Per poter utilizzare questo comando, necessiti del ruolo giusto."), 0;
+	}
+	else if(flags & CMD_FACTION_ROLE && (1 < Account_GetAdminLevel(playerid) < 4))
+	{
+		if(Account_GetAdminRole(playerid) != ADMIN_ROLE_FACTION)
 			return SendClientMessage(playerid, COLOR_ERROR, "Per poter utilizzare questo comando, necessiti del ruolo giusto."), 0;
 	}
 	else if(flags & CMD_TESTER && Account_GetAdminLevel(playerid) < 1)

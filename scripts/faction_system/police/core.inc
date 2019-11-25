@@ -17,6 +17,8 @@
 #include <faction_system\police\trace>
 #include <faction_system\police\mdc>
 
+#include <faction_system\police\commands\sirena>
+
 #include <YSI_Coding\y_hooks>
 
 

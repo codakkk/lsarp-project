@@ -552,12 +552,13 @@ stock Character_SetLevel(playerid, level)
 {
 	CharacterInfo[playerid][Level] = level;
 	SetPlayerScore(playerid, level);
-	mysql_pquery_f(gMySQL, "UPDATE `characters` SET level = '%d' WHERE id = '%d'", level, Account_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET level = '%d' WHERE id = '%d'", level, Character_GetID(playerid));
 }
 
 stock Character_IncreaseLevel(playerid, amount)
 {
-	Character_SetLevel(playerid, Character_GetLevel(playerid) + amount);
+	new newLevel = CharacterInfo[playerid][Level] + amount;
+	Character_SetLevel(playerid, newLevel);
 }
 
 stock Character_GetLevel(playerid)
@@ -573,7 +574,8 @@ stock Character_SetExperience(playerid, exp)
 
 stock Character_AddExperience(playerid, amount)
 {
-	Character_SetExperience(playerid, Character_GetExperience(playerid) + amount);
+	new newExp = Character_GetExperience(playerid) + amount;
+	Character_SetExperience(playerid, newExp);
 }
 
 stock Character_GetExperience(playerid)

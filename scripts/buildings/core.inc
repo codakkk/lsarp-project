@@ -15,6 +15,8 @@ enum _:E_BUILDING_TYPE
 	BUILDING_TYPE_ADS = 5,
 	BUILDING_TYPE_GAS_STATION = 6,
 	BUILDING_TYPE_PAYNSPRAY = 7,
+	BUILDING_TYPE_AMMUNATION = 8,
+	BUILDING_TYPE_FOOD = 9,
 	// Insert here other types
 	BUILDING_TYPE_LAST
 }
@@ -35,11 +37,14 @@ enum _:E_BUILDING_TYPE
 #include <player_system\core>
 
 #include "components\inventory"
-#include "components\garage"
 #include "components\shop"
-#include "components\ads"
-#include "components\gas_station"
-#include "components\paynspray"
+#include "types\garage"
+#include "types\ads"
+#include "types\gas_station"
+#include "types\paynspray"
+#include "types\247"
+#include "types\ammunation"
+#include "types\food"
 #include "components\employee"
 
 #include "commands\admin"
@@ -475,15 +480,21 @@ stock Building_ResetOwner(Building:building)
 
 stock Building_Delete(Building:building)
 {
-	new buildingid = Building_GetID(building);
+	new 
+		buildingid = Building_GetID(building),
+		type = Building_GetType(building);
 
     mysql_pquery_f(gMySQL, "DELETE FROM `buildings` WHERE id = '%d'", buildingid);
 
 	Building_DestroyElements(building);
 	
+	new index = list_find(BuildingsByType[type], building);
+	if(index != -1)
+		list_remove(BuildingsByType[type], index);
+	
 	// UPDATES OWNERID -> BUILDING_ID TO 0.
     CallLocalFunction(#OnBuildingDeleted, "d", _:building);
-	
+
 	var_release(Variant:building);
 	var_delete(Variant:building);
 

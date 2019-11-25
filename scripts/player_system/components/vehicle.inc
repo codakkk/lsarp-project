@@ -21,10 +21,10 @@ static
 
 hook OnPlayerEnterCheckpoint(playerid)
 {
-	if(Localizing[playerid])
+	if(Localizing{playerid})
 	{
 		DisablePlayerCheckpoint(playerid);
-		Localizing[playerid] = false;
+		Localizing{playerid} = false;
 	}
 	return 1;
 }
@@ -372,7 +372,7 @@ public LoadCharacterVehicle(playerid, slotid)
 	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai spawnato il tuo veicolo (%s). Segui il checkpoint per trovarlo.", Vehicle_GetNameFromModel(modelid));
 
 	SetPlayerCheckpoint(playerid, x, y, z, 5.0);
-	Localizing[playerid] = true;
+	Localizing{playerid} = true;
 	return 1;
 }
 

@@ -1,5 +1,5 @@
 
-flags:hcreate(CMD_ADMIN);
+flags:hcreate(CMD_ADMIN | CMD_PROPERTY_ROLE);
 CMD:hcreate(playerid, params[])
 {
     new type;

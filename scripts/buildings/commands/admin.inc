@@ -154,6 +154,7 @@ CMD:abedit(playerid, p[])
         {
             SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit <buildingid> type <typeid>");
             SendClientMessage(playerid, COLOR_ERROR, "0: Store, 1: Paycheck, 2: Garage, 3: Complex, 4: Banca, 5: Pubblicità, 6: Benzina, 7: Pay'n'Spray");
+            SendClientMessage(playerid, COLOR_ERROR, "8: Ammunation, 9: Cibo");
             return 0;
         }
 

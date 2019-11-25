@@ -1,17 +1,16 @@
 
 CMD:furniturecmds(playerid, params[])
 {
-    SendClientMessage(playerid, -1, "[FURNITURE]: (/arreda)mento - /listaobject - /textureoggetto");
-    SendClientMessage(playerid, -1, "[FURNITURE]: /piazzaobject - /rinominaobject - /spostaoggetto");
-    SendClientMessage(playerid, -1, "[FURNITURE]: /furnitureid - /idmobili - /fid");
+    SendClientMessage(playerid, -1, "[FURNITURE]: (/arreda)mento - /furnitureid (fid)");
+    //SendClientMessage(playerid, -1, "[FURNITURE]: (/arreda)mento - /listaobject - /textureoggetto");
+    //SendClientMessage(playerid, -1, "[FURNITURE]: /piazzaobject - /rinominaobject - /spostaoggetto");
+    //SendClientMessage(playerid, -1, "[FURNITURE]: /furnitureid - /idmobili - /fid");
     return 1;
 }
 
 flags:arredamento(CMD_ALIVE_USER);
 CMD:arredamento(playerid, params[])
 {
-    if(!Player_IsAdminDuty(playerid))
-        return 0;
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
     
@@ -23,8 +22,6 @@ alias:arredamento("arreda");
 flags:furnitureid(CMD_ALIVE_USER);
 CMD:furnitureid(playerid, params[])
 {
-    if(!Player_IsAdminDuty(playerid))
-        return 0;
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
     

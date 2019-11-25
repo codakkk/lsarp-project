@@ -122,7 +122,7 @@ CMD:vernicia(playerid, params[])
 
 CMD:rimorchia(playerid, params[])
 {
-    if(Character_GetJobType(playerid) != JOB_TYPE_MECHANIC || !Character_IsJobDuty(playerid))
+    if(Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE && (Character_GetJobType(playerid) != JOB_TYPE_MECHANIC || !Character_IsJobDuty(playerid)))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei un meccanico in servizio.");
     
 	new vehicleid = GetPlayerVehicleID(playerid),

@@ -25,12 +25,6 @@ hook OnPlayerConnect(playerid)
 	RemoveBuildingForPlayer(playerid, 8124, 1707.390, 1206.609, 24.234, 0.250);
 	RemoveBuildingForPlayer(playerid, 1616, 1700.430, 1250.680, 16.031, 0.250);
 
-	// Las_Venturas_Repairs_Exterior
-	RemoveBuildingForPlayer(playerid, 7161, 2380.734, 1993.226, 9.843, 0.250);
-	RemoveBuildingForPlayer(playerid, 6865, 2368.984, 1984.242, 14.773, 0.250);
-	RemoveBuildingForPlayer(playerid, 1532, 2394.007, 2041.156, 9.835, 0.250);
-
-	// Fix
 	RemoveBuildingForPlayer(playerid, 1245, 2414.7500, 1944.1719, 6.3672, 0.25);
 	RemoveBuildingForPlayer(playerid, 1503, 2424.1563, 2808.0781, 10.2109, 0.25);
 	RemoveBuildingForPlayer(playerid, 1503, 1749.7109, 776.4375, 10.2109, 0.25);
@@ -48,6 +42,7 @@ hook OnPlayerConnect(playerid)
 	RemoveBuildingForPlayer(playerid, 1503, 1436.9922, 1928.0391, 10.2109, 0.25);
 	RemoveBuildingForPlayer(playerid, 1245, 1501.6797, 1925.5859, 11.1719, 0.25);
 	RemoveBuildingForPlayer(playerid, 1245, 1501.6797, 1925.5859, 11.1719, 0.25);
+
 
 	// Environment CInese
 	RemoveBuildingForPlayer(playerid, 1264, 2260.593, 2293.250, 10.203, 0.250);

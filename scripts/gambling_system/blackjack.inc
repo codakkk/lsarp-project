@@ -49,8 +49,6 @@ hook OnCharacterClearData(playerid)
 
 hook function Character_CanCasino(playerid)
 {
-	if(Character_CanCasino(playerid))
-		return false;
     return continue(playerid);
 }
 

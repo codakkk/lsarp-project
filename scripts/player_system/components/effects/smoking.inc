@@ -96,7 +96,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 
         if(SmokingType{playerid} == SMOKING_TYPE_DRUG && SmokingShots{playerid} <= 5)
         {
-            DrugEffectTime[playerid] = 0;
+            DrugEffectTime{playerid} = 0;
             SetPlayerDrunkLevel(playerid, GetPlayerDrunkLevel(playerid) + 3500);
         }
 
