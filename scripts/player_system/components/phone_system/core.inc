@@ -864,13 +864,13 @@ static AddContactDialog(playerid, slotid, ownerNumber)
     yield 1;
     for(;;)
     {
-        await_arr(r) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, str_format("Cellulare - %d - Aggiungi numero in rubrica", ownerNumber), @("Inserisci il nome del nuovo contatto seguito dal numero del cellulare.\nEsempio: Peppe Rossi 444333221\n\n"), @("Crea Contatto"), @("Indietro"));
+        await_arr(r) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, str_format("Cellulare - %d - Aggiungi numero in rubrica", ownerNumber), @("Inserisci il nome del nuovo contatto seguito dal numero del cellulare.\nEsempio: 444333221 Peppe Rossi\n\n"), @("Crea Contatto"), @("Indietro"));
         
         if(!r[E_DIALOG_RESPONSE_Response])
             break;
         
         new name[32], number;
-        if(sscanf(r[E_DIALOG_RESPONSE_InputText], "s[32]d", name, number))
+        if(sscanf(r[E_DIALOG_RESPONSE_InputText], "ds[32]", number, name))
             continue;
         
         Character_AddToPhoneBook(playerid, slotid, number, name);

@@ -140,7 +140,7 @@ stock Character_ShowInBoundCalls(playerid, number)
             
             new time = callEnd - callStart;
             TimestampToDate(time, year, month, day, hour, minute, second, 0);
-            str_append_format(string, "%02d:%02d", minute, second);
+            str_append_format(string, "%02d:%02d\t", minute, second);
 
             TimestampToDate(callStart, year, month, day, hour, minute, second, 0);
             str_append_format(string, "%d/%d/%d - %d:%d\n", day, month, year, hour, minute);
@@ -205,7 +205,7 @@ stock Character_ShowOutBoundCalls(playerid, number)
             
             new time = callEnd - callStart;
             TimestampToDate(time, year, month, day, hour, minute, second, 0);
-            str_append_format(string, "%02d:%02d", minute, second);
+            str_append_format(string, "%02d:%02d\t", minute, second);
 
             TimestampToDate(callStart, year, month, day, hour, minute, second, 0);
             str_append_format(string, "%d/%d/%d - %d:%d\n", day, month, year, hour, minute);

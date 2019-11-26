@@ -17,13 +17,14 @@ hook OnCharacterClearData(playerid)
 
 hook OnCharacterLoad(playerid)
 {
-    inline OnLoad()
-    {
-        cache_get_value_name_float(0, "max_health", PlayerMaxHealth[playerid]);
-        cache_get_value_name_float(0, "max_armour", PlayerMaxArmour[playerid]);
-        cache_get_value_name_int(0, "upgrade_points", UpgradePoints[playerid]);
-    }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT max_health, max_armour, upgrade_points FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
+    await mysql_aquery_s(gMySQL, str_format("SELECT max_health, max_armour, upgrade_points FROM `characters` WHERE id = '%d'", Character_GetID(playerid)), .parallel=true);
+    
+    cache_get_value_name_float(0, "max_health", PlayerMaxHealth[playerid]);
+    cache_get_value_name_float(0, "max_armour", PlayerMaxArmour[playerid]);
+    cache_get_value_name_int(0, "upgrade_points", UpgradePoints[playerid]);
+
+    SetPlayerMaxArmour(playerid, PlayerMaxArmour[playerid]);
+    SetPlayerMaxHealth(playerid, PlayerMaxHealth[playerid]);
     return 1;
 }
 
@@ -84,6 +85,7 @@ stock bool:Character_SetMaxHealth(playerid, Float:max)
 		return false;
 	}
 	PlayerMaxHealth[playerid] = max;
+    SetPlayerMaxHealth(playerid, max);
 	mysql_pquery_f(gMySQL, "UPDATE `characters` SET max_health = '%f' WHERE id = '%d'", max, Character_GetID(playerid));
 	return true;
 }
@@ -96,6 +98,7 @@ stock Float:Character_GetMaxHealth(playerid)
 stock bool:Character_SetMaxArmour(playerid, Float:max)
 {
 	PlayerMaxArmour[playerid] = max;
+    SetPlayerMaxArmour(playerid, max);
 	mysql_pquery_f(gMySQL, "UPDATE `characters` SET max_armour = '%f' WHERE id = '%d'", max, Character_GetID(playerid));
 	return true;
 }

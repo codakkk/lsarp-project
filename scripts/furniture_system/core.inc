@@ -16,7 +16,7 @@
 #include <YSI_Coding\y_hooks>
 
 
-#define MAX_FURNITURE_PER_PAGE      (15)
+#define MAX_FURNITURE_PER_PAGE      (5)
 #define MAX_EXTERIOR_DISTANCE       (10.0)
 #define MAX_EXTERIOR_OBJECTS        (10)
 
@@ -299,11 +299,18 @@ static bool:ShowPlacedFurnituresDialog(playerid, bool:isExterior, EntityType:typ
         }
 
         if(page > 0)
-            str_append_format(string, "<<< Pagina %d\n", page + 1);
+            str_append_format(string, "<<< Pagina %d\n", page);
         if(size > page * MAX_FURNITURE_PER_PAGE + MAX_FURNITURE_PER_PAGE)
             str_append_format(string, ">>> Pagina %d\n", page + 2);
 
-        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_LIST, @("Arredamento"), string, @("Avanti"), @("Chiudi"));
+        new String:title = str_format("Arredamento - Pagina %d", page + 1);
+        
+        if(isExterior)
+            str_append(title, @("- Exterior"));
+        
+        str_append_format(title, " - (%d/%d)", size, GetMaxPlaceableFurnitures(playerid, isExterior));
+
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_LIST, title, string, @("Avanti"), @("Chiudi"));
     
         if(!response[E_DIALOG_RESPONSE_Response]) break;
 
@@ -318,7 +325,7 @@ static bool:ShowPlacedFurnituresDialog(playerid, bool:isExterior, EntityType:typ
                 page--;
                 continue;
             }
-            listitem--;
+            normalized++;
         }
         if(size > page * MAX_FURNITURE_PER_PAGE + MAX_FURNITURE_PER_PAGE)
         {
@@ -327,7 +334,6 @@ static bool:ShowPlacedFurnituresDialog(playerid, bool:isExterior, EntityType:typ
                 page++;
                 continue;
             }
-            listitem--;
         }        
         ret = true;
         if(HandleFurnitureOption(playerid, startIndex + listitem, furnitures))
@@ -340,7 +346,7 @@ static HandleFurnitureOption(playerid, index, List:furnitures)
 {
     new bool:ret = false,
         response[e_DIALOG_RESPONSE_INFO];
-    new String:string = str_new("Sposta\nRinomina\nRimuovi\nResetta Textures\n");
+    new String:string = str_new("Sposta\nRinomina\nRimuovi\nResetta Textures\nDuplica\n");
     if(Account_GetAdminLevel(playerid) > 1)
         str_append_format(string, "Gotati");
     pawn_guard(string);
@@ -391,7 +397,14 @@ static HandleFurnitureOption(playerid, index, List:furnitures)
                 SendClientMessage(playerid, COLOR_GREEN, "Hai rimosso le texture al mobile.");
                 Furniture_ShowOptions(playerid);
             }
-            case 4: // GOTO
+            case 4:
+            {
+                new modelid = Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_MODEL_ID);
+                Furniture_StartBuy(playerid, modelid, FurnitureCustomData[FURNITURE_IS_EXTERIOR], FurnitureCustomData[FURNITURE_BELONGS_TO_TYPE], FurnitureCustomData[FURNITURE_BELONGS_TO_ID]);
+                ret = true;
+                break;
+            }
+            case 5: // GOTO
             {
                 if(!Player_IsAdminDuty(playerid))
                     return 0;
@@ -672,7 +685,7 @@ stock Furniture_SetObject(objectid, dbid)
 
 stock Furniture_StartBuy(playerid, modelid, bool:isExterior, EntityType:belongsToType, entityId)
 {
-    new maxFurnitures = isExterior ? Character_GetExtFurnitureSlot(playerid) : Character_GetFurnitureSlot(playerid);
+    new maxFurnitures = GetMaxPlaceableFurnitures(playerid, isExterior);
     
     if(Character_GetFurnitureCount(playerid) >= maxFurnitures)
         return SendFormattedMessage(playerid, COLOR_ERROR, "Hai raggiunto il limite di mobili per questo edificio (%d).", maxFurnitures);
@@ -1206,3 +1219,8 @@ stock bool:Furniture_IsValid(objectid)
     return FurnitureCustomData[FURNITURE_DATABASE_ID] > 0;
 }
 
+static GetMaxPlaceableFurnitures(playerid, bool:isExterior)
+{
+    new maxFurnitures = isExterior ? Character_GetExtFurnitureSlot(playerid) : Character_GetFurnitureSlot(playerid);
+    return maxFurnitures;
+}

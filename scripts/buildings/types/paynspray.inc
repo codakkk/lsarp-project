@@ -6,7 +6,7 @@ hook OnPlayerPickUpElmPickup(playerid, pickupid, Building:elementId, E_ELEMENT_T
 {
     if(type == ELEMENT_TYPE_BUILDING_ENTRANCE && Building_IsValid(elementId) && Building_GetType(elementId) == BUILDING_TYPE_PAYNSPRAY)
     {
-        Player_Info(playerid, "-- ~y~Pay'n'Spray~w~ --~n~Usa /riparaveicolo a bordo di un veicolo per ripararlo", true, .time=2500);
+        Player_Info(playerid, "-- ~y~Pay'n'Spray~w~ --~n~Usa /riparaveicolo a bordo di un veicolo per ripararlo.", true, .time=2500);
     }
     return 1;
 }
@@ -23,7 +23,7 @@ CMD:riparaveicolo(playerid, params[])
     
     new remainder = floatround(999.0 - Vehicle_GetHealth(GetPlayerVehicleID(playerid)), floatround_ceil);
 
-    if(remainder < 2)
+    if(remainder < 1)
         return SendClientMessage(playerid, COLOR_ERROR, "Il tuo veicolo non ha bisogno di riparazioni.");
 
     new basePrice = GetRepairPricePerHP(building),

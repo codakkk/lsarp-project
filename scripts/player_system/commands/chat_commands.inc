@@ -63,7 +63,7 @@ CMD:pm(playerid, params[])
     }
     else
     {
-        if(Account_IsSupporterDuty(playerid))
+        if(Player_IsSupporterDuty(playerid))
         {
             SendTwoLinesMessage(id, COLOR_RECEIVEPM, "PM da {e9de98}%s{eccd2d} (%d): %s", Character_GetOOCName(playerid), playerid, s);
             SendTwoLinesMessage(playerid, COLOR_SENDPM, "PM a {e9de98}%s{eee854} (%d): %s", Character_GetOOCName(id), id, s);

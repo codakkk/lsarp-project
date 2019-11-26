@@ -119,7 +119,7 @@ static ShowSellBuildingDialog(playerid, Building:building)
 
         if(!response[E_DIALOG_RESPONSE_Response]) break;
         
-        if(!Building_IsOwned(building))
+        if(Building_GetOwnerID(building) <= 0)
         {
             SendClientMessage(playerid, COLOR_ERROR, "Il biz non è acquistato, per tanto non puoi venderlo.");
             break;
@@ -158,7 +158,7 @@ static ShowSellBuildingToPlayerDialog(playerid, Building:building)
 
         if(!response[E_DIALOG_RESPONSE_Response]) break;
 
-        if(!Building_IsOwned(building))
+        if(Building_GetOwnerID(building) <= 0)
         {
             SendClientMessage(playerid, COLOR_ERROR, "Il biz non è acquistato, per tanto non puoi venderlo.");
             break;

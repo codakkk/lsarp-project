@@ -550,11 +550,6 @@ stock bool:Building_IsOwnable(Building:building)
     return bool:var_get(Variant:building, Ownable);
 }
 
-stock bool:Building_IsOwned(Building:building)
-{
-    return Building_IsOwnable(building) && Building_GetOwnerID(building) > 0;
-}
-
 stock Building_GetOwnerID(Building:building)
 {
     return var_get(Variant:building, OwnerID);

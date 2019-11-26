@@ -323,16 +323,6 @@ stock Account_HasOOCEnabledForPlayer(playerid, targetid)
 	return !Iter_Contains(pToggleOOC[playerid], targetid);
 }
 
-stock Account_SetSupporterDuty(playerid, bool:enable)
-{
-	Bit_Set(gAccountBitState[e_pSupporterDuty], playerid, enable);
-}
-
-stock Account_IsSupporterDuty(playerid)
-{
-	return Bit_Get(gAccountBitState[e_pSupporterDuty], playerid);
-}
-
 stock Account_GetID(playerid)
 {
 	return AccountInfo[playerid][ID];

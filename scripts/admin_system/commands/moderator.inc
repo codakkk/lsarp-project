@@ -119,7 +119,7 @@ CMD:gotovehicle(playerid, params[])
 
     new Float:x, Float:y, Float:z;
     GetVehiclePos(id, x, y, z);
-    Character_SetSafePosition(playerid, x, y, z+5.0, 0, GetVehicleVirtualWorld(id));
+    Character_SetSafePosition(playerid, x, y, z+2.0, 0, GetVehicleVirtualWorld(id));
     return 1;
 }
 alias:gotovehicle("gotov");

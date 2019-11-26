@@ -25,8 +25,8 @@ CMD:tduty(playerid, params[])
 {
 	if(Player_IsAdminDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio admin.");
-	Account_SetSupporterDuty(playerid, !Account_IsSupporterDuty(playerid));
-    if(Account_IsSupporterDuty(playerid))
+	Player_SetSupporterDuty(playerid, !Player_IsSupporterDuty(playerid));
+    if(Player_IsSupporterDuty(playerid))
 	{
 		SetPlayerColor(playerid, 0xa52a2aff);
 		SendMessageToTesters(0, 0xe9de98ff, "[TESTERS]: %s è ora in servizio.", Character_GetOOCName(playerid));

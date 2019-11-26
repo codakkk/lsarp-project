@@ -95,7 +95,7 @@ stock Character_PayDay(playerid)
 	}
 
 	if(businessMoney > 0)
-		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s per il tuo business.", FormatNumber(businessMoney));
+		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s per i tuoi business.", FormatNumber(businessMoney));
 
 	if(premiumMoney > 0)
 		SendFormattedMessage(playerid, -1, "Hai ricevuto $%s per il tuo premium.", FormatNumber(premiumMoney));

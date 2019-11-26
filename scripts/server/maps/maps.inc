@@ -52,6 +52,72 @@ hook OnPlayerConnect(playerid)
 	// Tribunale.inc
 	RemoveBuildingForPlayer(playerid, 6106, 1226.953, -1656.156, 24.773, 0.250);
 	RemoveBuildingForPlayer(playerid, 6102, 1226.953, -1656.156, 24.773, 0.250);
+
+	// Exterior_Gov.inc
+	RemoveBuildingForPlayer(playerid, 1359, 1080.250, 1004.453, 10.960, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1003.484, 11.101, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1008.750, 11.101, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1019.281, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1014.015, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1024.546, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1029.812, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1359, 1141.906, 1031.320, 10.960, 0.250);
+	RemoveBuildingForPlayer(playerid, 1359, 1025.539, 1045.007, 10.960, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1061.414, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1040.351, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1045.617, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1050.882, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1056.148, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1035.078, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1069.273, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1066.679, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1071.945, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1074.539, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1077.210, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1079.804, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1082.476, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1085.070, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1087.742, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1090.335, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1093.007, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1095.601, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1098.273, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1359, 1150.171, 1098.492, 10.960, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1100.867, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1106.132, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1103.539, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1111.398, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1359, 1033.515, 1112.492, 10.960, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1108.804, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1114.070, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1116.664, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1119.335, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1121.929, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1127.203, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1124.609, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1132.468, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1137.734, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1129.875, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1135.140, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1143.000, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1148.265, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1158.796, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 976.289, 1153.531, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1359, 1095.656, 1139.289, 10.960, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1156.203, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1145.671, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1150.937, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1140.406, 11.171, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 979.125, 1161.687, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 984.390, 1161.687, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 994.921, 1161.687, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 989.656, 1161.687, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1005.453, 1161.687, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1000.187, 1161.687, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1010.718, 1161.687, 11.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1215, 1021.898, 1163.140, 10.335, 0.250);
+	RemoveBuildingForPlayer(playerid, 1215, 1032.906, 1163.140, 10.335, 0.250);
+	RemoveBuildingForPlayer(playerid, 1411, 1178.671, 1161.468, 11.171, 0.250);
 	return 1;
 }
 
@@ -82,5 +148,11 @@ hook OnGameModeInit()
 	#include "Cancelli_PD_Medic"
 	#include "Environment_Cinese_1_1"
 	#include "Tribunale"
+	#include "Exterior_Gov"
+	#include "GarageGrande_Texturizzato"
+	#include "GarageMedio_Texturizzato"
+	#include "GaragePiccolo_Texturizzato"
+	#include "Sushi_Interior"
+	#include "Craw_Bar"
 return 1;
 }

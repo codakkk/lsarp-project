@@ -2,7 +2,7 @@ flags:aduty(CMD_JR_MODERATOR);
 CMD:aduty(playerid, params[])
 {
 	static LastColor[MAX_PLAYERS] = {-1, ...};
-	if(Account_IsSupporterDuty(playerid))
+	if(Player_IsSupporterDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio supporter.");
 
 	if(Player_IsAdminDuty(playerid))

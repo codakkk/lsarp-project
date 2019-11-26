@@ -19,15 +19,6 @@ hook OnGameModeLateInit()
     return 1;
 }
 
-hook OnPlayerEnterBuilding(playerid, Building:building)
-{
-    if(Building_GetType(building) == BUILDING_TYPE_STORE)
-    {
-        SendClientMessage(playerid, COLOR_ORANGE, "Questo edificio ha degli oggetti in vendita. Usa \"/compra\" per visualizzarne la lista.");
-    }
-    return 1;
-}
-
 hook OnCharacterTryBuy(playerid)
 {
     new Building:building;

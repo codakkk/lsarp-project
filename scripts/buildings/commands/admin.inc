@@ -113,15 +113,22 @@ CMD:abedit(playerid, p[])
             SendFormattedMessage(playerid, COLOR_GREEN, "Non è stato possibile eseguire il comando sul building %d.", id);
         }
     }
-    /*else if(!strcmp(command, "rmowner", true))
+    else if(!strcmp(command, "setowner", true))
     {
-        new id;
-	    if(sscanf(params, "k<d>", id))
+        new pid;
+	    if(sscanf(params, "k<u>", pid))
             return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit [buildingid] [setowner] [playerid/partofname]");
-	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato  il proprietario del building %d.", id);
-       Building_ResetOwner(building);
-       Log(Account_GetName(playerid), "none", "/abedit rmowner", id);
-    }*/
+	   
+        if(!Character_IsLogged(pid))
+            return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+
+        SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato %s proprietario del building id %d.", Character_GetOOCName(pid), id);
+        
+        Building_ResetOwner(building);
+        Building_SetOwner(building, pid);
+        
+        Log(Account_GetName(playerid), "none", "/abedit setowner", Character_GetID(pid));
+    }
     else if(!strcmp(command, "rmowner", true))
     {
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai resettato il proprietario del building %d.", id);
