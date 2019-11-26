@@ -140,7 +140,7 @@ hook OnGameModeInit()
 	#include "Complex_1_Interior"
 	#include "LVFRD_Interior"
 	#include "The_Visage_Pianoterra_Interior"
-	#include "Bar_Rustico_Interior"
+	//#include "Bar_Rustico_Interior"
 	#include "Cantiere_Distretto_LVPD_Exterior"
 	#include "Las_Venturas_Correctional_Facility_Exterior"
 	#include "Las_Venturas_Correctional_Facility_Interior"
@@ -154,5 +154,9 @@ hook OnGameModeInit()
 	#include "GaragePiccolo_Texturizzato"
 	#include "Sushi_Interior"
 	#include "Craw_Bar"
+
+	#include "Interior_Piccolo_Vuoto"
+	#include "Interior_Medio_Vuoto"
+	#include "Interior_Grande_Vuoto"
 return 1;
 }

@@ -20,7 +20,7 @@ CMD:gov(playerid, params[])
 flags:tasse(CMD_GOVERNMENT);
 CMD:tasse(playerid, params[])
 {
-	if(Character_GetRank(playerid) != 1) 
+	if(Character_GetRank(playerid) > 2) 
 		return SendClientMessage(playerid, COLOR_ERROR, "Non hai il grado adatto per utilizzare questo comando.");
 	new 
 		String:title = @("Tasse - Las Venturas"),

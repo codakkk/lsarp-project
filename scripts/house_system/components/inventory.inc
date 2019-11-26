@@ -233,7 +233,7 @@ Dialog:HouseInventoryDepositAmount(playerid, response, listitem, inputtext[])
 
 	Inventory_AddItem(inventoryRef, itemid, val, extra, tempExtra);
 	Character_DecreaseSlotAmount(playerid, Internal_GetSlotID(playerid), val);
-
+	
 	Character_SaveInventory(playerid);
 	House_SaveInventory(Internal_GetHouse(playerid));
 
