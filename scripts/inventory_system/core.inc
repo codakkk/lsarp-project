@@ -558,6 +558,19 @@ stock Inventory_GetFreeSlot(Inventory:inventory)
     return -1;
 }
 
+stock bool:Inventory_TransferItem(Inventory:fromInventory, fromSlotId, amount, Inventory:toInventory)
+{
+	new itemid = Inventory_GetSlotItem(fromInventory, fromSlotId);
+	if(itemid == 0 || !Inventory_HasSpaceForItem(toInventory, itemid, amount) || amount > Inventory_GetSlotAmount(fromInventory, fromSlotId))
+		return false;
+	new extra = Inventory_GetSlotExtra(fromInventory, fromSlotId, 0);
+	new Map:tempExtra = Inventory_GetSlotTempExtraMap(fromInventory, fromSlotId);
+	
+	Inventory_AddItem(toInventory, itemid, amount, extra, tempExtra);
+	Inventory_DecreaseSlotAmount(fromInventory, fromSlotId, amount);
+	return true;
+}
+
 static Inventory_ShowInChatStr(Inventory:inventory, playerid, String:title)
 {
 	new String:str = str_format("_______________[%S]_______________", title);
@@ -615,29 +628,36 @@ static Inventory_ShowInChat(Inventory:inventory, playerid, const title[] = "")
 	return Inventory_ShowInChatStr(inventory, playerid, STRING_NULL);
 }
 
-static Inventory_ShowInDialog(Inventory:inventory, playerid, const title[], const dialog[] = "", const button1[] = "", const button2[] = "")
+static String:Inventory_GetDialogString(Inventory:inventory)
 {
-	new String:string = @("Nome\tQuantità\tTipo\tAltro\n"),
-		tempItem[E_ITEM_DATA], slotid = 0;
+	new String:string = str_new("Nome\tQuantità\tTipo\tAltro\n"),
+		tempItem[E_ITEM_DATA];
 	for_inventory(i : Inventory_GetItems(inventory))
 	{
 		iter_get_arr(i, tempItem);
 		if(iter_sizeof(i) == 0 || tempItem[InvItem] == 0) // If no item
 		{
-			tempItem[InvItem] = tempItem[InvAmount] = tempItem[InvExtra] = 0;
 			str_append(string, @("{808080}Slot Libero\t{808080}--\t{808080}--\t--\n"));
 		}
 		else
 		{
-			new itemid = tempItem[InvItem],
-				itemAmount = tempItem[InvAmount],
-				extra = tempItem[InvExtra][0];
-	
-			str_append_format(string, "{FFFFFF}%s\t{FFFFFF}%d\t{FFFFFF}%s\t%S\n", ServerItem_GetName(itemid), itemAmount, ServerItem_GetTypeName(itemid), GetItemExtraStr(itemid, itemAmount, extra));
+			new String:extra = GetItemExtraStr(tempItem[InvItem], tempItem[InvAmount], tempItem[InvExtra][0]);
+			str_append_format(string, "{FFFFFF}%s\t{FFFFFF}%d\t{FFFFFF}%s\t%S\n", ServerItem_GetName(tempItem[InvItem]), tempItem[InvAmount], ServerItem_GetTypeName(tempItem[InvItem]), extra);
 		}
-		slotid++;
 	}
-	Dialog_Open_s(playerid, dialog, DIALOG_STYLE_TABLIST_HEADERS, str_new(title), string, button1, button2);
+	return string;
+}
+
+stock Task:Inventory_ShowAsyncDialog(playerid, Inventory:inventory, String:title, String:button1, String:button2)
+{
+	new String:info = Inventory_GetDialogString(inventory);
+	return ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_TABLIST_HEADERS, title, info, button1, button2);
+}
+
+static Inventory_ShowInDialog(Inventory:inventory, playerid, const title[], const dialog[] = "", const button1[] = "", const button2[] = "")
+{
+	new String:info = Inventory_GetDialogString(inventory);
+	Dialog_Open_s(playerid, dialog, DIALOG_STYLE_TABLIST_HEADERS, str_new(title), info, button1, button2);
 	return 1;
 }
 

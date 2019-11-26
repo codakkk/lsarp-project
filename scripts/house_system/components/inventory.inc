@@ -1,21 +1,8 @@
 #include <YSI_Coding\y_hooks>
 
-static enum _:E_DIALOG_HOUSE_DATA
-{
-    House:House,
-    Inventory:Inventory,
-    SlotID,
-	ItemToDeposit
-}
-
-static 
-	Map:PlayerHouseInventory; // <playerid, E_DIALOG_HOUSE_DATA>
-
 hook OnGameModeInit()
 {
-	PlayerHouseInventory = map_new();
-
-	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `house_inventory` ( \
+	mysql_pquery(gMySQL, "CREATE TABLE IF NOT EXISTS `house_inventory` ( \
 							`house_id` int(11) NOT NULL, \
 							`slot_id` tinyint(4) NOT NULL, \
 							`item` int(11) NOT NULL, \
@@ -63,230 +50,170 @@ stock House_ShowInventory(House:house, playerid)
     if(!House_IsValid(house))
         return 0;
     
-    new Inventory:inventory = House_GetInventory(house);
+    new Inventory:houseInventory = House_GetInventory(house),
+		Inventory:playerInventory = Character_GetInventory(playerid),
+		String:info = str_new(""),
+		String:title = str_format("Inventario Casa (%d/%d)", Inventory_GetUsedSpace(houseInventory), Inventory_GetSpace(houseInventory));
 	
-	if(map_has_key(PlayerHouseInventory, playerid))
+	pawn_guard(title);
+	pawn_guard(info);
+
+	new response[e_DIALOG_RESPONSE_INFO];
+
+	yield 1;
+	for(;;)
 	{
-		map_set_cell(PlayerHouseInventory, playerid, House, _:house);
-		map_set_cell(PlayerHouseInventory, playerid, Inventory, List:inventory);
-		map_set_cell(PlayerHouseInventory, playerid, SlotID, -1);
+		await_arr(response) Inventory_ShowAsyncDialog(playerid, houseInventory, title, @("Seleziona"), @("Chiudi"));
+
+		if(!response[E_DIALOG_RESPONSE_Response])
+			break;
+		
+		new slotid = response[E_DIALOG_RESPONSE_Listitem],
+			itemid = Inventory_GetSlotItem(houseInventory, slotid);
+
+		str_clear(info);
+		str_append_format(info, "Deposita\n");
+		
+		if(ServerItem_IsValid(itemid))
+			str_append_format(info, "Ritira\n");
+
+		await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_LIST, @("Inventario Casa"), info, @("Seleziona"), @("Indietro"));
+
+		if(!response[E_DIALOG_RESPONSE_Response])
+			continue;
+
+		if(response[E_DIALOG_RESPONSE_Listitem] == 0)
+			HandleDepositInHouseDialog(playerid, playerInventory, house, houseInventory, slotid);
+		else if(response[E_DIALOG_RESPONSE_Listitem] == 1)
+			HandleWithdrawInHouseDialog(playerid, playerInventory, house, houseInventory, slotid);
 	}
-	else
-	{
-		new data[E_DIALOG_HOUSE_DATA];
-		data[House] = house;
-		data[Inventory] = inventory;
-		data[SlotID] = -1;
-		map_add_arr(PlayerHouseInventory, playerid, data);
-	}
-	Inventory_ShowStr(inventory, playerid, str_format("Inventario Casa (%d/%d)", Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory)), Dialog_HouseInventory, "Avanti", "Chiudi", .forceDialog = true);
+
 	return 1;
 }
 
-Dialog:Dialog_HouseInventory(playerid, response, listitem, inputtext[])
+static HandleDepositInHouseDialog(playerid, Inventory:playerInventory, House:house, Inventory:houseInventory, slotid)
 {
-	if(!response) return 1;
-    
-    Internal_ShowHouseSlotAction(playerid, listitem);
-	return 1;
-}
+	new response[e_DIALOG_RESPONSE_INFO];
+	new itemid = Inventory_GetSlotItem(houseInventory, slotid),
+		String:error = str_new("");
+	pawn_guard(error);
 
-Dialog:HouseInventoryAction(playerid, response, listitem, inputtext[])
-{
-    if(!response)
-        return House_ShowInventory(Internal_GetHouse(playerid), playerid);
-    new 
-		slotid = Internal_GetSlotID(playerid),
-		itemid = Inventory_GetSlotItem(Internal_GetInventory(playerid), slotid),
-		amount = Inventory_GetSlotAmount(Internal_GetInventory(playerid), itemid)
-	;
-
-	if(listitem == 0)
+	// If selected itemid isn't equal to zero (so there's something)
+	// First check if it's unique and if character has atleast one item.
+	// It's used to unify first insert and concat
+	if(itemid != 0)
 	{
-		if(itemid == 0)
+		if(ServerItem_IsUnique(itemid))
 		{
-			Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", HouseInventoryDepSelectItem, "Seleziona", "Indietro", .forceDialog = true);
+			SendClientMessage(playerid, COLOR_ERROR, "Non puoi depositare ulteriori oggetti in questo slot.");
+			return;
 		}
-		else
+		else if(!Character_HasItem(playerid, itemid))
 		{
-			if(ServerItem_IsUnique(itemid))
-				return SendClientMessage(playerid, COLOR_ERROR, "Non puoi depositare ulteriori oggetti in questo slot.");
+			SendClientMessage(playerid, COLOR_ERROR, "Non hai quest'oggetto nell'inventario.");
+			return;
+		}
+	}
+
+	yield 1;
+	for(;;)
+	{
+		await_arr(response) Inventory_ShowAsyncDialog(playerid, playerInventory, @("Inventario Giocatore - Seleziona l'oggetto da depositare"), @("Seleziona"), @("Indietro"));
+
+		if(!response[E_DIALOG_RESPONSE_Response])
+			break;
+		
+		new playerSlotId = response[E_DIALOG_RESPONSE_Listitem];
+		new playerSelectedItem = Inventory_GetSlotItem(playerInventory, playerSlotId);
+		new playerSelectedItemQuantity = Inventory_GetSlotAmount(playerInventory, playerSlotId);
+
+		new quantityToDeposit = (ServerItem_IsUnique(playerSelectedItem) || playerSelectedItemQuantity == 1) ? 1 : 0;
+
+		if(quantityToDeposit == 0)
+		{
+			yield 1;
+			for(;;)
+			{
+				new String:info = str_format("Inserisci l'ammontare che vuoi depositare all'interno dell'inventario della tua casa.\nOggetto: %s.\nQuantità nello slot: %d.\nStack Massime: %d", ServerItem_GetName(playerSelectedItem), playerSelectedItemQuantity, ServerItem_GetMaxStack(playerSelectedItem));
+				await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Quantità da depositare"), error + @("\n") + info, @("Deposita"), @("Indietro"));
+
+				if(!response[E_DIALOG_RESPONSE_Response])
+					break;
+				
+				str_clear(error);
+
+				new val = strval(response[E_DIALOG_RESPONSE_InputText]);
+
+				if(! (0 < val <= playerSelectedItemQuantity))
+				{
+					str_append_format(error, "{FF0000}Non possiedi la quantità inserita.\n{FFFFFF}");
+					continue;
+				}
+				quantityToDeposit = val;
+				break;
+			}
+		}
+		
+		if(quantityToDeposit > 0)
+		{
+			new bool:result = Inventory_TransferItem(playerInventory, playerSlotId, quantityToDeposit, houseInventory);
+			if(result)
+			{
+				SendFormattedMessage(playerid, COLOR_ORANGE, "Hai depositato gli oggetti nell'inventario della tua casa. (Oggetto: %s - Quantità: %d)", ServerItem_GetName(itemid), quantityToDeposit);
+				Character_SaveInventory(playerid);
+				House_SaveInventory(house);
+			}
+			break;
+		}
+	}
+}
+
+static HandleWithdrawInHouseDialog(playerid, Inventory:playerInventory, House:house, Inventory:houseInventory, houseSlotId)
+{
+	new houseItemId = Inventory_GetSlotItem(houseInventory, houseSlotId),
+		houseItemQuantity = Inventory_GetSlotAmount(houseInventory, houseSlotId);
+
+	if(houseItemId == 0 || houseItemQuantity == 0)
+		return;
+	
+	new quantityToWithdraw = (ServerItem_IsUnique(houseItemId) || houseItemQuantity == 1) ? 1 : 0;
+
+	if(quantityToWithdraw == 0)
+	{
+		new response[e_DIALOG_RESPONSE_INFO],
+			String:error = str_new("");
+		pawn_guard(error);
+		yield 1;
+		for(;;)
+		{
+			new String:info = str_format("Inserisci l'ammontare che vuoi ritirare dell'oggetto dall'interno dell'inventario della tua casa.\nOggetto: %s.\nQuantità nello slot: %d.", ServerItem_GetName(houseItemId), houseItemQuantity);
+			await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Quantità da depositare"), error + @("\n") + info, @("Ritira"), @("Indietro"));
+
+			if(!response[E_DIALOG_RESPONSE_Response])
+				break;
 			
-			if(!Character_HasItem(playerid, itemid))
-				return SendClientMessage(playerid, COLOR_ERROR, "Non hai quest'oggetto nell'inventario.");
+			str_clear(error);
 
-			map_set_cell(PlayerHouseInventory, playerid, ItemToDeposit, itemid);
+			new val = strval(response[E_DIALOG_RESPONSE_InputText]);
 
-			Dialog_Show_s(playerid, HouseInventoryDepositAmount, DIALOG_STYLE_INPUT, @("Quantità da depositare"), str_format("Inserisci l'ammontare che vuoi depositare all'interno dell'inventario della tua casa.\nOggetto: %s.\nQuantità: %d.\nStack Massime: %d", ServerItem_GetName(itemid), Character_GetItemAmount(playerid, itemid), ServerItem_GetMaxStack(itemid)), "Deposita", "Indietro");	
+			if(! (0 < val <= houseItemQuantity))
+			{
+				str_append_format(error, "{FF0000}La quantità inserita non è valida.\n{FFFFFF}");
+				continue;
+			}
+			quantityToWithdraw = val;
+			break;
 		}
 	}
-	else if(listitem == 1)
+
+	if(quantityToWithdraw > 0)
 	{
-		if(ServerItem_IsUnique(itemid) || amount == 1)
+		new bool:result = Inventory_TransferItem(houseInventory, houseSlotId, quantityToWithdraw, playerInventory);
+		if(result)
 		{
-			if(!Character_HasSpaceForItem(playerid, itemid, 1))
-				return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario."), Internal_ShowHouseSlotAction(playerid, Internal_GetSlotID(playerid));
-			new Inventory:invRef = Internal_GetInventory(playerid);
-
-			Character_GiveItem(playerid, itemid, 1, Inventory_GetSlotExtra(invRef, slotid, 0), true, Inventory_GetSlotTempExtraMap(invRef, slotid));
-			Inventory_DecreaseSlotAmount(invRef, slotid, 1);
-
 			Character_SaveInventory(playerid);
-			House_SaveInventory(Internal_GetHouse(playerid));
-
-			SendFormattedMessage(playerid, COLOR_ORANGE, "Hai ritirato gli oggetti dall'inventario della casa. (Oggetto: %s - Quantità: 1)", ServerItem_GetName(itemid));
-			return House_ShowInventory(Internal_GetHouse(playerid), playerid);
-		}
-		else
-		{
-			Dialog_Show_s(playerid, HouseInvWithdrawAmount, DIALOG_STYLE_INPUT, @("Ammontare da ritirare"), str_format("Inserisci l'ammontare che vuoi ritirare.\nOggetto: %s\nQuantità disponibile: %d", ServerItem_GetName(itemid), amount), "Ritira", "Indietro");
+			House_SaveInventory(house);
+			SendFormattedMessage(playerid, COLOR_ORANGE, "Hai ritirato gli oggetti dall'inventario della casa. (Oggetto: %s - Quantità: %d)", ServerItem_GetName(houseItemId), quantityToWithdraw);
 		}
 	}
-    return 1;
-}
-
-Dialog:HouseInvWithdrawAmount(playerid, response, listitem, inputtext[])
-{
-	if(!response)
-		return Internal_ShowHouseSlotAction(playerid, Internal_GetSlotID(playerid));
-	
-	new 
-		val = strval(inputtext),
-		slotid = Internal_GetSlotID(playerid),
-		Inventory:inventoryRef = Internal_GetInventory(playerid),
-		itemid = Inventory_GetSlotItem(inventoryRef, slotid),
-		slotAmount = Inventory_GetSlotAmount(inventoryRef, slotid)
-		;
-
-	if(! (0 < val <= slotAmount))
-		return Dialog_Show_s(playerid, HouseInvWithdrawAmount, DIALOG_STYLE_INPUT, @("Ammontare da ritirare"), str_format("{FF0000}Ammontare da ritirare non valido.{FFFFFF}\nInserisci l'ammontare che vuoi ritirare.\nOggetto: %s\nQuantità disponibile: %d", ServerItem_GetName(itemid), slotAmount), "Ritira", "Indietro");
-
-	if(!Character_HasSpaceForItem(playerid, itemid, val))
-		return Dialog_Show_s(playerid, HouseInvWithdrawAmount, DIALOG_STYLE_INPUT, @("Ammontare da ritirare"), str_format("{FF0000}Non hai abbastanza spazio nell'inventario.{FFFFFF}\nInserisci l'ammontare che vuoi ritirare.\nOggetto: %s\nQuantità disponibile: %d", ServerItem_GetName(itemid), slotAmount), "Ritira", "Indietro");
-
-	Character_GiveItem(playerid, itemid, val, Inventory_GetSlotExtra(inventoryRef, slotid, 0), true, Inventory_GetSlotTempExtraMap(inventoryRef, slotid));
-	Inventory_DecreaseSlotAmount(inventoryRef, slotid, val);
-
-	Character_SaveInventory(playerid);
-	House_SaveInventory(Internal_GetHouse(playerid));
-
-	House_ShowInventory(Internal_GetHouse(playerid), playerid);
-	return 1;
-}
-
-
-Dialog:HouseInventoryDepSelectItem(playerid, response, listitem, inputtext[])
-{
-	if(!response)
-		return Internal_ShowHouseSlotAction(playerid, Internal_GetSlotID(playerid));
-	
-	new 
-		Inventory:inventoryRef = Internal_GetInventory(playerid),
-		itemid = Character_GetSlotItem(playerid, listitem),
-		amount = Character_GetSlotAmount(playerid, listitem),
-		extra = Character_GetSlotExtra(playerid, listitem, 0),
-		Map:tempExtra = Inventory_GetSlotTempExtraMap(Character_GetInventory(playerid), listitem)
-	;
-	if(ServerItem_IsUnique(itemid) || amount == 1)
-	{
-		if(!Inventory_HasSpaceForItem(Internal_GetInventory(playerid), itemid, amount))
-		{
-			SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario della casa.");
-			return Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", HouseInventoryDepSelectItem, "Seleziona", "Indietro", .forceDialog = true);
-		}
-		Inventory_AddItem(inventoryRef, itemid, amount, extra, tempExtra);
-		Character_DecreaseSlotAmount(playerid, listitem, amount);
-
-		Character_SaveInventory(playerid);
-		House_SaveInventory(Internal_GetHouse(playerid));
-
-		SendFormattedMessage(playerid, COLOR_ORANGE, "Hai depositato gli oggetti nell'inventario della tua casa. (Oggetto: %s - Quantità: %d)", ServerItem_GetName(itemid), amount);
-		House_ShowInventory(Internal_GetHouse(playerid), playerid);
-	}
-	else
-	{
-		map_set_cell(PlayerHouseInventory, playerid, ItemToDeposit, itemid);
-		Dialog_Show_s(playerid, HouseInventoryDepositAmount, DIALOG_STYLE_INPUT, @("Quantità da depositare"), str_format("Inserisci l'ammontare che vuoi depositare all'interno dell'inventario della tua casa.\nOggetto: %s.\nQuantità: %d.\nStack Massime: %d", ServerItem_GetName(itemid), Character_GetItemAmount(playerid, itemid), ServerItem_GetMaxStack(itemid)), "Deposita", "Indietro");	
-	}
-	return 1;
-}
-
-
-Dialog:HouseInventoryDepositAmount(playerid, response, listitem, inputtext[])
-{
-	if(!response)
-		return Internal_ShowHouseSlotAction(playerid, Internal_GetSlotID(playerid));
-	new 
-		val = strval(inputtext),
-		Inventory:inventoryRef = Internal_GetInventory(playerid),
-		itemid = Internal_GetItemToDeposit(playerid),
-		playerAmount = Character_GetItemAmount(playerid, itemid),
-		itemMaxStacks = ServerItem_GetMaxStack(itemid),
-		extra = Character_GetSlotExtra(playerid, Internal_GetSlotID(playerid), 0),
-		Map:tempExtra = Inventory_GetSlotTempExtraMap(Character_GetInventory(playerid), Internal_GetSlotID(playerid))
-	;
-	if(! (0 < val <= playerAmount))
-		return Dialog_Show_s(playerid, HouseInventoryDepositAmount, DIALOG_STYLE_INPUT, @("Quantità da depositare"), str_format("{FF0000}Non possiedi l'ammontare inserito.{FFFFFF}\nInserisci l'ammontare che vuoi depositare all'interno dell'inventario della tua casa.\nOggetto: %s.\nQuantità: %d.\nStack Massime: %d", ServerItem_GetName(itemid), playerAmount, itemMaxStacks), "Deposita", "Indietro");	
-	
-	if(!Inventory_HasSpaceForItem(inventoryRef, itemid, val))
-		return Dialog_Show_s(playerid, HouseInventoryDepositAmount, DIALOG_STYLE_INPUT, @("Quantità da depositare"), str_format("{FF0000}La casa non ha abbastanza spazio.{FFFFFF}\nInserisci l'ammontare che vuoi depositare all'interno dell'inventario della tua casa.\nOggetto: %s.\nQuantità: %d.\nStack Massime: %d", ServerItem_GetName(itemid), playerAmount, itemMaxStacks), "Deposita", "Indietro");	
-
-	Inventory_AddItem(inventoryRef, itemid, val, extra, tempExtra);
-	Character_DecreaseSlotAmount(playerid, Internal_GetSlotID(playerid), val);
-	
-	Character_SaveInventory(playerid);
-	House_SaveInventory(Internal_GetHouse(playerid));
-
-	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai depositato gli oggetti nell'inventario della tua casa. (Oggetto: %s - Quantità: %d)", ServerItem_GetName(itemid), val);
-	
-	House_ShowInventory(Internal_GetHouse(playerid), playerid);
-	return 1;
-}
-
-static Internal_ShowHouseSlotAction(playerid, slotid)
-{
-	if(slotid == -1)
-		return 0;
-	
-	new itemid = Inventory_GetSlotItem(Internal_GetInventory(playerid), slotid);    
-	
-	map_set_cell(PlayerHouseInventory, playerid, SlotID, slotid);
-    
-	if(itemid == 0)
-    {
-        Dialog_Show(playerid, HouseInventoryAction, DIALOG_STYLE_LIST, "Inventario Casa", "Deposita", "Seleziona", "Indietro");
-    }
-    else
-    {
-        Dialog_Show(playerid, HouseInventoryAction, DIALOG_STYLE_LIST, "Inventario Casa", "Deposita\nRitira", "Seleziona", "Indietro");
-    }
-	return 1;
-}
-
-static House:Internal_GetHouse(playerid)
-{
-	if(!map_has_key(PlayerHouseInventory, playerid))
-		return INVALID_HOUSE;
-	return House:map_get(PlayerHouseInventory, playerid, House);
-}
-
-static Inventory:Internal_GetInventory(playerid)
-{
-	if(!map_has_key(PlayerHouseInventory, playerid))
-		return INVENTORY_NULL;
-	return Inventory:map_get(PlayerHouseInventory, playerid, Inventory);
-}
-
-static Internal_GetSlotID(playerid)
-{
-	if(!map_has_key(PlayerHouseInventory, playerid))
-		return -1;
-	return map_get(PlayerHouseInventory, playerid, SlotID);
-}
-
-static Internal_GetItemToDeposit(playerid)
-{
-	if(!map_has_key(PlayerHouseInventory, playerid))
-		return 0;
-	return map_get(PlayerHouseInventory, playerid, ItemToDeposit);
 }

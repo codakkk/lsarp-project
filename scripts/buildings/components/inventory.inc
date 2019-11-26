@@ -87,7 +87,7 @@ Dialog:Dialog_BizInventory(playerid, response, listitem, inputtext[])
 {
 	if(!response)
         return 0;
-    
+
     Internal_ShowBuildingSlotAction(playerid, listitem);
 	return 1;
 }
