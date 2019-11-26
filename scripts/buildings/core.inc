@@ -5,7 +5,7 @@
 
 #define _included_BUILDING
 
-enum //E_BUILDING_TYPE
+enum _:E_BUILDING_TYPE
 {
 	BUILDING_TYPE_STORE = 0,
 	BUILDING_TYPE_PAYCHECK = 1, // Not Used anymore
@@ -14,7 +14,9 @@ enum //E_BUILDING_TYPE
 	BUILDING_TYPE_BANK = 4,
 	BUILDING_TYPE_ADS = 5,
 	BUILDING_TYPE_GAS_STATION = 6,
-
+	BUILDING_TYPE_PAYNSPRAY = 7,
+	BUILDING_TYPE_AMMUNATION = 8,
+	BUILDING_TYPE_FOOD = 9,
 	// Insert here other types
 	BUILDING_TYPE_LAST
 }
@@ -27,17 +29,23 @@ enum //E_BUILDING_TYPE
 #define INVALID_BUILDING			(Building:VAR_NULL)
 
 //#define for_building(%0) for(new Iter:%0_iter=map_iter(GetBuildingsMap()),Building:%0=Building:iter_get_value(%0_iter);iter_inside(Iter:%0_iter);(iter_move_next(%0_iter) ? (%0=Building:iter_get_value(%0_iter)) : (%0=INVALID_BUILDING)))
-#define for_building(%0) for(new Iter:iter=map_iter(GetBuildingsMap()), Building:%0=Building:iter_get_value(iter);iter_inside(iter);%0=(iter_move_next(iter) != ITER_NULL ? (Building:iter_get_value(iter)) : (Building:0)))
+#define for_building(%0) for(new Iter:iter=map_iter(GetBuildingsMap()), Building:%0=(Building:iter_inside(iter) ? (Building:iter_get_value(iter)) : (Building:0));iter_inside(iter);%0=(iter_move_next(iter) != ITER_NULL ? (Building:iter_get_value(iter)) : (Building:0)))
+#define for_building_of<%1>(%0) for(new Iter:__iter=list_iter(GetBuildingsListByType(%1)), Building:%0=(iter_inside(__iter) ? (Building:iter_get_value(__iter)) : (Building:0));iter_inside(__iter);%0=(iter_move_next(__iter) != ITER_NULL ? (Building:iter_get_value(__iter)) : (Building:0)))
 
 #include <pickup_system\core>
 #include <faction_system\core>
 #include <player_system\core>
 
-#include <buildings\components\inventory>
-#include <buildings\components\garage>
-#include <buildings\components\shop>
-#include <buildings\components\ads>
-#include <buildings\components\gas_station>
+#include "components\inventory"
+#include "components\shop"
+#include "types\garage"
+#include "types\ads"
+#include "types\gas_station"
+#include "types\paynspray"
+#include "types\247"
+#include "types\ammunation"
+#include "types\food"
+#include "components\employee"
 
 #include "commands\admin"
 #include "commands\bmenu"
@@ -66,7 +74,6 @@ static enum _:E_BUILDING_INFO
 	ExitWorld,
     Ownable,
     OwnerID,
-    OwnerName[MAX_PLAYER_NAME],
     Price,
     IsLocked,
 	Faction,
@@ -81,7 +88,9 @@ static enum _:E_BUILDING_INFO
 	Text3D:Exit3DText,
 };
 
-static Map:Buildings;
+static 
+	Map:Buildings,
+	List:BuildingsByType[_:E_BUILDING_TYPE];
 
 static Building:CurrentEditing[MAX_PLAYERS] = {INVALID_BUILDING, ...};
 
@@ -90,9 +99,19 @@ stock Map:GetBuildingsMap()
 	return Buildings;
 }
 
+stock List:GetBuildingsListByType(type)
+{
+	return BuildingsByType[type];
+}
+
 hook OnGameModeInit()
 {
 	Buildings = map_new();
+	for(new i = 0; i < _:E_BUILDING_TYPE; ++i)
+	{
+		BuildingsByType[i] = list_new();
+	}
+
 	map_set_ordered(Buildings, true);
 	mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS `buildings` ( \
 						`id` int(11) NOT NULL AUTO_INCREMENT, \
@@ -122,18 +141,6 @@ hook OnGameModeInit()
 	return 1;
 }
 
-hook OnCharacterChangeName(playerid, newCharacterName[])
-{
-	for_building(building)
-	{
-		if(Building_GetOwnerID(building) == Character_GetID(playerid))
-		{
-			var_set_cells(Variant:building, OwnerName, newCharacterName, MAX_PLAYER_NAME);
-		}
-	}
-	return 1;
-}
-
 stock Building:Building_Find(buildingid)
 {
 	if(!map_has_key(Buildings, buildingid))
@@ -152,7 +159,6 @@ stock Building_Create(Float:x, Float:y, Float:z, interior, world)
 		var_set_cell(Variant:building, ID, id);
 		var_set_cells(Variant:building, Name, "SET NAME");
 		var_set_cells(Variant:building, WelcomeText, "");
-		var_set_cells(Variant:building, OwnerName, "");
 		var_set_cell(Variant:building, EnterX, _:x);
 		var_set_cell(Variant:building, EnterY, _:y);
 		var_set_cell(Variant:building, EnterZ, _:z);
@@ -163,8 +169,10 @@ stock Building_Create(Float:x, Float:y, Float:z, interior, world)
 		var_set_cell(Variant:building, Price, 0);
 		var_set_cell(Variant:building, ExitWorld, BUILDING_START_WORLD + id);
 		var_set_cell(Variant:building, IsLocked, 1);
+		var_set_cell(Variant:building, Type, BUILDING_TYPE_STORE);
 		var_set_cell(Variant:building, Data, map_new());
 		map_add(Buildings, id, _:building);
+		list_add(GetBuildingsListByType(BUILDING_TYPE_STORE), building);
 
 		Building_CreateElements(building);
 
@@ -216,7 +224,6 @@ stock Building_LoadAll()
 			var_set_cell(Variant:building, ID, data[ID]);
 			var_set_cells(Variant:building, Name, data[Name]);
 			var_set_cells(Variant:building, WelcomeText, data[WelcomeText]);
-			var_set_cells(Variant:building, OwnerName, data[OwnerName]);
 			var_set_cell(Variant:building, EnterX, _:data[EnterX]);
 			var_set_cell(Variant:building, EnterY, _:data[EnterY]);
 			var_set_cell(Variant:building, EnterZ, _:data[EnterZ]);
@@ -270,28 +277,12 @@ stock Building_LoadAll()
 			var_set_cell(Variant:building, Data, map);
 
 			map_add(Buildings, data[ID], building);
+			list_add(BuildingsByType[Building_GetType(building)], building);
 
 			Building_CreateElements(building);
 			CallLocalFunction(#OnBuildingLoaded, "d", _:building);
 		}
 		printf("%d buildings loaded.\n", count);
-
-		new ownerid;
-		for_building(building)
-		{
-			// DON'T USE CACHE FUNCTIONS AFTER THIS IF
-			ownerid = Building_GetOwnerID(building);
-			if(ownerid > 0)
-			{
-				new Cache:cache = mysql_query_f(gMySQL, true, "SELECT name FROM `characters` WHERE id = '%d'", ownerid);
-				if(cache_num_rows() <= 0)
-					continue;
-				new name[MAX_PLAYER_NAME];
-				cache_get_value_name(0, "name", name);
-				var_set_cells(Variant:building, OwnerName, name);
-				cache_delete(cache);
-			}
-		}
 	}
 
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `buildings`");
@@ -320,10 +311,12 @@ stock bool:Building_SetFloatData(Building:building, const key[], Float:value)
 	if(map_has_str_key(data, key))
 	{
 		map_str_set(data, key, value);
-		Building_SaveData(building);
-		return true;
 	}
-	map_str_add(data, key, value);
+	else
+	{
+		map_str_add(data, key, value);
+	}
+	Building_SaveData(building);
 	return true;
 }
 
@@ -333,10 +326,12 @@ stock bool:Building_SetIntData(Building:building, const key[], value)
 	if(map_has_str_key(data, key))
 	{
 		map_str_set(data, key, value);
-		Building_SaveData(building);
-		return true;
 	}
-	map_str_add(data, key, value);
+	else
+	{
+		map_str_add(data, key, value);
+	}
+	Building_SaveData(building);
 	return true;
 }
 
@@ -364,7 +359,7 @@ static Building_SaveData(Building:building)
 	}
     new s[255];
     JsonStringify(root, s, sizeof(s));
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET data = '%e' WHERE id = '%d'", s, Building_GetID(building));
+	mysql_pquery_f(gMySQL, "UPDATE `buildings` SET data = '%e' WHERE id = '%d'", s, Building_GetID(building));
 }
 
 stock Building_SetPosition(Building:building, Float:x, Float:y, Float:z, vw, int)
@@ -376,7 +371,7 @@ stock Building_SetPosition(Building:building, Float:x, Float:y, Float:z, vw, int
 	var_set_cell(Variant:building, EnterWorld, vw);
 	var_set_cell(Variant:building, EnterInterior, int);
     
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET enter_x = '%f', enter_y = '%f', enter_z = '%f', enter_interior = '%d', enter_world = '%d' WHERE id = '%d'", 
+	mysql_pquery_f(gMySQL, "UPDATE `buildings` SET enter_x = '%f', enter_y = '%f', enter_z = '%f', enter_interior = '%d', enter_world = '%d' WHERE id = '%d'", 
 					x, y, z, int, vw, Building_GetID(building));
 
     Building_DestroyElements(building);
@@ -389,7 +384,7 @@ stock bool:Building_SetName(Building:building, name[MAX_BUILDING_NAME])
 
 	var_set_cells(Variant:building, Name, name);
     
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET name = '%e' WHERE id = '%d'", name, Building_GetID(building));
+	mysql_pquery_f(gMySQL, "UPDATE `buildings` SET name = '%e' WHERE id = '%d'", name, Building_GetID(building));
 
     Building_DestroyElements(building);
 	Building_CreateElements(building);
@@ -405,7 +400,7 @@ stock Building_SetInterior(Building:building, Float:x, Float:y, Float:z, interio
 	var_set_cell(Variant:building, ExitInterior, interiorid);
 	var_set_cell(Variant:building, ExitWorld, BUILDING_START_WORLD + Building_GetID(building));
 
-    mysql_tquery_f(gMySQL, "UPDATE `buildings` SET exit_x = '%f', exit_y = '%f', exit_z = '%f', exit_interior = '%d' WHERE id = '%d'", 
+    mysql_pquery_f(gMySQL, "UPDATE `buildings` SET exit_x = '%f', exit_y = '%f', exit_z = '%f', exit_interior = '%d' WHERE id = '%d'", 
 					x, y, z, interiorid, Building_GetID(building));
 
 	Building_DestroyElements(building);
@@ -416,7 +411,7 @@ stock Building_SetInterior(Building:building, Float:x, Float:y, Float:z, interio
 stock Building_SetOwnable(Building:building, ownable)
 {
 	var_set_cell(Variant:building, Ownable, ownable);
-    mysql_tquery_f(gMySQL, "UPDATE `buildings` SET ownable = '%d' WHERE id = '%d'", ownable, Building_GetID(building));
+    mysql_pquery_f(gMySQL, "UPDATE `buildings` SET ownable = '%d' WHERE id = '%d'", ownable, Building_GetID(building));
     return 1;
 }
 
@@ -424,7 +419,7 @@ stock Building_SetPrice(Building:building, price)
 {
     var_set_cell(Variant:building, Price, price);
     
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET price = '%d' WHERE id = '%d'", price, Building_GetID(building));
+	mysql_pquery_f(gMySQL, "UPDATE `buildings` SET price = '%d' WHERE id = '%d'", price, Building_GetID(building));
     return 1;
 }
 
@@ -432,7 +427,7 @@ stock Building_SetWelcomeText(Building:building, text[MAX_WELCOME_TEXT_LENGTH])
 {
 	var_set_cells(Variant:building, WelcomeText, text);
 
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET welcome_text = '%e' WHERE id = '%d'", text, Building_GetID(building));
+	mysql_pquery_f(gMySQL, "UPDATE `buildings` SET welcome_text = '%e' WHERE id = '%d'", text, Building_GetID(building));
 	return 1;
 }
 
@@ -457,11 +452,10 @@ stock Building_SetOwner(Building:building, playerid)
 	Building_ResetOwner(building);
 
 	var_set_cell(Variant:building, OwnerID, Character_GetID(playerid));
-	var_set_cells(Variant:building, OwnerName, Character_GetOOCName(playerid));
 
 	Character_AddOwnedBuilding(playerid, building);
 
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), Building_GetID(building));
+	mysql_pquery_f(gMySQL, "UPDATE `buildings` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), Building_GetID(building));
 
     Log(Character_GetOOCName(playerid), "", "Building_SetOwner", Building_GetID(building));
     return 1;
@@ -469,7 +463,7 @@ stock Building_SetOwner(Building:building, playerid)
 
 stock Building_ResetOwner(Building:building)
 {
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET owner_id = '0' WHERE id = '%d'", Building_GetID(building));
+	mysql_pquery_f(gMySQL, "UPDATE `buildings` SET owner_id = '0' WHERE id = '%d'", Building_GetID(building));
 	
 	foreach(new i : Player)
 	{
@@ -479,7 +473,6 @@ stock Building_ResetOwner(Building:building)
 	}
 
     var_set_cell(Variant:building, OwnerID, 0);
-	var_set_cells(Variant:building, OwnerName, "");
 
     Log("", "", "Building_ResetOwner", Building_GetID(building));
     return 1;
@@ -487,19 +480,25 @@ stock Building_ResetOwner(Building:building)
 
 stock Building_Delete(Building:building)
 {
-    new query[64];
-    mysql_format(gMySQL, query, sizeof(query), "DELETE FROM `buildings` WHERE id = '%d'", Building_GetID(building));
-    mysql_tquery(gMySQL, query);
+	new 
+		buildingid = Building_GetID(building),
+		type = Building_GetType(building);
+
+    mysql_pquery_f(gMySQL, "DELETE FROM `buildings` WHERE id = '%d'", buildingid);
 
 	Building_DestroyElements(building);
 	
-	// UPDATE OWNERID -> BUILDING_ID TO 0.
-    CallLocalFunction(#OnBuildingDeleted, "d", _:building);
+	new index = list_find(BuildingsByType[type], building);
+	if(index != -1)
+		list_remove(BuildingsByType[type], index);
 	
+	// UPDATES OWNERID -> BUILDING_ID TO 0.
+    CallLocalFunction(#OnBuildingDeleted, "d", _:building);
+
 	var_release(Variant:building);
 	var_delete(Variant:building);
 
-	map_remove_deep(Buildings, Building_GetID(building));
+	map_remove(Buildings, buildingid);
     return 1;
 }
 
@@ -551,20 +550,9 @@ stock bool:Building_IsOwnable(Building:building)
     return bool:var_get(Variant:building, Ownable);
 }
 
-stock bool:Building_IsOwned(Building:building)
-{
-    return Building_IsOwnable(building) && Building_GetOwnerID(building) > 0;
-}
-
 stock Building_GetOwnerID(Building:building)
 {
     return var_get(Variant:building, OwnerID);
-}
-
-stock Building_GetOwnerName(Building:building, name[MAX_PLAYER_NAME])
-{
-    var_get_md_arr(Variant:building, {OwnerName}, name);
-    return 1;
 }
 
 stock Building_IsLocked(Building:building)
@@ -581,7 +569,7 @@ stock Building_SetFaction(Building:building, factionid)
 {
 	var_set_cell(Variant:building, Faction, factionid);
 
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET faction = '%d' WHERE id = '%d'", factionid, Building_GetID(building));
+	mysql_pquery_f(gMySQL, "UPDATE `buildings` SET faction = '%d' WHERE id = '%d'", factionid, Building_GetID(building));
 	return 1;
 }
 
@@ -610,12 +598,12 @@ stock Building_GetExitWorld(Building:building)
 	return var_get(Variant:building, ExitWorld);
 }
 
-stock Building_GetEnterPos(Building:building, &Float:x, &Float:y, &Float:z)
+stock bool:Building_GetEnterPos(Building:building, &Float:x, &Float:y, &Float:z)
 {
 	x = Float:var_get(Variant:building, EnterX);
 	y = Float:var_get(Variant:building, EnterY);
 	z = Float:var_get(Variant:building, EnterZ);
-	return 1;
+	return true;
 }
 
 stock Building_GetExitPos(Building:building, &Float:x, &Float:y, &Float:z)
@@ -635,9 +623,22 @@ stock bool:Building_SetType(Building:building, type)
 {
 	if(type < 0 || type >= BUILDING_TYPE_LAST)
 		return false;
+	new lastType = Building_GetType(building);
+
+	if(lastType == type)
+		return true;
+
 	var_set_cell(Variant:building, Type, type);
 
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET type = '%d' WHERE id = '%d'", type, Building_GetID(building));
+	new currentIndex = list_find(BuildingsByType[lastType], building);
+
+	if(currentIndex != -1)
+	{
+		list_remove(BuildingsByType[lastType], currentIndex);
+	}
+	list_add(BuildingsByType[type], building);
+	
+	mysql_pquery_f(gMySQL, "UPDATE `buildings` SET type = '%d' WHERE id = '%d'", type, Building_GetID(building));
 	return true;
 }
 
@@ -650,7 +651,7 @@ stock Building_SetLocked(Building:building, locked)
 {
 	var_set_cell(Variant:building, IsLocked, locked);
 
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET locked = '%d' WHERE id = '%d'", 
+	mysql_pquery_f(gMySQL, "UPDATE `buildings` SET locked = '%d' WHERE id = '%d'", 
 					locked, Building_GetID(building));
 	return 1;
 }
@@ -668,7 +669,7 @@ stock Building_GiveMoney(Building:building, amount)
 stock Building_SetMoney(Building:building, amount)
 {
 	var_set_cell(Variant:building, Money, amount);
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET money = '%d' WHERE id = '%d'", 
+	mysql_pquery_f(gMySQL, "UPDATE `buildings` SET money = '%d' WHERE id = '%d'", 
 					amount, Building_GetID(building));
 	return 1;
 }
@@ -691,13 +692,10 @@ stock String:Building_GetAddressStr(Building:building)
     return string;
 }
 
-hook OnCharacterAccept(playerid, stringHash)
+hook OnCharacterTryAccept(playerid, type)
 {
-    if(stringHash != _I<edificio> && stringHash != _I<edi> && stringHash != _I<biz>)
+    if(type != REQUEST_TYPE_BUILDING)
 		return 0;
-	
-	if(!Character_CanAcceptRequest(playerid, REQUEST_TYPE_BUILDING))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di vendita business attiva."), 0;
 	
 	new senderid = Request_GetSender(playerid, REQUEST_TYPE_BUILDING);
     if(!IsPlayerInRangeOfPlayer(playerid, senderid, 5.0))
@@ -746,39 +744,35 @@ stock Character_GetNearBuildingID(playerid)
 	return Character_GetVirtualWorld(playerid) - BUILDING_START_WORLD;
 }
 
-stock Building:Character_GetCurrentBuilding(playerid)
+stock bool:Character_TryGetBuilding(playerid, &Building:building)
 {
-	new Building:building = Character_GetBuilding(playerid, false);
-	if(Building_IsValid(building))
+	building = Building_Find(Character_GetNearBuildingID(playerid));
+	if(!Building_IsValid(building))
 	{
-		return building;
-	}
-	building = Character_GetBuilding(playerid, true);
-	if(Building_IsValid(building))
-	{
-		new Float:x, Float:y, Float:z, Float:ex, Float:ey, Float:ez;
-		Building_GetEnterPos(building, x, y, z);
-		Building_GetExitPos(building, ex, ey, ez);
-		if(IsPlayerInRangeOfPoint(playerid, 1.5, x, y, z) || IsPlayerInRangeOfPoint(playerid, 1.5, ex, ey, ez))
-			return building;
-	}
-	return Building:0;
-}
-
-stock Building:Character_GetBuilding(playerid, bool:inside)
-{
-	new Building:building = INVALID_BUILDING;
-	if(inside)
-	{
-		building = Building_Find(Character_GetNearBuildingID(playerid));
-	}
-	else
-	{
-		new Building:temp, E_ELEMENT_TYPE:type;
-		if(Character_GetNearestPickup(playerid, temp, type) && (type == ELEMENT_TYPE_BUILDING_ENTRANCE || type == ELEMENT_TYPE_BUILDING_EXIT))
+		new Building:temp = Building:0, E_ELEMENT_TYPE:type;
+		if(Character_GetNearestPickup(playerid, temp, type) && (type == ELEMENT_TYPE_BUILDING_ENTRANCE) && Building_IsValid(temp))
 			building = temp;
 	}
-	return building;
+	return Building_IsValid(building);
+}
+
+stock bool:Character_IsInsideBuilding(playerid, Building:building)
+{
+	return (Character_GetVirtualWorld(playerid) - BUILDING_START_WORLD) == Building_GetID(building);
+}
+
+stock bool:Character_IsNearBuildingEnter(playerid, Building:building)
+{
+	new Float:x, Float:y, Float:z;
+	Building_GetEnterPos(building, x, y, z);
+	return IsPlayerInRangeOfPoint(playerid, 1.5, x, y, z) > 0;
+}
+
+stock bool:Character_IsNearBuildingExit(playerid, Building:building)
+{
+	new Float:x, Float:y, Float:z;
+	Building_GetExitPos(building, x, y, z);
+	return IsPlayerInRangeOfPoint(playerid, 1.5, x, y, z);
 }
 
 stock bool:Character_CanUseBuildingMenu(playerid, Building:building, minRank = 3)
@@ -792,14 +786,6 @@ stock bool:Character_CanUseBuildingMenu(playerid, Building:building, minRank = 3
 	return false;
 }
 
-stock Building:Character_GetBusinessMenu(playerid)
-{
-	new Building:building = Character_GetCurrentBuilding(playerid);
-	if(Character_CanUseBuildingMenu(playerid, building))
-		return building;
-	return INVALID_BUILDING;
-}
-
 flags:businesscmds(CMD_ALIVE_USER);
 CMD:businesscmds(playerid, params[])
 {
@@ -808,12 +794,30 @@ CMD:businesscmds(playerid, params[])
 alias:businesscmds("bizcmds");
 
 hook function Character_Enter(playerid)
-{   
-	printf("[Character_Enter]: Building");
+{
 	if(IsPlayerInAnyVehicle(playerid))
 		return continue(playerid);
+		
 	new Building:building, E_ELEMENT_TYPE:type;
-    if(Character_GetNearestPickup(playerid, building, type) && Building_IsValid(building))
+	new ret = Character_GetNearestPickup(playerid, building, type);
+	if(!ret)
+	{
+		if(Character_GetNearBuildingID(playerid) > 0)
+		{
+			new Building:btest = Building_Find(Character_GetNearBuildingID(playerid));
+			if(Building_IsValid(btest))
+			{
+				new Float:x, Float:y, Float:z;
+				Building_GetExitPos(btest, x, y, z);
+				if(IsPlayerInRangeOfPoint(playerid, 3.0, x, y, z))
+				{
+					building = btest;
+					type = ELEMENT_TYPE_BUILDING_EXIT;
+				}
+			}
+		}
+	}
+    if(Building_IsValid(building))
     {
 		if(Building_IsLocked(building))
 			return GameTextForPlayer(playerid, "~r~Porta Chiusa", 5000, 1), 0;
@@ -835,8 +839,6 @@ hook function Character_Enter(playerid)
 			world = Building_GetExitWorld(building);
 			
 			CallLocalFunction(#OnPlayerEnterBuilding, "dd", playerid, _:building);
-
-			printf("Enter Building");
 		}
 		else if(type == ELEMENT_TYPE_BUILDING_EXIT)
 		{
@@ -844,10 +846,7 @@ hook function Character_Enter(playerid)
 			interiorId = Building_GetEnterInterior(building);
 			world = Building_GetEnterWorld(building);
 
-			printf("Character_Enter -> Building -> Pos: %f - %f - %f", x, y, z);
-
 			CallLocalFunction(#OnPlayerExitBuilding, "dd", playerid, _:building);
-			printf("Exit Building");
 		}
 		if(x != 0.0 && y != 0.0 && z != 0.0)
 		{
@@ -868,4 +867,27 @@ stock Character_SetEditingBuilding(playerid, Building:building)
 stock Building:Character_GetEditingBuilding(playerid)
 {
 	return CurrentEditing[playerid];
+}
+
+SSCANF:building(string[])
+{
+	new ret = strval(string);
+	new Building:building = INVALID_BUILDING;
+	if(ret > 0)
+		building = Building_Find(ret);
+	return _:building;
+}
+
+hook function bool:Entity_GetWorldPosition(EntityType:entityType, entityId, &Float:x, &Float:y, &Float:z)
+{
+	if(entityType != ENTITY_TYPE_BUILDING)
+		return bool:continue(entityType, entityId, x, y, z);
+	
+	new Building:building = Building_Find(entityId);
+
+	if(!Building_IsValid(building))
+		return false;
+	
+	Building_GetEnterPos(building, x, y, z);
+	return true;
 }

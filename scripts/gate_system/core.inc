@@ -157,7 +157,7 @@ stock Gate_Create(modelid, Float:x, Float:y, Float:z)
     data[OwnerID] = 0;
     
     GateState{id} = false;
-    data[ObjectID] = CreateDynamicObject(data[ModelID], x, y, z, 0, 0, 0, -1, -1, -1, STREAMER_OBJECT_SD, STREAMER_OBJECT_DD);
+    data[ObjectID] = Server_CreateObject(data[ModelID], x, y, z, 0, 0, 0, -1, -1, -1, STREAMER_OBJECT_SD, STREAMER_OBJECT_DD);
     Streamer_SetIntData(STREAMER_TYPE_OBJECT, data[ObjectID], E_STREAMER_EXTRA_ID, id);
     
     map_add_arr(Gates, id, data);
@@ -211,7 +211,7 @@ stock Gate_LoadAll()
 
             cache_get_value_name_int(i, "owner_id", data[OwnerID]);
 
-            data[ObjectID] = CreateDynamicObject(data[ModelID], data[StartX], data[StartY], data[StartZ], data[StartRotX], data[StartRotY], data[StartRotZ], -1, -1, -1, STREAMER_OBJECT_SD, STREAMER_OBJECT_DD);
+            data[ObjectID] = Server_CreateObject(data[ModelID], data[StartX], data[StartY], data[StartZ], data[StartRotX], data[StartRotY], data[StartRotZ], -1, -1, -1, STREAMER_OBJECT_SD, STREAMER_OBJECT_DD);
 
             GateState{i} = false;
             
@@ -278,7 +278,7 @@ stock Gate_SetFaction(gateid, factionid)
         return 0;
     map_set_cell(Gates, gateid, FactionID, Faction_GetID(factionid));
 
-    mysql_tquery_f(gMySQL, "UPDATE `gates` SET faction_id = '%d' WHERE id = '%d'", Faction_GetID(factionid), Gate_GetID(gateid));
+    mysql_pquery_f(gMySQL, "UPDATE `gates` SET faction_id = '%d' WHERE id = '%d'", Faction_GetID(factionid), Gate_GetID(gateid));
     return 1;
 }
 
@@ -295,7 +295,7 @@ stock Gate_SetOwner(gateid, playerid)
         return 0;
     map_set_cell(Gates, gateid, OwnerID, Character_GetID(playerid));
 
-    mysql_tquery_f(gMySQL, "UPDATE `gates` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), Gate_GetID(gateid));
+    mysql_pquery_f(gMySQL, "UPDATE `gates` SET owner_id = '%d' WHERE id = '%d'", Character_GetID(playerid), Gate_GetID(gateid));
     return 1;
 }
 
@@ -312,7 +312,7 @@ stock Gate_ResetOwner(gateid)
         return 0;
     map_set_cell(Gates, gateid, OwnerID, 0);
 
-    mysql_tquery_f(gMySQL, "UPDATE `gates` SET owner_id = '0' WHERE id = '%d'", Gate_GetID(gateid));
+    mysql_pquery_f(gMySQL, "UPDATE `gates` SET owner_id = '0' WHERE id = '%d'", Gate_GetID(gateid));
     return 1;
 }
 
@@ -324,7 +324,7 @@ stock Gate_SetStartPos(gateid, Float:x, Float:y, Float:z)
     map_set_cell(Gates, gateid, StartY, y);
     map_set_cell(Gates, gateid, StartZ, z);
 
-    mysql_tquery_f(gMySQL, "UPDATE `gates` SET start_x = '%f', start_y = '%f', start_z = '%f' WHERE id = '%d'", 
+    mysql_pquery_f(gMySQL, "UPDATE `gates` SET start_x = '%f', start_y = '%f', start_z = '%f' WHERE id = '%d'", 
                             x, y, z, Gate_GetID(gateid));
     return 1;
 }
@@ -347,7 +347,7 @@ stock Gate_SetStartRot(gateid, Float:x, Float:y, Float:z)
     map_set_cell(Gates, gateid, StartRotY, y);
     map_set_cell(Gates, gateid, StartRotZ, z);
 
-    mysql_tquery_f(gMySQL, "UPDATE `gates` SET start_rot_x = '%f', start_rot_y = '%f', start_rot_z = '%f' WHERE id = '%d'", 
+    mysql_pquery_f(gMySQL, "UPDATE `gates` SET start_rot_x = '%f', start_rot_y = '%f', start_rot_z = '%f' WHERE id = '%d'", 
                             x, y, z, Gate_GetID(gateid));
     return 1;
 }
@@ -370,7 +370,7 @@ stock Gate_SetEndPos(gateid, Float:x, Float:y, Float:z)
     map_set_cell(Gates, gateid, EndY, y);
     map_set_cell(Gates, gateid, EndZ, z);
 
-    mysql_tquery_f(gMySQL, "UPDATE `gates` SET end_x = '%f', end_y = '%f', end_z = '%f' WHERE id = '%d'", 
+    mysql_pquery_f(gMySQL, "UPDATE `gates` SET end_x = '%f', end_y = '%f', end_z = '%f' WHERE id = '%d'", 
                             x, y, z, Gate_GetID(gateid));
     return 1;
 }
@@ -393,7 +393,7 @@ stock Gate_SetEndRot(gateid, Float:x, Float:y, Float:z)
     map_set_cell(Gates, gateid, EndRotY, y);
     map_set_cell(Gates, gateid, EndRotZ, z);
 
-    mysql_tquery_f(gMySQL, "UPDATE `gates` SET end_rot_x = '%f', end_rot_y = '%f', end_rot_z = '%f' WHERE id = '%d'", 
+    mysql_pquery_f(gMySQL, "UPDATE `gates` SET end_rot_x = '%f', end_rot_y = '%f', end_rot_z = '%f' WHERE id = '%d'", 
                             x, y, z, Gate_GetID(gateid));
     return 1;
 }
@@ -467,11 +467,13 @@ CMD:gcreate(playerid, params[])
     }
     
     if(!isValid)
-        return SendClientMessage(playerid, COLOR_ERROR, "Modelli utilizzabili: 19912, 985");
+        return SendClientMessage(playerid, COLOR_ERROR, "Modelli utilizzabili: 19912, 985, 2933, 2990, 986, 971, 976, 19870, "), SendClientMessage(playerid, COLOR_ERROR, "19795, 19796, 6400, 2928, 9093, 19910, 988, 2909, 3036, 975, 969, 10149"), 0;
 
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
-    new gateid = Gate_Create(val, x, y, z);
+
+    new gateid = Gate_Create(val, x, y+5.0, z);
+
     if(gateid != -1)
         SendFormattedMessage(playerid, -1, "Cancello id %d con modello %d creato con successo. Usa /gedit %d per modificarlo.", gateid, val, gateid);
     else

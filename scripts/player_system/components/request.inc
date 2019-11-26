@@ -15,7 +15,7 @@ enum _:e_PendingType
 	REQUEST_TYPE_VEHICLE,
 	REQUEST_TYPE_BLACKJACK,
 	REQUEST_TYPE_TAXI,
-
+	REQUEST_TYPE_EMPLOYEE,
 	// Write request types before REQUEST_TYPE_LAST
 	REQUEST_TYPE_LAST
 };
@@ -173,13 +173,10 @@ stock Request_GetReceiver(playerid, reqType)
 	return PendingRequestInfo[playerid][reqType][ToPlayer];
 }
 
-hook OnCharacterAccept(playerid, stringHash)
+hook OnCharacterTryAccept(playerid, type)
 {
-    if(stringHash != _I<oggetto> && stringHash != _I<item>)
+    if(type != REQUEST_TYPE_ITEM)
 		return 0;
-	
-	if(!Request_IsPending(playerid, REQUEST_TYPE_ITEM) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_ITEM))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta attiva.");
 
 	if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_ITEM), 5.0))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore che ti ha inviato la richiesta.");
@@ -238,11 +235,39 @@ stock Request_GetTypeName(type)
 	   case REQUEST_TYPE_VEHICLE_SPRAY: l = "Verniciatura";
 	   case REQUEST_TYPE_SEARCH: l = "Perquisizione";
 	   case REQUEST_TYPE_BUILDING: l = "Edificio";
+	   case REQUEST_TYPE_HOUSE: l = "Casa";
 	   case REQUEST_TYPE_CARE: l = "Cura";
 	   case REQUEST_TYPE_FACTION: l = "Fazione";
 	   case REQUEST_TYPE_VEHICLE: l = "Veicolo";
 	   case REQUEST_TYPE_BLACKJACK: l = "Blackjack";
+	   case REQUEST_TYPE_TAXI: l = "Taxi";
+	   case REQUEST_TYPE_EMPLOYEE: l = "Lavoro";
 	   default: l = "Sconosciuto";
     }
     return l;
+}
+
+stock Request_GetTypeFromString(const name[])
+{
+	if(isnull(name) || strlen(name) <= 0)
+		return REQUEST_TYPE_NONE;
+	new hash = YHash(name);
+	new type = REQUEST_TYPE_NONE;
+	switch(hash)
+	{
+		case _I<arma>, _I<weapon>: type = REQUEST_TYPE_WEAPON;
+		case _I<oggetto>, _I<object>: type = REQUEST_TYPE_ITEM;
+		case _I<riparazione>, _I<repair>, _I<ripa>: type = REQUEST_TYPE_REPAIR;
+		case _I<verniciatura>, _I<vern>, _I<spray>: type = REQUEST_TYPE_VEHICLE_SPRAY;
+		case _I<perquisizione>, _I<perq>, _I<search>: type = REQUEST_TYPE_SEARCH;
+		case _I<edificio>, _I<business>, _I<building>, _I<biz>: type = REQUEST_TYPE_BUILDING;
+		case _I<casa>, _I<house>, _I<home>: type = REQUEST_TYPE_HOUSE;
+		case _I<cura>, _I<cure>, _I<heal>: type = REQUEST_TYPE_CARE;
+		case _I<fazione>, _I<faction>, _I<faz>: type = REQUEST_TYPE_FACTION;
+		case _I<veicolo>, _I<vehicle>, _I<veh>, _I<auto>: type = REQUEST_TYPE_VEHICLE;
+		case _I<blackjack>, _I<black>, _I<bj>: type = REQUEST_TYPE_BLACKJACK;
+		case _I<taxi>, _I<tassi>, _I<tassista>: type = REQUEST_TYPE_TAXI;
+		case _I<lavoro>, _I<job>: type = REQUEST_TYPE_EMPLOYEE;
+	}
+	return type;
 }

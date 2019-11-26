@@ -27,17 +27,16 @@ static enum _:E_CHEAT_DATA
     LastAlert,
 };
 
-static 
-    Map:CheatData[MAX_PLAYERS];
+static Map:CheatData[MAX_PLAYERS];
 
 hook OnCharacterClearData(playerid)
 {
     if(map_valid(CheatData[playerid]))
-        map_delete_deep(CheatData[playerid]);
+        map_delete(CheatData[playerid]);
     return 1;
 }
 
-ptask LVRP_OnCheatTimer[10000](playerid) 
+/*ptask LVRP_OnCheatTimer[10000](playerid) 
 {
     if(!map_valid(CheatData[playerid]))
         return 0;
@@ -55,7 +54,7 @@ ptask LVRP_OnCheatTimer[10000](playerid)
         }
     }
     return 1;
-}
+}*/
 
 forward OnCheatDetected(playerid, ip_address[], type, code);
 public OnCheatDetected(playerid, ip_address[], type, code) 
@@ -164,28 +163,6 @@ static GetCheatName(code)
     }
     return name;
 }
-
-/*stock bool:ac_RemovePlayerWeapon(playerid, weaponid)
-{
-	if(!IsPlayerConnected(playerid))
-		return false;
-	
-	ResetPlayerWeapons(playerid);
-
-	for(new ac_i = 12; ac_i >= 0; --ac_i)
-	{
-		if(ACInfo[playerid][acWeapon][ac_i] == weaponid)
-		{
-			ACInfo[playerid][acWeapon][ac_i] = ACInfo[playerid][acAmmo][ac_i] = 0;
-			ACInfo[playerid][acSetWeapon][ac_i] = -1;
-			ACInfo[playerid][acGiveAmmo][ac_i] = -65535;
-            continue;
-		}
-		GivePlayerWeapon(playerid, ACInfo[playerid][acWeapon][ac_i], ACInfo[playerid][acAmmo][ac_i]);
-	}
-
-	return true;
-}*/
 
 stock Server_GetOnlineStaffCount()
 {

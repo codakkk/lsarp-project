@@ -250,7 +250,7 @@ static const PlayerObjectsList[][E_OBJECTSLIST] =
 	{366, "Estintore", OBJECT_FIRE, BONE_RHAND},
 	{19330, "Elmetto giallo", OBJECT_FIRE, BONE_HEAD},
 	{19331, "Elmetto nero", OBJECT_FIRE, BONE_HEAD},
-	{11734, "Kit primo soccorso verde", OBJECT_FIRE, BONE_RHAND},
+	{11736, "Kit primo soccorso verde", OBJECT_FIRE, BONE_RHAND},
 	{11738, "Kit primo soccorso rosso", OBJECT_FIRE, BONE_RHAND},
 	{11747, "Bandana", 	OBJECT_FIRE, BONE_RHAND}
 };
@@ -313,6 +313,7 @@ hook OnCharacterClearData(playerid)
     SelectedCategory{playerid} = -1;
     if(list_valid(CategoryIndex[playerid]))
         list_delete_deep(CategoryIndex[playerid]);
+    CategoryIndex[playerid] = INVALID_LIST;
     for(new i = 0; i < 10; ++i)
         RemovePlayerAttachedObject(playerid, i);
     return 1;
@@ -364,12 +365,7 @@ CMD:oggetto(playerid, params[])
     new String:str = @("Oggetto\tStato\tSlot\nAggiungi Nuovo Oggetto\t \t \n"), count = 1;
     for_playerobjects(i : playerid)
     {
-        str += str_format("%d\t%s\t", count, WearObject_GetName(i));
-        if(Character_IsWearing(playerid, i))
-            str += @("{00FF00}Indossato{FFFFFF}");
-        else
-            str += @("{FF0000}Non Indossato{FFFFFF}");
-        str += @("\n");
+        str_append_format(str, "%d\t%s\t%s\n", count, WearObject_GetName(i), Character_IsWearing(playerid, i) ? ("{00FF00}Indossato{FFFFFF}") : ("{FF0000}Non Indossato{FFFFFF}"));
         count++;
     }
     Dialog_Show_s(playerid, Dialog_WearObjectList, DIALOG_STYLE_TABLIST_HEADERS, @("Lista oggetti"), str, "Avanti", "Chiudi");
@@ -463,6 +459,12 @@ Dialog:Dialog_WearObjectCategories(playerid, response, listitem, inputtext[])
     if(!response)
         return callcmd::oggetto(playerid, "");
     
+    if(listitem == 9 && Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questa categoria.");
+    
+    if(listitem == 10 && Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_MEDICAL)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questa categoria.");
+
     SelectedCategory{playerid} = listitem;
     WearObject_ShowCategory(playerid, listitem);   
     return 1;
@@ -486,6 +488,7 @@ Dialog:Dialog_WearObjectSelect(playerid, response, listitem, inputtext[])
 OnResponse:Dialog_WearObjectSelect(playerid, response, listitem, inputtext[])   
 {
     list_delete_deep(CategoryIndex[playerid]);
+    CategoryIndex[playerid] = INVALID_LIST;
     return 1;
 }
 
@@ -550,7 +553,7 @@ stock WearObject_ShowCategory(playerid, category)
         String:str = @("");
     for(new i = 0, j = sizeof(PlayerObjectsList); i < j; ++i)
     {
-        if(PlayerObjectsList[i][Type] != category)
+        if(PlayerObjectsList[i][Type] != category || PlayerObjectsList[i][Object] == 0)
             continue;
         str += str_format("%s\n", PlayerObjectsList[i][oName]);
         list_add(CategoryIndex[playerid], i);
@@ -564,6 +567,7 @@ stock bool:WearObject_Remove(playerid, PlayerObject:playerObject)
     if(index != -1)
     {
         RemovePlayerAttachedObject(playerid, index);
+        var_set_cell(Variant:playerObject, Index, -1);
         mysql_pquery_f(gMySQL, "UPDATE `character_wear_objects` SET wearing = '0' WHERE id = '%d'", WearObject_GetID(playerObject));
         return true;
     }
@@ -578,7 +582,6 @@ stock Character_LoadWearObjects(playerid)
         new 
             rows = cache_num_rows(),
             data[E_PLAYER_CUSTOM_OBJECT_DATA];
-        printf("Player %d loaded %d wear objects.", playerid, rows);
         for(new i = 0; i < rows; ++i)
         {
             if(i >= MAX_PLAYER_OBJECTS)
@@ -682,7 +685,7 @@ stock WearObject_GetModelId(PlayerObject:playerObject)
 stock WearObject_SetBone(PlayerObject:playerObject, boneid)
 {
     var_set_cell(Variant:playerObject, Bone, boneid);
-    mysql_tquery_f(gMySQL, "UPDATE character_wear_objects SET bone = '%d' WHERE id = '%d';", boneid, WearObject_GetID(playerObject));
+    mysql_pquery_f(gMySQL, "UPDATE character_wear_objects SET bone = '%d' WHERE id = '%d';", boneid, WearObject_GetID(playerObject));
 }
 
 stock WearObject_GetBone(PlayerObject:playerObject)
@@ -750,7 +753,7 @@ stock Character_IsWearing(playerid, PlayerObject:playerObject)
 stock WearObject_SetMaterialColor1(PlayerObject:playerObject, color)
 {
     var_set_cell(Variant:playerObject, MaterialColor1, color);
-    mysql_tquery_f(gMySQL, "UPDATE character_wear_objects SET mat_color_1 = '%d' WHERE id = '%d';", color, WearObject_GetID(playerObject));
+    mysql_pquery_f(gMySQL, "UPDATE character_wear_objects SET mat_color_1 = '%d' WHERE id = '%d';", color, WearObject_GetID(playerObject));
 }
 
 stock WearObject_GetMaterialColor1(PlayerObject:playerObject)
@@ -761,7 +764,7 @@ stock WearObject_GetMaterialColor1(PlayerObject:playerObject)
 stock WearObject_SetMaterialColor2(PlayerObject:playerObject, color)
 {
     var_set_cell(Variant:playerObject, MaterialColor2, color);
-    mysql_tquery_f(gMySQL, "UPDATE character_wear_objects SET mat_color_2 = '%d' WHERE id = '%d';", color, WearObject_GetID(playerObject));
+    mysql_pquery_f(gMySQL, "UPDATE character_wear_objects SET mat_color_2 = '%d' WHERE id = '%d';", color, WearObject_GetID(playerObject));
 }
 
 stock WearObject_GetMaterialColor2(PlayerObject:playerObject)
@@ -817,7 +820,8 @@ static bool:WearObject_Delete(playerid, PlayerObject:playerObject)
     }
     if(slotid != -1)
     {
-        mysql_tquery_f(gMySQL, "DELETE FROM character_wear_objects WHERE id = '%d'", WearObject_GetID(playerObject));
+        WearObject_Remove(playerid, playerObject);
+        mysql_pquery_f(gMySQL, "DELETE FROM character_wear_objects WHERE id = '%d'", WearObject_GetID(playerObject));
         var_release(Variant:playerObject);
         list_remove(list, slotid);
     }
@@ -826,7 +830,7 @@ static bool:WearObject_Delete(playerid, PlayerObject:playerObject)
 
 static Internal_ShowCategories(playerid)
 {
-    return Dialog_Show(playerid, Dialog_WearObjectCategories, DIALOG_STYLE_LIST, "Categorie", "Oggetti vari\nBandane\nCappelli\nCappelli 2\nOrologi\nOcchiali\nElmetti\nMaschere\nExtra\nLSPD\nLSFD", "Avanti", "Indietro");
+    return Dialog_Show(playerid, Dialog_WearObjectCategories, DIALOG_STYLE_LIST, "Categorie", "Oggetti vari\nBandane\nCappelli\nCappelli 2\nOrologi\nOcchiali\nElmetti\nMaschere\nExtra\nLVMPD\nLVFD", "Avanti", "Indietro");
 }
 
 stock static PlayerObject:CreateWearObject(playerid, name[], modelid, bone, Float:x = 0.0, Float:y = 0.0, Float:z = 0.0, Float:rotx = 0.0, Float:roty = 0.0, Float:rotz = 0.0, Float:scalex = 1.0, Float:scaley = 1.0, Float:scalez = 1.0, matcolor1 = 0, matcolor2 = 0)

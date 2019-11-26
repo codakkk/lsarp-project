@@ -55,7 +55,7 @@ hook OnGameModeInit()
 
 stock Log(const playerName[], const giveplayerName[], const text[], extravar = 0)
 {
-	mysql_tquery_f(gMySQL, "INSERT INTO `logs` \
+	mysql_pquery_f(gMySQL, "INSERT INTO `logs` \
 						  (PlayerID, GivePlayerID, Text, ExtraVar, Time) \
 						  VALUES('%s', '%s', '%e', '%d', '%d')", playerName, 
 										giveplayerName, 
@@ -64,9 +64,24 @@ stock Log(const playerName[], const giveplayerName[], const text[], extravar = 0
 										gettime());
 }
 
+stock LogCommand(playerid, issuerid, const commandName[], const reason[] = "", param1 = 0, param2 = 0, param3 = 0)
+{
+	new issuerAccountId = 0;
+	new issuerCharacterId = 0;
+	if(Character_IsLogged(issuerid))
+	{
+		issuerAccountId = Account_GetID(issuerid);
+		issuerCharacterId = Character_GetID(issuerid);
+	}
+	mysql_pquery_f(gMySQL, "INSERT INTO `command_logs` \
+						  (account_id, character_id, issuer_account_id, issuer_character_id, command_name, reason, param1, param2, param3, created_at) \
+						  VALUES('%d', '%d', '%d', '%d', '%d', '%e', '%d', '%d')", 
+						  Account_GetID(playerid), Character_GetID(playerid), issuerAccountId, issuerCharacterId, commandName, reason, param1, param2, param3, gettime());
+}
+
 stock LogCharacter(playerid, issuerid, e_LOG_TYPE:type, const reason[] = "", extra = 0)
 {
-	mysql_tquery_f(gMySQL, "INSERT INTO `character_logs` \
+	mysql_pquery_f(gMySQL, "INSERT INTO `character_logs` \
 						  (account_id, character_id, issuer_account_id, issuer_character_id, type, reason, extra, created_at) \
 						  VALUES('%d', '%d', '%d', '%d', '%d', '%e', '%d', '%d')", 
 						  Account_GetID(playerid), Character_GetID(playerid), Account_GetID(issuerid), Character_GetID(issuerid), type, reason, extra, gettime());

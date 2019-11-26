@@ -1,9 +1,13 @@
 flags:setadmin(CMD_RCON);
 CMD:setadmin(playerid, params[])
 {
-	new id, lvl;
-	if(sscanf(params, "k<u>d", id, lvl))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setadmin <playerid/nome> <level (0 - 5)>");
+	new id, lvl, role;
+	if(sscanf(params, "k<u>dD(0)", id, lvl, role))
+	{
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setadmin [playerid/nome] [level (0 - 5)] [facoltativo: ruolo]");
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "[RUOLI] 0: No - 1: proprietà - 2: fazioni");
+		return 1;
+	}
 
 	if(!Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "L'utente non è collegato.");
@@ -28,6 +32,7 @@ CMD:setadmin(playerid, params[])
 	}
 	Log(Account_GetName(playerid), Account_GetName(id), "/setadmin", lvl);
 	Account_SetAdminLevel(id, lvl);
+	Account_SetAdminRole(id, role);
 	return 1;
 }
 
@@ -78,4 +83,40 @@ CMD:payday(playerid, params[])
 		Character_PayDay(i);
 	}
     return 1;
+}
+
+flags:setpremium(CMD_RCON);
+CMD:setpremium(playerid, params[])
+{
+	new id, premiumid, time;
+	if(sscanf(params, "k<u>dd", id, premiumid, time))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setpremium [playerid/partofname] <premium (0 - 3)> <giorni>");
+	if(!IsPlayerConnected(id) || IsPlayerNPC(id) || !Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido");
+	if(premiumid < 0 || premiumid > 3)
+		return SendClientMessage(playerid, COLOR_ERROR, "Premium ID non valido");
+	if(time < 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Giorni < 0");
+	
+	Account_SetPremiumLevel(id, premiumid);
+	Account_SetPremiumExpiry(id, time ? (gettime() + 3600 * 24 * time) : 0);
+
+	SendMessageToAdmins(true, COLOR_ADMINCMD, "AdmAlert: %s (%d) ha settato %s (%d) premium livello %d.", 
+	Account_GetName(playerid), playerid, Account_GetName(id), id, premiumid);
+	return 1;
+}
+
+flags:givezpoints(CMD_RCON);
+CMD:givezpoints(playerid, params[])
+{
+	new id, points;
+	if(sscanf(params, "k<u>d", id, points))	
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /givezpoints [playerid/partofname] <points>");
+	
+	Account_AddPoints(id, points);
+
+	SendMessageToAdmins(true, COLOR_ADMINCMD, "AdmCmd: %s (%d) ha dato %d Z-Points a %s (%d).", 
+	Account_GetName(playerid), playerid, points, Account_GetName(id), id);
+
+	return 1;
 }

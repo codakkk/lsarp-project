@@ -5,7 +5,7 @@
 flags:abuildingcmds(CMD_ADMIN);
 CMD:abuildingcmds(playerid, params[])
 {
-    SendClientMessage(playerid, -1, "[BUILDINGS]: /abcreate - /abedit");
+    SendClientMessage(playerid, -1, "[BUILDINGS]: /abcreate - /abedit - /abdelete");
     return 1;
 }
 
@@ -14,7 +14,7 @@ CMD:gotobuilding(playerid, params[])
 {
 	new id;
 	if(sscanf(params, "d", id))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gotobuilding [buildingid]");
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: (/gotob)uilding [buildingid]");
     
     new Building:building = Building_Find(id);
 
@@ -28,8 +28,9 @@ CMD:gotobuilding(playerid, params[])
 	Character_SetVirtualWorld(playerid, Building_GetEnterWorld(building));
 	return 1;
 }
+alias:gotobuilding("gotob");
 
-flags:abcreate(CMD_ADMIN);
+flags:abcreate(CMD_ADMIN | CMD_PROPERTY_ROLE);
 CMD:abcreate(playerid, params[])
 {
     
@@ -41,7 +42,7 @@ CMD:abcreate(playerid, params[])
     return 1;
 }
 
-flags:abdelete(CMD_DEVELOPER);
+flags:abdelete(CMD_ADMIN | CMD_PROPERTY_ROLE);
 CMD:abdelete(playerid, params[])
 {
     new id;
@@ -64,14 +65,14 @@ CMD:abdelete(playerid, params[])
 }
 
 
-flags:abedit(CMD_ADMIN);
+flags:abedit(CMD_ADMIN | CMD_PROPERTY_ROLE);
 CMD:abedit(playerid, p[])
 {
     new id, command[16], params[256];
     if(sscanf(p, "ds[16]S()[256]", id, command, params))
     {
 	    SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit [buildingid] [pos - interior - price - lock - rmowner - name - type - ..");
-        SendClientMessage(playerid, COLOR_COMMAND_ERROR, ".. faction - exit - ownable - welcometext]");
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, ".. faction - exit - ownable - welcometext - setowner]");
         return 0;
     }
     
@@ -112,6 +113,22 @@ CMD:abedit(playerid, p[])
             SendFormattedMessage(playerid, COLOR_GREEN, "Non è stato possibile eseguire il comando sul building %d.", id);
         }
     }
+    else if(!strcmp(command, "setowner", true))
+    {
+        new pid;
+	    if(sscanf(params, "k<u>", pid))
+            return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit [buildingid] [setowner] [playerid/partofname]");
+	   
+        if(!Character_IsLogged(pid))
+            return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+
+        SendFormattedMessage(playerid, COLOR_GREEN, "Hai settato %s proprietario del building id %d.", Character_GetOOCName(pid), id);
+        
+        Building_ResetOwner(building);
+        Building_SetOwner(building, pid);
+        
+        Log(Account_GetName(playerid), "none", "/abedit setowner", Character_GetID(pid));
+    }
     else if(!strcmp(command, "rmowner", true))
     {
 	   SendFormattedMessage(playerid, COLOR_GREEN, "Hai resettato il proprietario del building %d.", id);
@@ -143,7 +160,8 @@ CMD:abedit(playerid, p[])
         if(sscanf(params, "d", type))
         {
             SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /abedit <buildingid> type <typeid>");
-            SendClientMessage(playerid, COLOR_ERROR, "0: Store, 1: Paycheck, 2: Garage, 3: Complex, 4: Banca, 5: Pubblicità, 6: Benzina");
+            SendClientMessage(playerid, COLOR_ERROR, "0: Store, 1: Paycheck, 2: Garage, 3: Complex, 4: Banca, 5: Pubblicità, 6: Benzina, 7: Pay'n'Spray");
+            SendClientMessage(playerid, COLOR_ERROR, "8: Ammunation, 9: Cibo");
             return 0;
         }
 

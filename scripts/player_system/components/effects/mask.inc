@@ -9,12 +9,6 @@ hook OnCharacterClearData(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-hook OnCharacterInjured(playerid)
-{
-	//Character_RemoveMask(playerid);
-	return Y_HOOKS_CONTINUE_RETURN_1;
-}
-
 hook OnCharacterSpawn(playerid)
 {
 	if(Character_IsAlive(playerid))
@@ -29,9 +23,9 @@ hook OnPlayerStreamIn(playerid, forplayerid)
 {
 	if(Character_IsMasked(playerid))
 	{
-		if(Player_IsAdminDuty(playerid))
+		if(Player_IsAdminDuty(forplayerid))
 		{
-			SetPlayerMarkerForPlayer(forplayerid, playerid, (Player_IsAdminDuty(playerid)) ? 0xFFFF00AA : 0xFFFFFF00);
+			SetPlayerMarkerForPlayer(forplayerid, playerid, (Player_IsAdminDuty(forplayerid)) ? 0xFFFF00AA : 0xFFFFFF00);
 			ShowPlayerNameTagForPlayer(forplayerid, playerid, true);
 		}
 		else ShowPlayerNameTagForPlayer(forplayerid, playerid, false);
@@ -40,7 +34,7 @@ hook OnPlayerStreamIn(playerid, forplayerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-flags:masks(CMD_JR_MODERATOR);
+flags:masks(CMD_MODERATOR);
 CMD:masks(playerid, params[])
 {
 	new c = 0;

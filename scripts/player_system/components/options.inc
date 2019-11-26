@@ -6,7 +6,8 @@ static enum e_Bit1_OptionsData
 	e_pInvMode, // 0: Dialog - 1: Chat
 	e_pToggleHUD,
 	e_pVehMode, // 0: Dialog - 1: Chat
-	e_pCheatAlerts
+	e_pCheatAlerts,
+	e_pPremiumAlerts
 };
 static BitArray:OptionsBitSet[e_Bit1_OptionsData]<MAX_PLAYERS>;
 
@@ -35,7 +36,7 @@ stock Player_LoadOptions(playerid)
 	{
 		if(cache_num_rows() <= 0)
 		{
-			mysql_tquery_f(gMySQL, "INSERT INTO `account_options` (account_id, hotkeys, inv_mode, veh_mode) VALUES('%d', '%d', '%d', '%d')", Account_GetID(playerid), 0, 0, 0);
+			mysql_pquery_f(gMySQL, "INSERT INTO `account_options` (account_id, hotkeys, inv_mode, veh_mode) VALUES('%d', '%d', '%d', '%d')", Account_GetID(playerid), 0, 0, 0);
 			return 1;
 		}
 		new t;
@@ -55,7 +56,7 @@ stock Player_LoadOptions(playerid)
 
 stock Player_SaveOptions(playerid)
 {
-	mysql_tquery_f(gMySQL, 
+	mysql_pquery_f(gMySQL, 
 	"INSERT INTO `account_options` (account_id, hotkeys, inv_mode) VALUES('%d', '%d', '%d') \
 	ON DUPLICATE KEY UPDATE \
 	hotkeys = VALUES(hotkeys), \
@@ -119,4 +120,14 @@ stock Player_SetCheatAlertsEnabled(playerid, bool:enable)
 stock Player_HasCheatAlertsEnabled(playerid)
 {
 	return !Bit_Get(OptionsBitSet[e_pCheatAlerts], playerid);
+}
+
+stock Player_SetPremiumAlertsEnabled(playerid, bool:enable)
+{
+	Bit_Set(OptionsBitSet[e_pPremiumAlerts], playerid, !enable);
+}
+
+stock Player_HasPremiumAlertsEnabled(playerid)
+{
+	return !Bit_Get(OptionsBitSet[e_pPremiumAlerts], playerid);
 }

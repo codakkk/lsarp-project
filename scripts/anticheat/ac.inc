@@ -6225,7 +6225,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 	forward ac_OnPlayerStateChange(playerid, newstate, oldstate);
 #endif
 
-#if defined OnPlayerWeaponShot
+/*#if defined OnPlayerWeaponShot
 	public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 	{
 		if(ACInfo[playerid][acKicked] > 0 || ACInfo[playerid][acDead]) return 0;
@@ -6649,6 +6649,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 		forward ac_OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ);
 	#endif
 #endif
+*/
 /*
 public OnVehicleMod(playerid, vehicleid, componentid)
 {
@@ -8545,7 +8546,7 @@ static ac_IsVehicleSeatOccupied(vehicleid, seat)
 #endif
 #undef AC_USE_CASINOS
 
-static ac_IsCompatible(modelid, componentid)
+static stock ac_IsCompatible(modelid, componentid)
 {
 	if(400 <= modelid <= 611)
 	{

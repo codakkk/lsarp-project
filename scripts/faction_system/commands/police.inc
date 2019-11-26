@@ -106,7 +106,7 @@ CMD:arresta(playerid, params[])
 
 	Character_SetToJailPos(id);
 
-	SendFormattedMessage(id, COLOR_ORANGE, "Sei stato arrestato da %s per %d minuti.", Character_GetOOCName(playerid));
+	SendFormattedMessage(id, COLOR_ORANGE, "Sei stato arrestato da %s per %d minuti.", Character_GetOOCName(playerid), time);
 
 	new rankName[MAX_FACTION_RANK_NAME];
 	Faction_GetRankName(Character_GetFaction(playerid), Character_GetRank(playerid), rankName);
@@ -180,6 +180,7 @@ CMD:cura(playerid, params[])
 		if(!Character_IsFactionDuty(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non sei in servizio.");
 	}
+	
 	new id;
 	if(sscanf(params, "k<u>", id))
 		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /cura [playerid/partofname]");
@@ -251,14 +252,11 @@ CMD:megafono(playerid, params[])
 }
 alias:megafono("m");
 
-hook OnCharacterAccept(playerid, stringHash)
+hook OnCharacterTryAccept(playerid, type)
 {
-    if(stringHash != _I<perquisizione> && stringHash != _I<perq>)
+    if(type != REQUEST_TYPE_SEARCH)
 		return 0;
 	
-	if(!Request_IsPending(playerid, REQUEST_TYPE_SEARCH) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_SEARCH))
-	
-        return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta di perquisizione attiva."), 0;
     if(!IsPlayerInRangeOfPlayer(playerid, Request_GetSender(playerid, REQUEST_TYPE_SEARCH), 5.0))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore."), 0;
 	new senderid = Request_GetSender(playerid, REQUEST_TYPE_SEARCH);
@@ -371,5 +369,108 @@ CMD:vsign(playerid, params[])
 
 		Vehicle_SetSign(vehicleid, pos, text);
 	}
+	return 1;
+}
+
+flags:multa(CMD_POLICE);
+CMD:multa(playerid, params[])
+{
+	new id, amount, reason[64];
+
+	if(sscanf(params, "k<u>ds[64]", id, amount, reason))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /multa <playerid/name> <ammontare> <motivo>");
+
+	if(!Character_IsLogged(playerid) || id == playerid)
+		return SendClientMessage(playerid, COLOR_ERROR, "ID invalido.");
+
+	if(!ProxDetectorS(5.0, playerid, id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al giocatore.");
+
+	if(amount < 10)
+		return SendClientMessage(playerid, COLOR_ERROR, "Ammontare invalido. ($10+)");
+
+	mysql_pquery_f(gMySQL, "INSERT INTO police_fine_records (created_at, officer, target, amount, reason) VALUES (NOW(), '%d', '%d', '%d', '%e')", Character_GetID(playerid), Character_GetID(id), amount, reason);
+
+	SendFormattedMessage(id, COLOR_YELLOW, "Il poliziotto %s ti ha multato per %s.", Character_GetOOCName(playerid), reason);
+	SendFormattedMessage(id, COLOR_YELLOW, "Somma da pagare: $%d. Digita /multe per pagarla.", amount);
+
+	Character_CharacterMe(playerid, id, "strappa una multa dal blocchetto e la consegna a");
+
+	return 1;
+}
+
+flags:multe(CMD_ALIVE_USER);
+CMD:multe(playerid, params[])
+{
+	yield 1;
+	await mysql_aquery_s(gMySQL, str_format("SELECT * FROM police_fine_records WHERE target = '%d'", Character_GetID(playerid)));
+	new rows = cache_num_rows();
+
+	if(rows <= 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono multe a tuo nome.");
+	
+	new List:fines = list_new();
+
+	new String:content = str_new("Costo ($)\tMotivo\n");
+	new fineId, price, reason[64];
+	new response[e_DIALOG_RESPONSE_INFO];
+	
+	for(new j = 0; j < rows; j++)
+	{
+		cache_get_value_name_int(j, "id", fineId);
+		cache_get_value_name_int(j, "amount", price);
+		cache_get_value_name(j, "reason", reason);
+		
+		str_append_format(content, "$%d\t%s\n", price, reason);
+
+		list_add(fines, fineId);
+	}
+
+	pawn_guard(content);
+	yield 1;
+	for(;;)
+	{
+		
+		await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_TABLIST_HEADERS, @("Multe"), content, @("Continua"), @("Chiudi"));
+
+		if(!response[E_DIALOG_RESPONSE_Response])
+			break;		
+		
+		if(ShowFineInfo(playerid, list_get(fines, response[E_DIALOG_RESPONSE_Listitem])))
+			break;
+		continue;
+	}
+
+	list_delete(fines);
+	return 1;
+}
+
+static ShowFineInfo(playerid, fineid)
+{
+	new response[e_DIALOG_RESPONSE_INFO];
+	await mysql_aquery_s(gMySQL, str_format("SELECT * FROM police_fine_records WHERE id = '%d'", fineid));
+	
+	if(cache_num_rows() <= 0)
+		return 0;
+	
+	new price, reason[64];
+	cache_get_value_name_int(0, "amount", price);
+	cache_get_value_name(0, "reason", reason);
+
+	await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, @("Multa"), str_format("\t\tAmmontare: $%d\nMotivo: %s", price, reason), @("Paga"), @("Chiudi"));
+
+	if(!response[E_DIALOG_RESPONSE_Response])
+		return 0;
+	
+	if(Character_GetMoney(playerid) < price)
+	{
+		SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi.");
+		return 0;
+	}
+
+	mysql_pquery_f(gMySQL, "DELETE FROM police_fine_records WHERE id = '%d'", fineid);
+
+	Character_GiveMoney(playerid, -price, "fine");
+	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai pagato la multa dell'amontare di $%d.", price);
 	return 1;
 }

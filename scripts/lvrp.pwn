@@ -41,9 +41,6 @@
 	#warning LSARP_DEBUG is enabled. Care!!
 #endif
 
-#define CUSTOM_TAG_TYPES Building,House,JobType
-
-#define CreateDynamicObjectWithHighDD CreateDynamicObject
 
 #define FIXES_Single
 #define FIX_const 0
@@ -54,6 +51,7 @@
 #include <a_samp>
 #include <formatnumber>
 #include <requests>
+#include <strlib>
 #include <sampmailjs>
 
 // Define this for some bugs related to MySQL_TQueryInline
@@ -75,6 +73,8 @@
 #include <SKY>
 #include <a_mysql>
 //#include <mysql_yinline_include>
+#define CUSTOM_TAG_TYPES Building,House,JobType
+
 #include <YSI_Coding\y_timers>
 #include <YSI_Coding\y_va>
 #include <YSI_Coding\y_inline>
@@ -83,6 +83,8 @@
 // For YSI and PawnPlus yield conflict.
 #undef yield
 #undef @@
+
+
 #include <Pawn.CMD>
 #include <streamer>
 #define PP_SYNTAX 1
@@ -98,6 +100,7 @@
 #include <sa_zones>
 
 #define WC_DEBUG_SILENT false
+#define WC_DEBUG false
 #include <weapon-config>
 
 #include <utils\colors>
@@ -130,7 +133,9 @@ enum (<<= 1)
 	CMD_ADMIN,
 	CMD_DEVELOPER,
 	CMD_RCON,
-	CMD_SLOW_MODE
+	CMD_SLOW_MODE,
+	CMD_PROPERTY_ROLE,
+	CMD_FACTION_ROLE
 }
 
 #include <anticheat\core>
@@ -142,7 +147,7 @@ enum (<<= 1)
 #include <checkpoint_system\core>
 #include <weapon_system\core>
 #include <dp_system\core>
-#include <loot_zone_system\core>
+//#include <loot_zone_system\core>
 #include <utils\utils>
 #include <utils\maths>
 #include <faction_system\core>
@@ -170,10 +175,11 @@ enum (<<= 1)
 #include <jobs\core>
 
 // ========== [ DIALOGS ] ==========
-#include <player_system\dialogs>
+
 #include <YSI_Coding\y_hooks> // Place hooks after this. Everything included before, gets hooked first
 
 forward OnCharacterDamageDone(playerid, Float:amount, issuerid, weaponid, bodypart);
+forward OnPlayerConnected(playerid);
 
 main()
 {
@@ -209,7 +215,14 @@ public OnGameModeInit()
 
 	Streamer_TickRate(30);
 	
+	pp_public_min_index(0);
+
 	CallLocalFunction(#OnGameModeLateInit, "");
+
+	SetRespawnTime(1);
+
+	mysql_tquery_f(gMySQL, "ALTER TABLE `characters` ADD admin_role INT(11) DEFAULT '0'");
+	printf("Public OnGameModeInit");
 	return 1;
 }
 
@@ -256,7 +269,7 @@ public OnPlayerPrepareDeath(playerid, animlib[32], animname[32], &anim_lock, &re
 
 public OnPlayerDamage(&playerid, &Float:amount, &issuerid, &weapon, &bodypart)
 {
-	if(Player_IsAdminDuty(playerid) && Account_GetAdminLevel(playerid) > 1)
+	if(Player_IsAdminDuty(playerid))
 		return 0;
 	if(Character_IsDead(playerid))
 		return 0;
@@ -307,23 +320,16 @@ hook OnPlayerRequestSpawn(playerid)
     return 1;
 }
 
-hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ) 
+public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ) 
 {
 	if(IsPlayerNPC(playerid))
-		return Y_HOOKS_BREAK_RETURN_1;
-	
-	if( !( -1000.0 <= fX <= 1000.0 ) || !( -1000.0 <= fY <= 1000.0 ) || !( -1000.0 <= fZ <= 1000.0 ) )
-    {
-		#if defined DEBUG
-			//printf("Not in range");
-		#endif
-		return 0;
-	}
-	if(hittype == BULLET_HIT_TYPE_PLAYER && hitid != INVALID_PLAYER_ID && Player_IsAdminDuty(hitid))
+		return 1;
+
+	/*if(hittype == BULLET_HIT_TYPE_PLAYER && hitid != INVALID_PLAYER_ID && Player_IsAdminDuty(hitid))
 	{
 		return Y_HOOKS_BREAK_RETURN_0;
-	}
-	return Y_HOOKS_CONTINUE_RETURN_1;
+	}*/
+	return 1;
 }
 
 // Not Hooking it makes the OnPlayerWeaponShot not called.
@@ -474,8 +480,17 @@ public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 			return 0;
 		}
 	}
-	
-	if(flags & CMD_TESTER && Account_GetAdminLevel(playerid) < 1)
+	if(flags & CMD_PROPERTY_ROLE && (1 < Account_GetAdminLevel(playerid) < 4))
+	{
+		if(Account_GetAdminRole(playerid) != ADMIN_ROLE_PROPERTY)
+			return SendClientMessage(playerid, COLOR_ERROR, "Per poter utilizzare questo comando, necessiti del ruolo giusto."), 0;
+	}
+	else if(flags & CMD_FACTION_ROLE && (1 < Account_GetAdminLevel(playerid) < 4))
+	{
+		if(Account_GetAdminRole(playerid) != ADMIN_ROLE_FACTION)
+			return SendClientMessage(playerid, COLOR_ERROR, "Per poter utilizzare questo comando, necessiti del ruolo giusto."), 0;
+	}
+	else if(flags & CMD_TESTER && Account_GetAdminLevel(playerid) < 1)
 	{
 		SendClientMessage(playerid, COLOR_ERROR, "Non sei un membro dello staff.");
 		return 0;
@@ -522,11 +537,14 @@ public OnPlayerCommandPerformed(playerid, cmd[], params[], result, flags)
 	return 1;
 }
 
-hook OnPlayerText(playerid, text[])
+forward OnCharacterSpeak(playerid, text[]);
+
+public OnPlayerText(playerid, text[])
 {
-	if(!Character_IsLogged(playerid) || isnull(text))
-		return Y_HOOKS_BREAK_RETURN_0;
-	return Y_HOOKS_CONTINUE_RETURN_0;
+	if(!Character_IsLogged(playerid) || isnull(text) || isempty(text))
+		return 0;
+	CallLocalFunction(#OnCharacterSpeak, "ds", playerid, text);
+	return 0;
 }
 
 hook OnPlayerDisconnect(playerid, reason)
@@ -550,8 +568,6 @@ hook OnPlayerDisconnect(playerid, reason)
 	
 	if(Character_IsLogged(playerid))
 	{
-		if(reason == 0)
-
 		CallLocalFunction(#OnCharacterDisconnected, "ii", playerid, reason);
 		CallLocalFunction(#OnCharacterClearData, "i", playerid);
 	}
@@ -562,11 +578,19 @@ hook OnPlayerDisconnect(playerid, reason)
 }
 
 // This is the last callback called after the hooks.
-hook OnPlayerConnect(playerid)
+public OnPlayerConnect(playerid)
 {
 	wait_ticks(1);
 	
-	SetPlayerScore(playerid, 0);
+	if(IsPlayerNPC(playerid))
+	{
+		SetPlayerScore(playerid, 1+random(10));
+		SetPlayerColor(playerid, 0xFFFFFFFF);
+		SetPlayerVirtualWorld(playerid, playerid + BUILDING_START_WORLD*2 + random(999));
+		return 1;
+	}
+
+	SetPlayerScore(playerid, 1);
 	SetPlayerColor(playerid, 0xFFFFFFFF);
 	
 	Account_SetLogged(playerid, false);
@@ -610,12 +634,6 @@ hook OnPlayerConnect(playerid)
 		return 0;
 	}
 
-	#if defined FAKE_LOGIN
-		Account_SetLogged(playerid, true);
-		Character_SetLogged(playerid, true);
-		SpawnPlayer(playerid);
-	#endif
-
 	new serial[41];
 	gpci(playerid, serial, sizeof(serial));
 
@@ -629,15 +647,11 @@ hook OnPlayerConnect(playerid)
 
 	cache_delete(cache);
 
-	/*new name[MAX_PLAYER_NAME];
-	GetPlayerName(playerid, name, sizeof(name));
-	for(new i = 0, j = strlen(name); i < j;++i)
-	{
-		if(name[i] == '_')
-			return SendClientMessage(playerid, COLOR_ERROR, "Il tuo nome account contiene caratteri non consentiti."), KickEx(playerid), 0;
-	}*/
+	defer Cncted(playerid);
 	return 1;
 }
+
+timer Cncted[100](playerid) { CallLocalFunction(#OnPlayerConnected, "d", playerid); }
 
 public OnPlayerFinishedDownloading(playerid, virtualworld)
 {

@@ -11,8 +11,8 @@ static bool:Character_ShowBizDialog(playerid)
     new response[e_DIALOG_RESPONSE_INFO];
     for(;;)
     {
-        new Building:building = Character_GetCurrentBuilding(playerid);
-        if(!Building_IsValid(building) || !Character_CanUseBuildingMenu(playerid, building))
+        new Building:building;
+        if(!Character_TryGetBuilding(playerid, building) || !Character_CanUseBuildingMenu(playerid, building))
         {
             SendClientMessage(playerid, COLOR_ERROR, "Non sei all'entrata o all'interno di un tuo biz.");
             break;
@@ -25,7 +25,7 @@ static bool:Character_ShowBizDialog(playerid)
         switch(response[E_DIALOG_RESPONSE_Listitem])
         {
             case 0: ToggleBuildingLockState(playerid, building);
-            case 1: Building_ShowInventory(building, playerid);
+            case 1: { Building_ShowInventory(building, playerid); break; }
             case 2: ShowBuildingDepositMoneyDialog(playerid, building);
             case 3: ShowBuildingWithdrawMoneyDialog(playerid, building);
             case 4: ShowSellBuildingDialog(playerid, building);
@@ -118,8 +118,8 @@ static ShowSellBuildingDialog(playerid, Building:building)
         await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, @("Vendita Edificio"), str_format("Sei sicuro di voler vendere questo edificio (%s) per {85BB65}$%d{FFFFFF}?", name, price), @("Vendi"), @("Annulla"));
 
         if(!response[E_DIALOG_RESPONSE_Response]) break;
-        printf("%d - %d", Building_IsOwnable(building), Building_GetOwnerID(building));
-        if(!Building_IsOwned(building))
+        
+        if(Building_GetOwnerID(building) <= 0)
         {
             SendClientMessage(playerid, COLOR_ERROR, "Il biz non è acquistato, per tanto non puoi venderlo.");
             break;
@@ -158,7 +158,7 @@ static ShowSellBuildingToPlayerDialog(playerid, Building:building)
 
         if(!response[E_DIALOG_RESPONSE_Response]) break;
 
-        if(!Building_IsOwned(building))
+        if(Building_GetOwnerID(building) <= 0)
         {
             SendClientMessage(playerid, COLOR_ERROR, "Il biz non è acquistato, per tanto non puoi venderlo.");
             break;

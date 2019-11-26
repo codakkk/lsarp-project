@@ -1,6 +1,6 @@
 
 #include <YSI_Coding\y_hooks>
-flags:hedit(CMD_JR_MODERATOR);
+flags:hedit(CMD_ADMIN | CMD_PROPERTY_ROLE);
 CMD:hedit(playerid, params[])
 {
     new houseid, command[16], value, value2;
@@ -80,14 +80,15 @@ CMD:hedit(playerid, params[])
 		{
 			SendFormattedMessage(playerid, COLOR_YELLOW, "Hai resettato il proprietario della casa id %d.", houseid);
 			SendMessageToAdmins(1, COLOR_ORANGE, "AdmCmd: %s (%d) ha resettato il proprietario della casa id %d.", Account_GetName(playerid), playerid, houseid);
+			Log(Account_GetName(playerid), "house", "/hedit rmowner", houseid);
 		}
 	}
 	else if(hash == _I<rmfurnitures>)
 	{
-		if(House_RemoveAllfurnitures(house))
+		/*if(House_RemoveAllfurnitures(house))
 			SendFormattedMessage(playerid, COLOR_GREEN, "Mobili rimossi dalla casa id %d", House_GetID(house));
 		else
-			SendFormattedMessage(playerid, COLOR_ERROR, "Non è stato possibile rimuovere i mobili dalla casa id %d", House_GetID(house));
+			SendFormattedMessage(playerid, COLOR_ERROR, "Non è stato possibile rimuovere i mobili dalla casa id %d", House_GetID(house));*/
 	}
     else SendClientMessageStr(playerid, COLOR_COMMAND_ERROR, commandInfo);
     return 1;

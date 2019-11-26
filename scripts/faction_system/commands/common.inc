@@ -3,7 +3,7 @@
 flags:fcmds(CMD_USER);
 CMD:fcmds(playerid, params[])
 {
-	SendClientMessage(playerid, COLOR_SLATEBLUE, "/flascia - /servizio - /uniforme - /fcaccia - /finvita - /frank - /fmembri");
+	SendClientMessage(playerid, COLOR_SLATEBLUE, "/flascia - /fcaccia - /finvita - /frank - /fmembri");
 	new factionid = Character_GetFaction(playerid);
 	if(Faction_IsValid(factionid))
 	{
@@ -11,11 +11,12 @@ CMD:fcmds(playerid, params[])
 		{
 			SendClientMessage(playerid, COLOR_SLATEBLUE, "/manette - /trascina - /arresta - (/m)egafono - /vsign");
 			SendClientMessage(playerid, COLOR_SLATEBLUE, "/perquisisci - /servizio - (/d)ipartimento - /traccia");
-			SendClientMessage(playerid, COLOR_SLATEBLUE, "/ritiralicenza - /daiportodarmi");
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "/ritiralicenza - /daiportodarmi - /beanbag - /taser - /mdc");
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "/servizio - /uniforme - /multa - /sirena");
 		}
 		else if(Faction_GetType(factionid) == FACTION_TYPE_GOVERNMENT)
 		{
-			SendClientMessage(playerid, COLOR_SLATEBLUE, "/gov");
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "/servizio - /gov");
 		}
 	}
 	return 1;
@@ -34,8 +35,8 @@ CMD:servizio(playerid, params[])
 	if(!Character_IsAlive(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
 	
-	new Building:building = Character_GetBuilding(playerid, true);
-	if(Building_IsValid(building) && Building_GetFaction(building) == factionid)
+	new Building:building;
+	if(Character_TryGetBuilding(playerid, building) && Character_IsInsideBuilding(playerid, building) && Building_GetFaction(building) == factionid)
 	{
 		if(!Character_IsFactionDuty(playerid))
 		{
@@ -45,7 +46,10 @@ CMD:servizio(playerid, params[])
 
 			Character_SetHealth(playerid, 100.0);
 
-			SetPlayerColor(playerid, COLOR_SLATEBLUE);
+			if(Faction_GetType(factionid) == FACTION_TYPE_POLICE)
+				SetPlayerColor(playerid, COLOR_SLATEBLUE);
+			else
+				SetPlayerColor(playerid, Faction_GetColor(factionid));
 			//Character_SetSelectingUniform(playerid, true);
 			new rankName[16];
 			Faction_GetRankName(factionid, Character_GetRank(playerid), rankName);
@@ -72,12 +76,15 @@ CMD:uniforme(playerid, params[])
 	if(!Character_IsFactionDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Puoi utilizzare questo comando solo se in servizio.");
 
+	new Building:building;
+	if(!Character_TryGetBuilding(playerid, building) || !Character_IsInsideBuilding(playerid, building) || Building_GetFaction(building) != fid)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei nell'edificio della tua fazione.");
+	
 	new uniform_id,
 		List:factionSkins = Faction_GetSkins(fid);
 
 	if(list_size(factionSkins) <= 0)
 		return SendClientMessage(playerid, COLOR_ERROR, "Non ci sono uniformi disponibili.");
-	printf("Uniformi Size: %d", list_size(factionSkins));
 	if(sscanf(params, "d", uniform_id))
 	{
 		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /uniforme <id uniforme>");
@@ -86,7 +93,6 @@ CMD:uniforme(playerid, params[])
 		for(new i = 0, j = list_size(factionSkins); i < j; ++i)
 		{
 			new skinid = list_get(factionSkins, i);
-			printf("Skin id: %d", skinid);
 			if(skinid != 0)
 			{
 				SendFormattedMessage(playerid, COLOR_GREEN, "Skin: %d", skinid);
@@ -241,13 +247,11 @@ CMD:finvita(playerid, params[])
 	return 1;
 }
 
-hook OnCharacterAccept(playerid, stringHash)
+hook OnCharacterTryAccept(playerid, type)
 {
-    if(stringHash != _I<fazione> && stringHash != _I<faz> && stringHash != _I<faction>)
+    if(type != REQUEST_TYPE_FACTION)
 		return 0;
 	
-	if(!Request_IsPending(playerid, REQUEST_TYPE_FACTION) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_FACTION))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta fazione attiva.");
 	if(Faction_IsValid(Character_GetFaction(playerid)))
 		return SendClientMessage(playerid, COLOR_ERROR, "Fai già parte di una fazione.");
 	
@@ -266,6 +270,9 @@ hook OnCharacterAccept(playerid, stringHash)
 
 	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai accettato l'invito di %s. Adesso fai parte della fazione %s.", Character_GetRolePlayName(senderid), fname);
 	SendFormattedMessage(senderid, COLOR_ORANGE, "%s ha accettato il tuo invito in fazione.", Character_GetRolePlayName(playerid));
+	
+	Request_Reset(playerid, REQUEST_TYPE_FACTION);
+	Request_Reset(senderid, REQUEST_TYPE_FACTION);
 	return 1;
 }
 
@@ -345,12 +352,20 @@ Dialog:DialogFactionMembers(playerid, response, listitem, inputtext[])
 
 static Faction_GiveWeapons(playerid)
 {
-	printf("Type: %d", Faction_GetType(Character_GetFaction(playerid)));
-	if(Faction_GetType(Character_GetFaction(playerid)) == FACTION_TYPE_POLICE)
+	new factionid = Character_GetFaction(playerid);
+	if(!Faction_IsValid(factionid))
+		return 0;
+	if(Faction_GetType(factionid) == FACTION_TYPE_POLICE)
 	{
 		Character_GiveWeapon(playerid, WEAPON_NITESTICK, 1);
 		Character_GiveWeapon(playerid, WEAPON_SPRAYCAN, 1000);
 		Character_GiveWeapon(playerid, WEAPON_DEAGLE, 100);
 		Character_SetArmour(playerid, 100.0);
 	}
+	else if(Faction_GetType(factionid) == FACTION_TYPE_FIREFIGHTERS)
+	{
+		Character_GiveWeapon(playerid, WEAPON_SHOVEL, 1);
+		Character_GiveWeapon(playerid, WEAPON_FIREEXTINGUISHER, 1000);
+	}
+	return 1;
 }

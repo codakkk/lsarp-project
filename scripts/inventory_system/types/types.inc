@@ -1,5 +1,6 @@
 #include <inventory_system\types\ammo>
-#include <inventory_system\types\bag>
+//#include <inventory_system\types\bag>
+#include "phone"
 #include <inventory_system\types\fuel>
 #include <inventory_system\types\medic>
 #include <inventory_system\types\money>

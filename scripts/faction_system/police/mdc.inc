@@ -1,15 +1,6 @@
 #include <buildings\core>
 #include <YSI_Coding\y_hooks>
 
-static
-    TargetID[MAX_PLAYERS];
-
-hook OnCharacterClearData(playerid)
-{
-    ClearMDCData(playerid);
-    return 1;
-}
-
 CMD:mdc(playerid, params[])
 {
     new vehicleid = GetPlayerVehicleID(playerid);
@@ -19,149 +10,438 @@ CMD:mdc(playerid, params[])
     if(Faction_GetType(Vehicle_GetFaction(vehicleid)) != FACTION_TYPE_POLICE)
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un veicolo munito del Mobile Data Computer.");
 
-    if(Character_ShowMDC(playerid, true))
-    {
-        Character_AMe(playerid, "accede al Mobile Data Computer.");
-    }
+    Character_ShowMDC(playerid);
     return 1;
 }
 
-static Character_ShowMDC(playerid, bool:clearData = false)
+static Character_ShowMDC(playerid)
 {
     if(Faction_GetType(Character_GetFaction(playerid)) != FACTION_TYPE_POLICE)
         return 0;
-    if(clearData)
-        ClearMDCData(playerid);
-    //\nRicerca\tTarga\nRicerca\tNumero\nAPB\tInserisci\nAPB\tLista\nPorto d'armi\tGestione\nProprietario\tBiz\nProprietario\tCasa
-    Dialog_Show(playerid, Dialog_MDC, DIALOG_STYLE_TABLIST_HEADERS, "Mobile Data Computer", "Azione\tTipo\nRicerca\tCittadino", "Procedi", "Annulla");
-    return 1;
-}
-
-Dialog:Dialog_MDC(playerid, response, listitem, inputtext[])
-{
-    if(!response)
-        return 0;
     
-    switch(listitem)
-    {
-        case 0: return Dialog_Show(playerid, Dialog_MDCSearch, DIALOG_STYLE_INPUT, "Ricerca cittadino", "Inserisci i dati del cittadino che vuoi cercare.\nFormati validi:\n- Nome_Cognome\n- ID Giocatore", "Ricerca", "Chiudi");
-    }
-    return 1;
-}
+    Character_AMe(playerid, "accede al Mobile Data Computer.");
 
-Dialog:Dialog_MDCSearch(playerid, response, listitem, inputtext[])
-{
-    if(!response)
-        return Character_ShowMDC(playerid);
+    new response[e_DIALOG_RESPONSE_INFO], String:info = str_new("");
+    str_append_format(info, "Ricerca Cittadino\n");
+    str_append_format(info, "Ricerca Numero Cellulare\n");
+    str_append_format(info, "Ricerca Targa\n");
+    //str_append_format(info, "Lista Porto Armi\n");
+    str_append_format(info, "Proprietario Biz\n");
+    str_append_format(info, "Proprietario Casa\n");
+
+    pawn_guard(info);
     
-    static const rowsNeeded[] = "id, name";
-
-    inline OnSearch()
+    yield 1;
+    for(;;)
     {
-        if(cache_num_rows() <= 0)
-            return Dialog_Show(playerid, Dialog_MDCSearch, DIALOG_STYLE_INPUT, "Ricerca cittadino", "{FF0000}Non è stato trovato nessun cittadino.{FFFFFF}\nInserisci i dati del cittadino che vuoi cercare.\nFormati validi:\n- Nome_Cognome\n- ID Giocatore", "Ricerca", "Chiudi");
-        new name[MAX_PLAYER_NAME];
-        cache_get_value_index_int(0, 0, TargetID[playerid]);
-        cache_get_value_index(0, 1, name);
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_LIST, @("Mobile Data Computer"), info, @("Procedi"), @("Chiudi"));
 
-        Dialog_Show(playerid, Dialog_MDCSearchCharacter, DIALOG_STYLE_LIST, name, "Dati del cittadino\nVeicoli proprietari", "Continua", "Chiudi");
-    }
-    if(IsNumeric(inputtext))
-    {
-        new val = strval(inputtext);
+        if(!response[E_DIALOG_RESPONSE_Response])
+            break;
         
-        if(!Character_IsLogged(val))
-            return Dialog_Show(playerid, Dialog_MDCSearch, DIALOG_STYLE_INPUT, "Ricerca cittadino", "{FF0000}L'ID inserito non è valido.{FFFFFF}\nInserisci i dati del cittadino che vuoi cercare.\nFormato: Nome_Cognome", "Ricerca", "Chiudi");
+        switch(response[E_DIALOG_RESPONSE_Listitem])
+        {
+            case 0: HandleCivilianSearchDialog(playerid);
+            case 1: HandleSearchPhoneDialog(playerid);
+            case 2: HandleSearchPlateDialog(playerid);
+            case 3: HandleBizOwnerDialog(playerid);
+            case 4: HandleHouseOwnerDialog(playerid);
+        }
+    }
+    return 1;
+}
 
-        MySQL_TQueryInline(gMySQL, using inline OnSearch, "SELECT %e FROM characters WHERE id = '%d'", rowsNeeded, Character_GetID(val));
+static HandleCivilianSearchDialog(playerid)
+{
+    new 
+        String:error = str_new(""),
+        String:info = str_new(""),
+        targetid = 0,
+        name[MAX_PLAYER_NAME],
+        response[e_DIALOG_RESPONSE_INFO]
+        ;
+    
+    pawn_guard(info);
+    pawn_guard(error);
+    
+    yield 1;
+    for(;;)
+    {
+        if(targetid <= 0)
+        {
+            str_clear(info);
+            str_append_format(info, "{FFFFFF}Inserisci il nome del civile da ricercare all'interno del database.\nEsempio: Mario_Rossi");
+            await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Ricerca Cittadino"), error + @("\n") + info, @("Ricerca"), @("Indietro"));
+
+            str_clear(error);
+
+            if(!response[E_DIALOG_RESPONSE_Response])
+                break;
+
+            if(isnull(response[E_DIALOG_RESPONSE_InputText]) || strlen(response[E_DIALOG_RESPONSE_InputText]) <= 0)
+            {
+                str_append(error, @("{FF0000}Il nome inserito non è valido.{FFFFFF}"));
+                continue;
+            }
+
+            await mysql_aquery_s(gMySQL, str_format("SELECT id, name FROM `characters` WHERE LOWER(name) = LOWER('%e')", response[E_DIALOG_RESPONSE_InputText]), .parallel=true);
+
+            if(cache_num_rows() <= 0)
+            {
+                str_append(error, @("{FF0000}Il nome inserito non è valido o non è presente nel database.{FFFFFF}"));
+                continue;
+            }
+
+            cache_get_value_name_int(0, "id", targetid);
+            cache_get_value_name(0, "name", name);
+        }
+
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_LIST, str_format("%s - Ricerca Cittadino", name), @("Dati del cittadino\nVeicoli del cittadino\nBiz del cittadino\nCase del cittadino"), @("Seleziona"), @("Indietro"));
+
+        if(!response[E_DIALOG_RESPONSE_Response]) break;
+
+        switch(response[E_DIALOG_RESPONSE_Listitem])
+        {
+            case 0: HandleCivilianDataDialog(playerid, targetid, name);
+            case 1: HandleCivilianVehiclesDialog(playerid, targetid, name);
+            case 2: HandleCivilianBizDialog(playerid, targetid, name);
+            case 3: HandleCivilianHouseDialog(playerid, targetid, name);
+        }
+    }
+}
+
+static HandleCivilianDataDialog(playerid, targetid, const targetName[])
+{
+    new String:info = str_new("");
+    pawn_guard(info);
+    
+    new name[MAX_PLAYER_NAME], surname[MAX_PLAYER_NAME], House:rentHouse = INVALID_HOUSE, rentHouseId = 0;
+
+    yield 1;
+    await mysql_aquery_s(gMySQL, str_format("SELECT house_rent FROM characters WHERE id = '%d' and banned = 0", targetid), .parallel=true);
+
+    if(cache_num_rows() <= 0)
+        return;
+    
+    cache_get_value_index_int(0, 0, rentHouseId);
+    rentHouse = House_Find(rentHouseId);
+
+
+    sscanf(targetName, "p<_>s[24]s[24]", name, surname);
+    
+    str_clear(info);
+    str_append_format(info, "{FFFFFF}===== SCHEDA DEL CITTADINO =====\n");
+    str_append_format(info, "- Nome: %s\n", name);
+    str_append_format(info, "- Cognome: %s\n", surname);
+    
+    SendClientMessage(playerid, -1, "-- Scheda del cittadino --");
+    SendClientMessageStr(playerid, -1, str_format("- Nome: %s", name));
+    SendClientMessageStr(playerid, -1, str_format("- Cognome: %s", surname));
+
+    if(House_IsValid(rentHouse))
+    {
+        str_append_format(info, "Affitto: %s\n", House_GetAddress(rentHouse));
+        SendClientMessageStr(playerid, -1, str_format("Affitto: %s", House_GetAddress(rentHouse)));
+    }
+    new response[e_DIALOG_RESPONSE_INFO];
+    await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, @("Scheda"), info, @("Indietro"), @(""));
+}
+
+static HandleCivilianVehiclesDialog(playerid, targetid, const targetName[])
+{
+    yield 1;
+    await mysql_aquery_s(gMySQL, str_format("SELECT model, plate FROM vehicles WHERE owner_id = '%d'", targetid), .parallel=true);
+
+    new num = cache_num_rows(), 
+        String:string = str_new("-- Veicoli -- \n\n");
+    
+    SendClientMessageStr(playerid, -1, @("-- Veicoli --"));
+
+    if(num <= 0)
+    {
+        str_append_format(string, "Il civile non possiede veicoli di proprietà.\n");
+        SendClientMessage(playerid, -1, "Il civile non possiede veicoli di proprietà.");
     }
     else
     {
-        MySQL_TQueryInline(gMySQL, using inline OnSearch, "SELECT %e FROM characters WHERE LOWER(name) = LOWER('%e')", rowsNeeded, inputtext);
-    }
-
-    return 1;
-}
-
-Dialog:Dialog_MDCSearchCharacter(playerid, response, listitem, inputtext[])
-{
-    if(!response)
-        return Character_ShowMDC(playerid, true);
-    
-    if(TargetID[playerid] == 0)
-        return 0;
-    
-    if(listitem == 0)
-    {
-        inline OnSearch()
+        new modelid, plate[9];
+        for(new i = 0; i < num; ++i)
         {
-            if(cache_num_rows() <= 0)
-                return SendClientMessage(playerid, COLOR_ERROR, "Il cittadino non è più presente nel database.");
-            
-            new id, tempName[MAX_PLAYER_NAME], name[MAX_PLAYER_NAME], surname[MAX_PLAYER_NAME], House:rentHouse = INVALID_HOUSE, temp = 0;
+            cache_get_value_name_int(i, "model", modelid);
+            cache_get_value_name(i, "plate", plate);
 
-            cache_get_value_index_int(0, 0, id);
-            cache_get_value_index(0, 1, tempName);
-            cache_get_value_index_int(0, 2, temp);
+            str_append_format(string, "- %s [%s]\n", Vehicle_GetNameFromModel(modelid), plate);
 
-            sscanf(tempName, "p<_>s[24]s[24]", name, surname);
-
-            new String:end = str_format("{FFFFFF}==== SCHEDA DEL CITTADINO ====\n- Nome: %s\n- Cognome: %s\n\n==== Case ====\n\n", name, surname);
-
-            rentHouse = House_Find(temp);
-            if(House_IsValid(rentHouse))
-            {
-                end += str_format("- %s\n", House_GetAddress(rentHouse));
-            }
-
-            for_house(house)
-            {
-                if(House_GetOwnerID(house) == id && rentHouse != house)
-                {
-                    end += str_format("{33AA33}%s{FFFFFF}\n", House_GetAddress(rentHouse));
-                }
-            }
-            
-            end += @("\n==== Edifici (Biz) ====\n\n");
-            for_building(building)
-            {
-                if(Building_GetOwnerID(building) == id)
-                {
-                    end += str_format("{33AA33}%S{FFFFFF}\n", Building_GetAddressStr(building));
-                }
-            } 
-
-            end += @("\n");
-
-            Dialog_Show_s(playerid, DialogNull, DIALOG_STYLE_MSGBOX, @("Scheda"), end, "Chiudi", "");
+            SendClientMessageStr(playerid, -1, str_format("- %s [%s]", Vehicle_GetNameFromModel(modelid), plate));
         }
-        MySQL_TQueryInline(gMySQL, using inline OnSearch, "SELECT id, name, house_rent FROM characters WHERE id = '%d' and banned = 0", TargetID[playerid]);
+        new response[e_DIALOG_RESPONSE_INFO];
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, str_format("%s - Veicoli", targetName), string, @("Chiudi"), @(""));
     }
-    else if(listitem == 1)
-    {
-        inline OnSearch()
-        {
-            new rows = cache_num_rows();
-            if(rows <= 0)
-                return SendClientMessage(playerid, COLOR_ERROR, "Questo cittadino non possiede veicoli.");
-
-            new model, plate[9], String:end = @("Modello\tTarga\tUltima Localiz.\n");
-
-            for(new i = 0; i < rows; ++i)
-            {
-                cache_get_value_index_int(i, 0, model);
-                cache_get_value_index(i, 1, plate);
-                end += str_format("%s\t%s\tSconosciuta", Vehicle_GetNameFromModel(model), plate);
-            }
-
-            Dialog_Show_s(playerid, DialogNull, DIALOG_STYLE_TABLIST_HEADERS, @("Veicoli Cittadino"), end, "Chiudi", "");
-        }
-        MySQL_TQueryInline(gMySQL, using inline OnSearch, "SELECT model, plate FROM `vehicles` WHERE owner_id = '%d'", TargetID[playerid]);
-    }
-    return 1;
 }
 
-static ClearMDCData(playerid)
+static HandleCivilianBizDialog(playerid, targetid, const targetName[])
 {
-    TargetID[playerid] = 0;
+    new String:info = str_new("");
+    
+    SendClientMessageStr(playerid, -1, str_format("-- Biz di %s", targetName));
+
+    new count = 0;
+    str_append_format(info, "\n==== Edifici (Biz) ====\n\n");
+    for_building(building)
+    {
+        if(Building_GetOwnerID(building) != targetid)
+            continue;
+        
+        str_append_format(info, "- {33AA33}%S{FFFFFF}\n", Building_GetAddressStr(building));
+        SendClientMessageStr(playerid, -1, str_format("- {33AA33}%S{FFFFFF}", Building_GetAddressStr(building)));
+        count++;
+    }
+
+    if(count <= 0)
+    {
+        str_append_format(info, "Il civile non possiede edifici di proprietà.\n");
+        SendClientMessage(playerid, -1, "Il civile non possiede edifici di proprietà.");
+    }
+    new response[e_DIALOG_RESPONSE_INFO];
+    await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, str_format("%s - Case", targetName), info, @("Indietro"), @(""));
 }
+
+static HandleCivilianHouseDialog(playerid, targetid, const targetName[])
+{
+    new String:info = str_new("");
+    
+    SendClientMessageStr(playerid, -1, str_format("Case di %s", targetName));
+
+    new count = 0;
+    for_house(house)
+    {
+        if(House_GetOwnerID(house) == targetid)
+        {
+            str_append_format(info, "- {33AA33}%s{FFFFFF}\n", House_GetAddress(house));
+            SendClientMessageStr(playerid, -1, str_format("- {33AA33}%s{FFFFFF}\n", House_GetAddress(house)));
+            count++;
+        }
+    }
+    
+    if(count <= 0)
+        str_append_format(info, "Il civile non possiede case di proprietà.");
+    
+    new response[e_DIALOG_RESPONSE_INFO];
+    await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, str_format("%s - Case", targetName), info, @("Indietro"), @(""));
+}
+
+static HandleSearchPhoneDialog(playerid)
+{
+    new 
+        String:info = str_new("{FFFFFF}Inserisci il numero di cellulare che vuoi ricercare."), String:error = str_new(""),
+        response[e_DIALOG_RESPONSE_INFO], number = 0;
+    
+    pawn_guard(info);
+    pawn_guard(error);
+    
+    yield 1;
+    for(;;)
+    {
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Ricerca Numero Cellulare"), error + @("\n") + info, @("Cerca"), @("Indietro"));
+        
+        if(!response[E_DIALOG_RESPONSE_Response])
+            break;
+
+        str_clear(error);
+
+        number = strval(response[E_DIALOG_RESPONSE_InputText]);
+        if(number <= 0)
+        {
+            str_append(error, @("{FF0000}Il numero inserito non è del formato giusto.{FFFFFF}"));
+            continue;
+        }
+        
+        new String:query = str_format("SELECT phone_data.character_id, phone_data.created_at, characters.name FROM phone_data INNER JOIN `characters` ON phone_data.character_id = characters.id AND phone_data.number = '%d';", number);
+        await mysql_aquery_s(gMySQL, query, .parallel=true);
+
+        if(cache_num_rows() <= 0)
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "Il numero inserito non è stato trovato nel database.");
+            str_append(error, @("{FF0000}Il numero inserito non è stato trovato nel database.{FFFFFF}"));
+            continue;
+        }
+
+        new ownerid, createdAt, name[MAX_PLAYER_NAME];
+        cache_get_value_name_int(0, "character_id", ownerid);
+        cache_get_value_name_int(0, "created_at", createdAt);
+        cache_get_value_name(0, "name", name);
+
+
+        new year, month, day, hour, minute, second;
+        TimestampToDate(createdAt, year, month, day, hour, minute, second);
+
+        new String:res = str_new("");
+
+        SendClientMessageStr(playerid, -1, str_format("-- Numero di cellulare - %d", number));
+
+        if(ownerid > 0)
+        {
+            str_append_format(res, "Intestatario: %s\n", name);
+            SendClientMessageStr(playerid, -1, str_format("Intestatario: %s", name));
+        }
+        str_append_format(res, "Acquistato il %02d/%02d/%02d alle ore %02d:%02d", day, month, year, hour, minute);
+
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, str_format("Numero di cellulare - %d", number), res, @("Indietro"), @(""));
+
+        break;
+    }
+}
+
+static HandleSearchPlateDialog(playerid)
+{
+    new 
+        String:info = str_new("{FFFFFF}Inserisci la targa del veicolo da ricercare all'interno del database."), String:error = str_new(""),
+        response[e_DIALOG_RESPONSE_INFO];
+    
+    pawn_guard(info);
+    pawn_guard(error);
+    
+    yield 1;
+    for(;;)
+    {
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Ricerca Targa"), error + @("\n") + info, @("Cerca"), @("Indietro"));
+        
+        if(!response[E_DIALOG_RESPONSE_Response])
+            break;
+
+        str_clear(error);
+
+        if(isnull(response[E_DIALOG_RESPONSE_InputText]) || strlen(response[E_DIALOG_RESPONSE_InputText]) <= 0 || strlen(response[E_DIALOG_RESPONSE_InputText]) > 9)
+        {
+            str_append(error, @("{FF0000}Il numero di targa inserito non è del formato giusto.{FFFFFF}"));
+            continue;
+        }
+        
+        new String:query = str_format("SELECT vehicles.owner_id, vehicles.model, characters.name FROM vehicles INNER JOIN `characters` ON vehicles.owner_id = characters.id AND vehicles.plate = '%e';", response[E_DIALOG_RESPONSE_InputText]);
+        await mysql_aquery_s(gMySQL, query, .parallel=true);
+
+        if(cache_num_rows() <= 0)
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "La targa non è stata trovata nel database.");
+            str_append(error, @("{FF0000}La targa non è stata trovata nel database.{FFFFFF}"));
+            continue;
+        }
+
+        new ownerid, modelid, name[MAX_PLAYER_NAME];
+        cache_get_value_name_int(0, "owner_id", ownerid);
+        cache_get_value_name_int(0, "model", modelid);
+        cache_get_value_name(0, "name", name);
+
+        new String:res = str_new("");
+
+        str_append_format(res, "Modello: %s\n", Vehicle_GetNameFromModel(modelid));
+        SendClientMessageStr(playerid, -1, str_format("Modello: %s", Vehicle_GetNameFromModel(modelid)));
+        if(ownerid > 0)
+        {
+            str_append_format(res, "Intestatario: %s\n", name);
+            SendClientMessageStr(playerid, -1, str_format("Intestatario: %s", name));
+        }
+        //str_append_format(res, "Acquistato il %02d/%02d/%02d alle ore %02d:%02d", day, month, year, hour, minute);
+
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, str_format("Targa - %s", response[E_DIALOG_RESPONSE_InputText]), res, @("Indietro"), @(""));
+        break;
+    }
+}
+
+static HandleWeaponLicenseListDialog(playerid)
+{
+    #pragma unused playerid
+}
+static HandleBizOwnerDialog(playerid)
+{
+    new 
+        String:info = str_new("{FFFFFF}Inserisci l'id del biz di cui vuoi le informazioni."), String:error = str_new(""),
+        response[e_DIALOG_RESPONSE_INFO];
+    
+    pawn_guard(info);
+    pawn_guard(error);
+    
+    yield 1;
+    for(;;)
+    {
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Ricerca Proprietario Biz"), error + @("\n") + info, @("Cerca"), @("Indietro"));
+        
+        if(!response[E_DIALOG_RESPONSE_Response])
+            break;
+
+        str_clear(error);
+
+        new foundid = strval(response[E_DIALOG_RESPONSE_InputText]);
+        new Building:found = Building_Find(foundid);
+        if(!Building_IsValid(found))
+        {
+            str_append(error, @("{FF0000}L'edificio inserito non esiste.{FFFFFF}"));
+            continue;
+        }
+        
+        new String:res = str_new("");
+        pawn_guard(res);
+
+        new name[MAX_BUILDING_NAME];
+        Building_GetName(found, name);
+        str_append_format(res, "Nome: %s\n", name);
+        str_append_format(res, "Indirizzo: %S\n", Building_GetAddressStr(found));
+        if(Building_GetOwnerID(found) > 0)
+        {
+            await mysql_aquery_s(gMySQL, str_format("SELECT name FROM characters WHERE id = '%d'", Building_GetOwnerID(found)), .parallel=true);
+            if(cache_num_rows() > 0)
+            {
+                cache_get_value_name(0, "name", name);
+                str_append_format(res, "Proprietario: %s\n", name);
+            }
+        }
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, str_format("Biz - %d", foundid), res, @("Indietro"), @(""));
+        break;
+    }
+}
+static HandleHouseOwnerDialog(playerid)
+{
+    new 
+        String:info = str_new("{FFFFFF}Inserisci l'id della casa di cui vuoi le informazioni."), String:error = str_new(""),
+        response[e_DIALOG_RESPONSE_INFO];
+    
+    pawn_guard(info);
+    pawn_guard(error);
+    
+    yield 1;
+    for(;;)
+    {
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Ricerca Proprietario Casa"), error + @("\n") + info, @("Cerca"), @("Indietro"));
+        
+        if(!response[E_DIALOG_RESPONSE_Response])
+            break;
+
+        str_clear(error);
+
+        new foundid = strval(response[E_DIALOG_RESPONSE_InputText]);
+        new House:found = House_Find(foundid);
+        if(!House_IsValid(found))
+        {
+            str_append(error, @("{FF0000}La casa inserita non esiste.{FFFFFF}"));
+            continue;
+        }
+        
+        new String:res = str_new("");
+        pawn_guard(res);
+
+        str_append_format(res, "Indirizzo: %S\n", House_GetAddressStr(found));
+        if(House_GetOwnerID(found) > 0)
+        {
+            await mysql_aquery_s(gMySQL, str_format("SELECT name FROM characters WHERE id = '%d'", House_GetOwnerID(found)), .parallel=true);
+            if(cache_num_rows() > 0)
+            {
+                new name[MAX_PLAYER_NAME];
+                cache_get_value_name(0, "name", name);
+                str_append_format(res, "Proprietario: %s\n", name);
+            }
+        }
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, str_format("Casa - %d", foundid), res, @("Indietro"), @(""));
+        break;
+    }
+}
+

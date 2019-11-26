@@ -14,7 +14,7 @@ stock SendMail( const szReceiver[ ], const szSubject[ ], const szMessage[ ] )
 	new str[256];
 	format(str, sizeof(str), "%s?sendto=%s&subject=%s&body=%s",
 								MAILER_URL, rec, subject, mess);
-	printf("%s", str);
+	//printf("%s", str);
 	HTTP( 0xD00D, HTTP_GET , str, "", "OnMailScriptResponse" );
 }
 

@@ -93,7 +93,7 @@ Dialog:Dialog_CustomAnimDelete(playerid, response, listitem, inputtext[])
 		cache_get_value_index_int(listitem, 0, tmpId);
 		cache_get_value_index(listitem, 1, tmpName);
 
-		mysql_tquery_f(gMySQL, "DELETE FROM `character_custom_animations` WHERE id = '%d';", tmpId);
+		mysql_pquery_f(gMySQL, "DELETE FROM `character_custom_animations` WHERE id = '%d';", tmpId);
 
 		SendFormattedMessage(playerid, COLOR_GREEN, "Custom Animation \"%s\" eliminata con successo.", tmpName);
 	}
@@ -165,7 +165,7 @@ Dialog:Dialog_CreateCustomAnimOk(playerid, response, listitem, inputtext[])
 
 stock CustomAnimation_CreateForPlayer(playerid, const customName[], const library[], const animName[], isLoop)
 {
-	mysql_tquery_f(gMySQL, "INSERT INTO `character_custom_animations` (character_id, name, library, anim_name, is_loop) VALUES('%d', '%e', '%e', '%e', '%d');", 
+	mysql_pquery_f(gMySQL, "INSERT INTO `character_custom_animations` (character_id, name, library, anim_name, is_loop) VALUES('%d', '%e', '%e', '%e', '%d');", 
 	Character_GetID(playerid), customName, library, animName, isLoop);
 }
 

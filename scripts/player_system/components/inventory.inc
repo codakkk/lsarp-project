@@ -3,9 +3,7 @@
 
 #include <YSI_Coding\y_hooks>
 
-static 
-	Map:PlayerInventory, 
-	pInventoryBag[MAX_PLAYERS],
+static
 	SelectedListItem[MAX_PLAYERS]
 ;
 forward OnCharacterUseItem(playerid, slotid, itemid);
@@ -14,48 +12,32 @@ forward OnCharacterGiveItem(playerid, itemid, amount, extra, Map:tempExtra);
 
 // #define Character_%0(%1, Inventory_%0(Character_GetInventory(%1), // It is a convenient way to call Inventory_Func with player inventory
 
-hook OnGameModeInit()
+hook OnCharacterLoad(playerid)
 {
-	PlayerInventory = map_new();
+	Inventory_New(ENTITY_TYPE_PLAYER, playerid, PLAYER_INVENTORY_START_SIZE);
+	Character_LoadInventory(playerid);
 	return 1;
 }
 
-stock bool:Character_InitializeInventory(playerid)
+stock Inventory:Character_GetInventory(playerid)
 {
-	//if(!Character_IsLogged(playerid))
-		//return false;
-	if(map_has_key(PlayerInventory, playerid))
-	{
-		map_remove_deep(PlayerInventory, playerid);
-	}
-	new Inventory:inventory = Inventory_New(PLAYER_INVENTORY_START_SIZE);
-	map_add(PlayerInventory, playerid, List:inventory);
-	return true;
+	return Inventory_Get(ENTITY_TYPE_PLAYER, playerid);
 }
 
 stock bool:Character_UnloadInventory(playerid)
 {
 	if(!Character_IsLogged(playerid))
 		return false;
-	map_remove_deep(PlayerInventory, playerid);
+	Inventory_Delete(Inventory_Get(ENTITY_TYPE_PLAYER, playerid));
 	return true;
-}
-
-hook OnCharacterLoad(playerid)
-{
-	Character_InitializeInventory(playerid);
-	Character_LoadInventory(playerid);
-	return 1;
 }
 
 hook OnCharacterClearData(playerid)
 {
 	SelectedListItem[playerid] = -1;
-	Character_ResetInventory(playerid);
 	Character_UnloadInventory(playerid);
 	return 1;
 }
-
 
 hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
@@ -70,9 +52,7 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 		if(Character_HasSpaceForItem(playerid, weaponid, 1))
 		{
 			SendClientMessage(playerid, COLOR_GREEN, "Proiettili esauriti. L'arma è stata rimessa nell'inventario.");
-			//Character_AMe(playerid, "ripone l'arma nell'inventario.");
 			Character_GiveItem(playerid, weaponid, 1, 0, false);
-			Character_RemoveWeapon(playerid, weaponid);
 		}
 		else
 		{
@@ -83,11 +63,7 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 				GetVehiclePos(GetPlayerVehicleID(playerid), x, y, z);
 			else 
 			 	GetPlayerPos(playerid, x, y, z);
-			new result = Drop_Create(Character_GetOOCNameStr(playerid), x, y, z - 0.9, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, 0);
-			if(result != -1)
-			{
-				Character_RemoveWeapon(playerid, weaponid);
-			}
+			Drop_Create(Character_GetOOCNameStr(playerid), x, y, z - 0.9, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), weaponid, 1, 0);
 		}
 		if(Request_IsPending(playerid, REQUEST_TYPE_WEAPON) && Request_GetSlot(playerid, REQUEST_TYPE_WEAPON) == Weapon_GetSlot(weaponid) && Request_GetItem(playerid, REQUEST_TYPE_WEAPON) == weaponid)
 		{
@@ -98,17 +74,6 @@ hook OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, 
 		}
 	}
 	return 1;
-}
-
-stock Inventory:Character_GetInventory(playerid)
-{
-	new Inventory:inv;
-	if(!map_has_key(PlayerInventory, playerid))
-	{
-		Character_InitializeInventory(playerid);
-	}
-	map_get_safe(PlayerInventory, playerid, List:inv);
-	return inv;
 }
 
 // Returns success or not.
@@ -162,7 +127,8 @@ stock Character_ResizeInventory(playerid)
 
 stock Character_GetInventorySize(playerid)
 {
-	return PLAYER_INVENTORY_START_SIZE + ServerItem_GetBagSize(Character_GetBag(playerid));
+	#pragma unused playerid
+	return PLAYER_INVENTORY_START_SIZE;
 }
 
 stock bool:Character_IsSlotUsed(playerid, slotid)
@@ -338,9 +304,7 @@ Dialog:Dialog_InvItemAction(playerid, response, listitem, inputtext[])
 		{
 			if(ServerItem_GetType(itemid) == ITEM_TYPE_WEAPON && extra > 0)
 			{
-				new dest[8];
-				valstr(dest, slotid);
-				callcmd::disassembla(playerid, dest);
+				Character_DisassembleWeapon(playerid, slotid);
 				return 1;
 			}
 		}
@@ -449,6 +413,8 @@ stock String:Item_GetDialogTitle(itemid, amount, extra)
 stock Character_GetSlotItem(playerid, slotid)
 {
 	new Inventory:playerInv = Character_GetInventory(playerid);
+	if(!Inventory_IsValid(playerInv))
+		return 0;
 	return Inventory_GetSlotItem(playerInv, slotid);
 }
 
@@ -467,25 +433,6 @@ stock Character_GetItemAmount(playerid, itemid)
 stock Character_HasItem(playerid, itemid, min = 1) return Inventory_HasItem(Character_GetInventory(playerid), itemid, min);
 
 stock Character_HasSpaceForItem(playerid, itemid, amount) return Inventory_HasSpaceForItem(Character_GetInventory(playerid), itemid, amount);
-
-stock Character_HasBag(playerid) return pInventoryBag[playerid] != 0 && ServerItem_IsBag(pInventoryBag[playerid]);
-
-stock Character_GetBag(playerid) return pInventoryBag[playerid];
-
-stock bool:Character_SetBag(playerid, bagid)
-{
-	if(bagid != 0 && !ServerItem_IsBag(bagid))
-		return false;
-	pInventoryBag[playerid] = bagid;
-	Character_ResizeInventory(playerid);
-	return true;
-}
-
-stock Character_ResetInventory(playerid)
-{
-	Character_SetBag(playerid, 0);
-	return 1;
-}
 
 stock Character_SaveInventory(playerid)
 {
@@ -536,8 +483,10 @@ stock Character_DropItem(playerid, slotid, amount)
 {
 	if(Request_IsPending(playerid, REQUEST_TYPE_ITEM))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi gettare un oggetto se hai una richiesta attiva.");
+	
 	if(IsPlayerInAnyVehicle(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando all'interno di un veicolo.");
+		
 	new 
 		itemid = Character_GetSlotItem(playerid, slotid),
 		slotAmount = Character_GetSlotAmount(playerid, slotid),
@@ -546,9 +495,11 @@ stock Character_DropItem(playerid, slotid, amount)
 		return SendClientMessage(playerid, COLOR_ERROR, "Oggetto non valido o non hai abbastanza quantità.");
 	if(amount < 1 || amount > slotAmount)
 		return SendClientMessage(playerid, COLOR_ERROR, "La quantità inserita non è valida.");
+	
 	new Float:x, Float:y, Float:z;
 	GetPlayerPos(playerid, x, y, z);
 	GetXYInFrontOfPlayer(playerid, x, y, 1.5);
+
 	new result = Drop_Create(Character_GetOOCNameStr(playerid), x, y, z - 0.9, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), itemid, amount, extra, Inventory_GetSlotTempExtraMap(Character_GetInventory(playerid), slotid));
 	if(result != -1)
 	{

@@ -17,20 +17,25 @@ hook OnCharacterClearData(playerid)
 
 hook OnCharacterLoad(playerid)
 {
-    inline OnLoad()
-    {
-        cache_get_value_name_float(0, "max_health", PlayerMaxHealth[playerid]);
-        cache_get_value_name_float(0, "max_armour", PlayerMaxArmour[playerid]);
-        cache_get_value_name_int(0, "upgrade_points", UpgradePoints[playerid]);
-    }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT max_health, max_armour, upgrade_points FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
+    await mysql_aquery_s(gMySQL, str_format("SELECT max_health, max_armour, upgrade_points FROM `characters` WHERE id = '%d'", Character_GetID(playerid)), .parallel=true);
+    
+    cache_get_value_name_float(0, "max_health", PlayerMaxHealth[playerid]);
+    cache_get_value_name_float(0, "max_armour", PlayerMaxArmour[playerid]);
+    cache_get_value_name_int(0, "upgrade_points", UpgradePoints[playerid]);
+
+    SetPlayerMaxArmour(playerid, PlayerMaxArmour[playerid]);
+    SetPlayerMaxHealth(playerid, PlayerMaxHealth[playerid]);
     return 1;
 }
 
 CMD:upgrade(playerid, params[])
 {
     if(isnull(params) || strlen(params) <= 0)
-        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /upgrade [vita - armatura]");
+    {
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /upgrade [vita - armatura]");
+        SendFormattedMessage(playerid, COLOR_COMMAND_ERROR, "Attualmente hai %d punti a disposizione.", UpgradePoints[playerid]);
+        return 1;
+    }
     
     if(UpgradePoints[playerid] <= 0)
         return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza punti.");
@@ -68,7 +73,7 @@ CMD:upgrade(playerid, params[])
 
         Character_SetMaxArmour(playerid, current);
 
-        SendFormattedMessage(playerid, COLOR_GREEN, "Hai aumentato i tuoi punti salute massimi. Punti upgrade rimanenti: %d.", UpgradePoints[playerid]);
+        SendFormattedMessage(playerid, COLOR_GREEN, "Hai aumentato i tuoi punti armatura massimi. Punti upgrade rimanenti: %d.", UpgradePoints[playerid]);
     }
     return 1;
 }
@@ -77,11 +82,11 @@ stock bool:Character_SetMaxHealth(playerid, Float:max)
 {
 	if(max < 100.0)
 	{
-		printf("Trying to set max health under 100.0");
 		return false;
 	}
 	PlayerMaxHealth[playerid] = max;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET max_health = '%f' WHERE id = '%d'", max, Character_GetID(playerid));
+    SetPlayerMaxHealth(playerid, max);
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET max_health = '%f' WHERE id = '%d'", max, Character_GetID(playerid));
 	return true;
 }
 
@@ -93,7 +98,8 @@ stock Float:Character_GetMaxHealth(playerid)
 stock bool:Character_SetMaxArmour(playerid, Float:max)
 {
 	PlayerMaxArmour[playerid] = max;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET max_armour = '%f' WHERE id = '%d'", max, Character_GetID(playerid));
+    SetPlayerMaxArmour(playerid, max);
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET max_armour = '%f' WHERE id = '%d'", max, Character_GetID(playerid));
 	return true;
 }
 
@@ -105,6 +111,6 @@ stock Float:Character_GetMaxArmour(playerid)
 stock Character_AddUpgradePoints(playerid, points)
 {
     UpgradePoints[playerid] += points;
-    mysql_tquery_f(gMySQL, "UPDATE `characters` SET upgrade_points = '%d' WHERE id = '%d'", UpgradePoints[playerid], Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `characters` SET upgrade_points = '%d' WHERE id = '%d'", UpgradePoints[playerid], Character_GetID(playerid));
     return 1;
 }

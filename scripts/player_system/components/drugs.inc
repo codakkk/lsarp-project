@@ -38,7 +38,7 @@ static PlayerDrugAddictionInfo[MAX_PLAYERS][MAX_PLAYER_DRUGS][e_PlayerDrugAddict
 CMD:drugstats(playerid, params[])
 {
 	new id;
-	if(Account_GetAdminLevel(playerid) > 1)
+	if(Account_GetAdminLevel(playerid) > 2)
 	{
 		if(sscanf(params, "k<u>", id))
 			id = playerid;
@@ -49,7 +49,7 @@ CMD:drugstats(playerid, params[])
 	return 1;
 }
 
-flags:resetdrugstats(CMD_JR_MODERATOR);
+flags:resetdrugstats(CMD_MODERATOR);
 CMD:resetdrugstats(playerid, params[])
 {
 	new id;
@@ -343,7 +343,7 @@ static stock Character_SaveDrugAddiction(playerid)
 		drugid = Character_GetDrug(playerid, i);
 		if(drugid == 0)
 		{
-			mysql_tquery_f(gMySQL, "DELETE FROM `character_drug_info` WHERE character_id = '%d' AND drug_id = '%d';", Character_GetID(playerid), drugid);
+			mysql_pquery_f(gMySQL, "DELETE FROM `character_drug_info` WHERE character_id = '%d' AND drug_id = '%d';", Character_GetID(playerid), drugid);
 			continue;
 		}
 		if(!ServerItem_IsDrug(drugid))
@@ -351,7 +351,7 @@ static stock Character_SaveDrugAddiction(playerid)
 			printf("Unable to save. Drug id invalid. ID: %d", drugid);
 			continue;
 		}
-		mysql_tquery_f(gMySQL, "INSERT INTO `character_drug_info` (character_id, drug_id, last_usage_time, usage_counter, next_usage_time) VALUES('%d', '%d', '%d', '%d', '%d') \
+		mysql_pquery_f(gMySQL, "INSERT INTO `character_drug_info` (character_id, drug_id, last_usage_time, usage_counter, next_usage_time) VALUES('%d', '%d', '%d', '%d', '%d') \
 		ON DUPLICATE KEY UPDATE \
 		last_usage_time = VALUES(last_usage_time), \
 		usage_counter = VALUES(usage_counter), \

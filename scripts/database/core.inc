@@ -165,7 +165,7 @@ hook OnAccountLogin(playerid)
 	GetPlayerIp(playerid, ip, sizeof(ip));
 	gpci(playerid, serial, sizeof(serial));
 
-	mysql_tquery_f(gMySQL, "INSERT INTO `connections` (account_id, ip, gpci) VALUES('%d', '%e', '%e')", Account_GetID(playerid), ip, serial);
+	mysql_pquery_f(gMySQL, "INSERT INTO `connections` (account_id, ip, gpci) VALUES('%d', '%e', '%e')", Account_GetID(playerid), ip, serial);
 	return 1;
 }
 

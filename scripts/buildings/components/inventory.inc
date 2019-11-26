@@ -10,12 +10,10 @@ static enum _:E_DIALOG_HOUSE_DATA
 }
 
 static
-    Map:BuildingInventory,
     Map:PlayerBuildingInventory; // <playerid, E_DIALOG_HOUSE_DATA>
 
 hook OnGameModeInit()
 {
-    BuildingInventory = map_new();
 	PlayerBuildingInventory = map_new();
 
     mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `building_inventory` ( \
@@ -39,21 +37,13 @@ hook OnBuildingLoaded(Building:building)
 
 static Inventory:Building_InitializeInventory(Building:building)
 {
-    if(map_has_key(BuildingInventory, Building_GetID(building)))
-		return Inventory:0;
-	new Inventory:inv = Inventory_New(30);
-	map_add(BuildingInventory, Building_GetID(building), List:inv);
+	new Inventory:inv = Inventory_New(ENTITY_TYPE_BUILDING, Building_GetID(building), 30);
 	return inv;
 }
 
 stock Inventory:Building_GetInventory(Building:building)
 {
-	new Inventory:inv;
-	if(map_get_safe(BuildingInventory, Building_GetID(building), List:inv))
-	{
-		return inv;
-	}
-	return Inventory:0;
+	return Inventory_Get(ENTITY_TYPE_BUILDING, Building_GetID(building));
 }
 
 stock Building_SaveInventory(Building:building)
@@ -89,7 +79,7 @@ stock Building_ShowInventory(Building:building, playerid)
 		data[SlotID] = -1;
 		map_add_arr(PlayerBuildingInventory, playerid, data);
 	}
-	Inventory_ShowStr(inventory, playerid, str_format("Inventario Edificio (%d/%d)", Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory)), Dialog_BizInventory, "Avanti", "Chiudi");
+	Inventory_ShowStr(inventory, playerid, str_format("Inventario Edificio (%d/%d)", Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory)), Dialog_BizInventory, "Avanti", "Chiudi", .forceDialog = true);
 	return 1;
 }
 
@@ -105,19 +95,23 @@ Dialog:Dialog_BizInventory(playerid, response, listitem, inputtext[])
 Dialog:BuildingInventoryAction(playerid, response, listitem, inputtext[])
 {
 	new Building:building = Internal_GetBuilding(playerid);
+
     if(!response)
         return Building_ShowInventory(building, playerid);
     new 
 		slotid = Internal_GetSlotID(playerid),
-		itemid = Inventory_GetSlotItem(Internal_GetInventory(playerid), slotid),
-		amount = Inventory_GetSlotAmount(Internal_GetInventory(playerid), itemid)
+		Inventory:inventoryRef = Internal_GetInventory(playerid),
+		itemid = Inventory_GetSlotItem(inventoryRef, slotid),
+		amount = Inventory_GetSlotAmount(inventoryRef, slotid),
+		extra = Inventory_GetSlotExtra(inventoryRef, slotid, 0),
+		Map:tempExtra = Inventory_GetSlotTempExtraMap(inventoryRef, slotid)
 	;
 
 	if(listitem == 0)
 	{
 		if(itemid == 0)
 		{
-			Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", BuildingInvDepSelectItem, "Seleziona", "Indietro");
+			Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", BuildingInvDepSelectItem, "Seleziona", "Indietro", .forceDialog = true);
 		}
 		else
 		{
@@ -139,8 +133,8 @@ Dialog:BuildingInventoryAction(playerid, response, listitem, inputtext[])
 			if(!Character_HasSpaceForItem(playerid, itemid, 1))
 				return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario."), Internal_ShowBuildingSlotAction(playerid, Internal_GetSlotID(playerid));
 			
-			Inventory_DecreaseSlotAmount(Internal_GetInventory(playerid), slotid, 1);
-			Character_GiveItem(playerid, itemid, 1, 0, true);
+			Inventory_DecreaseSlotAmount(inventoryRef, slotid, 1);
+			Character_GiveItem(playerid, itemid, 1, extra, true, tempExtra);
 
 			Character_SaveInventory(playerid);
 			Building_SaveInventory(building);
@@ -166,7 +160,9 @@ Dialog:BuildingInvWithdrawAmount(playerid, response, listitem, inputtext[])
 		slotid = Internal_GetSlotID(playerid),
 		Inventory:inventoryRef = Internal_GetInventory(playerid),
 		itemid = Inventory_GetSlotItem(inventoryRef, slotid),
-		slotAmount = Inventory_GetSlotAmount(inventoryRef, slotid)
+		slotAmount = Inventory_GetSlotAmount(inventoryRef, slotid),
+		slotExtra = Inventory_GetSlotExtra(inventoryRef, slotid, 0),
+		Map:tempExtra = Inventory_GetSlotTempExtraMap(inventoryRef, slotid)
 		;
 
 	if(! (0 < val <= slotAmount))
@@ -176,7 +172,7 @@ Dialog:BuildingInvWithdrawAmount(playerid, response, listitem, inputtext[])
 		return Dialog_Show_s(playerid, BuildingInvWithdrawAmount, DIALOG_STYLE_INPUT, @("Ammontare da ritirare"), str_format("{FF0000}Non hai abbastanza spazio nell'inventario.{FFFFFF}\nInserisci l'ammontare che vuoi ritirare.\nOggetto: %s\nQuantità disponibile: %d", ServerItem_GetName(itemid), slotAmount), "Ritira", "Indietro");
 
 	Inventory_DecreaseSlotAmount(inventoryRef, slotid, val);
-	Character_GiveItem(playerid, itemid, val, 0, true);
+	Character_GiveItem(playerid, itemid, val, slotExtra, true, tempExtra);
 
 	Character_SaveInventory(playerid);
 
@@ -197,17 +193,21 @@ Dialog:BuildingInvDepSelectItem(playerid, response, listitem, inputtext[])
 		Building:building = Internal_GetBuilding(playerid), 
 		Inventory:inventoryRef = Internal_GetInventory(playerid),
 		itemid = Character_GetSlotItem(playerid, listitem),
-		amount = Character_GetSlotAmount(playerid, listitem)
+		amount = Character_GetSlotAmount(playerid, listitem),
+		extra = Character_GetSlotExtra(playerid, listitem, 0),
+		Map:tempExtra = Inventory_GetSlotTempExtraMap(Inventory_Get(ENTITY_TYPE_PLAYER, playerid), listitem)
 	;
+	if(itemid == 0)
+		return Internal_ShowBuildingSlotAction(playerid, Internal_GetSlotID(playerid));
 	if(ServerItem_IsUnique(itemid) || amount == 1)
 	{
 		if(!Inventory_HasSpaceForItem(Internal_GetInventory(playerid), itemid, amount))
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario dell'edificio.");
-			return Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", BuildingInvDepSelectItem, "Seleziona", "Indietro");
+			return Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", BuildingInvDepSelectItem, "Seleziona", "Indietro", .forceDialog = true);
 		}
-		Inventory_AddItem(inventoryRef, itemid, amount, 0);
-		Character_DecreaseItemAmount(playerid, itemid, amount);
+		Character_DecreaseSlotAmount(playerid, listitem, amount);
+		Inventory_AddItem(inventoryRef, itemid, amount, extra, tempExtra);
 
 		Character_SaveInventory(playerid);
 		Building_SaveInventory(building);

@@ -13,11 +13,11 @@ hook OnCharacterClearData(playerid)
 
 hook OnCharacterDisconnected(playerid, reason)
 {
-    mysql_tquery_f(gMySQL, "UPDATE `characters` SET last_skin = '%d' WHERE id = '%d'", GetPlayerSkin(playerid), Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `characters` SET last_skin = '%d' WHERE id = '%d'", GetPlayerSkin(playerid), Character_GetID(playerid));
     return 1;
 }
 
-hook OnCharacterSpawn(playerid)
+hook OnCharacterSpawned(playerid)
 {
     new skinid = PlayerLastSkin[playerid] > 0 ? PlayerLastSkin[playerid] : Character_GetSkin(playerid);
     if(skinid == 0)
@@ -25,6 +25,7 @@ hook OnCharacterSpawn(playerid)
         skinid = 1;
         printf("No skin found for player id %d. Set skin id 1.");
     }
+    PlayerLastSkin[playerid] = 0;
     mysql_pquery_f(gMySQL, "UPDATE `characters` SET last_skin = '%d' WHERE id = '%d'", 0, Character_GetID(playerid));
     SetPlayerSkin(playerid, skinid);
     return 1;
@@ -45,7 +46,7 @@ static Internal_Save(playerid)
 {
     if(!Character_IsLogged(playerid))
         return 0;
-    mysql_tquery_f(gMySQL, "UPDATE `characters` SET skin = '%d' WHERE id = '%d'", Character_GetSkin(playerid), Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `characters` SET skin = '%d' WHERE id = '%d'", Character_GetSkin(playerid), Character_GetID(playerid));
     return 1;
 }
 
@@ -61,4 +62,10 @@ stock Character_SetSkin(playerid, skinid)
 stock Character_GetSkin(playerid)
 {
     return PlayerSkin[playerid];
+}
+
+stock Character_SetTempSkin(playerid, skinid)
+{
+    mysql_pquery_f(gMySQL, "UPDATE `characters` SET last_skin = '%d' WHERE id = '%d'", skinid, Character_GetID(playerid));
+    return 1;
 }

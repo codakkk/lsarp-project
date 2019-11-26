@@ -31,7 +31,7 @@ hook OnGameModeInit()
 
 hook OnCharacterClearData(playerid)
 {
-    callcmd::gps(playerid, "off");
+    HideGPS(playerid);
     return 1;
 }
 
@@ -40,7 +40,7 @@ hook OnPlayerEnterDynamicCP(playerid, checkpointid)
     if(CurrentLocationCheckpoint[playerid] == checkpointid && IsValidDynamicCP(CurrentLocationCheckpoint[playerid]))
     {
         SendClientMessage(playerid, COLOR_ORANGE, "Hai raggiunto il luogo segnato.");
-        callcmd::gps(playerid, "off");        
+        HideGPS(playerid);    
     }
     return 1;
 }
@@ -172,12 +172,8 @@ CMD:gps(playerid, params[])
 {
     if(!isnull(params) && !strcmp(params, "off", true))
     {
-        if(CurrentLocationCheckpoint[playerid] != -1 && IsValidDynamicCP(CurrentLocationCheckpoint[playerid]))
-        {
-            DestroyDynamicCP(CurrentLocationCheckpoint[playerid]);
-            CurrentLocationCheckpoint[playerid] = -1;
-            return 1;
-        }
+        HideGPS(playerid);
+        SendClientMessage(playerid, -1, "Hai rimosso il checkpoint del GPS.");
     }
     else
     {
@@ -187,20 +183,20 @@ CMD:gps(playerid, params[])
 }
 alias:gps("luoghi");
 
-static ShowGPS(playerid, page = 0)
+static ShowGPS(playerid)
 {
     if(list_size(Locations) <= 0)
     {
         SendClientMessage(playerid, COLOR_ERROR, "Non ci sono luoghi definiti.");
         return;
     }
-    yield 1;
     new 
         String:content = str_new(""), 
         response[e_DIALOG_RESPONSE_INFO],
         data[E_GPS_LOCATION];
 
     pawn_guard(content);
+    yield 1;
     for(;;)
     {
         str_clear(content);
@@ -221,12 +217,19 @@ static ShowGPS(playerid, page = 0)
         
         list_get_arr(Locations, listitem, data);
         
-        callcmd::gps(playerid, "off");
+        HideGPS(playerid);
 
         CurrentLocationCheckpoint[playerid] = CreateDynamicCP(data[X], data[Y], data[Z], 2.5, 0, 0, playerid, 99999.0);
         SendFormattedMessage(playerid, COLOR_ORANGE, "Il luogo (%s) è segnato sulla mappa da un checkpoint rosso. Usa \"/luoghi off\" per disabilitarlo.", data[Name]);
         break;
     }
+}
+
+static HideGPS(playerid)
+{
+    if(IsValidDynamicCP(CurrentLocationCheckpoint[playerid]))
+        DestroyDynamicCP(CurrentLocationCheckpoint[playerid]);
+    CurrentLocationCheckpoint[playerid] = -1;
 }
 
 static GPS_LoadAll()

@@ -37,43 +37,13 @@ CMD:setarmour(playerid, params[])
 
     Character_SetArmour(id, hp);
     SendMessageToAdmins(0, COLOR_ADMINCMD, "AdmCmd: %s (%s) ha settato l'armatura di %s (%d) a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), Character_GetOOCName(id), id, hp);
-    SendFormattedMessage(playerid, COLOR_GREEN, "[ADMIN] %s (%s) ti ha settato l'armatura a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
+    SendFormattedMessage(id, COLOR_GREEN, "[ADMIN] %s (%s) ti ha settato l'armatura a %d.", Account_GetName(playerid), Character_GetOOCName(playerid), hp);
     Log(Account_GetName(playerid), Character_GetOOCName(id), "/setarmour", hp);
     return 1;
 }
 alias:setarmour("setap");
 
-flags:vcreate(CMD_MODERATOR);
-CMD:vcreate(playerid, params[])
-{
-	new model, c1, c2;
-	if(sscanf(params, "k<vehicle>D(0)D(0)", model, c1, c2))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /vcreate <modelid> <color1> <color2>");
-	if (model < 400 || model > 611) 
-		return SendClientMessage(playerid, COLOR_WHITE, "L'id del modello deve andare da 400 a 611.");
-	new 
-	Float:_x, 
-	Float:_y, 
-	Float:_z;
-	GetPlayerPos(playerid, _x, _y, _z);
 
-	new id = Vehicle_Create(model, _x, _y, _z, 0, c1, c2, 0, 0);
-	if(id == -1)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non è stato possibile creare il veicolo.");
-	
-	LinkVehicleToInterior(id, GetPlayerInterior(playerid));
-	SetVehicleVirtualWorld(id, Character_GetVirtualWorld(playerid));
-	
-	Vehicle_SetTemporary(id, true);
-	Vehicle_SetFuel(id, 100);
-	PutPlayerInVehicle(playerid, id, 0);
-	Vehicle_SetEngineStatus(id, true);
-
-	SendFormattedMessage(playerid, COLOR_GREEN, "Veicolo %d creato. Non dimenticare di distruggerlo con /vdelete (a bordo).", id);
-	
-	Log(Account_GetName(playerid), "", "/vcreate", model);
-	return 1;
-}
 
 flags:setvhp(CMD_MODERATOR);
 CMD:setvhp(playerid, params[])
@@ -149,9 +119,7 @@ CMD:gotovehicle(playerid, params[])
 
     new Float:x, Float:y, Float:z;
     GetVehiclePos(id, x, y, z);
-    SetPlayerPos(playerid, x, y, z+5.0);
-    SetPlayerInterior(playerid, 0);
-    Character_SetVirtualWorld(playerid, GetVehicleVirtualWorld(id)); 
+    Character_SetSafePosition(playerid, x, y, z+2.0, 0, GetVehicleVirtualWorld(id));
     return 1;
 }
 alias:gotovehicle("gotov");
@@ -185,7 +153,7 @@ CMD:apark(playerid, params[])
     new Float:x, Float:y, Float:z, Float:a;
     GetVehiclePos(vehicleid, x, y, z);
     GetVehicleZAngle(vehicleid, a);
-	printf("ZAngle: %f", a);
+
     Vehicle_Park(vehicleid, x, y, z, a);
 	if(Vehicle_GetOwnerID(vehicleid) > 0)
 	{
@@ -251,30 +219,6 @@ CMD:resetinv(playerid, params[])
 	Character_SaveInventory(id);
 	SendMessageToAdmins(false, COLOR_ADMINCMD, "AdmAlert: %s ha resettato l'inventario di %s.", Account_GetName(playerid), Character_GetOOCName(id));
 	SendFormattedMessage(id, COLOR_ERROR, "[ADMIN]: %s ti ha resettato l'inventario.", Account_GetName(playerid));
-	return 1;
-}
-
-flags:vdelete(CMD_MODERATOR);
-CMD:vdelete(playerid, params[])
-{
-	new vehicleid = GetPlayerVehicleID(playerid);
-
-	if(vehicleid <= 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non sei a bordo di un veicolo.");
-	// If Vehicle Faction, don't make it callable
-
-	if(Vehicle_GetID(vehicleid) > 0)
-	{
-		if(Account_GetAdminLevel(playerid) < 3)
-			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando su questo veicolo.");
-		SendMessageToAdmins(true, COLOR_YELLOW, "AdmAlert: %s (%d) ha deletato il veicolo %d di %s.", Account_GetName(playerid), playerid, vehicleid, Character_GetNameFromDatabase(Vehicle_GetOwnerID(vehicleid), true));
-		Vehicle_Delete(vehicleid);
-	}
-	else
-	{
-		SendMessageToAdmins(true, COLOR_YELLOW, "AdmAlert: %s (%d) ha deletato il veicolo %d.", Account_GetName(playerid), playerid, vehicleid);
-		Vehicle_Destroy(vehicleid);
-	}
 	return 1;
 }
 
@@ -359,7 +303,7 @@ CMD:banofflineaccount(playerid, params[])
 			new id, e_name[MAX_PLAYER_NAME];
 			cache_get_value_index_int(0, 0, id);
 			cache_get_value_index(0, 1, e_name);
-			mysql_tquery_f(gMySQL, "UPDATE `accounts` SET banned = '1' WHERE id = '%d'", id);
+			mysql_pquery_f(gMySQL, "UPDATE `accounts` SET banned = '1' WHERE id = '%d'", id);
 			SendFormattedMessage(playerid, COLOR_ORANGE, "L'account \"%s\" è stato bannato.", e_name);
 			SendMessageToAdmins(true, COLOR_ORANGE, "AdmAlert: %s ha bannato l'account \"%s\".", Account_GetName(playerid), e_name);
 			Log(Account_GetName(playerid), e_name, "/banofflineaccount");
@@ -387,7 +331,7 @@ CMD:unbanaccount(playerid, params[])
 			new id, e_name[MAX_PLAYER_NAME];
 			cache_get_value_index_int(0, 0, id);
 			cache_get_value_index(0, 1, e_name);
-			mysql_tquery_f(gMySQL, "UPDATE `accounts` SET banned = '0', ban_expiry = '0' WHERE id = '%d'", id);
+			mysql_pquery_f(gMySQL, "UPDATE `accounts` SET banned = '0', ban_expiry = '0' WHERE id = '%d'", id);
 			SendFormattedMessage(playerid, COLOR_ORANGE, "L'account \"%s\" è stato sbannato.", e_name);
 			SendMessageToAdmins(true, COLOR_ORANGE, "AdmAlert: %s ha sbannato l'account \"%s\".", Account_GetName(playerid), e_name);
 			Log(Account_GetName(playerid), e_name, "/unbanaccount");
@@ -395,10 +339,10 @@ CMD:unbanaccount(playerid, params[])
 		}
 		else
 		{
-			SendFormattedMessage(playerid, COLOR_ERROR, "L'account non esiste.");
+			SendFormattedMessage(playerid, COLOR_ERROR, "L'account non esiste o è già sbannato.");
 		}
 	}
-	MySQL_TQueryInline(gMySQL, using inline FindAccount, "SELECT id, name FROM `accounts` WHERE LOWER(name) = LOWER('%e')", name);
+	MySQL_TQueryInline(gMySQL, using inline FindAccount, "SELECT id, name FROM `accounts` WHERE LOWER(name) = LOWER('%e') AND banned = '1'", name);
 	return 1;
 }
 
@@ -429,10 +373,12 @@ CMD:unbancharacter(playerid, params[])
 			new id, e_name[MAX_PLAYER_NAME];
 			cache_get_value_index_int(0, 0, id);
 			cache_get_value_index(0, 1, e_name);
-			mysql_tquery_f(gMySQL, "UPDATE `characters` SET banned = '0', ban_expiry = '0' WHERE id = '%d'", id);
+			mysql_pquery_f(gMySQL, "UPDATE `characters` SET banned = '0', ban_expiry = '0' WHERE id = '%d'", id);
 			SendFormattedMessage(playerid, COLOR_ORANGE, "Il personaggio \"%s\" è stato sbannato.", e_name);
 			SendMessageToAdmins(true, COLOR_ORANGE, "AdmAlert: %s ha sbannato il personaggio \"%s\".", Account_GetName(playerid), e_name);
 			Log(Account_GetName(playerid), e_name, "/unban");
+
+			Discord_SendBanMessage("L'admin **%s** ha _sbannato_ il personaggio **%s**.", Account_GetName(playerid), e_name);
 		}
 		else
 		{
@@ -462,7 +408,7 @@ stock BanCharacter(playerid, adminid, days, reason[])
 
 	Log(Account_GetName(adminid), Account_GetName(playerid), "BanCharacter", days);
 	LogCharacter(playerid, adminid, LOG_TYPE_BAN, reason, days);
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET banned = '1', ban_expiry = '%d' WHERE id = '%d'", banTime, Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET banned = '1', ban_expiry = '%d' WHERE id = '%d'", banTime, Character_GetID(playerid));
 
 	KickEx(playerid);
 	return 1;
@@ -470,7 +416,7 @@ stock BanCharacter(playerid, adminid, days, reason[])
 
 stock BanAccount(playerid, adminid, reason[])
 {
-	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET banned = '1' WHERE id = '%d'", Account_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `accounts` SET banned = '1' WHERE id = '%d'", Account_GetID(playerid));
 
 	SendFormattedMessage(playerid, COLOR_ORANGE, "Il tuo account (%s) è stato bannato da %s. Motivo: %s", Account_GetName(playerid), Account_GetName(adminid), reason);
 
@@ -514,6 +460,7 @@ CMD:respawnfactionvehicles(playerid, params[])
 		if(Vehicle_GetFaction(v) == factionid)
 		{
 			Vehicle_Respawn(v);
+			Vehicle_SetFuel(v, 100.0);
 		}
 	}
 
@@ -521,5 +468,162 @@ CMD:respawnfactionvehicles(playerid, params[])
 	Faction_GetName(factionid, name);
 	SendMessageToAdmins(0, COLOR_ORANGE, "AdmCmd: %s ha respawnato i veicoli della fazione id %d (%s).", Account_GetName(playerid), factionid, name);
 	Faction_SendMessage(factionid, "(( %s (%d) ha respawnato tutti i veicoli non occupati ))", Account_GetName(playerid), playerid);
+	return 1;
+}
+
+flags:check(CMD_MODERATOR);
+CMD:check(playerid, params[])
+{
+    new id;
+    if(sscanf(params, "k<u>", id))
+	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /check [playerid/partofname]");
+    if(id < 0 || id >= MAX_PLAYERS  || !Character_IsLogged(id))
+	   return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+    Character_ShowStats(id, playerid);
+
+	Character_ShowVehicleList(playerid, id, true);
+
+	new ip[16];
+	GetPlayerIp(id, ip, sizeof(ip));
+	SendFormattedMessage(playerid, COLOR_GREEN, "L'IP del giocatore è %s", ip);
+	if(Character_IsJailed(id)) 
+		SendFormattedMessage(id, COLOR_ORANGE, "Il giocatore è in jail per %d minuti", Character_GetJailTime(id));
+	SendClientMessage(playerid, COLOR_GREEN, "Per l'inventario, digita /invcheck [playerid/partofname]");
+	SendClientMessage(playerid, COLOR_GREEN, "Per le case, digita /housecheck [playerid/partofname]");
+	SendClientMessage(playerid, COLOR_GREEN, "Per i biz, digita /bizcheck [playerid/partofname]");
+    return 1;
+}
+
+flags:invcheck(CMD_MODERATOR);
+CMD:invcheck(playerid, params[])
+{
+    new id;
+    if(sscanf(params, "k<u>", id))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /invcheck [playerid/partofname]");
+    if(id < 0 || id >= MAX_PLAYERS  || !Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+	new str[64], Inventory:inv = Character_GetInventory(id);
+	format(str, sizeof(str), "Inventario di %s (%d/%d)",  Character_GetOOCName(id), Inventory_GetUsedSpace(inv), Inventory_GetSpace(inv));
+	
+	Inventory_Show(inv, playerid, str, DialogNull, "Chiudi", "Chiudi");
+	// Inventory_ShowInChatStr(Character_GetInventory(id), playerid, Character_GetOOCNameStr(id));
+	return 1;
+}
+
+flags:housecheck(CMD_MODERATOR);
+CMD:housecheck(playerid, params[])
+{
+	new id;
+	if(sscanf(params, "k<u>", id))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /housecheck [playerid/partofname]");
+	
+	if(!Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+
+	if(Character_GetOwnedHouseCount(id) <= 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non possiede case.");
+	
+	SendFormattedMessage(playerid, 0xFF6347FF, "Le case di %s", Character_GetOOCName(id));
+
+	new List:houses = Character_GetOwnedHousesList(id);
+	for_list(i : houses)
+	{
+		SendFormattedMessage(playerid, 0xFF6347FF, "- %s", House_GetAddress(House:iter_get(i)));
+	}
+	return 1;
+}
+
+flags:bizcheck(CMD_MODERATOR);
+CMD:bizcheck(playerid, params[])
+{
+	new id;
+	if(sscanf(params, "k<u>", id))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /bizcheck [playerid/partofname]");
+	
+	if(!Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+
+	if(Character_GetOwnedHouseCount(id) <= 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non possiede biz.");
+	
+	SendFormattedMessage(playerid, 0xFF6347FF, "I Biz di %s", Character_GetOOCName(id));
+
+	new List:buildings = Character_GetOwnedBuildingsList(id);
+	for_list(i : buildings)
+	{
+		SendFormattedMessage(playerid, 0xFF6347FF, "- %s", Building_GetAddress(Building:iter_get(i)));
+	}
+	return 1;
+}
+
+flags:setweather(CMD_MODERATOR);
+CMD:setweather(playerid, params[])
+{
+	if(isnull(params))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setweather <weather id>");
+	new w = strval(params);
+	if(0 <= w <= 20)
+	{
+		Server_SetNextWeather(w);
+		Server_UpdateWeather();
+		SendMessageToAdmins(false, COLOR_ADMINCMD, "%s (%d) ha cambiato il tempo metereologico. ID: %d.", Account_GetName(playerid), playerid, w);
+	}
+	else 
+		SendClientMessage(playerid, COLOR_ERROR, "ID Errato.");
+	return 1;
+}
+
+flags:respawnjobvehicles(CMD_MODERATOR);
+CMD:respawnjobvehicles(playerid, params[])
+{
+	new jobType;
+	if(sscanf(params, "d", jobType))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /respawnjobvehicles <factionid>");
+	
+	if(!(JOB_TYPE_NONE < JobType:jobType <= JobType))
+		return SendClientMessage(playerid, COLOR_ERROR, "Lavoro non valido.");
+
+	new bool:isOccupied = false;
+	foreach(new v : Vehicle)
+	{
+        if(Vehicle_GetJob(v) == JOB_TYPE_NONE)
+            continue;
+        
+		isOccupied = false;
+		foreach(new p : Player)
+		{
+			if(GetPlayerVehicleID(p) == v)
+			{
+				isOccupied = true;
+				break;
+			}
+		}
+		
+		if(isOccupied)
+			continue;
+		
+		if(Vehicle_GetJob(v) == JobType:jobType)
+		{
+			Vehicle_Respawn(v);
+            Vehicle_SetFuel(v, 100.0);
+		}
+	}
+
+	new name[32];
+	Job_GetName(JobType:jobType, name);
+	SendMessageToAdmins(0, COLOR_ORANGE, "AdmCmd: %s ha respawnato i veicoli del lavoro id %d (%s).", Account_GetName(playerid), jobType, name);
+	return 1;
+}
+
+flags:setlevel(CMD_MODERATOR);
+CMD:setlevel(playerid, params[])
+{
+	new id, level;
+    if(sscanf(params, "k<u>d", id, level))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setlevel [playerid/partofname] [level]");
+    if(!Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+	Character_SetLevel(id, level);
+	SendMessageToAdmins(false, COLOR_ADMINCMD, "AdmCmd: %s ha settato il livello di %s a %d.", Account_GetName(playerid), Character_GetOOCName(id), level);
 	return 1;
 }

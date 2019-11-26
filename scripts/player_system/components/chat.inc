@@ -29,10 +29,8 @@ CMD:stilechat(playerid, params[])
 	return 1;
 }
 
-hook OnPlayerText(playerid, text[])
+hook OnCharacterSpeak(playerid, text[])
 {
-	if(isnull(text))
-		return 0;
 	if(Player_IsAdminDuty(playerid))
 	{
 		callcmd::b(playerid, text);
@@ -114,7 +112,7 @@ stock Character_SetChatStyle(playerid, style)
 	if(!Character_IsLogged(playerid))
 		return 0;
 	PlayerChatStyle{playerid} = style;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET chat_style = '%d' WHERE id = '%d'", Character_GetChatStyle(playerid), Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET chat_style = '%d' WHERE id = '%d'", Character_GetChatStyle(playerid), Character_GetID(playerid));
 	return 1;
 }
 

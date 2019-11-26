@@ -13,7 +13,7 @@ hook OnCharacterLoad(playerid)
     return 1;
 }
 
-hook OnCharacterSpawn(playerid)
+hook OnCharacterSpawned(playerid)
 {
     if(Character_GetFightingStyle(playerid) == 0)
 		Character_SetFightingStyle(playerid, FIGHT_STYLE_NORMAL);
@@ -24,7 +24,7 @@ hook OnCharacterSpawn(playerid)
 
 static Internal_Save(playerid)
 {
-    mysql_tquery_f(gMySQL, "UPDATE `characters` SET fight_style = '%d' WHERE id = '%d'", Character_GetFightingStyle(playerid), Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `characters` SET fight_style = '%d' WHERE id = '%d'", Character_GetFightingStyle(playerid), Character_GetID(playerid));
 }
 
 stock Character_SetFightingStyle(playerid, style)

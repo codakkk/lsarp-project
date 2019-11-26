@@ -13,9 +13,9 @@ static const RewardInfo[][e_RewardData] =
 	{250, "Cambio Nome"},
 	{300, "Block PM"},
 	{300, "Block OOC"},
-	{500, "Premium Nerone (1 mese)"},
-	{750, "Premium Caligola (1 mese)"},
-	{1000, "Premium Giulio Cesare (1 mese)"},
+	{500, "Premium Bronze (1 mese)"},
+	{1000, "Premium Silver (1 mese)"},
+	{1500, "Premium Gold (1 mese)"},
 	{500, "+1 Slot Personaggio"},
 	{50, "+1 Livello"}
 };
@@ -56,7 +56,7 @@ stock Account_LoadRewards(playerid)
 		}
 		else
 		{
-			mysql_tquery_f(gMySQL, "INSERT INTO `account_rewards` (account_id) VALUES('%d')", Account_GetID(playerid));
+			mysql_pquery_f(gMySQL, "INSERT INTO `account_rewards` (account_id) VALUES('%d')", Account_GetID(playerid));
 		}
 	}
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `account_rewards` WHERE account_id = '%d'", Account_GetID(playerid));
@@ -67,7 +67,7 @@ stock Account_SetZPoints(playerid, points)
 	if(!Character_IsLogged(playerid))
 		return 0;
 	PlayerRewardData[playerid][ZPoints] = points;
-	mysql_tquery_f(gMySQL, "UPDATE `account_rewards` SET z_points = '%d' WHERE account_id = '%d'", points, Account_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `account_rewards` SET z_points = '%d' WHERE account_id = '%d'", points, Account_GetID(playerid));
 	return 1;
 }
 
@@ -86,7 +86,7 @@ stock Account_AddChangeName(playerid, amount)
     if(!Account_IsLogged(playerid))
         return 0;
     PlayerRewardData[playerid][ChangeName] += amount;
-	mysql_tquery_f(gMySQL, "UPDATE `account_rewards` SET change_name = '%d' WHERE account_id = '%d'", Account_GetChangeNameCount(playerid), Account_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `account_rewards` SET change_name = '%d' WHERE account_id = '%d'", Account_GetChangeNameCount(playerid), Account_GetID(playerid));
     return 1;
 }
 
@@ -109,7 +109,7 @@ stock Account_SetBlockPM(playerid, value)
     if(!Account_IsLogged(playerid))
         return 0;
     PlayerRewardData[playerid][BlockPM] = value;
-	mysql_tquery_f(gMySQL, "UPDATE `account_rewards` SET block_pm = '%d' WHERE account_id = '%d'", Account_HasBlockPM(playerid), Account_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `account_rewards` SET block_pm = '%d' WHERE account_id = '%d'", Account_HasBlockPM(playerid), Account_GetID(playerid));
     return 1;
 }
 
@@ -132,7 +132,7 @@ stock Account_SetBlockOOC(playerid, value)
     if(!Account_IsLogged(playerid))
         return 0;
     PlayerRewardData[playerid][BlockOOC] = value;
-	mysql_tquery_f(gMySQL, "UPDATE `account_rewards` SET block_ooc = '%d' WHERE account_id = '%d'", Account_HasBlockOOC(playerid), Account_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `account_rewards` SET block_ooc = '%d' WHERE account_id = '%d'", Account_HasBlockOOC(playerid), Account_GetID(playerid));
     return 1;
 }
 
@@ -206,7 +206,7 @@ Dialog:Dialog_ChangeName(playerid, response, listitem, inputtext[])
 
 	// Must be static or breaks the inline functions
 	static characterName[MAX_PLAYER_NAME];
-
+	format(characterName, sizeof(characterName), "");
 	for(new i = 0, len = strlen(inputtext); i < len; ++i)
 	{
 		characterName[i] = (inputtext[i] == ' ') ? (characterName[i] = '_') : (characterName[i] = inputtext[i]); // () crashes compiler porca madonna
@@ -229,7 +229,7 @@ Dialog:Dialog_ChangeName(playerid, response, listitem, inputtext[])
 
 			Account_AddChangeName(playerid, -1);
 
-			mysql_tquery_f(gMySQL, "UPDATE `characters` SET name = '%e' WHERE id = '%d'", characterName, Character_GetID(playerid));
+			mysql_pquery_f(gMySQL, "UPDATE `characters` SET name = '%e' WHERE id = '%d'", characterName, Character_GetID(playerid));
 			SendMessageToAdmins(0, COLOR_ORANGE, "%s (%d) ha cambiato il proprio nome. Nuovo nome: %s", Character_GetOOCName(playerid), playerid, characterName);
 			
 			Log(Character_GetOOCName(playerid), characterName, "change_name_zpoints");
@@ -242,8 +242,6 @@ Dialog:Dialog_ChangeName(playerid, response, listitem, inputtext[])
 			KickEx(playerid);
 		}
 	}
-	// here '%e' AS new_name is used to pass newCharacterName to Inline function
-	
 	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT id FROM `characters` WHERE name = '%e'", characterName);
 	return 1;
 }
@@ -281,11 +279,11 @@ Dialog:Dialog_ZPointsBuyRewards(playerid, response, listitem, inputtext[])
 			//3600 seconds * 24 (hours) * 30 (days)
 			if(Account_GetPremiumLevel(playerid) == 1 && Account_GetPremiumExpiry(playerid) > gettime())
 			{
-                Account_SetPremiumExpiry(playerid, Account_GetPremiumExpiry(playerid) + 3600 * 24 * 30);
+                Account_SetPremiumExpiry(playerid, gettime() + Account_GetPremiumExpiry(playerid) + 3600 * 24 * 30);
 			}
 			else
 			{
-                Account_SetPremiumExpiry(playerid, 3600 * 24 * 30);
+                Account_SetPremiumExpiry(playerid, gettime() + 3600 * 24 * 30);
 				Account_SetPremiumLevel(playerid, 1);
 			}
 		}

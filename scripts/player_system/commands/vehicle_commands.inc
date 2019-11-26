@@ -172,7 +172,7 @@ CMD:vdisassembla(playerid, params[])
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino ad un veicolo.");
 	if(!Vehicle_IsOwner(vehicleid, playerid, false))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non sei il proprietario di questo veicolo.");
-	if(sscanf(params, "d", slotid))
+	if(sscanf(params, "k<slotid>", slotid))
 	{
 		if(Character_IsFactionDuty(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio");
@@ -238,36 +238,6 @@ CMD:motore(playerid, params[])
     return callcmd::vehicle(playerid, "motore");
 }
 
-/*timer TurnOnVehicleEngine[500](playerid)
-{
-	new vehicleid = GetPlayerVehicleID(playerid);
-	if(vehicleid > 0)
-	{
-		new Float:vh = Vehicle_GetHealth(vehicleid), vr = 0;
-		if(vh < 300.0) vr = 2;
-		else if(vh < 400) vr = 3;
-		else if(vh < 500) vr = 4;
-		else if(vh < 600) vr = 5;
-		else if(vh < 700) vr = 6;
-		else if(vh < 800) vr = 7;
-		else if(vh < 900) vr = 8;
-		else vr = 9;
-		vr *= 2;
-		new r = random(vr);
-		if(r == 0)
-		{
-			Character_Do(playerid, "Il motore non si accende");
-			Vehicle_SetEngineStatus(vehicleid, false);
-		}
-		else
-		{
-			Character_Do(playerid, "Il motore si accende");
-			Vehicle_SetEngineOn(vehicleid);
-		}
-	}
-	Character_SetFreezed(playerid, false);
-	Character_SetTurningOnEngine(playerid, false);
-}*/
 
 Dialog:Dialog_VehicleList(playerid, response, listitem, inputtext[])
 {

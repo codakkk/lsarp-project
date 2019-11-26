@@ -1,16 +1,32 @@
-#include <account_system\components\login>
-#include <account_system\components\register>
 #include <account_system\components\char_select>
 #include <reward_system\core>
+#include <samp_bcrypt>
+#define BCRYPT_COST 10
 
 #include <YSI_Coding\y_hooks>
 
+#define MAX_LOGIN_ATTEMPTS	(3)
+
 forward OnAccountLogin(playerid);
+
+static
+	PlayerHash[MAX_PLAYERS][250],
+	LoginAttempts[MAX_PLAYERS char] = {0, ...}
+;
+
+enum
+{
+	ADMIN_ROLE_NONE = 0,
+	ADMIN_ROLE_PROPERTY = 1,
+	ADMIN_ROLE_FACTION = 2
+}
+
 
 static enum E_ACCOUNT_DATA
 {
 	ID,
 	Admin,
+	AdminRole,
 	ZPoints,
 	Premium,
 	PremiumExpiry,
@@ -39,9 +55,36 @@ static
 	CleanAccountData[E_ACCOUNT_DATA]
 ;
 
-hook OnCharacterClearData(playerid)
+hook OnPlayerRequestClass(playerid, classid)
+{
+	if(IsPlayerNPC(playerid))
+		return 1;
+
+	if(Character_IsLogged(playerid))
+	{
+		defer SpawnTest(playerid);
+		return 1;
+	}
+
+	if(Account_IsLogged(playerid) && !Character_IsLogged(playerid))
+	{
+		Account_ShowCharactersList(playerid);
+		return 1;
+	}
+
+	//CheckAccount(playerid);
+	return 1;
+}
+
+timer SpawnTest[10](playerid)
+{
+	SpawnPlayer(playerid);
+}
+
+hook OnPlayerDisconnect(playerid)
 {
 
+	LoginAttempts{playerid} = 0;
 	AccountName[playerid] = "";
 	AccountEMail[playerid] = "";
 	AccountInfo[playerid] = CleanAccountData;
@@ -62,11 +105,9 @@ hook OnCharacterClearData(playerid)
     return 1;
 }
 
-stock CheckAccount(playerid)
+hook OnPlayerConnected(playerid)
 {
-	printf("CheckAccount called");
-	new 
-	   name[24];
+	new name[MAX_PLAYER_NAME], bool:found = false;
     
     GetPlayerName(playerid, name, sizeof(name));
 
@@ -74,77 +115,132 @@ stock CheckAccount(playerid)
 	{
 		if(Account_IsLogged(i) && !strcmp(Account_GetName(i), name, false))
 		{
-			KickEx(playerid);
-			SendClientMessage(playerid, COLOR_ERROR, "Questo account risulta già collegato nel server.");
-			return 0;
+			found = true;
+			break;
 		}
 	}
 
-	inline AccountCheckCallback()
-    {
-		new 
-			String:string;
-		
-		printf("AccountCheckCallback");
-		if(cache_num_rows() > 0)
-		{
-			new id;
-			cache_get_value_index_int(0, 0, id);
-			string = str_format("Ciao %s!\nIl tuo account risulta registrato.\nInserisci la password per effettuare il login.", name);
-			Dialog_Show_s(playerid, Dialog_Login, DIALOG_STYLE_PASSWORD, @("Login"), string, "Login", "Esci");
-			printf("Dialog_Login");
-		}
-		else
-		{
-			//Dialog_Show_s(playerid, Dialog_Login, DIALOG_STYLE_PASSWORD, @("Login"), @("Questo account non risulta registrato.\nPer poter giocare su questo server, devi possederne uno.\nVisita http://ucp.lv-rp.it/ per crearne uno."), "Esci", "");
-			SendClientMessage(playerid, COLOR_YELLOW, "SERVER: Devi avere un account registrato per poter giocare su questo server!");
-			SendClientMessage(playerid, COLOR_YELLOW, "Puoi registrarne uno qui: ucp.lv-rp.it");
-			KickEx(playerid);
-			return 1;
-		}
-    }
-    MySQL_PQueryInline(gMySQL, using inline AccountCheckCallback, "SELECT id FROM accounts WHERE LOWER(name) = LOWER('%e')", name);
+	if(found)
+	{
+		SendClientMessage(playerid, COLOR_ERROR, "Questo account risulta già collegato nel server.");
+		KickEx(playerid);
+		return 0;
+	}
 	return 1;
 }
 
-hook OnPlayerRequestClass(playerid, classid)
+public OnPlayerRequestClass(playerid, classid)
 {
 	if(IsPlayerNPC(playerid))
 		return 1;
+	new name[MAX_PLAYER_NAME];
+	GetPlayerName(playerid, name, sizeof(name));
+	yield 1;
+	await mysql_aquery_s(gMySQL, str_format("SELECT password FROM `accounts` WHERE LOWER(name) = LOWER('%e')", name), true);
 
-	if(Character_IsLogged(playerid))
+	if(cache_num_rows() > 0)
 	{
-		//SpawnPlayer(playerid);
-		return 1;
+		cache_get_value_name(0, "password", PlayerHash[playerid]);
+		ShowLoginDialog(playerid);
 	}
-
-	if(Account_IsLogged(playerid) && !Character_IsLogged(playerid))
+	else
 	{
-		Account_ShowCharactersList(playerid);
-		return 1;
+		SendClientMessage(playerid, COLOR_YELLOW, "SERVER: Devi avere un account registrato per poter giocare su questo server!");
+		SendClientMessage(playerid, COLOR_YELLOW, "Puoi registrarne uno qui: ucp.lv-rp.it");
+		KickEx(playerid);
 	}
-
-	//CheckAccount(playerid);
 	return 1;
 }
 
-stock Account_CreateCharacter(playerid, const characterName[MAX_PLAYER_NAME], skinid = 46)
+static ShowLoginDialog(playerid)
 {
-	inline OnCreate()
-	{	
-		CallLocalFunction(#OnCharacterCreated, "dd", playerid, cache_insert_id());
+	new name[MAX_PLAYER_NAME];
+	GetPlayerName(playerid, name, sizeof(name));
+	new String:string = str_format("Ciao %s!\nIl tuo account risulta registrato.\nInserisci la password per effettuare il login.\nTentativo %d/%d", name, LoginAttempts{playerid}+1, MAX_LOGIN_ATTEMPTS);
+	Dialog_Show_s(playerid, Dialog_Login, DIALOG_STYLE_PASSWORD, @("Login"), string, "Login", "Esci");
+}
+
+static CheckForAccountStatus(playerid)
+{
+	new accountId, isBanned, banTime;
+	
+	cache_get_value_name_int(0, "id", accountId);
+	cache_get_value_name_int(0, "banned", isBanned);
+	cache_get_value_name_int(0, "ban_expiry", banTime);
+
+	if(isBanned)
+	{
+		if(!banTime || gettime() < banTime)
+		{
+			Dialog_Show(playerid, DialogNull, DIALOG_STYLE_MSGBOX, "Account Bannato", "Questo account risulta bannato.\nSe pensi sia un errore, visita www.lsarp.it", "Ok", "");
+			KickEx(playerid);
+			return 0;
+		}
+		else
+		{
+			mysql_pquery_f(gMySQL, "UPDATE `accounts` SET banned = '0', ban_expiry = '0' WHERE id = '%d'", accountId);
+		}
 	}
-	MySQL_TQueryInline(gMySQL, using inline OnCreate, "INSERT INTO `characters` (name, account_id, skin) VALUES('%e', '%d', '%d')", characterName, Account_GetID(playerid), skinid);
-	Log(Account_GetName(playerid), characterName, "CharacterCreation");
 	return 1;
 }
 
-timer LoginKickTimer[1000 * 60](playerid) 
+Dialog:Dialog_Login(playerid, response, listitem, inputtext[])
 {
-	if(Account_IsLogged(playerid))
-		return 0;
-	SendClientMessage(playerid, COLOR_ERROR, "Sei stato kickato per inattività.");
-	KickEx(playerid);
+	if(!response) return KickEx(playerid);
+	bcrypt_verify(playerid, #OnPasswordCheck, inputtext, PlayerHash[playerid]);
+	return 1;
+}
+
+stock LoadAccountData(playerid)
+{
+	cache_get_value_name_int(0, "id", AccountInfo[playerid][ID]);
+	cache_get_value_name(0, "name", AccountName[playerid]);
+	cache_get_value_name_int(0, "admin_level", AccountInfo[playerid][Admin]);
+	cache_get_value_name_int(0, "admin_role", AccountInfo[playerid][AdminRole]);
+	cache_get_value_name_int(0, "premium", AccountInfo[playerid][Premium]);
+	cache_get_value_name_int(0, "premium_expiry", AccountInfo[playerid][PremiumExpiry]);
+	cache_get_value_name_int(0, "characters_counter", AccountInfo[playerid][CharactersCount]);
+	cache_get_value_name(0, "email", AccountEMail[playerid]);
+	cache_get_value_name_int(0, "characters_slot", AccountInfo[playerid][CharactersSlot]);
+	cache_get_value_name_int(0, "payday", AccountInfo[playerid][PayDay]);
+
+	if(AccountInfo[playerid][Admin] <= 1)
+		AccountInfo[playerid][AdminRole] = 0;
+}
+
+forward OnPasswordCheck(playerid, bool:success);
+public OnPasswordCheck(playerid, bool:success)
+{
+	if(success)
+	{
+		new name[MAX_PLAYER_NAME];
+		GetPlayerName(playerid, name, sizeof(name));
+		
+
+		inline OnLoad()
+		{
+			//await mysql_aquery_s(gMySQL, str_format("SELECT * FROM `accounts` WHERE LOWER(name) = LOWER('%e')", name));
+			//printf("Success after query");
+			CheckForAccountStatus(playerid);
+			LoadAccountData(playerid);
+
+			Account_SetLogged(playerid, true);
+
+			CallLocalFunction(#OnAccountLogin, "d", playerid);
+		}
+		MySQL_PQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `accounts` WHERE LOWER(name) = LOWER('%e')", name);
+
+	}
+	else
+	{
+		LoginAttempts{playerid}++;
+		if(LoginAttempts{playerid} >= MAX_LOGIN_ATTEMPTS)
+		{
+			KickEx(playerid);
+			return 0;
+		}
+		ShowLoginDialog(playerid);
+	}
 	return 1;
 }
 
@@ -165,23 +261,6 @@ stock Account_GetNameFromDatabase(accountdbid)
 	return tmpName;
 }
 
-stock LoadAccountData(playerid)
-{
-	if(cache_num_rows() > 0)
-	{
-		cache_get_value_name_int(0, "id", AccountInfo[playerid][ID]);
-		cache_get_value_name(0, "name", AccountName[playerid]);
-		cache_get_value_name_int(0, "admin_level", AccountInfo[playerid][Admin]);
-		cache_get_value_name_int(0, "premium", AccountInfo[playerid][Premium]);
-		cache_get_value_name_int(0, "premium_expiry", AccountInfo[playerid][PremiumExpiry]);
-		cache_get_value_name_int(0, "characters_counter", AccountInfo[playerid][CharactersCount]);
-		cache_get_value_name(0, "email", AccountEMail[playerid]);
-		cache_get_value_name_int(0, "characters_slot", AccountInfo[playerid][CharactersSlot]);
-		cache_get_value_name_int(0, "payday", AccountInfo[playerid][PayDay]);
-		return 1;
-	}
-	return 0;
-}
 
 // ======================= ACCESSORS ========================================
 
@@ -207,18 +286,6 @@ stock Account_SetEMail(playerid, email[])
 stock Account_GetEMail(playerid)
 {
 	return AccountEMail[playerid];
-}
-
-stock Account_GetPayDay(playerid)
-{
-	return AccountInfo[playerid][PayDay];
-}
-
-stock Account_AddPayDay(playerid, add)
-{
-	AccountInfo[playerid][PayDay] += add;
-	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET payday = '%d' WHERE id = '%d'", Account_GetPayDay(playerid), Account_GetID(playerid));
-	return 1;
 }
 
 stock Account_SetLogged(playerid, bool:logged)
@@ -256,16 +323,6 @@ stock Account_HasOOCEnabledForPlayer(playerid, targetid)
 	return !Iter_Contains(pToggleOOC[playerid], targetid);
 }
 
-stock Account_SetSupporterDuty(playerid, bool:enable)
-{
-	Bit_Set(gAccountBitState[e_pSupporterDuty], playerid, enable);
-}
-
-stock Account_IsSupporterDuty(playerid)
-{
-	return Bit_Get(gAccountBitState[e_pSupporterDuty], playerid);
-}
-
 stock Account_GetID(playerid)
 {
 	return AccountInfo[playerid][ID];
@@ -274,7 +331,7 @@ stock Account_GetID(playerid)
 stock Account_SetAdminLevel(playerid, level)
 {
 	AccountInfo[playerid][Admin] = level;
-	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET admin_level = '%d' WHERE id = '%d'", level, Account_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `accounts` SET admin_level = '%d' WHERE id = '%d'", level, Account_GetID(playerid));
 	return 1;
 }
 
@@ -283,10 +340,22 @@ stock Account_GetAdminLevel(playerid)
 	return AccountInfo[playerid][Admin];
 }
 
+stock Account_SetAdminRole(playerid, role)
+{
+	AccountInfo[playerid][AdminRole] = role;
+	mysql_pquery_f(gMySQL, "UPDATE `accounts` SET admin_role = '%d' WHERE id = '%d'", role, Account_GetID(playerid));
+	return 1;
+}
+
+stock Account_GetAdminRole(playerid)
+{
+	return AccountInfo[playerid][AdminRole];
+}
+
 stock Account_SetPremiumLevel(playerid, level)
 {
 	AccountInfo[playerid][Premium] = level;
-	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET premium = '%d' WHERE id = '%d'", level, Account_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `accounts` SET premium = '%d' WHERE id = '%d'", level, Account_GetID(playerid));
 	return 1;
 }
 
@@ -298,7 +367,7 @@ stock Account_GetPremiumLevel(playerid)
 stock Account_SetPremiumExpiry(playerid, time)
 {
 	AccountInfo[playerid][PremiumExpiry] = time;
-	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET premium_expiry = '%d' WHERE id = '%d'", time, Account_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `accounts` SET premium_expiry = '%d' WHERE id = '%d'", time, Account_GetID(playerid));
 	return 1;
 }
 
@@ -317,7 +386,7 @@ stock Account_SetCharactersSlot(playerid, setValue)
 	if(!Account_IsLogged(playerid))
 		return 0;
 	AccountInfo[playerid][CharactersSlot] = setValue;
-	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET characters_slot = '%d' WHERE id = '%d'", Account_GetCharactersSlot(playerid), Account_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `accounts` SET characters_slot = '%d' WHERE id = '%d'", Account_GetCharactersSlot(playerid), Account_GetID(playerid));
 	return 1;
 }
 
@@ -334,7 +403,7 @@ stock Account_GetCharactersCount(playerid)
 stock Account_AddCharactersCount(playerid, add)
 {
 	AccountInfo[playerid][CharactersCount] += add;
-	mysql_tquery_f(gMySQL, "UPDATE `accounts` SET characters_counter = '%d' WHERE id = '%d'", Account_GetCharactersCount(playerid), Account_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `accounts` SET characters_counter = '%d' WHERE id = '%d'", Account_GetCharactersCount(playerid), Account_GetID(playerid));
 }
 
 stock Account_GetOwnableVehicleCount(playerid)

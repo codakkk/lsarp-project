@@ -16,10 +16,10 @@ static enum E_DRIVE_LICENSE_I
 
 static LicensesData[][E_DRIVE_LICENSE_I] =
 {
-    {1723.3232, -1867.1775, 13.5705, -1, -1, LICENSE_TYPE_DRIVER, 3000},
-    {1723.3232, -1870.1775, 13.5705, -1, -1, LICENSE_TYPE_BOAT, 6000},
-    {1723.3232, -1873.1775, 13.5705, -1, -1, LICENSE_TYPE_FLY, 12000},
-    {1723.3232, -1876.1775, 13.5705, -1, -1, LICENSE_TYPE_WEAPON, 0}
+    {1165.6710,1346.9652,10.9219, -1, -1, LICENSE_TYPE_DRIVER, 3000},
+    {2293.9709,523.9048,1.7944, -1, -1, LICENSE_TYPE_BOAT, 6000},
+    {1319.0269,1250.9351,10.8203, -1, -1, LICENSE_TYPE_FLY, 12000}
+    //{1723.3232, -1876.1775, 13.5705, -1, -1, LICENSE_TYPE_WEAPON, 0}
 };
 
 static 
@@ -44,7 +44,7 @@ hook OnGameModeInit()
     for(new i = 0, j = sizeof(LicensesData); i < j; ++i)
     {
         Pickup_Create(1239, i, LicensesData[i][X], LicensesData[i][Y], LicensesData[i][Z], ELEMENT_TYPE_LICENSE, LicensesData[i][Interior], LicensesData[i][World]);
-        format(name, sizeof(name), "%s (/compra)", GetLicenseName(LicensesData[i][Type]));
+        format(name, sizeof(name), "%s\n(/compra)", GetLicenseName(LicensesData[i][Type]));
         CreateDynamic3DTextLabel(name, COLOR_BLUE, LicensesData[i][X], LicensesData[i][Y], LicensesData[i][Z], 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, LicensesData[i][World], LicensesData[i][Interior]);
     }
     return 1;
@@ -62,7 +62,7 @@ hook OnCharacterLoad(playerid)
     {
         if(cache_num_rows() <= 0)
         {
-            mysql_tquery_f(gMySQL, "INSERT INTO `character_licenses` (character_id, drive, boat, fly, weapon) VALUES('%d', '0', '0', '0', '0')", Character_GetID(playerid));
+            mysql_pquery_f(gMySQL, "INSERT INTO `character_licenses` (character_id, drive, boat, fly, weapon) VALUES('%d', '0', '0', '0', '0')", Character_GetID(playerid));
             DriveLicense{playerid} = BoatLicense{playerid} = FlyLicense{playerid} = WeaponLicense{playerid} = false;
         }
         else
@@ -144,7 +144,7 @@ CMD:mostradocumenti(playerid, params[])
     SendFormattedMessage(id, -1, "- Patente nautica: %s", Character_HasBoatLicense(playerid) ? ("Si") : ("No"));
     SendFormattedMessage(id, -1, "- Patente di volo: %s", Character_HasFlyLicense(playerid) ? ("Si") : ("No"));
     SendFormattedMessage(id, -1, "- Porto d'armi: %s", Character_HasWeaponLicense(playerid) ? ("Si") : ("No"));
-    SendClientMessage(playerid, COLOR_GREEN, "___________________________________");
+    SendClientMessage(id, COLOR_GREEN, "___________________________________");
     return 1;
 }
 alias:mostradocumenti("md");
@@ -247,6 +247,10 @@ Dialog:Dialog_LicenseBuy(playerid, response, listitem, inputtext[])
     
     if(Character_HasLicense(playerid, type))
         return SendClientMessage(playerid, COLOR_ERROR, "Possiedi già questa licenza.");
+    
+    if(price > Character_GetMoney(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai tutti questi soldi.");
+
     if(Character_SetLicense(playerid, type, true))
     {
         SendFormattedMessage(playerid, COLOR_GREEN, "Hai acquistato la licenza (%s) per $%d.", GetLicenseName(type), price);
@@ -288,7 +292,7 @@ stock bool:Character_SetDriveLicense(playerid, bool:set)
     if(!Character_IsLogged(playerid))
         return false;
     DriveLicense{playerid} = set;
-    mysql_tquery_f(gMySQL, "UPDATE `character_licenses` SET drive = '%d' WHERE character_id = '%d'", set ? 1 : 0, Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `character_licenses` SET drive = '%d' WHERE character_id = '%d'", set ? 1 : 0, Character_GetID(playerid));
     return true;
 }
 
@@ -302,7 +306,7 @@ stock bool:Character_SetBoatLicense(playerid, bool:set)
     if(!Character_IsLogged(playerid))
         return false;
     BoatLicense{playerid} = set;
-    mysql_tquery_f(gMySQL, "UPDATE `character_licenses` SET boat = '%d' WHERE character_id = '%d'", set ? 1 : 0, Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `character_licenses` SET boat = '%d' WHERE character_id = '%d'", set ? 1 : 0, Character_GetID(playerid));
     return true;
 }
 
@@ -316,7 +320,7 @@ stock bool:Character_SetFlyLicense(playerid, bool:set)
     if(!Character_IsLogged(playerid))
         return false;
     FlyLicense{playerid} = set;
-    mysql_tquery_f(gMySQL, "UPDATE `character_licenses` SET fly = '%d' WHERE character_id = '%d'", set ? 1 : 0, Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `character_licenses` SET fly = '%d' WHERE character_id = '%d'", set ? 1 : 0, Character_GetID(playerid));
     return true;
 }
 
@@ -330,7 +334,7 @@ stock bool:Character_SetWeaponLicense(playerid, bool:set)
     if(!Character_IsLogged(playerid))
         return false;
     WeaponLicense{playerid} = set;
-    mysql_tquery_f(gMySQL, "UPDATE `character_licenses` SET weapon = '%d' WHERE character_id = '%d'", set ? 1 : 0, Character_GetID(playerid));
+    mysql_pquery_f(gMySQL, "UPDATE `character_licenses` SET weapon = '%d' WHERE character_id = '%d'", set ? 1 : 0, Character_GetID(playerid));
     return true;
 }
 

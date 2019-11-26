@@ -116,7 +116,7 @@ stock bool:LootZone_Initialize(lootzoneid)
 		return false;
 	
 	if(!Inventory_IsValid(LootZone_GetInventory(lootzoneid)))
-		map_set_cell(LootZones, LootZone_GetID(lootzoneid), Inventory, List:Inventory_New(10));
+		map_set_cell(LootZones, LootZone_GetID(lootzoneid), Inventory, Inventory_New(ENTITY_TYPE_DROP, lootzoneid, 10));
 	
 	if(!map_valid(LootZone_GetItems(lootzoneid)))
 		map_set_cell(LootZones, LootZone_GetID(lootzoneid), Items, map_new());
@@ -151,7 +151,7 @@ stock LootZone_Delete(lootzoneid)
 	if(!LootZone_IsValid(lootzoneid))
 		return false;
 	
-	mysql_tquery_f(gMySQL, "DELETE FROM `loot_zones` WHERE id = '%d'", LootZone_GetID(lootzoneid));
+	mysql_pquery_f(gMySQL, "DELETE FROM `loot_zones` WHERE id = '%d'", LootZone_GetID(lootzoneid));
 
 	Inventory_Delete(LootZone_GetInventory(lootzoneid));
 	map_delete_deep(LootZone_GetItems(lootzoneid));
@@ -207,7 +207,7 @@ stock bool:LootZone_SetPosition(lootzoneid, Float:x, Float:y, Float:z)
 	map_set_cell(LootZones, LootZone_GetID(lootzoneid), Y, y);
 	map_set_cell(LootZones, LootZone_GetID(lootzoneid), Z, z);
 
-	mysql_tquery_f(gMySQL, "UPDATE `loot_zones` SET x = '%f', y = '%f', z = '%f' WHERE id = '%d'", x, y, z, LootZone_GetID(lootzoneid));
+	mysql_pquery_f(gMySQL, "UPDATE `loot_zones` SET x = '%f', y = '%f', z = '%f' WHERE id = '%d'", x, y, z, LootZone_GetID(lootzoneid));
 	return true;
 }
 
@@ -224,7 +224,7 @@ stock bool:LootZone_SetInterior(lootzoneid, interior)
 		return false;
 	map_set_cell(LootZones, LootZone_GetID(lootzoneid), Interior, interior);
 
-	mysql_tquery_f(gMySQL, "UPDATE `loot_zones` SET interior = '%d' WHERE id = '%d'", interior, LootZone_GetID(lootzoneid));
+	mysql_pquery_f(gMySQL, "UPDATE `loot_zones` SET interior = '%d' WHERE id = '%d'", interior, LootZone_GetID(lootzoneid));
 	return true;
 }
 
@@ -241,7 +241,7 @@ stock bool:LootZone_SetVirtualWorld(lootzoneid, worldid)
 		return false;
 	map_set_cell(LootZones, LootZone_GetID(lootzoneid), VirtualWorld, worldid);
 
-	mysql_tquery_f(gMySQL, "UPDATE `loot_zones` SET virtual_world = '%d' WHERE id = '%d'", worldid, LootZone_GetID(lootzoneid));
+	mysql_pquery_f(gMySQL, "UPDATE `loot_zones` SET virtual_world = '%d' WHERE id = '%d'", worldid, LootZone_GetID(lootzoneid));
 	return true;
 }
 
@@ -263,7 +263,7 @@ stock bool:LootZone_AddDropItem(lootzoneid, itemid, dropChance = 0, minQuantity 
 	data[MinQuantity] = minQuantity;
 	data[MaxQuantity] = maxQuantity;
 	
-	mysql_tquery_f(gMySQL, "INSERT INTO `loot_zone_items` (lootzone_id, item_id, min_quantity, max_quantity, drop_chance) VALUES('%d', '%d', '%d', '%d', '%d')", 
+	mysql_pquery_f(gMySQL, "INSERT INTO `loot_zone_items` (lootzone_id, item_id, min_quantity, max_quantity, drop_chance) VALUES('%d', '%d', '%d', '%d', '%d')", 
 	LootZone_GetID(lootzoneid), itemid, minQuantity, maxQuantity, dropChance);
 
 	return map_add_arr(items, itemid, data);
@@ -273,7 +273,7 @@ stock bool:LootZone_RemoveDropItem(lootzoneid, itemid)
 {
 	if(!LootZone_IsValid(lootzoneid) || !LootZone_CanDropItem(lootzoneid, itemid))
 		return false;
-	mysql_tquery_f(gMySQL, "DELETE FROM `loot_zone_items` WHERE lootzone_id = '%d' AND item_id = '%d'", LootZone_GetID(lootzoneid), itemid);
+	mysql_pquery_f(gMySQL, "DELETE FROM `loot_zone_items` WHERE lootzone_id = '%d' AND item_id = '%d'", LootZone_GetID(lootzoneid), itemid);
 	return map_remove_deep(LootZone_GetItems(lootzoneid), itemid);
 }
 
@@ -282,7 +282,7 @@ stock bool:LootZone_RemoveAllDropItems(lootzoneid)
 	if(!LootZone_IsValid(lootzoneid))
 		return false;
 	map_clear(LootZone_GetItems(lootzoneid));
-	mysql_tquery_f(gMySQL, "DELETE FROM `loot_zone_items` WHERE lootzone_id = '%d'", LootZone_GetID(lootzoneid));
+	mysql_pquery_f(gMySQL, "DELETE FROM `loot_zone_items` WHERE lootzone_id = '%d'", LootZone_GetID(lootzoneid));
 	return true;
 }
 
@@ -579,7 +579,7 @@ stock bool:LootZone_Fill(lootzoneid)
 
 			LootZone_GetPosition(lootzoneid, x, y, z);
 			
-			new objectid = CreateDynamicObject(ServerItem_GetModelID(itemid), x + math_random_float(-1.0, 1.0) * 0.5, y  + math_random_float(-1.0, 1.0) * 0.5, z, 90.0, 0.0, 0.0, LootZone_GetVirtualWorld(lootzoneid), LootZone_GetInterior(lootzoneid));
+			new objectid = Server_CreateObject(ServerItem_GetModelID(itemid), x + math_random_float(-1.0, 1.0) * 0.5, y  + math_random_float(-1.0, 1.0) * 0.5, z, 90.0, 0.0, 0.0, LootZone_GetVirtualWorld(lootzoneid), LootZone_GetInterior(lootzoneid));
 			map_add(LootZone_GetObjectsMap(lootzoneid), itemid, objectid);
 		}
 	}

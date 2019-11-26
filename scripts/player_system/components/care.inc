@@ -10,7 +10,7 @@ hook OnCharacterClearData(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-hook OnCharacterSpawn(playerid)
+hook OnCharacterSpawned(playerid)
 {
 	CareTicks{playerid} = 0;
 	if(Request_IsPending(playerid, REQUEST_TYPE_CARE))
@@ -63,13 +63,11 @@ ptask OnCharacterCareUpdateTimer[1000](playerid)
 	return 1;
 }
 
-hook OnCharacterAccept(playerid, stringHash)
+hook OnCharacterTryAccept(playerid, type)
 {
-    if(stringHash != _I<cure>)
+    if(type != REQUEST_TYPE_CARE)
 		return 0;
-	
-	if(!Request_IsPending(playerid, REQUEST_TYPE_CARE) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_CARE))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta cure attiva.");
+
 	new senderid = Request_GetSender(playerid, REQUEST_TYPE_CARE);
 	
 	if(!Character_CanInteract(senderid))

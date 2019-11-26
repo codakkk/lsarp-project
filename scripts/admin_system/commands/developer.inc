@@ -13,7 +13,7 @@ CMD:kickall(playerid, params[])
 		wait_ticks(1);
 		KickEx(i);
 	}
-	Discord_SendBanMessage("L'admin **%s** ha _kickato_ tutti. Motivo: __**%s**.", Account_GetName(playerid), params);
+	Discord_SendKickMessage("L'admin **%s** ha _kickato_ tutti. Motivo: __**%s**.", Account_GetName(playerid), params);
 	return 1;
 }
 
@@ -22,5 +22,34 @@ CMD:update(playerid, params[])
 {
 	SendRconCommand("password lsarp_updating_psw");
 	callcmd::kickall(playerid, "Riavvio.");
+	return 1;
+}
+
+
+flags:spawnbots(CMD_DEVELOPER);
+CMD:spawnbots(playerid, params[])
+{
+	static bool:AreBotSpawned = false;
+	static bool:IsCreatedBot[MAX_PLAYERS char] = {false, ...};
+	if(AreBotSpawned)
+	{
+		for(new i = 0; i < MAX_PLAYERS; ++i)
+		{
+			if(IsPlayerNPC(playerid) && IsCreatedBot{i})
+			{
+				Kick(i);
+				IsCreatedBot{i} = false;
+			}
+		}
+	}
+	else
+	{
+
+		for(new i = 0; i < 2; ++i)
+		{
+			ConnectNPC("test", "idle");
+			IsCreatedBot{i} = true;
+		}
+	}
 	return 1;
 }

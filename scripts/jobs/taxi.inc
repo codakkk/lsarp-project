@@ -1,6 +1,3 @@
-
-#include "core"
-
 #include <YSI_Coding\y_hooks>
 
 static 
@@ -29,12 +26,6 @@ hook OnCharacterClearData(playerid)
     return 1;
 }
 
-CMD:job(playerid, params[])
-{
-    Character_SetJobType(playerid, JOB_TYPE_TAXI);
-    return 1;
-}
-
 hook OnPlayerExitVehicle(playerid, vehicleid)
 {
     if(TaxiPassenger[playerid] != INVALID_PLAYER_ID)
@@ -44,61 +35,85 @@ hook OnPlayerExitVehicle(playerid, vehicleid)
     return 1;
 }
 
+hook OnPlayerStateChange(playerid, newstate, oldstate)
+{
+    if(oldstate == PLAYER_STATE_PASSENGER && newstate != PLAYER_STATE_PASSENGER )
+    {
+        if(TaxiPassenger[playerid] != INVALID_PLAYER_ID)
+            StopTaxi(playerid, TaxiPassenger[playerid]);
+        else if(PlayerTaxi[playerid] != INVALID_PLAYER_ID)
+            StopTaxi(PlayerTaxi[playerid], playerid);
+    }
+    return 1;
+}
+
 timer EachSecondTaxiUpdate[1000](playerDoingTaxi, playerPassenger)
 {
     new vehicleid = GetPlayerVehicleID(playerDoingTaxi);
     if(vehicleid == GetPlayerVehicleID(playerPassenger) && !IsPlayerInRangeOfPoint(playerPassenger, 60.0, StartingPosX[playerPassenger], StartingPosY[playerPassenger], StartingPosZ[playerPassenger]))
     {
-        TaxiPayment[playerDoingTaxi] += TaxiPrice[playerPassenger];
-        if(Character_GetMoney(playerPassenger) < TaxiPrice[playerPassenger])
+        if(Vehicle_GetSpeed(vehicleid) >= 20)
         {
-            RemovePlayerFromVehicle(playerPassenger);
-            
-            Character_GiveMoney(playerDoingTaxi, TaxiPayment[playerDoingTaxi], "/tassametro");
-            Character_GiveMoney(playerPassenger, -TaxiPayment[playerDoingTaxi], "/tassametro");
+            Player_InfoStr(playerPassenger, str_format("-- Tassametro --~n~Costo KM: ~g~$~w~%d~n~Corrente: ~g~$~w~%d", TaxiPrice[playerPassenger], TaxiPayment[playerDoingTaxi]), true, 2000);
+            Player_InfoStr(playerDoingTaxi, str_format("-- Tassametro --~n~Costo KM: ~g~$~w~%d~n~Guadagno: ~g~$~w~%d", TaxiPrice[playerPassenger], TaxiPayment[playerDoingTaxi]), true, 2000);
+            if(Character_GetMoney(playerPassenger) < TaxiPrice[playerPassenger])
+            {
+                RemovePlayerFromVehicle(playerPassenger);
 
-            SendFormattedMessage(playerDoingTaxi, -1, "%s non ha abbastanza soldi per continuare la corsa in taxi.", Character_GetRolePlayName(playerPassenger));
-            SendClientMessage(playerPassenger, -1, "Non hai abbastanza soldi per continuare la corsa in taxi.");
+                SendFormattedMessage(playerDoingTaxi, -1, "%s non ha abbastanza soldi per continuare la corsa in taxi.", Character_GetRolePlayName(playerPassenger));
+                SendClientMessage(playerPassenger, -1, "Non hai abbastanza soldi per continuare la corsa in taxi.");
 
-            TaxiPassenger[playerDoingTaxi] = INVALID_PLAYER_ID;
-            PlayerTaxi[playerPassenger] = INVALID_PLAYER_ID;
-            TaxiPrice[playerPassenger] = TaxiPayment[playerDoingTaxi] = 0;
-            StartingPosX[playerPassenger] = StartingPosY[playerPassenger] = StartingPosZ[playerPassenger] = 0.0;
+                TaxiPassenger[playerDoingTaxi] = INVALID_PLAYER_ID;
+                PlayerTaxi[playerPassenger] = INVALID_PLAYER_ID;
+                TaxiPrice[playerPassenger] = TaxiPayment[playerDoingTaxi] = 0;
+                StartingPosX[playerPassenger] = StartingPosY[playerPassenger] = StartingPosZ[playerPassenger] = 0.0;
 
-            stop TaxiTimer[playerDoingTaxi];
-            TaxiTimer[playerDoingTaxi] = Timer:0;
+                stop TaxiTimer[playerDoingTaxi];
+                TaxiTimer[playerDoingTaxi] = Timer:0;
+                Player_Info(playerDoingTaxi, "", true, 0);
+                Player_Info(playerPassenger, "", true, 0);
+            }
+            else
+            {
+                TaxiPayment[playerDoingTaxi] += TaxiPrice[playerPassenger];
+                Character_GiveMoney(playerDoingTaxi, TaxiPrice[playerPassenger], "/tassametro");
+                Character_GiveMoney(playerPassenger, -TaxiPrice[playerPassenger], "/tassametro");
+            }
         }
     }
 }
 
-hook function Character_EnterJobDuty(playerid)
+hook function EnterJobDuty(playerid)
 {
+    printf("Taxi 1");
     if(Character_GetJobType(playerid) != JOB_TYPE_TAXI)
         return continue(playerid);
-    
+    printf("Taxi 2");
     new vehicleid = GetPlayerVehicleID(playerid);
 
-    if(vehicleid <= 0 || !IsTaxiVehicle(vehicleid) || !Vehicle_IsOwner(vehicleid, playerid, false))
+    if(!Character_IsValidJobVehicle(playerid, vehicleid))
     {
-        SendClientMessage(playerid, COLOR_ERROR, "Devi essere su un tuo taxi per poter utilizzare questo comando.");
+        SendClientMessage(playerid, COLOR_ERROR, "Devi essere su un tuo taxi o uno convenzionato per poter utilizzare questo comando.");
+        printf("Taxi 2.1");
         return false;
     }
+    printf("Taxi 3");
     return true;
 }
 
 hook function Character_ExitJobDuty(playerid)
 {
-    if(Character_GetJobType(playerid) != JOB_TYPE_TAXI)
-        return continue(playerid);
+    if(Character_GetJobType(playerid) == JOB_TYPE_TAXI)
+        return true;
     
-    return true;
+    return continue(playerid);
 }
 
 hook function ShowJobCommands(playerid)
 {
     if(Character_GetJobType(playerid) == JOB_TYPE_TAXI)
     {
-        return true;
+        SendClientMessage(playerid, COLOR_YELLOW, "[TAXI] /tassametro");
     }
     return continue(playerid);
 }
@@ -106,7 +121,7 @@ hook function ShowJobCommands(playerid)
 hook function Job_GetColor(JobType:jobType)
 {
     if(jobType == JOB_TYPE_TAXI)
-        return COLOR_YELLOW;
+        return 0xD79064FF;
     return continue(jobType);
 }
 
@@ -127,7 +142,7 @@ CMD:tassametro(playerid, params[])
     
     new vehicleid = GetPlayerVehicleID(playerid);
     
-    if(vehicleid < 0 || !IsTaxiVehicle(vehicleid) || !Vehicle_IsOwner(vehicleid, playerid, false) || GetPlayerVehicleSeat(playerid) != 0)
+    if(!Character_IsValidJobVehicle(playerid, vehicleid))
         return SendClientMessage(playerid, COLOR_ERROR, "Devi essere alla guida di un tuo taxi per poter utilizzare questo comando.");
 
     if(TaxiPassenger[playerid] != INVALID_PLAYER_ID)
@@ -163,14 +178,15 @@ static StopTaxi(driver, passenger)
 {
     if(Character_IsLogged(TaxiPassenger[driver]) && Character_IsLogged(PlayerTaxi[passenger]) && TaxiPassenger[driver] == passenger && PlayerTaxi[passenger] == driver)
     {
-        Character_GiveMoney(driver, TaxiPayment[driver], "/tassametro");
-        Character_GiveMoney(passenger, -TaxiPayment[driver], "/tassametro");
         SendFormattedMessage(driver, COLOR_ORANGE, "Tu o il passeggero siete usciti dal veicolo, per tanto la corsa è terminata. Hai guadagnato $%d.", TaxiPayment[driver]);
         SendFormattedMessage(passenger, COLOR_ORANGE, "Tu o il conducente siete usciti dal veicolo, per tanto la corsa è terminata. Hai speso $%d.", TaxiPayment[driver]);
 
         TaxiPassenger[driver] = PlayerTaxi[passenger] = INVALID_PLAYER_ID;
         TaxiPrice[passenger] = TaxiPayment[driver] = 0;
         StartingPosX[passenger] = StartingPosY[passenger] = StartingPosZ[passenger] = 0.0;
+
+        Player_Info(driver, "", true, 0);
+        Player_Info(passenger, "", true, 0);
 
         if(TaxiTimer[driver] != Timer:0)
             stop TaxiTimer[driver];
@@ -179,18 +195,12 @@ static StopTaxi(driver, passenger)
     return 1;
 }
 
-hook OnCharacterAccept(playerid, hash)
+hook OnCharacterTryAccept(playerid, type)
 {
-    if(hash != _I<taxi>)
+    if(type != REQUEST_TYPE_TAXI)
         return 0;
     
-    if(!Request_IsPending(playerid, REQUEST_TYPE_TAXI))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta taxi attiva.");
-    
     new senderid = Request_GetSender(playerid, REQUEST_TYPE_TAXI);
-    
-    if(!Character_IsLogged(senderid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore che ti ha inviato la richiesta non è più online.");
 
     if(GetPlayerVehicleID(playerid) != GetPlayerVehicleID(senderid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nello stesso veicolo del giocatore che ti ha inviato la richiesta.");
@@ -216,7 +226,15 @@ hook OnCharacterAccept(playerid, hash)
 
     TaxiTimer[senderid] = repeat EachSecondTaxiUpdate(senderid, playerid);
 
+    Player_InfoStr(senderid, str_format("-- Tassametro --~n~Costo KM: ~g~$~w~%d~n~Guadagno: ~g~$~w~%d", TaxiPrice[playerid], TaxiPayment[senderid]), true, 99999);
+    Player_InfoStr(playerid, str_format("-- Tassametro --~n~Costo KM: ~g~$~w~%d~n~Guadagno: ~g~$~w~%d", TaxiPrice[playerid], TaxiPayment[senderid]), true, 99999);
+
     Request_Reset(playerid, REQUEST_TYPE_TAXI);
     Request_Reset(senderid, REQUEST_TYPE_TAXI);    
     return 1;
+}
+
+stock bool:Character_IsValidJobVehicle(playerid, vehicleid)
+{
+    return (vehicleid > 0 && GetPlayerVehicleSeat(playerid) == 0 && (IsTaxiVehicle(vehicleid) || Vehicle_IsOwner(vehicleid, playerid, false) || Vehicle_GetJob(vehicleid) == JOB_TYPE_TAXI));
 }

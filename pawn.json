@@ -5,7 +5,7 @@
 	"output": "gamemodes/lvrp.amx",
 	"dependencies": [
 		"Zeex/samp-plugin-crashdetect",
-		"Zeex/amx_assembly@master",
+		"Zeex/amx_assembly",
 		"sampctl/samp-stdlib",
 		"urShadow/Pawn.CMD:3.2.0",
 		"IllidanS4/PawnPlus:v1.1",
@@ -23,7 +23,8 @@
 		"pBlueG/SA-MP-MySQL",
 		"AGraber/pawn-plus-mysql",
 		"oscar-broman/SKY",
-		"AGraber/samp-async-dialogs"
+		"AGraber/samp-async-dialogs",
+		"AGraber/samp-compat"
 	],
 	"local": true,
 	"builds": [

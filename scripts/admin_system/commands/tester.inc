@@ -15,7 +15,7 @@ hook OnCharacterClearData(playerid)
 flags:tcmds(CMD_TESTER);
 CMD:tcmds(playerid, params[])
 {
-	SendClientMessage(playerid, -1, "[TESTER]: (/t)chat - /tduty - /lr - /goto - /gethere");
+	SendClientMessage(playerid, -1, "[TESTER]: (/t)chat - /tduty - /lr - /goto - /gethere - /jetpack");
 	SendClientMessage(playerid, -1, "[TESTER]: /kick - /freeze - /unfreeze - /setinterior - /setvw");
 	return 1;
 }
@@ -25,8 +25,8 @@ CMD:tduty(playerid, params[])
 {
 	if(Player_IsAdminDuty(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se sei in servizio admin.");
-	Account_SetSupporterDuty(playerid, !Account_IsSupporterDuty(playerid));
-    if(Account_IsSupporterDuty(playerid))
+	Player_SetSupporterDuty(playerid, !Player_IsSupporterDuty(playerid));
+    if(Player_IsSupporterDuty(playerid))
 	{
 		SetPlayerColor(playerid, 0xa52a2aff);
 		SendMessageToTesters(0, 0xe9de98ff, "[TESTERS]: %s è ora in servizio.", Character_GetOOCName(playerid));
@@ -48,7 +48,7 @@ CMD:tchat(playerid, params[])
 	if(isnull(params) || strlen(params) > 128)
 		return SendClientMessage(playerid, COLOR_ERROR, "(/t)chat <testo>");
 	
-	SendMessageToTesters(0, 0xE9DE98FF, "[TESTER] %s (%s): %s", Account_GetName(playerid), Character_GetOOCName(playerid), params);
+	SendMessageToTesters(0, 0xE9DE98FF, "TesterChat: %s (%s): %s", Account_GetName(playerid), Character_GetOOCName(playerid), params);
 	return 1;
 }
 alias:tchat("t");
@@ -92,14 +92,10 @@ CMD:gethere(playerid, params[])
 
 	new 
 	   Float:x, Float:y, Float:z,
-	   vw = Character_GetVirtualWorld(playerid), int = GetPlayerInterior(playerid);
+	   vw = Character_GetVirtualWorld(playerid), 
+	   int = GetPlayerInterior(playerid);
     
     GetPlayerPos(playerid, x, y, z);
-    
-    Streamer_UpdateEx(id, x, y, z, vw, int);
-    
-	Character_SetVirtualWorld(id, vw);
-    SetPlayerInterior(id, int);
 
     if(GetPlayerState(id) == PLAYER_STATE_DRIVER)
 	{
@@ -108,7 +104,7 @@ CMD:gethere(playerid, params[])
 		SetVehicleVirtualWorld(GetPlayerVehicleID(id), vw);
 	}
 	else
-    	SetPlayerPos(id, x+2, y, z );
+    	Character_SetSafePosition(id, x+2, y, z, int, vw);
     return 1;
 }
 
@@ -147,7 +143,7 @@ CMD:goto(playerid, params[])
     if(sscanf(params, "k<u>", id))
 	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /goto [playerid/partofname]");
     
-    if(id < 0 || id >= MAX_PLAYERS  || !Character_IsLogged(id))
+    if(!Character_IsLogged(id))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
 
 	if(id == playerid)
@@ -203,6 +199,9 @@ CMD:setvw(playerid, params[])
     if(sscanf(params, "k<u>d", id, vw))
 	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setvw <playerid/nome> <virtual world>");
 	
+	if(!Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+
 	Character_SetVirtualWorld(id, vw);
 
 	SendFormattedMessage(id, COLOR_GREEN, "L'admin %s ti ha settato il virtual world a %d.", Account_GetName(playerid), vw);
@@ -217,6 +216,9 @@ CMD:setinterior(playerid, params[])
     if(sscanf(params, "k<u>d", id, int))
 	   return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setinterior <playerid/nome> <interior>");
 	
+	if(!Character_IsLogged(id))
+		return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non è collegato.");
+
 	SetPlayerInterior(id, int);
 
 	SendFormattedMessage(id, COLOR_GREEN, "L'admin %s ti ha settato l'interior id %d.", Account_GetName(playerid), int);

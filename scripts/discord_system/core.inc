@@ -1,5 +1,4 @@
-#include <discord-connector>
-#include <strlib>
+//#include <discord-connector>
 #include <YSI_Coding\y_hooks>
 
 static 
@@ -16,6 +15,17 @@ hook OnGameModeInit()
     MoneyLogsChannel = DCC_FindChannelById("620901733815549963");
     AdminLogsChannel = DCC_FindChannelById("620946825746186244");
     return 1;
+}
+
+stock DCC_Channel:DCC_FindChannelById(const c[]) 
+{
+    #pragma unused c
+    return DCC_Channel:0;
+}
+
+stock DCC_SendChannelMessage(DCC_Channel:t, msg[])
+{ 
+    #pragma unused t, msg 
 }
 
 stock Discord_SendMessage(DCC_Channel:channel, const msg[], GLOBAL_TAG_TYPES:...)

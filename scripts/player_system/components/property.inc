@@ -1,3 +1,15 @@
+
+/*
+
+	Relying on the fact that the lists (CharacterBuildings/CharacterHouses) are handled by House_/Building_ is bad.
+	Should I make a check on each property?
+
+
+*/
+
+#define for_player_building(%0:%1) for(new Iter:__iter=list_iter(Character_GetOwnedBuildingsList(%1)), Building:%0=(iter_inside(__iter) ? (Building:iter_get(__iter)) : (Building:0));iter_inside(__iter);%0=(iter_move_next(__iter) != ITER_NULL ? (Building:iter_get(__iter)) : (Building:0)))
+#define for_player_house(%0:%1) for(new Iter:__iter=list_iter(Character_GetOwnedHousesList(%1)), House:%0=(iter_inside(__iter) ? (House:iter_get(__iter)) : (INVALID_HOUSE));iter_inside(__iter);%0=(iter_move_next(__iter) != ITER_NULL ? (House:iter_get(__iter)) : (INVALID_HOUSE)))
+
 #include <house_system\core>
 #include <pickup_system\core>
 #include <YSI_Coding\y_hooks>
@@ -14,26 +26,29 @@ static
 hook OnCharacterClearData(playerid)
 {
 	if(list_valid(CharacterBuildings[playerid]))
-		list_delete_deep(CharacterBuildings[playerid]);
+		list_delete(CharacterBuildings[playerid]);
 	
 	if(list_valid(CharacterHouses[playerid]))
-		list_delete_deep(CharacterHouses[playerid]);
+		list_delete(CharacterHouses[playerid]);
 
+	CharacterBuildings[playerid] = CharacterHouses[playerid] = INVALID_LIST;
 	PlayerHouseRent[playerid] = INVALID_HOUSE;
 	return 1;
 }
 
 hook OnCharacterLoad(playerid)
 {
-	inline OnLoad()
-	{
-		new hid = 0;
-		cache_get_value_name_int(0, "house_rent", hid);
-		cache_get_value_name_int(0, "house_rent_price", PlayerHouseRentPrice[playerid]);
-		PlayerHouseRent[playerid] = House_Find(hid);
-	}
-	MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT house_rent, house_rent_price FROM `characters` WHERE id = '%d'", Character_GetID(playerid));
+	await mysql_aquery_s(gMySQL, str_format("SELECT house_rent, house_rent_price FROM `characters` WHERE id = '%d'", Character_GetID(playerid)), .parallel=true);
+	
+	new hid = 0;
+	cache_get_value_name_int(0, "house_rent", hid);
+	cache_get_value_name_int(0, "house_rent_price", PlayerHouseRentPrice[playerid]);
+	PlayerHouseRent[playerid] = House_Find(hid);
+	return 1;
+}
 
+hook OnCharacterLoaded(playerid)
+{
 	for_building(building)
 	{
 		if(Building_GetOwnerID(building) == Character_GetID(playerid))
@@ -52,13 +67,22 @@ hook OnCharacterLoad(playerid)
 	return 1;
 }
 
+hook OnBuildingDeleted(Building:building)
+{
+	foreach(new i : Player)
+	{
+		Character_RemoveOwnedBuilding(i, building);
+	}
+	return 1;
+}
+
 flags:affittacasa(CMD_ALIVE_USER);
 CMD:affittacasa(playerid, params[])
 {
 	if(Character_HasRentHouse(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Sei già affittuario di una casa.");
-	new House:house = Character_GetCurrentHouse(playerid);
-	if(House_IsValid(house))
+	new House:house;
+	if(Character_TryGetHouse(playerid, house))
 	{
 		if(!House_IsRentable(house))
 			return SendClientMessage(playerid, COLOR_ERROR, "Questa casa non è in affitto.");		
@@ -78,10 +102,10 @@ hook OnCharacterTryBuy(playerid)
 {
 	static response[e_DIALOG_RESPONSE_INFO];
 
-	new House:house = Character_GetHouse(playerid, false);
-	new Building:building = Character_GetBuilding(playerid, false);
+	new House:house;
+	new Building:building;
 	
-	if(House_IsValid(house))
+	if(Character_TryGetHouse(playerid, house) && !Character_IsInsideHouse(playerid, house))
 	{
 		if(!House_IsOwnable(house))
 			return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
@@ -93,9 +117,9 @@ hook OnCharacterTryBuy(playerid)
 			Character_BuyHouse(playerid, house);
 		}
 	}	
-	else if(Building_IsValid(building))
+	else if(Character_TryGetBuilding(playerid, building) && !Character_IsInsideBuilding(playerid, building))
 	{
-		if(Building_IsOwned(building))
+		if(!Building_IsOwnable(building) || Building_GetOwnerID(building) > 0)
 			return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
 
 		yield 1;
@@ -132,11 +156,9 @@ CMD:myhouses(playerid, params[])
 
 CMD:mybiz(playerid, params[])
 {
-	if(Character_GetOwnedHouseCount(playerid) == 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "Non possiedi uno o più businesses.");
-	SendClientMessage(playerid, 0xFF6347FF, "I business che possiedi sono:");
 	if(Character_GetOwnedBuildingCount(playerid) <= 0)
 		return SendClientMessage(playerid, 0xFF6347FF, "Non possiedi uno o più biz.");
+	SendClientMessage(playerid, 0xFF6347FF, "I business che possiedi sono:");
 	for_list(i : CharacterBuildings[playerid])
 	{
 		SendFormattedMessage(playerid, 0xFF6347FF, "- %s", Building_GetAddress(Building:iter_get(i)));
@@ -158,13 +180,13 @@ stock Character_SetRentHouse(playerid, House:house)
 {
     PlayerHouseRent[playerid] = house;
 	new hid = House_IsValid(house) ? House_GetID(house) : INVALID_HOUSE_ID;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET house_rent = '%d' WHERE id = '%d'", hid, Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET house_rent = '%d' WHERE id = '%d'", hid, Character_GetID(playerid));
 }
 
 stock bool:Character_SetHouseRentPrice(playerid, price)
 {
 	PlayerHouseRentPrice[playerid] = price;
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET house_rent_price = '%d' WHERE id = '%d'", price, Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET house_rent_price = '%d' WHERE id = '%d'", price, Character_GetID(playerid));
 	return true;
 }
 
@@ -188,7 +210,6 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 // Pref callcmd::entra(playerid, ""); instead of Character_Enter because the first makes some considerations.
 stock Character_Enter(playerid)
 {
-	printf("[Character_Enter]: Stock");
 	#pragma unused playerid
 	return 1;
 }
@@ -312,30 +333,15 @@ stock bool:Character_DoesOwnBuilding(playerid, Building:building)
 	if(!list_valid(CharacterBuildings[playerid]) || list_size(CharacterBuildings[playerid]) == 0)
 		return false;
 	new bool:result = false;
-	for_list(i : CharacterBuildings[playerid])
+	for_player_building(i : playerid)
 	{
-		if(_:building == iter_get(i))
+		if(building == i)
 		{
 			result = true;
 			break;
 		}
 	}
 	return result;
-}
-
-// Returns a List of buildings by type owned by player
-stock List:Character_GetBuildingsByType(playerid, E_BUILDING_TYPE:type)
-{
-	if(!list_valid(CharacterBuildings[playerid]) || list_size(CharacterBuildings[playerid]) == 0)
-		return List:0;
-	new List:list = list_new(), Building:building = INVALID_BUILDING;
-	for_list(i : CharacterBuildings[playerid])
-	{
-		building = Building:iter_get(i);
-		if(Building_IsValid(building) && Building_GetType(building) == _:type)
-			list_add(list, _:building);
-	}
-	return list;
 }
 
 stock bool:Character_AddOwnedHouse(playerid, House:house)

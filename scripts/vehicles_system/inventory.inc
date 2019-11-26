@@ -1,16 +1,9 @@
 #include <YSI_Coding\y_hooks>
 
 static 
-	Map:VehicleInventory, // <Key: vehicle_id, Value: List:Items>
 	CurrentVehicleInventory[MAX_PLAYERS], // Current Opened Vehicle Inventory Dialog
 	SelectedListItem[MAX_PLAYERS]
 ;
-
-hook OnGameModeInit()
-{
-	VehicleInventory = map_new();
-	return 1;
-}
 
 hook OnCharacterClearData(playerid)
 {
@@ -21,39 +14,19 @@ hook OnCharacterClearData(playerid)
 
 stock Inventory:Vehicle_InitializeInventory(vehicleid)
 {
-	if(bool:map_has_key(VehicleInventory, vehicleid))
-	{
-		printf("Unable to initialize vehicle id %d inventory.", vehicleid);
-		return Inventory:0;	
-	}
-    new Inventory:inv = Inventory_New(2);
-    map_add(VehicleInventory, vehicleid, List:inv);
-    //printf("Vehicle %d Inventory initialized", vehicleid);
+    new Inventory:inv = Inventory_New(ENTITY_TYPE_VEHICLE, vehicleid, 10);
     return inv;
 }
 
 stock Vehicle_UnloadInventory(vehicleid)
 {
-	if(Vehicle_IsValid(vehicleid) && map_has_key(VehicleInventory, vehicleid))
-	{
-    	map_remove_deep(VehicleInventory, vehicleid);
-    	//printf("Vehicle %d Inventory unloaded", vehicleid);
-	}
+	Inventory_Delete(Vehicle_GetInventory(vehicleid));
     return 1;
 }
 
 stock Inventory:Vehicle_GetInventory(vehicleid)
 {
-	new Inventory:inv;
-	if(map_has_key(VehicleInventory, vehicleid))
-	{
-    	map_get_safe(VehicleInventory, vehicleid, List:inv);
-	}
-	else
-	{
-		inv = Vehicle_InitializeInventory(vehicleid);
-	}
-	return inv;
+	return Inventory_Get(ENTITY_TYPE_VEHICLE, vehicleid);
 }
 
 // Checks if slotid is in the inventory boundaries (0 <= slotid <= Inventory_GetSpace(inventory))
@@ -65,9 +38,7 @@ stock Vehicle_IsValidSlot(vehicleid, slotid)
 stock bool:Vehicle_HasInventory(vehicleid)
 {
 	new Inventory:inv = Vehicle_GetInventory(vehicleid);
-	if(inv == Inventory:0)
-		return false;
-    return list_valid(Vehicle_GetInventory(vehicleid));
+    return Inventory_IsValid(inv);
 }
 
 hook OnVehicleUnloaded(vehicleid)
@@ -85,10 +56,7 @@ hook OnVehicleLoaded(vehicleid)
 
 stock Vehicle_GiveItem(vehicleid, itemid, amount = 1, extra = 0)
 {
-    new Inventory:vehicleInventory = Vehicle_GetInventory(vehicleid);
-	//if(vehicleInventory == Inventory:0)
-		//return INVENTORY_INVALID;
-    new result = Inventory_AddItem(vehicleInventory, itemid, amount, extra);
+    new result = Inventory_AddItem(Vehicle_GetInventory(vehicleid), itemid, amount, extra);
     Vehicle_SaveInventory(vehicleid);
     return result;
 }
@@ -116,10 +84,7 @@ stock Vehicle_DecreaseItemAmount(vehicleid, itemid, amount = 1)
 
 stock Vehicle_HasSpaceForItem(vehicleid, itemid, amount)
 {
-    new Inventory:inventory = Vehicle_GetInventory(vehicleid);
-    if(!list_valid(inventory))
-	   return 0;
-    return Inventory_HasSpaceForItem(inventory, itemid, amount);
+    return Inventory_HasSpaceForItem(Vehicle_GetInventory(vehicleid), itemid, amount);
 }
 
 stock bool:Vehicle_IsSlotUsed(vehicleid, slotid)
@@ -129,10 +94,7 @@ stock bool:Vehicle_IsSlotUsed(vehicleid, slotid)
 
 stock Vehicle_GetSlotItem(vehicleid, slotid)
 {
-    new Inventory:inventory = Vehicle_GetInventory(vehicleid);
-    if(!list_valid(inventory))
-	   return 0;
-    new result = Inventory_GetSlotItem(inventory, slotid);
+    new result = Inventory_GetSlotItem(Vehicle_GetInventory(vehicleid), slotid);
     return result;
 }
 
@@ -342,7 +304,7 @@ Dialog:ABC(playerid, response, listitem, inputtext[])
 			SendClientMessage(playerid, COLOR_ERROR, "Il veicolo non ha abbastanza spazio nell'inventario.");
 		return 1;
 	}
-	if(Character_DecreaseItemAmount(playerid, itemid, amount))
+	if(Character_DecreaseSlotAmount(playerid, slotid, amount))
 	{
 		SendFormattedMessage(playerid, COLOR_GREEN, "Hai depositato %d %s nel veicolo.", amount, ServerItem_GetName(itemid));
 		Vehicle_GiveItem(vehicleid, itemid, amount, extra);
@@ -425,7 +387,7 @@ Dialog:D_VehInvItemAmount(playerid, response, listitem, inputtext[])
 
 stock Vehicle_SaveInventory(vehicleid)
 {
-	if(!Vehicle_GetID(vehicleid) || !list_valid(Vehicle_GetInventory(vehicleid)))
+	if(!Vehicle_GetID(vehicleid))
 		return 0;
 	Inventory_SaveInDatabase(Vehicle_GetInventory(vehicleid), "vehicle_inventory", "vehicle_id", Vehicle_GetID(vehicleid));
 	return 1;

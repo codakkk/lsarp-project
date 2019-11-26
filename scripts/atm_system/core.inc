@@ -92,7 +92,8 @@ CMD:atmid(playerid, params[])
 
 CMD:ritira(playerid, params[])
 {
-    if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_ATM) && Building_GetType(Character_GetBuilding(playerid, true)) != BUILDING_TYPE_BANK)
+    new Building:building;
+    if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_ATM) && (!Character_TryGetBuilding(playerid, building) || Building_GetType(building) != BUILDING_TYPE_BANK))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un atm o in banca.");
     new money;
     if(sscanf(params, "d", money))
@@ -112,7 +113,8 @@ CMD:ritira(playerid, params[])
 
 CMD:deposita(playerid, params[])
 {
-    if(Building_GetType(Character_GetBuilding(playerid, true)) != BUILDING_TYPE_BANK)
+    new Building:building;
+    if(!Character_TryGetBuilding(playerid, building) || !Character_IsInsideBuilding(playerid, building) || Building_GetType(building) != BUILDING_TYPE_BANK)
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'interno di una banca.");
     new money;
     if(sscanf(params, "d", money))
@@ -132,8 +134,10 @@ CMD:deposita(playerid, params[])
 
 CMD:bonifico(playerid, params[])
 {
-    if(Building_GetType(Character_GetBuilding(playerid, true)) != BUILDING_TYPE_BANK)
+    new Building:building;
+    if(!Character_TryGetBuilding(playerid, building) || !Character_IsInsideBuilding(playerid, building) || Building_GetType(building) != BUILDING_TYPE_BANK)
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei all'interno di una banca.");
+    
     new n[24], money;
     if(sscanf(params, "s[24]d", n, money))
     {
@@ -174,7 +178,7 @@ CMD:bonifico(playerid, params[])
             }
             else
             {
-                mysql_tquery_f(gMySQL, "UPDATE `characters` SET bank = '%d' WHERE id = '%d'", newBank, id);
+                mysql_pquery_f(gMySQL, "UPDATE `characters` SET bank = '%d' WHERE id = '%d'", newBank, id);
                 SendNotification(id, msg);
             }
             SendFormattedMessage(playerid, 0xCBCCCEFF, "Hai effettuato un bonifico a %s di $%s.", name, FormatNumber(money));
@@ -194,7 +198,8 @@ CMD:bonifico(playerid, params[])
 
 CMD:bilancio(playerid, params[])
 {
-    if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_ATM) && Building_GetType(Character_GetBuilding(playerid, true)) != BUILDING_TYPE_BANK)
+    new Building:building;
+    if(!Character_IsNearPickupType(playerid, ELEMENT_TYPE_ATM) && (!Character_TryGetBuilding(playerid, building) || !Character_IsInsideBuilding(playerid, building) || Building_GetType(building) != BUILDING_TYPE_BANK))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un atm o in banca.");
     Character_AMe(playerid, "verifica il suo bilancio bancario.");
     SendFormattedMessage(playerid, 0xCBCCCEFF, "Sul tuo conto bancario possiedi $%d.", Character_GetBank(playerid));
@@ -305,7 +310,7 @@ stock ATM_Create(Float:x, Float:y, Float:z, interior, world)
     data[RotZ] = 0.0;
     data[Interior] = interior;
     data[World] = world;
-    data[Object] = CreateDynamicObject(19324, x, y, z, 0.0, 0.0, 0.0, world, interior, -1);
+    data[Object] = Server_CreateObject(19324, x, y, z, 0.0, 0.0, 0.0, world, interior, -1);
 
     map_add_arr(AtmMap, id, data);
 
@@ -325,7 +330,7 @@ stock bool:ATM_SetPosition(atmid, Float:x, Float:y, Float:z, interior, world)
 
     SetDynamicObjectPos(ATM_GetObject(atmid), x, y, z);
 
-    mysql_tquery_f(gMySQL, "UPDATE `atm` SET pos_x = '%f', pos_y = '%f', pos_z = '%f', interior = '%d', world = '%d' WHERE id = '%d'", x, y, z, interior, world, ATM_GetID(atmid));
+    mysql_pquery_f(gMySQL, "UPDATE `atm` SET pos_x = '%f', pos_y = '%f', pos_z = '%f', interior = '%d', world = '%d' WHERE id = '%d'", x, y, z, interior, world, ATM_GetID(atmid));
     return true;
 }
 
@@ -349,7 +354,7 @@ stock bool:ATM_SetRotation(atmid, Float:rx, Float:ry, Float:rz)
     
     SetDynamicObjectRot(ATM_GetObject(atmid), rx, ry, rz);
     
-    mysql_tquery_f(gMySQL, "UPDATE `atm` SET rot_x = '%f', rot_y = '%f', rot_z = '%f' WHERE id = '%d'", rx, ry, rz, ATM_GetID(atmid));
+    mysql_pquery_f(gMySQL, "UPDATE `atm` SET rot_x = '%f', rot_y = '%f', rot_z = '%f' WHERE id = '%d'", rx, ry, rz, ATM_GetID(atmid));
     return true;
 }
 
@@ -389,7 +394,7 @@ stock ATM_GetObject(atmid)
 
 stock ATM_Delete(atmid)
 {
-    mysql_tquery_f(gMySQL, "DELETE FROM `atm` WHERE id = '%d'", ATM_GetID(atmid));
+    mysql_pquery_f(gMySQL, "DELETE FROM `atm` WHERE id = '%d'", ATM_GetID(atmid));
     Pickup_Destroy(ATM_GetPickup(atmid));
     DestroyDynamicObject(ATM_GetObject(atmid));
     map_remove_deep(AtmMap, ATM_GetID(atmid));
@@ -417,7 +422,7 @@ static ATM_LoadAll()
             cache_get_value_name_int(i, "interior", data[Interior]);
             cache_get_value_name_int(i, "world", data[World]);
 
-            data[Object] = CreateDynamicObject(19324, data[X], data[Y], data[Z], data[RotX], data[RotY], data[RotZ], data[World], data[Interior], -1);
+            data[Object] = Server_CreateObject(19324, data[X], data[Y], data[Z], data[RotX], data[RotY], data[RotZ], data[World], data[Interior], -1);
             data[Pickup] = Pickup_Create(1007, data[ID], data[X], data[Y], data[Z], ELEMENT_TYPE_ATM, data[World], data[Interior]);
             map_add_arr(AtmMap, data[ID], data);
 

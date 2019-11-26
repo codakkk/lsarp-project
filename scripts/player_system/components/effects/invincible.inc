@@ -11,6 +11,8 @@ hook OnCharacterClearData(playerid)
 
 ptask OnInvicibleTimeUpdate[1000](playerid) 
 {
+    if(!Character_IsLogged(playerid))
+        return 0;
     if(InvincibleTime{playerid} > 0)
     {
         InvincibleTime{playerid}--;

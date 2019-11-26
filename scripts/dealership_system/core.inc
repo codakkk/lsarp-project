@@ -99,7 +99,7 @@ stock Dealership_SetName(dealershipid, name[])
     new Iter:iter = Iter:map_iter_at(Dealerships, dealershipid);
 	iter_set_cells(iter, Name, name, 32);
 
-	mysql_tquery_f(gMySQL, "UPDATE `dealerships` SET name = '%e' WHERE id = '%d'", name, Dealership_GetID(dealershipid));
+	mysql_pquery_f(gMySQL, "UPDATE `dealerships` SET name = '%e' WHERE id = '%d'", name, Dealership_GetID(dealershipid));
 
     Dealership_DestroyElements(dealershipid);
     Dealership_CreateElements(dealershipid);
@@ -140,7 +140,7 @@ stock Dealership_SetOnlyPremium(dealershipid, bool:value)
 		return 0;
 	map_set_cell(Dealerships, Dealership_GetID(dealershipid), OnlyPremium, value);
 
-	mysql_tquery_f(gMySQL, "UPDATE `dealerships` SET only_premium = '%d' WHERE id = '%d'", value?1:0, Dealership_GetID(dealershipid));
+	mysql_pquery_f(gMySQL, "UPDATE `dealerships` SET only_premium = '%d' WHERE id = '%d'", value?1:0, Dealership_GetID(dealershipid));
 
 	return true;
 }
@@ -180,7 +180,7 @@ stock Dealership_SetPosition(dealership_id, Float:new_x, Float:new_y, Float:new_
 	map_set_cell(Dealerships, Dealership_GetID(dealership_id), Y, new_y);
 	map_set_cell(Dealerships, Dealership_GetID(dealership_id), Z, new_z);
     
-	mysql_tquery_f(gMySQL, "UPDATE `dealerships` SET x = '%f', y = '%f', z = '%f' WHERE id = '%d'", new_x, new_y, new_z, Dealership_GetID(dealership_id));
+	mysql_pquery_f(gMySQL, "UPDATE `dealerships` SET x = '%f', y = '%f', z = '%f' WHERE id = '%d'", new_x, new_y, new_z, Dealership_GetID(dealership_id));
 
     Dealership_CreateElements(dealership_id);
     return 1;
@@ -250,7 +250,7 @@ static Dealership_SetPriceAt(dealershipid, slotid, newPrice)
 	if(slotid < 0 || slotid >= list_size(vehicles))
 		return 0;
 	list_set_cell(vehicles, slotid, VehiclePrice, newPrice);
-	mysql_tquery_f(gMySQL, "UPDATE `dealership_vehicles` SET price = '%d' WHERE id = '%d' AND modelid = '%d'", newPrice, Dealership_GetModelAt(dealershipid, slotid));
+	mysql_pquery_f(gMySQL, "UPDATE `dealership_vehicles` SET price = '%d' WHERE id = '%d' AND modelid = '%d'", newPrice, Dealership_GetModelAt(dealershipid, slotid));
 	return 1;
 }
 
@@ -264,13 +264,13 @@ stock Dealership_DeleteVehicle(dealershipid, slotid)
 	if(modelid == 0 || !list_remove(Dealership_GetVehiclesList(dealershipid), slotid))
 		return 0;
 
-	mysql_tquery_f(gMySQL, "DELETE FROM `dealership_vehicles` WHERE dealership_id = '%d' AND modelid = '%d'", Dealership_GetID(dealershipid), modelid);
+	mysql_pquery_f(gMySQL, "DELETE FROM `dealership_vehicles` WHERE dealership_id = '%d' AND modelid = '%d'", Dealership_GetID(dealershipid), modelid);
     return 1;
 }
 
 stock Dealership_AddVehicle(dealershipid, modelid, price)
 {
-    if(!Dealership_IsValid(dealershipid) || Dealership_HasModel(dealershipid, modelid))
+    if(!Dealership_IsValid(dealershipid) || Dealership_HasModel(dealershipid, modelid) || !(400 <= modelid <= 611))
 	   return 0;
 	new data[e_DEALERSHIP_VEHICLE_DATA];
 	
@@ -279,7 +279,7 @@ stock Dealership_AddVehicle(dealershipid, modelid, price)
 
 	list_add_arr(Dealership_GetVehiclesList(dealershipid), data);
 
-	mysql_tquery_f(gMySQL, "INSERT INTO `dealership_vehicles` (dealership_id, modelid, price) VALUES('%d', '%d', '%d')", Dealership_GetID(dealershipid), modelid, price);
+	mysql_pquery_f(gMySQL, "INSERT INTO `dealership_vehicles` (dealership_id, modelid, price) VALUES('%d', '%d', '%d')", Dealership_GetID(dealershipid), modelid, price);
     return 1;
 }
 
@@ -292,7 +292,7 @@ stock Dealership_SetVehicleSpawnPos(dealership_id, Float:x, Float:y, Float:z, Fl
 	map_set_cell(Dealerships, Dealership_GetID(dealership_id), VehZ, z);
 	map_set_cell(Dealerships, Dealership_GetID(dealership_id), VehA, a);
     
-	mysql_tquery_f(gMySQL, "UPDATE `dealerships` SET vehicle_x = '%f', vehicle_y = '%f', vehicle_z = '%f', vehicle_a = '%f' WHERE id = '%d'", x, y, z, a, Dealership_GetID(dealership_id));
+	mysql_pquery_f(gMySQL, "UPDATE `dealerships` SET vehicle_x = '%f', vehicle_y = '%f', vehicle_z = '%f', vehicle_a = '%f' WHERE id = '%d'", x, y, z, a, Dealership_GetID(dealership_id));
     return 1;
 }
 
@@ -327,6 +327,7 @@ stock Dealership_LoadAll()
 			cache_get_value_name_float(i, "vehicle_z", data[VehZ]);
 			cache_get_value_name_float(i, "vehicle_a", data[VehA]);
 			cache_get_value_name_int(i, "virtual_world", data[VirtualWorld]);
+			cache_get_value_name_int(i, "only_premium", data[OnlyPremium]);
 			
 			data[Vehicles] = list_new();
 			map_add_arr(Dealerships, data[ID], data);
@@ -355,7 +356,7 @@ static Dealership_LoadVehicles(dealershipid)
 			cache_get_value_name_int(i, "modelid", vehicleData[VehicleModel]);
 			cache_get_value_name_int(i, "price", vehicleData[VehiclePrice]);
 
-			if(vehicleData[VehicleModel] == 0 || vehicleData[VehiclePrice] < 0)
+			if(vehicleData[VehicleModel] <= 0 || vehicleData[VehiclePrice] < 0)
 				continue;
 			
 			list_add_arr(vehicles, vehicleData);
@@ -377,7 +378,6 @@ stock Dealership_CreateElements(dealershipid)
 
 	new pickupid = Pickup_Create(1239, Dealership_GetID(dealershipid), x, y, z, ELEMENT_TYPE_DEALERSHIP, Dealership_GetVirtualWorld(dealershipid), 0);
     new Text3D:text = CreateDynamic3DTextLabel(nName, COLOR_GREY, x, y, z + 0.5, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, Dealership_GetVirtualWorld(dealershipid));
-    printf("Create elements for dealership id %d", dealershipid);
 	map_set_cell(Dealerships, Dealership_GetID(dealershipid), Pickup, pickupid);
 	map_set_cell(Dealerships, Dealership_GetID(dealershipid), Text3D, text);
 	return 1;
@@ -548,10 +548,27 @@ stock Dealership_ShowOptions(dealershipid, playerid)
 //
 //
 
-flags:adealershipcmds(CMD_ADMIN);
+flags:adealershipcmds(CMD_DEVELOPER);
 CMD:adealershipcmds(playerid, params[])
 {
-	SendClientMessage(playerid, -1, "[DEALERSHIP]: /acreatedealership - /adealershipmenu");
+	SendClientMessage(playerid, -1, "[DEALERSHIP]: /acreatedealership - /adealershipmenu - /gotodealership");
+	return 1;
+}
+
+flags:gotodealership(CMD_JR_MODERATOR);
+CMD:gotodealership(playerid, params[])
+{
+	if(isempty(params) || isnull(params))
+		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gotodealership [dealershipid]");
+	
+	new val = strval(params);	
+
+	if(!Dealership_IsValid(val))
+		return SendClientMessage(playerid, COLOR_ERROR, "La concessionaria inserita non esiste.");
+	
+	new Float:x, Float:y, Float:z;
+	Dealership_GetPosition(val, x, y, z);
+	Character_SetSafePosition(playerid, x, y, z, 0, Dealership_GetVirtualWorld(val));
 	return 1;
 }
 
@@ -691,9 +708,9 @@ Dialog:Dialog_DealershipAddVehicle(playerid, response, listitem, inputtext[])
 	
 	new modelid, price;
 
-    if(isnull(inputtext) || sscanf(inputtext, "k<vehicle>d", modelid, price) || price < 0)
+    if(isnull(inputtext) || sscanf(inputtext, "k<vehicle>d", modelid, price) || price < 0 || !(400 <= modelid <= 611))
     {
-	   return Dialog_Show(playerid, Dialog_DealershipAddVehicle, DIALOG_STYLE_INPUT, "Aggiungi Veicolo", "{FF0000}La stringa che hai inserito non è corretta!\n{FFFFFF}Inserisci il modello che vuoi inserire seguito dal prezzo!\n-- Esempi --\n- 522 50000\n- NRG 50000", "Aggiungi", "Indietro");
+	   return Dialog_Show(playerid, Dialog_DealershipAddVehicle, DIALOG_STYLE_INPUT, "Aggiungi Veicolo", "{FF0000}La stringa che hai inserito non è corretta o il modello inserito non è valido.\n{FFFFFF}Inserisci il modello che vuoi inserire seguito dal prezzo!\n-- Esempi --\n- 522 50000\n- NRG 50000", "Aggiungi", "Indietro");
     }
     if(Dealership_AddVehicle(SelectedDealership[playerid], modelid, price))
     	SendFormattedMessage(playerid, COLOR_GREEN, "Hai aggiunto %s (%d) per $%d alla concessionaria (%d).", Vehicle_GetNameFromModel(modelid), modelid, price, SelectedDealership[playerid]);

@@ -43,7 +43,7 @@ hook OnCharacterClearData(playerid)
 {
     if(list_valid(PlayerRequests[playerid]))
         list_delete_deep(PlayerRequests[playerid]);
-    PlayerRequests[playerid] = List:0;
+    PlayerRequests[playerid] = INVALID_LIST;
     PlayerRequestsCounter{playerid} = 0;
     PlayerRequestTime[playerid] = 0;
     CurrentRequestPage{playerid} = 0;
@@ -326,7 +326,7 @@ static StaffRequest_Accept(playerid, requestid)
         PlayerRequestsCounter{owner}--;
 
         SelectedRequest[playerid] = 0;
-        mysql_tquery_f(gMySQL, "DELETE FROM `staff_requests` WHERE id = '%d'", requestid);
+        mysql_pquery_f(gMySQL, "DELETE FROM `staff_requests` WHERE id = '%d'", requestid);
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `staff_requests` WHERE id = '%d'", requestid);
     return 1;
@@ -364,7 +364,7 @@ static StaffRequest_Decline(playerid, requestid, const reason[])
 
         PlayerRequestsCounter{owner}--;
         SelectedRequest[playerid] = 0;
-        mysql_tquery_f(gMySQL, "DELETE FROM `staff_requests` WHERE id = '%d'", requestid);
+        mysql_pquery_f(gMySQL, "DELETE FROM `staff_requests` WHERE id = '%d'", requestid);
     }
     MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM `staff_requests` WHERE id = '%d'", requestid);
     return 1;
@@ -374,7 +374,7 @@ Dialog:Dialog_PlayerRequestView(playerid, response, listitem, inputtext[])
 {
     if(response)
     {
-        mysql_tquery_f(gMySQL, "DELETE FROM `staff_requests` WHERE id = '%d'", SelectedRequest[playerid]);
+        mysql_pquery_f(gMySQL, "DELETE FROM `staff_requests` WHERE id = '%d'", SelectedRequest[playerid]);
         SendClientMessage(playerid, COLOR_ORANGE, "Hai annullato la tua richiesta.");
         return 1;
     }
@@ -398,12 +398,12 @@ stock StaffRequest_Add(playerid, type, const text[])
         new id = cache_insert_id();
         if(type == REQUEST_TYPE_SUPPORTER)
         {
-            SendMessageToTesters(0, 0xe9de98ff, "[TESTER-REQ %d]: %s (%d) ha effettuato una richiesta: %s", id, Character_GetOOCName(playerid), playerid, temp);
+            SendMessageToTesters(0, 0xe9de98ff, "[TesterReq %d]: %s (%d) ha effettuato una richiesta: %s", id, Character_GetOOCName(playerid), playerid, temp);
             SendMessageToTesters(0, 0xE9DE98FF, "Digita /ar %d per accettare la richiesta.", id);
         }
         else
         {
-            SendMessageToAdmins(0, 0xEA7500FF, "[ADMIN-REQ %d]: %s (%d) chiede: %s", id, Character_GetOOCName(playerid), playerid, temp);
+            SendMessageToAdmins(0, 0xEA7500FF, "[AdminReq %d]: %s (%d) chiede: %s", id, Character_GetOOCName(playerid), playerid, temp);
             SendMessageToAdmins(0, 0xEA7500FF, "Digita /ar %d per accettare la richiesta.", id);
         }
     }
@@ -416,7 +416,7 @@ stock StaffRequest_Reset(playerid)
 {
     if(!Character_IsLogged(playerid))
         return 0;
-    mysql_tquery_f(gMySQL, "DELETE FROM `staff_requests` WHERE owner_id = '%d'", playerid);
+    mysql_pquery_f(gMySQL, "DELETE FROM `staff_requests` WHERE owner_id = '%d'", playerid);
     return 1;
 }
 

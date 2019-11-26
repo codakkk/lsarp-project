@@ -25,7 +25,11 @@ static
 
 hook OnCharacterClearData(playerid)
 {
-    Character_StopSmoking(playerid);
+    IsSmoking{playerid} = SMOKING_POSITION_NONE;
+    SmokingShots{playerid} = 0;
+    SmokingType{playerid} = SMOKING_TYPE_NONE;
+    DrugEffectTime{playerid} = 0;
+    LastShotTime[playerid] = 0;
     return 1;
 }
 
@@ -92,7 +96,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 
         if(SmokingType{playerid} == SMOKING_TYPE_DRUG && SmokingShots{playerid} <= 5)
         {
-            DrugEffectTime[playerid] = 0;
+            DrugEffectTime{playerid} = 0;
             SetPlayerDrunkLevel(playerid, GetPlayerDrunkLevel(playerid) + 3500);
         }
 
@@ -161,5 +165,26 @@ static Character_CreateSmokingObject(playerid)
         SetPlayerAttachedObject(playerid, 1, 3027, 6, 0.0852, 0.0303, 0.0194, 88.7970, 53.3082, 162.5791);
         SetPlayerAttachedObject(playerid, 2, 18673, 6, 0.1570, -0.0588, -1.6079, 0.0000, 0.0000, 0.0000, 1.0000, 1.0000, 1.0000);
     }
+    return 1;
+}
+
+flags:fuma(CMD_ALIVE_USER);
+CMD:fuma(playerid, params[])
+{
+    if(IsSmoking{playerid})
+        return SendClientMessage(playerid, COLOR_ERROR, "Stai già fumando.");
+    
+    new Inventory:inventory = Character_GetInventory(playerid),
+        slot = Inventory_GetFirstItem(inventory, gItem_Cigarette);
+    
+    if(slot == -1)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai una sigaretta nell'inventario.");
+    
+    if(!Character_CanInteract(playerid))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+    if(Request_IsPending(playerid, REQUEST_TYPE_ITEM))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se hai una richiesta d'oggetto attiva.");
+    
+    Character_UseInventoryItem(playerid, slot);
     return 1;
 }

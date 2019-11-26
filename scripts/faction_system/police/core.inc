@@ -1,20 +1,23 @@
 
 #include <pickup_system\core>
 
-#define IC_JAIL_X						(2638.62)
-#define IC_JAIL_Y						(-1978.24)
-#define IC_JAIL_Z 						(-58.73)
-#define IC_JAIL_INT						(2)
-#define IC_JAIL_VW						(5018)
+#define IC_JAIL_X						(1810.0928)
+#define IC_JAIL_Y						(-1575.3351)
+#define IC_JAIL_Z 						(5700.4287)
+#define IC_JAIL_INT						(0)
+#define IC_JAIL_VW						(5114)
 
 #define OOC_JAIL_X						(197.1209)
 #define OOC_JAIL_Y						(176.3204)
 #define OOC_JAIL_Z 						(1003.0234)
 #define OOC_JAIL_INT					(3)
 
+#include "divisions/core"
 #include <faction_system\police\beanbag_taser>
 #include <faction_system\police\trace>
 #include <faction_system\police\mdc>
+
+#include <faction_system\police\commands\sirena>
 
 #include <YSI_Coding\y_hooks>
 
@@ -29,7 +32,7 @@ static enum e_POLICE_ARREST
 };
 static PoliceArrestPositions[][e_POLICE_ARREST] = 
 {
-	{2661.1257,-1949.2670,-58.7113, 0}
+	{1791.9943,-1532.5957,5700.4287, 0}
 	//{DEFAULT_SPAWN_X, DEFAULT_SPAWN_Y, DEFAULT_SPAWN_Z, 0}
 };
 
@@ -47,7 +50,7 @@ hook OnGameModeInit()
     return 1;
 }
 
-hook OnCharacterSpawn(playerid)
+hook OnCharacterSpawned(playerid)
 {
 	if(Character_IsFactionDuty(playerid) && Faction_GetType(Character_GetFaction(playerid)) == FACTION_TYPE_POLICE)
 	{
@@ -65,14 +68,3 @@ stock IsPlayerNearAnyArrestPos(playerid)
 	}
 	return 0;
 }
-
-/*flags:espulsionezona(CMD_POLICE);
-CMD:espulsionezona(playerid, params[])
-{
-	if(sscanf(params, "k<u>s[128]", id, reason))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /espulsionezona <playerid/partofname/#####> <motivo>");
-	
-	SendFormattedMessage(id, COLOR_ERROR, "Sei stato espulso dalla zona sicura da %s.", Character_GetOOCName(playerid));
-	SendFormattedMessage(playerid, COLOR_ERROR, "Hai espulso %s dalla zona governativa.", Character_GetOOCName(id));
-	return 1;
-}*/

@@ -135,7 +135,7 @@ stock Character_SetHunger(playerid, Hunger, bool:triggerCallback = false)
 		Hunger = 0;
 	PlayerHunger{playerid} = Hunger;
 	
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET hunger = '%d' WHERE id = '%d'", Character_GetHunger(playerid), Character_GetID(playerid));
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET hunger = '%d' WHERE id = '%d'", Character_GetHunger(playerid), Character_GetID(playerid));
 
 	if(triggerCallback)
 		CallLocalFunction(#OnCharacterHungerChange, "d", playerid);

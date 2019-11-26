@@ -80,3 +80,18 @@ Dialog:Dialog_InvSelectAmmo(playerid, response, listitem, inputtext[])
 	Trigger_OnPlayerInvItemUse(playerid, ammoType, ammo, ITEM_TYPE_AMMO);
     return 1;
 }
+
+hook function String:GetItemExtraStr(itemid, quantity, extra)
+{
+    if(ServerItem_IsWeapon(itemid))
+    {
+        if(Weapon_RequireAmmo(itemid) || Weapon_CanBeDisassembled(itemid))
+        {
+            if(extra == 0)
+                return @("Vuota");
+            else
+                return str_val(extra);
+        }
+    }
+    return String:continue(itemid, quantity, extra);
+}

@@ -84,13 +84,18 @@ stock Player_Info(playerid, text[], bool:forced = false, time = 2500)
 	if(InfoBoxShown{playerid} == true && !forced)
 		return 1;
 
-	PlayerTextDrawHide(playerid, PlayerInfoText[playerid]);
+	static Timer:InfoTimer[MAX_PLAYERS] = {Timer:0, ...};
+
+	if(InfoTimer[playerid] != Timer:0)
+		stop InfoTimer[playerid];
+
+	//PlayerTextDrawHide(playerid, PlayerInfoText[playerid]);
 	PlayerTextDrawSetString(playerid, PlayerInfoText[playerid], text);
 	PlayerTextDrawShow(playerid, PlayerInfoText[playerid]);
 
-	SetTimerEx("DeleteInfoBox", time, false, "d", playerid);
 	InfoBoxShown{playerid} = true;
 
+	InfoTimer[playerid] = defer DeleteInfoBox(playerid, time);
 	return 1;
 }
 
@@ -109,9 +114,9 @@ stock Player_InfoStr(playerid, String:string, bool:forced = false, time = 2500)
 	return result;
 }
 
-forward DeleteInfoBox(playerid); 
-public DeleteInfoBox(playerid)
+timer DeleteInfoBox[time](playerid, time)
 {
+	#pragma unused time
 	PlayerTextDrawHide(playerid, PlayerInfoText[playerid]);
 
 	InfoBoxShown{playerid} = false;

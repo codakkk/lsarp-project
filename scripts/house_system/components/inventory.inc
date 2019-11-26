@@ -9,12 +9,10 @@ static enum _:E_DIALOG_HOUSE_DATA
 }
 
 static 
-	Map:HouseInventory,
 	Map:PlayerHouseInventory; // <playerid, E_DIALOG_HOUSE_DATA>
 
 hook OnGameModeInit()
 {
-	HouseInventory = map_new();
 	PlayerHouseInventory = map_new();
 
 	mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS `house_inventory` ( \
@@ -39,22 +37,13 @@ hook OnHouseLoaded(House:house)
 
 stock Inventory:House_InitializeInventory(House:house)
 {
-	if(map_has_key(HouseInventory, House_GetID(house)))
-		return Inventory:0;
-	new Inventory:inv = Inventory_New(20);
-	map_add(HouseInventory, House_GetID(house), List:inv);
-	//printf("House %d List:inventory initialized");
+	new Inventory:inv = Inventory_New(ENTITY_TYPE_HOUSE, House_GetID(house), 20);
 	return inv;
 }
 
 stock Inventory:House_GetInventory(House:house)
 {
-	new Inventory:inv;
-	if(map_get_safe(HouseInventory, House_GetID(house), List:inv))
-	{
-		return inv;
-	}
-	return Inventory:0;
+	return Inventory_Get(ENTITY_TYPE_HOUSE, House_GetID(house));
 }
 
 stock House_SaveInventory(House:house)
@@ -90,18 +79,13 @@ stock House_ShowInventory(House:house, playerid)
 		data[SlotID] = -1;
 		map_add_arr(PlayerHouseInventory, playerid, data);
 	}
-	Inventory_ShowStr(inventory, playerid, str_format("Inventario Casa (%d/%d)", Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory)), Dialog_HouseInventory, "Avanti", "Chiudi");
+	Inventory_ShowStr(inventory, playerid, str_format("Inventario Casa (%d/%d)", Inventory_GetUsedSpace(inventory), Inventory_GetSpace(inventory)), Dialog_HouseInventory, "Avanti", "Chiudi", .forceDialog = true);
 	return 1;
 }
 
 Dialog:Dialog_HouseInventory(playerid, response, listitem, inputtext[])
 {
-	if(!response)
-    {
-		Character_ShowHouseDialog(playerid);
-		return 1;
-	}
-	
+	if(!response) return 1;
     
     Internal_ShowHouseSlotAction(playerid, listitem);
 	return 1;
@@ -121,7 +105,7 @@ Dialog:HouseInventoryAction(playerid, response, listitem, inputtext[])
 	{
 		if(itemid == 0)
 		{
-			Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", HouseInventoryDepSelectItem, "Seleziona", "Indietro");
+			Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", HouseInventoryDepSelectItem, "Seleziona", "Indietro", .forceDialog = true);
 		}
 		else
 		{
@@ -144,7 +128,7 @@ Dialog:HouseInventoryAction(playerid, response, listitem, inputtext[])
 				return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario."), Internal_ShowHouseSlotAction(playerid, Internal_GetSlotID(playerid));
 			new Inventory:invRef = Internal_GetInventory(playerid);
 
-			Character_GiveItem(playerid, itemid, 1, Inventory_GetSlotExtra(invRef, slotid, 0), true);
+			Character_GiveItem(playerid, itemid, 1, Inventory_GetSlotExtra(invRef, slotid, 0), true, Inventory_GetSlotTempExtraMap(invRef, slotid));
 			Inventory_DecreaseSlotAmount(invRef, slotid, 1);
 
 			Character_SaveInventory(playerid);
@@ -180,7 +164,7 @@ Dialog:HouseInvWithdrawAmount(playerid, response, listitem, inputtext[])
 	if(!Character_HasSpaceForItem(playerid, itemid, val))
 		return Dialog_Show_s(playerid, HouseInvWithdrawAmount, DIALOG_STYLE_INPUT, @("Ammontare da ritirare"), str_format("{FF0000}Non hai abbastanza spazio nell'inventario.{FFFFFF}\nInserisci l'ammontare che vuoi ritirare.\nOggetto: %s\nQuantità disponibile: %d", ServerItem_GetName(itemid), slotAmount), "Ritira", "Indietro");
 
-	Character_GiveItem(playerid, itemid, val, Inventory_GetSlotExtra(inventoryRef, slotid, 0), true);
+	Character_GiveItem(playerid, itemid, val, Inventory_GetSlotExtra(inventoryRef, slotid, 0), true, Inventory_GetSlotTempExtraMap(inventoryRef, slotid));
 	Inventory_DecreaseSlotAmount(inventoryRef, slotid, val);
 
 	Character_SaveInventory(playerid);
@@ -200,17 +184,18 @@ Dialog:HouseInventoryDepSelectItem(playerid, response, listitem, inputtext[])
 		Inventory:inventoryRef = Internal_GetInventory(playerid),
 		itemid = Character_GetSlotItem(playerid, listitem),
 		amount = Character_GetSlotAmount(playerid, listitem),
-		extra = Character_GetSlotExtra(playerid, Internal_GetSlotID(playerid), 0)
+		extra = Character_GetSlotExtra(playerid, listitem, 0),
+		Map:tempExtra = Inventory_GetSlotTempExtraMap(Character_GetInventory(playerid), listitem)
 	;
 	if(ServerItem_IsUnique(itemid) || amount == 1)
 	{
 		if(!Inventory_HasSpaceForItem(Internal_GetInventory(playerid), itemid, amount))
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza spazio nell'inventario della casa.");
-			return Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", HouseInventoryDepSelectItem, "Seleziona", "Indietro");
+			return Inventory_Show(Character_GetInventory(playerid), playerid, "Seleziona l'oggetto da depositare", HouseInventoryDepSelectItem, "Seleziona", "Indietro", .forceDialog = true);
 		}
-		Inventory_AddItem(inventoryRef, itemid, amount, extra);
-		Character_DecreaseItemAmount(playerid, itemid, amount);
+		Inventory_AddItem(inventoryRef, itemid, amount, extra, tempExtra);
+		Character_DecreaseSlotAmount(playerid, listitem, amount);
 
 		Character_SaveInventory(playerid);
 		House_SaveInventory(Internal_GetHouse(playerid));
@@ -236,7 +221,9 @@ Dialog:HouseInventoryDepositAmount(playerid, response, listitem, inputtext[])
 		Inventory:inventoryRef = Internal_GetInventory(playerid),
 		itemid = Internal_GetItemToDeposit(playerid),
 		playerAmount = Character_GetItemAmount(playerid, itemid),
-		itemMaxStacks = ServerItem_GetMaxStack(itemid)
+		itemMaxStacks = ServerItem_GetMaxStack(itemid),
+		extra = Character_GetSlotExtra(playerid, Internal_GetSlotID(playerid), 0),
+		Map:tempExtra = Inventory_GetSlotTempExtraMap(Character_GetInventory(playerid), Internal_GetSlotID(playerid))
 	;
 	if(! (0 < val <= playerAmount))
 		return Dialog_Show_s(playerid, HouseInventoryDepositAmount, DIALOG_STYLE_INPUT, @("Quantità da depositare"), str_format("{FF0000}Non possiedi l'ammontare inserito.{FFFFFF}\nInserisci l'ammontare che vuoi depositare all'interno dell'inventario della tua casa.\nOggetto: %s.\nQuantità: %d.\nStack Massime: %d", ServerItem_GetName(itemid), playerAmount, itemMaxStacks), "Deposita", "Indietro");	
@@ -244,9 +231,9 @@ Dialog:HouseInventoryDepositAmount(playerid, response, listitem, inputtext[])
 	if(!Inventory_HasSpaceForItem(inventoryRef, itemid, val))
 		return Dialog_Show_s(playerid, HouseInventoryDepositAmount, DIALOG_STYLE_INPUT, @("Quantità da depositare"), str_format("{FF0000}La casa non ha abbastanza spazio.{FFFFFF}\nInserisci l'ammontare che vuoi depositare all'interno dell'inventario della tua casa.\nOggetto: %s.\nQuantità: %d.\nStack Massime: %d", ServerItem_GetName(itemid), playerAmount, itemMaxStacks), "Deposita", "Indietro");	
 
-	Inventory_AddItem(inventoryRef, itemid, val, Character_GetSlotExtra(playerid, Internal_GetSlotID(playerid), 0));
-	Character_DecreaseItemAmount(playerid, itemid, val);
-
+	Inventory_AddItem(inventoryRef, itemid, val, extra, tempExtra);
+	Character_DecreaseSlotAmount(playerid, Internal_GetSlotID(playerid), val);
+	
 	Character_SaveInventory(playerid);
 	House_SaveInventory(Internal_GetHouse(playerid));
 

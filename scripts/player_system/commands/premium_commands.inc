@@ -1,6 +1,7 @@
 
 #include <YSI_Coding\y_hooks>
-hook OnCharacterLoad(playerid)
+
+hook OnCharacterLoaded(playerid)
 {
 	if(Account_GetPremiumLevel(playerid) > 0)
 	{
@@ -12,21 +13,6 @@ hook OnCharacterLoad(playerid)
 		}
 	}
 	return Y_HOOKS_CONTINUE_RETURN_1;
-}
-
-flags:givezpoints(CMD_RCON);
-CMD:givezpoints(playerid, params[])
-{
-	new id, points;
-	if(sscanf(params, "k<u>d", id, points))	
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /givezpoints [playerid/partofname] <points>");
-	
-	Account_AddPoints(id, points);
-
-	SendMessageToAdmins(true, COLOR_ADMINCMD, "AdmCmd: %s (%d) ha dato %d Z-Points a %s (%d).", 
-	Account_GetName(playerid), playerid, points, Account_GetName(id), id);
-
-	return 1;
 }
 
 flags:blockpm(CMD_USER);
@@ -103,23 +89,24 @@ CMD:blockb(playerid, params[])
     return 1;
 }
 
-flags:setpremium(CMD_RCON);
-CMD:setpremium(playerid, params[])
+CMD:premiumchat(playerid, params[])
 {
-	new id, premiumid, time;
-	if(sscanf(params, "k<u>dd", id, premiumid, time))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /setpremium [playerid/partofname] <premium (0 - 3)> <giorni>");
-	if(!IsPlayerConnected(id) || IsPlayerNPC(id) || !Character_IsLogged(id))
-		return SendClientMessage(playerid, COLOR_ERROR, "ID Invalido");
-	if(premiumid < 0 || premiumid > 3)
-		return SendClientMessage(playerid, COLOR_ERROR, "Premium ID non valido");
-	if(time < 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "Giorni < 0");
-	
-	Account_SetPremiumLevel(id, premiumid);
-	Account_SetPremiumExpiry(id, time ? (gettime() + 3600 * 24 * time) : 0);
+    if(!Player_HasPremiumAlertsEnabled(playerid))
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "Non puoi utilizzare questo comando con gli alerts premium disattivati.");
+    if(isnull(params))
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: (/pc) /premiumchat [testo]");
 
-	SendMessageToAdmins(true, COLOR_ADMINCMD, "AdmAlert: %s (%d) ha settato %s (%d) premium livello %d.", 
-	Account_GetName(playerid), playerid, Account_GetName(id), id, premiumid);
-	return 1;
+    new String:string = str_new("PremiumChat: ");
+    if(Account_GetAdminLevel(playerid) > 1)
+        str_append_format(string, "%s (%s): %s", Account_GetName(playerid), Character_GetOOCName(playerid), params);
+    else
+        str_append_format(string, "%s: %s", Character_GetOOCName(playerid), params);
+    foreach(new i : Player)
+    {
+        if(!Character_IsLogged(i) || Account_GetPremiumLevel(i) <= 0 || !Player_HasPremiumAlertsEnabled(i))
+            continue;
+        SendClientMessageStr(i, COLOR_ORANGE, string);
+    }
+    return 1;
 }
+alias:premiumchat("pc");

@@ -60,7 +60,7 @@ stock bool:Teleport_AllowVehicles(teleportid, bool:allow)
 {
     if(!Teleport_IsValid(teleportid))
         return false;
-    mysql_tquery_f(gMySQL, "UPDATE `teleports` SET allow_vehicles = '%d' WHERE id = '%d'", allow ? 1 : 0, Teleport_GetID(teleportid));
+    mysql_pquery_f(gMySQL, "UPDATE `teleports` SET allow_vehicles = '%d' WHERE id = '%d'", allow ? 1 : 0, Teleport_GetID(teleportid));
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), AllowVehicles, allow);
     return true;
 }
@@ -72,7 +72,7 @@ stock bool:Teleport_DoesAllowVehicles(teleportid)
     return map_get(TeleportsMap, Teleport_GetID(teleportid), AllowVehicles) > 0 ? true : false;
 }
 
-flags:teleportcreate(CMD_MODERATOR);
+flags:teleportcreate(CMD_ADMIN);
 CMD:teleportcreate(playerid, params[])
 {
     new name[32];
@@ -108,7 +108,7 @@ CMD:gototeleport(playerid, params[])
     return 1;
 }
 
-flags:teleportedit(CMD_MODERATOR);
+flags:teleportedit(CMD_ADMIN);
 CMD:teleportedit(playerid, p[])
 {
     new teleportid, command[16], params[256];
@@ -246,7 +246,10 @@ alias:teleportedit("tedit");
 
 stock bool:GetTeleportRightPosByPlayer(playerid, teleportid, &Float:finalX, &Float:finalY, &Float:finalZ, &finalInterior, &finalWorld)
 {
+    if(!Teleport_IsValid(teleportid))
+        return false;
     static Float:x, Float:y, Float:z, Float:ex, Float:ey, Float:ez;
+    x = y = z = ex = ey = ez = 0.0;
     new Float:range = IsPlayerInAnyVehicle(playerid) ? 4.0 : 1.5;
     Teleport_GetEnterPosition(teleportid, x, y, z);
     Teleport_GetExitPosition(teleportid, ex, ey, ez);
@@ -273,29 +276,10 @@ stock bool:GetTeleportRightPosByPlayer(playerid, teleportid, &Float:finalX, &Flo
 
 hook function Character_Enter(playerid)
 {
-    printf("[Character_Enter]: Teleport");
-    
-    new Float:finalX, Float:finalY, Float:finalZ, finalInterior, finalWorld;
+    static Float:finalX, Float:finalY, Float:finalZ, finalInterior, finalWorld;
 
-    new teleport = Character_GetCurrentTeleport(playerid);
-
-    if(Teleport_IsValid(teleport))
-    {
-        GetTeleportRightPosByPlayer(playerid, teleport, finalX, finalY, finalZ, finalInterior, finalWorld);
-    }
-    else if(!Teleport_IsValid(teleport) && IsPlayerInAnyVehicle(playerid))
-    {
-        new tempTeleport = 0;
-        for_map(i : TeleportsMap)
-        {
-            tempTeleport = iter_get_key(i);
-            if(GetTeleportRightPosByPlayer(playerid, teleport, finalX, finalY, finalZ, finalInterior, finalWorld))
-            {
-                teleport = tempTeleport;
-                break;
-            }
-        }
-    }
+    static teleport = 0;
+    teleport = Character_GetCurrentTeleport(playerid);
 
     if(Teleport_IsValid(teleport))
     {
@@ -319,6 +303,8 @@ hook function Character_Enter(playerid)
             }
         }
 
+        GetTeleportRightPosByPlayer(playerid, teleport, finalX, finalY, finalZ, finalInterior, finalWorld);
+
         if(finalX == 0.0 && finalY == 0.0 && finalZ == 0.0)
             return continue(playerid);
 
@@ -337,7 +323,6 @@ hook function Character_Enter(playerid)
         }
         else
         {
-            printf("Teleport Set Pos: %f - %f - %f", finalX, finalY, finalZ);
             Character_SetSafePosition(playerid, finalX, finalY, finalZ, finalInterior, finalWorld);
         }
         return 1;
@@ -348,12 +333,37 @@ hook function Character_Enter(playerid)
 
 stock Character_GetCurrentTeleport(playerid)
 {
-    new teleportid = 0, elementid, E_ELEMENT_TYPE:type;
-    if(Character_GetNearestPickup(playerid, elementid, type) && type == ELEMENT_TYPE_TELEPORT)
+    static teleportid = 0;
+    teleportid = 0;
+    new Float:range = IsPlayerInAnyVehicle(playerid) ? 5.0 : 2.5;
+    /*if(IsPlayerInAnyVehicle(playerid))
+    {*/
+    static Float:x, Float:y, Float:z, Float:ex, Float:ey, Float:ez, tempTeleport = 0;
+    tempTeleport = 0;
+    for_map(i : TeleportsMap)
     {
-        teleportid = elementid;
+        tempTeleport = iter_get_key(i);
+        if(!Teleport_IsValid(tempTeleport))
+            continue;
+        Teleport_GetEnterPosition(tempTeleport, x, y, z);
+        if(IsPlayerInRangeOfPoint(playerid, range, x, y, z) && Character_GetVirtualWorld(playerid) == Teleport_GetEnterWorld(tempTeleport))
+        {
+            teleportid = tempTeleport;
+        }
+        Teleport_GetExitPosition(tempTeleport, ex, ey, ez);
+        if(IsPlayerInRangeOfPoint(playerid, range, ex, ey, ez) && Character_GetVirtualWorld(playerid) == Teleport_GetExitWorld(tempTeleport))
+        {
+            teleportid = tempTeleport;
+        }
     }
-    
+    /*}
+    else
+    {
+        static elementid, E_ELEMENT_TYPE:type;
+        Character_GetNearestPickup(playerid, elementid, type);
+        if(type == ELEMENT_TYPE_TELEPORT)
+            teleportid = elementid;
+    }*/
     return teleportid;
 }
 
@@ -404,7 +414,7 @@ stock bool:Teleport_Delete(teleportid)
     text = Text3D:map_get(TeleportsMap, Teleport_GetID(teleportid), ExitLabel);
     DestroyDynamic3DTextLabel(text);
 
-    mysql_tquery_f(gMySQL, "DELETE FROM `teleports` WHERE id = '%d'", Teleport_GetID(teleportid));
+    mysql_pquery_f(gMySQL, "DELETE FROM `teleports` WHERE id = '%d'", Teleport_GetID(teleportid));
 
     map_remove_deep(TeleportsMap, Teleport_GetID(teleportid));
     return true;       
@@ -476,7 +486,7 @@ stock bool:Teleport_SetEnterPosition(teleportid, Float:x, Float:y, Float:z, inte
 {
     if(!Teleport_IsValid(teleportid))
         return false;
-    mysql_tquery_f(gMySQL, "UPDATE teleports SET enter_x = '%f', enter_y = '%f', enter_z = '%f', enter_world = '%d', enter_interior = '%d' WHERE id = '%d'", x, y, z, world, interior, Teleport_GetID(teleportid));
+    mysql_pquery_f(gMySQL, "UPDATE teleports SET enter_x = '%f', enter_y = '%f', enter_z = '%f', enter_world = '%d', enter_interior = '%d' WHERE id = '%d'", x, y, z, world, interior, Teleport_GetID(teleportid));
     
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterX, x);
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), EnterY, y);
@@ -513,7 +523,7 @@ stock bool:Teleport_SetExitPosition(teleportid, Float:x, Float:y, Float:z, inter
     if(!Teleport_IsValid(teleportid))
         return false;
 
-    mysql_tquery_f(gMySQL, "UPDATE teleports SET exit_x = '%f', exit_y = '%f', exit_z = '%f', exit_world = '%d', exit_interior = '%d' WHERE id = '%d'", x, y, z, world, interior, Teleport_GetID(teleportid));
+    mysql_pquery_f(gMySQL, "UPDATE teleports SET exit_x = '%f', exit_y = '%f', exit_z = '%f', exit_world = '%d', exit_interior = '%d' WHERE id = '%d'", x, y, z, world, interior, Teleport_GetID(teleportid));
     
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitX, x);
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), ExitY, y);
@@ -549,7 +559,7 @@ stock bool:Teleport_SetFaction(teleportid, factionid)
 {
     if(!Teleport_IsValid(Teleport_GetID(teleportid)) || (factionid != INVALID_FACTION_ID && !Faction_IsValid(factionid)))
         return false;
-    mysql_tquery_f(gMySQL, "UPDATE teleports SET faction_id = '%d' WHERE id = '%d'", factionid, Teleport_GetID(teleportid));
+    mysql_pquery_f(gMySQL, "UPDATE teleports SET faction_id = '%d' WHERE id = '%d'", factionid, Teleport_GetID(teleportid));
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), Faction, factionid);
     return true;
 }
@@ -571,7 +581,7 @@ stock bool:Teleport_SetCharacter(teleportid, playerid)
     new id = 0;
     if(playerid != -1 && Character_IsLogged(playerid))
         id = Character_GetID(playerid);
-    mysql_tquery_f(gMySQL, "UPDATE teleports SET character_id = '%d' WHERE id = '%d'", id, Teleport_GetID(teleportid));
+    mysql_pquery_f(gMySQL, "UPDATE teleports SET character_id = '%d' WHERE id = '%d'", id, Teleport_GetID(teleportid));
     map_set_cell(TeleportsMap, Teleport_GetID(teleportid), Character, id);
     return true;
 }
@@ -599,7 +609,7 @@ stock bool:Teleport_SetName(teleportid, name[])
     new Iter:iter = Iter:map_iter_at(TeleportsMap, Teleport_GetID(teleportid));
 	iter_set_cells(iter, Name, name, 32);
 
-    mysql_tquery_f(gMySQL, "UPDATE teleports SET name = '%e' WHERE id = '%d'", name, Teleport_GetID(teleportid));
+    mysql_pquery_f(gMySQL, "UPDATE teleports SET name = '%e' WHERE id = '%d'", name, Teleport_GetID(teleportid));
 
     Teleport_CreatePickupAndLabel(Teleport_GetID(teleportid));
     return true;

@@ -11,7 +11,7 @@ stock Character_SavePrivileges(playerid)
 	// This should never happen.
     if(!Character_IsLogged(playerid))
 	   return 0;
-	mysql_tquery_f(gMySQL, 
+	mysql_pquery_f(gMySQL, 
 		"INSERT INTO `character_privileges` (character_id, chop_shop) VALUES('%d', '%d') \
 		ON DUPLICATE KEY UPDATE \
 		chop_shop = VALUES(chop_shop);", 

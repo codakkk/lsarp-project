@@ -56,6 +56,4 @@ static stock UpdateServerTime(playerid)
     FixHour(tmphour);
 
     SetWorldTime(tmphour);
-
-    printf("UpdateServerTime");
 }

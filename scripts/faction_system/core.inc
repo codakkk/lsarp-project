@@ -13,12 +13,14 @@
 enum // Faction Type
 {
 	FACTION_TYPE_POLICE = 0,
-	FACTION_TYPE_MEDICAL,
-	FACTION_TYPE_GOVERNMENT,
-	FACTION_TYPE_IMPORT_WEAPONS,
-	FACTION_TYPE_IMPORT_DRUGS,
-	FACTION_TYPE_IMPORT_FOODS,
-	FACTION_TYPE_OTHERS,
+	FACTION_TYPE_MEDICAL = 1,
+	FACTION_TYPE_GOVERNMENT = 2,
+	FACTION_TYPE_IMPORT_WEAPONS = 3,
+	FACTION_TYPE_IMPORT_DRUGS = 4,
+	FACTION_TYPE_IMPORT_FOODS = 5,
+	FACTION_TYPE_OTHERS = 6,
+	FACTION_TYPE_FIREFIGHTERS = 7,
+
 	// Add types here.
 	FACTION_TYPE_LAST
 }
@@ -127,8 +129,8 @@ stock Faction_Delete(factionid)
 	if(!Faction_IsValid(factionid))
 		return 0;
 
-	mysql_tquery_f(gMySQL, "UPDATE `characters` SET faction = '%d', faction_rank = '0' WHERE faction = '%d'", INVALID_FACTION_ID, factionid);
-	mysql_tquery_f(gMySQL, "UPDATE `buildings` SET faction = '%d' WHERE faction = '%d'", INVALID_FACTION_ID, factionid);
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET faction = '%d', faction_rank = '0' WHERE faction = '%d'", INVALID_FACTION_ID, factionid);
+	mysql_pquery_f(gMySQL, "UPDATE `buildings` SET faction = '%d' WHERE faction = '%d'", INVALID_FACTION_ID, factionid);
 	
 	for_building(building)
 	{
@@ -148,7 +150,7 @@ stock Faction_Delete(factionid)
 		}
 	}
 	
-	mysql_tquery_f(gMySQL, "DELETE FROM `factions` WHERE id = '%d'", factionid);
+	mysql_pquery_f(gMySQL, "DELETE FROM `factions` WHERE id = '%d'", factionid);
 
 	CallLocalFunction(#OnFactionDeleted, "d", factionid);
 
@@ -162,7 +164,6 @@ stock Faction_ShowList(playerid, edit = true)
 	for_map(i : Factions)
 	{
 		new factionid = iter_get_key(i);
-		printf("Faction id: %d", factionid);
 		Faction_GetName(factionid, name);
 		Faction_GetShortName(factionid, shortName);
 
@@ -185,7 +186,6 @@ stock Faction_ShowOptions(factionid, playerid)
 	if(!Faction_IsValid(factionid) || Account_GetAdminLevel(playerid) < 5)
 		return 0;
 	pAdminSelectedFaction{playerid} = factionid;
-	printf("Selected: %d", factionid);
 	new String:content = @("Modifica Nome\nModifica Acronimo\nModifica Tipo\nAggiungi Rank\nModifica Ranks\nModifica Skins\nSpawn (Posizione Corrente)\nColore\n{FF0000}Resetta Fazione{FFFFFF}");
 	Dialog_Show_s(playerid, Dialog_FactionActions, DIALOG_STYLE_LIST, Faction_GetNameStr(pAdminSelectedFaction{playerid}), content, "Avanti", "Indietro");
 	return 1;
@@ -258,7 +258,7 @@ stock Faction_SetName(factionid, name[])
 	iter_set_cells(it, Name, name, MAX_FACTION_NAME);
 	if(Faction_GetID(factionid) > 0)
 	{
-		mysql_tquery_f(gMySQL, "UPDATE `factions` SET name = '%e' WHERE id = '%d'", name, Faction_GetID(factionid));
+		mysql_pquery_f(gMySQL, "UPDATE `factions` SET name = '%e' WHERE id = '%d'", name, Faction_GetID(factionid));
 	}
 	return 1;
 }
@@ -289,7 +289,7 @@ stock Faction_SetShortName(factionid, name[])
 	iter_set_cells(it, ShortName, name, MAX_FACTION_SHORT_NAME);
 	if(Faction_GetID(factionid) > 0)
 	{
-		mysql_tquery_f(gMySQL, "UPDATE `factions` SET short_name = '%e' WHERE id = '%d'", name, Faction_GetID(factionid));
+		mysql_pquery_f(gMySQL, "UPDATE `factions` SET short_name = '%e' WHERE id = '%d'", name, Faction_GetID(factionid));
 	}
 	return 1;
 }
@@ -318,7 +318,7 @@ stock Faction_SetType(factionid, type)
 	map_set_cell(Factions, factionid, Type, type);
 	if(Faction_GetID(factionid) > 0)
 	{
-		mysql_tquery_f(gMySQL, "UPDATE `factions` SET type = '%d' WHERE id = '%d'", type, Faction_GetID(factionid));
+		mysql_pquery_f(gMySQL, "UPDATE `factions` SET type = '%d' WHERE id = '%d'", type, Faction_GetID(factionid));
 	}
 	return 1;
 }
@@ -352,7 +352,7 @@ stock Faction_SetSpawnPos(factionid, Float:x, Float:y, Float:z, interior, world)
 
 	if(Faction_GetID(factionid) > 0)
 	{
-		mysql_tquery_f(gMySQL, "UPDATE `factions` SET spawn_x = '%f', spawn_y = '%f', spawn_z = '%f', spawn_interior = '%d', spawn_world = '%d' WHERE id = '%d'", 
+		mysql_pquery_f(gMySQL, "UPDATE `factions` SET spawn_x = '%f', spawn_y = '%f', spawn_z = '%f', spawn_interior = '%d', spawn_world = '%d' WHERE id = '%d'", 
 		x, y, z, interior, world, Faction_GetID(factionid));
 	}
 	return 1;
@@ -386,7 +386,7 @@ stock Faction_SetColor(factionid, color)
 	map_set_cell(Factions, factionid, Color, color);
 
 	if(Faction_GetID(factionid) > 0)
-		mysql_tquery_f(gMySQL, "UPDATE `factions` SET color = '%d' WHERE id = '%d'", color, Faction_GetID(factionid));
+		mysql_pquery_f(gMySQL, "UPDATE `factions` SET color = '%d' WHERE id = '%d'", color, Faction_GetID(factionid));
 	return 1;
 }
 

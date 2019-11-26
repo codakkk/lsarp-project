@@ -25,7 +25,6 @@ task OnVehicleComponentUpdate[5000]()
             {
                 RemoveVehicleComponent(vehicleid, componentid);
                 AddVehicleComponent(vehicleid, acComponentid);
-                printf("Removed");
             }
         }
     }

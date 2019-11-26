@@ -21,10 +21,10 @@ static
 
 hook OnPlayerEnterCheckpoint(playerid)
 {
-	if(Localizing[playerid])
+	if(Localizing{playerid})
 	{
 		DisablePlayerCheckpoint(playerid);
-		Localizing[playerid] = false;
+		Localizing{playerid} = false;
 	}
 	return 1;
 }
@@ -77,12 +77,11 @@ CMD:vehicle(playerid, params[])
 	{
     	if(vehicleid == 0 || GetPlayerState(playerid) != PLAYER_STATE_DRIVER || IsABike(vehicleid))	
         	return 0;
-		
-		if(!Vehicle_IsOwner(vehicleid, playerid, false))
-			return SendClientMessage(playerid, COLOR_ERROR, "Non hai le chiavi di questo veicolo.");
 
 		if(Vehicle_IsEngineOff(vehicleid))
 		{
+			if(!Vehicle_IsOwner(vehicleid, playerid, false))
+				return SendClientMessage(playerid, COLOR_ERROR, "Non hai le chiavi di questo veicolo.");
 			if(Vehicle_GetFuel(vehicleid) < 0.5)
 				return SendClientMessage(playerid, COLOR_ERROR, "Non c'è benzina nel veicolo.");
 			if(Vehicle_GetHealth(vehicleid) <= VEHICLE_MIN_HEALTH_FOR_ENGINE && !Player_IsAdminDuty(playerid))
@@ -134,7 +133,7 @@ CMD:vehicle(playerid, params[])
 	}
 	else if(commandHash == _I<lista> || commandHash == _I<list>)
 	{
-		return Character_ShowVehicleList(playerid, playerid);
+		return Character_ShowVehicleList(playerid, playerid, true);
 	}
 	else if(commandHash == _I<spawn>)
 	{
@@ -172,7 +171,7 @@ CMD:vehicle(playerid, params[])
 		if(vehicleid <= 0)
 			return SendClientMessage(playerid, COLOR_ERROR, "(/v)eicolo respawn <vehicleid>");
 		
-		if(Vehicle_GetFaction(vehicleid) != Character_GetFaction(playerid))
+		if(!Faction_IsValid(Vehicle_GetFaction(vehicleid)) || Vehicle_GetFaction(vehicleid) != Character_GetFaction(playerid))
 			return SendClientMessage(playerid, COLOR_ERROR, "Il veicolo non fa parte della tua fazione.");
 		
 		new Float:x, Float:y, Float:z;
@@ -208,7 +207,7 @@ CMD:vehicle(playerid, params[])
 		if(id > 0 && Character_IsNearVehicle(playerid, id)) vehicleid = id;
 		
 		if(vehicleid <= 0)
-			return SendClientMessage(playerid, COLOR_ERROR, "(/v)eicolo vendi <vehicleid (opzionale)>");
+			return SendClientMessage(playerid, COLOR_ERROR, "(/v)eicolo rottama <vehicleid (opzionale)>");
 		
 		if(!Vehicle_IsOwner(vehicleid, playerid, true))
 			return 0;
@@ -277,13 +276,11 @@ Dialog:Dialog_SellVehicleToPlayer(playerid, response, listitem, inputtext[])
 	return 1;
 }
 
-hook OnCharacterAccept(playerid, stringHash)
+hook OnCharacterTryAccept(playerid, type)
 {
-    if(stringHash != _I<veicolo> && stringHash != _I<veh> && stringHash != _I<vehicle>)
+    if(type != REQUEST_TYPE_VEHICLE)
 		return 0;
-	
-	if(!Request_IsPending(playerid, REQUEST_TYPE_VEHICLE) || !Character_CanAcceptRequest(playerid, REQUEST_TYPE_VEHICLE))
-		return SendClientMessage(playerid, COLOR_ERROR, "Non hai una richiesta attiva.");
+
 	new 
 		senderid = Request_GetSender(playerid, REQUEST_TYPE_VEHICLE),
 		receiver = Request_GetReceiver(playerid, REQUEST_TYPE_VEHICLE),
@@ -370,13 +367,12 @@ public LoadCharacterVehicle(playerid, slotid)
 	if(!canSpawn)
 		return 0;
 
-	printf("SELECT * FROM `vehicles` WHERE id = '%d'", id);
 	mysql_tquery_f_callback(gMySQL, #Vehicle_LoadAll, "", "SELECT * FROM `vehicles` WHERE id = '%d'", id);
 
 	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai spawnato il tuo veicolo (%s). Segui il checkpoint per trovarlo.", Vehicle_GetNameFromModel(modelid));
 
 	SetPlayerCheckpoint(playerid, x, y, z, 5.0);
-	Localizing[playerid] = true;
+	Localizing{playerid} = true;
 	return 1;
 }
 
@@ -388,13 +384,13 @@ stock Character_ShowVehicleList(showToPlayer, playerid, bool:forceTextOnly = fal
 	new 
 		dbid, modelid, plate[9], vehicleid = 0,
 		String:string = str_new("");
-	
+	pawn_guard(string);
 	await mysql_aquery_s(gMySQL, str_format("SELECT id, model, plate FROM `vehicles` WHERE owner_id = '%d'", Character_GetID(playerid)));
 
 	new rows = cache_num_rows();
 
 	if(rows <= 0)
-		return SendClientMessage(playerid, COLOR_ERROR, "Nessun veicolo trovato.");
+		return SendClientMessage(showToPlayer, COLOR_ERROR, "Nessun veicolo trovato.");
 
 	for(new i = 0; i < rows; ++i)
 	{
@@ -407,12 +403,12 @@ stock Character_ShowVehicleList(showToPlayer, playerid, bool:forceTextOnly = fal
 		if(map_has_key(GetVehiclesMap(), dbid))
 			vehicleid = map_get(GetVehiclesMap(), dbid);
 
-		if(Player_HasVehModeEnabled(playerid) || forceTextOnly)
+		if(Player_HasVehModeEnabled(showToPlayer) || forceTextOnly)
 		{
 			if(vehicleid != 0)
-				SendFormattedMessage(playerid, COLOR_LIGHTBLUE, "[Slot %d] %s [%s] - Spawnato - ID: %d", i + 1, Vehicle_GetNameFromModel(modelid), plate, vehicleid);
+				SendFormattedMessage(showToPlayer, COLOR_LIGHTBLUE, "[Slot %d] %s [%s] - Spawnato - ID: %d", i + 1, Vehicle_GetNameFromModel(modelid), plate, vehicleid);
 			else
-				SendFormattedMessage(playerid, COLOR_LIGHTBLUE, "[Slot %d] %s [%s] - Non Spawnato", i + 1, Vehicle_GetNameFromModel(modelid), plate);
+				SendFormattedMessage(showToPlayer, COLOR_LIGHTBLUE, "[Slot %d] %s [%s] - Non Spawnato", i + 1, Vehicle_GetNameFromModel(modelid), plate);
 		}
 		else
 		{
@@ -424,12 +420,7 @@ stock Character_ShowVehicleList(showToPlayer, playerid, bool:forceTextOnly = fal
 	}
 
 	if(!Player_HasInvModeEnabled(playerid) && !forceTextOnly)
-		Dialog_Show_s(playerid, DialogNull, DIALOG_STYLE_LIST, @("Lista veicoli"), string, "Seleziona", "Chiudi");
-	return 1;
-}
-
-hook OnCharacterLoad(playerid)
-{
+		Dialog_Show_s(showToPlayer, DialogNull, DIALOG_STYLE_LIST, @("Lista veicoli"), string, "Seleziona", "Chiudi");
 	return 1;
 }
 
@@ -506,9 +497,15 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
 				Internal_UpdateFuelText(playerid, vehicleid);
 				TextDraw_ShowFuel(playerid, true);
 			}
-			if(Vehicle_GetOwnerID(vehicleid) > 0)
+			if(Player_IsAdminDuty(playerid) && Vehicle_GetOwnerID(vehicleid) > 0)
 			{
-				SendFormattedMessage(playerid, COLOR_GREEN, "(( Questo veicolo (%s) appartiene a %s ))", Vehicle_GetName(vehicleid), Vehicle_GetOwnerName(vehicleid));
+				await mysql_aquery_s(gMySQL, str_format("SELECT name FROM `characters` WHERE id = '%d'", Vehicle_GetOwnerID(vehicleid)), .parallel=true);
+				if(cache_num_rows() > 0)
+				{
+					new name[MAX_PLAYER_NAME];
+					cache_get_value_name(0, "name", name);
+					SendFormattedMessage(playerid, COLOR_GREEN, "(( Questo veicolo (%s) appartiene a %s ))", Vehicle_GetName(vehicleid), name);
+				}
 			}
 		}
 		SetPlayerArmedWeapon(playerid, 0);
