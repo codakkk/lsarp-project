@@ -126,10 +126,12 @@ CMD:vehicle(playerid, params[])
 	{
 		if(id <= 0)
 			vehicleid = Character_GetClosestVehicle(playerid, 5.0);
+		if(!Vehicle_IsValid(vehicleid))
+			return 0;
 		if(!Vehicle_IsOwner(vehicleid, playerid, false))
 			return SendClientMessage(playerid, COLOR_ERROR, "Non sei il proprietario di questo veicolo.");
-	
-		Vehicle_ShowInventory(vehicleid, playerid);
+		printf("ID: %d", _:Vehicle_GetInventory(vehicleid));
+		Character_InteractWithInventory(playerid, Vehicle_GetInventory(vehicleid), true, true);
 	}
 	else if(commandHash == _I<lista> || commandHash == _I<list>)
 	{

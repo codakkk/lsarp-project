@@ -73,9 +73,9 @@ hook OnGameModeInit()
     mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS vehicle_inventory \
 						(`vehicle_id` INT(11) NOT NULL, \
 						`slot_id` INT(4) NULL, \
-						`item` INT(6) NULL, \
-						`amount` INT(6) NULL, \
-						`extra` INT(6) NULL, \
+						`item` INT(11) NULL, \
+						`amount` INT(11) NULL, \
+						`extra` INT(11) NULL, \
 						PRIMARY KEY (`vehicle_id`))");
     
     mysql_tquery(gMySQL, "CREATE TABLE IF NOT EXISTS houses \

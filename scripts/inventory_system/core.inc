@@ -749,6 +749,13 @@ stock Inventory_SaveInDatabase(Inventory:inventory, const databaseName[], const 
 	return 1;
 }
 
+stock Inventory_Save(Inventory:inventory)
+{
+	new EntityType:entityType = Inventory_GetEntityType(inventory), 
+		entityid = Inventory_GetEntityID(inventory);
+	Entity_SaveInventory(EntityType:entityType, entityid);
+}
+
 stock bool:Inventory_SetSlotExtra(Inventory:inventory, slotid, index, value)
 {
 	if(!Inventory_IsValid(inventory) || !(0 <= index < MAX_SLOT_EXTRA) || !Inventory_IsValidSlot(inventory, slotid))
@@ -877,4 +884,182 @@ stock bool:World_FindItem(itemid, extra, &Inventory:inventory, &EntityType:entit
 		index = 0;
 	}
 	return found;
+}
+
+stock Character_InteractWithInventory(playerid, Inventory:interactWith, bool:canDeposit = true, bool:canWithdraw = true)
+{
+	if(!Inventory_IsValid(interactWith))
+		return;
+	new Inventory:playerInventory = Character_GetInventory(playerid),
+		EntityType:entityType = Inventory_GetEntityType(interactWith),
+		entityid = Inventory_GetEntityID(interactWith),
+		String:info = str_new(""),
+		String:entityName = Entity_GetNameStr(entityType, entityid),
+		String:title = str_format("Inventario %S (%d/%d)", entityName, Inventory_GetUsedSpace(interactWith), Inventory_GetSpace(interactWith));
+	
+	pawn_guard(title);
+	pawn_guard(info);
+	pawn_guard(entityName);
+
+	new response[e_DIALOG_RESPONSE_INFO];
+
+	yield 1;
+	for(;;)
+	{
+		await_arr(response) Inventory_ShowAsyncDialog(playerid, interactWith, title, @("Seleziona"), @("Chiudi"));
+
+		if(!response[E_DIALOG_RESPONSE_Response])
+			break;
+		
+		if(!canDeposit && !canWithdraw)
+			break;
+
+		new slotid = response[E_DIALOG_RESPONSE_Listitem],
+			itemid = Inventory_GetSlotItem(interactWith, slotid);
+
+		str_clear(info);
+
+		if(canDeposit)
+			str_append_format(info, "Deposita\n");
+		
+		if(itemid != 0 && ServerItem_IsValid(itemid) && canWithdraw)
+			str_append_format(info, "Ritira\n");
+
+		await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_LIST, str_format("Inventario %S - %s", entityName, ServerItem_GetName(itemid)), info, @("Seleziona"), @("Indietro"));
+
+		if(!response[E_DIALOG_RESPONSE_Response])
+			continue;
+		new listitem = response[E_DIALOG_RESPONSE_Listitem];
+
+		if(listitem == 0 && canDeposit)
+		{
+			HandleDepositInInvDialog(playerid, playerInventory, interactWith, slotid);
+		}
+		else if(canWithdraw)
+		{
+			HandleWithdrawInInvDialog(playerid, playerInventory, interactWith, slotid);
+		}
+	}
+}
+
+static HandleDepositInInvDialog(playerid, Inventory:playerInventory, Inventory:interactWithInventory, interactWithSlotId)
+{
+	new response[e_DIALOG_RESPONSE_INFO];
+	new itemid = Inventory_GetSlotItem(interactWithInventory, interactWithSlotId),
+		String:error = str_new("");
+	pawn_guard(error);
+
+	// If selected itemid isn't equal to zero (so there's something)
+	// First check if it's unique and if character has atleast one item.
+	// It's used to unify first insert and concat
+	if(itemid != 0)
+	{
+		if(ServerItem_IsUnique(itemid))
+		{
+			SendClientMessage(playerid, COLOR_ERROR, "Non puoi depositare ulteriori oggetti in questo slot.");
+			return;
+		}
+	}
+
+	yield 1;
+	for(;;)
+	{
+		await_arr(response) Inventory_ShowAsyncDialog(playerid, playerInventory, @("Inventario Giocatore - Seleziona l'oggetto da depositare"), @("Seleziona"), @("Indietro"));
+
+		if(!response[E_DIALOG_RESPONSE_Response])
+			break;
+		
+		new playerSlotId = response[E_DIALOG_RESPONSE_Listitem];
+		new playerSelectedItem = Inventory_GetSlotItem(playerInventory, playerSlotId);
+		new playerSelectedItemQuantity = Inventory_GetSlotAmount(playerInventory, playerSlotId);
+
+		new quantityToDeposit = (ServerItem_IsUnique(playerSelectedItem) || playerSelectedItemQuantity == 1) ? 1 : 0;
+
+		if(quantityToDeposit == 0)
+		{
+			yield 1;
+			for(;;)
+			{
+				new String:info = str_format("Inserisci l'ammontare che vuoi depositare all'interno dell'inventario.\nOggetto: %s.\nQuantità nello slot: %d.\nStack Massime: %d", ServerItem_GetName(playerSelectedItem), playerSelectedItemQuantity, ServerItem_GetMaxStack(playerSelectedItem));
+				await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Quantità da depositare"), error + @("\n") + info, @("Deposita"), @("Indietro"));
+
+				if(!response[E_DIALOG_RESPONSE_Response])
+					break;
+				
+				str_clear(error);
+
+				new val = strval(response[E_DIALOG_RESPONSE_InputText]);
+
+				if(! (0 < val <= playerSelectedItemQuantity))
+				{
+					str_append_format(error, "{FF0000}Non possiedi la quantità inserita.{FFFFFF}");
+					continue;
+				}
+				quantityToDeposit = val;
+				break;
+			}
+		}
+		
+		if(quantityToDeposit > 0)
+		{
+			new bool:result = Inventory_TransferItem(playerInventory, playerSlotId, quantityToDeposit, interactWithInventory);
+			if(result)
+			{
+				SendFormattedMessage(playerid, COLOR_ORANGE, "Hai depositato gli oggetti nell'inventario. (Oggetto: %s - Quantità: %d)", ServerItem_GetName(itemid), quantityToDeposit);
+				Inventory_Save(playerInventory);
+				Inventory_Save(interactWithInventory);
+			}
+			break;
+		}
+	}
+}
+
+static HandleWithdrawInInvDialog(playerid, Inventory:playerInventory, Inventory:interactWithInventory, interactWithSlotId)
+{
+	new interactWithItemId = Inventory_GetSlotItem(interactWithInventory, interactWithSlotId),
+		interactWithItemQuantity = Inventory_GetSlotAmount(interactWithInventory, interactWithSlotId);
+
+	if(interactWithItemId == 0 || interactWithItemQuantity == 0)
+		return;
+	
+	new quantityToWithdraw = (ServerItem_IsUnique(interactWithItemId) || interactWithItemQuantity == 1) ? 1 : 0;
+
+	if(quantityToWithdraw == 0)
+	{
+		new response[e_DIALOG_RESPONSE_INFO],
+			String:error = str_new("");
+		pawn_guard(error);
+		yield 1;
+		for(;;)
+		{
+			new String:info = str_format("Inserisci l'ammontare che vuoi ritirare dall'inventario.\nOggetto: %s.\nQuantità nello slot: %d.", ServerItem_GetName(interactWithItemId), interactWithItemQuantity);
+			await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Quantità da depositare"), error + @("\n") + info, @("Ritira"), @("Indietro"));
+
+			if(!response[E_DIALOG_RESPONSE_Response])
+				break;
+			
+			str_clear(error);
+
+			new val = strval(response[E_DIALOG_RESPONSE_InputText]);
+
+			if(! (0 < val <= interactWithItemQuantity))
+			{
+				str_append_format(error, "{FF0000}La quantità inserita non è valida.\n{FFFFFF}");
+				continue;
+			}
+			quantityToWithdraw = val;
+			break;
+		}
+	}
+
+	if(quantityToWithdraw > 0)
+	{
+		new bool:result = Inventory_TransferItem(interactWithInventory, interactWithSlotId, quantityToWithdraw, playerInventory);
+		if(result)
+		{
+			Inventory_Save(playerInventory);
+			Inventory_Save(interactWithInventory);
+			SendFormattedMessage(playerid, COLOR_ORANGE, "Hai ritirato gli oggetti dall'inventario. (Oggetto: %s - Quantità: %d)", ServerItem_GetName(interactWithItemId), quantityToWithdraw);
+		}
+	}
 }

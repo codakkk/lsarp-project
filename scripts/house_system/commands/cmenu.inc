@@ -32,7 +32,7 @@ stock bool:Character_ShowHouseDialog(playerid)
         switch(response[E_DIALOG_RESPONSE_Listitem])
         {
             case 0: ToggleHouseLockState(playerid, house);
-            case 1: { House_ShowInventory(house, playerid); break; }
+            case 1: Character_InteractWithInventory(playerid, House_GetInventory(house), true, true);
             case 2: ShowHouseDepositMoneyDialog(playerid, house);
             case 3: ShowHouseWithdrawMoneyDialog(playerid, house);
             case 4: ShowSellHouseDialog(playerid, house);

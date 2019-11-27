@@ -220,8 +220,6 @@ public OnGameModeInit()
 	CallLocalFunction(#OnGameModeLateInit, "");
 
 	SetRespawnTime(1);
-
-	mysql_tquery_f(gMySQL, "ALTER TABLE `characters` ADD admin_role INT(11) DEFAULT '0'");
 	printf("Public OnGameModeInit");
 	return 1;
 }

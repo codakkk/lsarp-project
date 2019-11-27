@@ -19,6 +19,33 @@ enum EntityType
 
 #include <YSI_Coding\y_hooks>
 
+stock String:Entity_GetNameStr(EntityType:type, entityid)
+{
+	new String:string = str_new("");
+	switch(type)
+	{
+		case ENTITY_TYPE_PLAYER: str_append_format(string, "%s", Character_GetOOCName(entityid));
+        case ENTITY_TYPE_HOUSE: str_append_format(string, "Casa");
+        case ENTITY_TYPE_BUILDING: str_append_format(string, "Business");
+        case ENTITY_TYPE_VEHICLE: str_append_format(string, "Veicolo");
+        case ENTITY_TYPE_DROP: str_append_format(string, "Drop");
+        case ENTITY_TYPE_BAG: str_append_format(string, "Borsa");
+        case ENTITY_TYPE_WORLD: str_append_format(string, "World");
+	}
+    return string;
+}
+
+stock Entity_SaveInventory(EntityType:entityType, entityid)
+{
+	switch(entityType)
+	{
+		case ENTITY_TYPE_PLAYER: Character_SaveInventory(entityid);
+        case ENTITY_TYPE_HOUSE: House_SaveInventory(House_Find(entityid));
+        case ENTITY_TYPE_BUILDING: Building_SaveInventory(Building_Find(entityid));
+        case ENTITY_TYPE_VEHICLE: Vehicle_SaveInventory(entityid);
+	}
+}
+
 // Used with hook function
 stock bool:Entity_GetWorldPosition(EntityType:entityType, entityId, &Float:x, &Float:y, &Float:z)
 {

@@ -250,10 +250,14 @@ stock House_Delete(House:house)
 
     House_DestroyObjects(house);
 
+    CallLocalFunction(#OnHouseDeleted, "d", _:house);
+
     var_release(Variant:house);
     var_delete(Variant:house);
 
     map_remove(Houses, houseid);
+
+    Furniture_DeleteAll(ENTITY_TYPE_HOUSE, houseid);
     return 1;
 }
 

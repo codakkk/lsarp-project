@@ -117,6 +117,8 @@ CMD:arresta(playerid, params[])
 	SendFormattedMessage(playerid, COLOR_ORANGE, "** Hai arrestato %s per %d minuti.", Character_GetOOCName(id), time);
 
 	Log(Character_GetOOCName(playerid), Character_GetOOCName(id), "/arresta", time);
+
+	MDC_ShowCriminalRecordDialogAdd(playerid, id);
 	return 1;
 }
 

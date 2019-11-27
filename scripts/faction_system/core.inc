@@ -34,6 +34,7 @@ new
 #include <faction_system\ranks>
 
 #include <faction_system\police\core>
+//#include <faction_system\government\core>
 
 #include <faction_system\commands>
 #include <faction_system\commands\police>
@@ -76,6 +77,7 @@ static FactionListItem[MAX_PLAYERS][20];
 hook OnGameModeInit()
 {
 	Factions = map_new();
+	printf("Factions");
 	mysql_query(gMySQL, "CREATE TABLE IF NOT EXISTS factions \
 						(`id` INT(11) NOT NULL AUTO_INCREMENT, \
 						`name` VARCHAR(32) NULL, \
@@ -230,12 +232,30 @@ stock Faction_SendMessageStr(factionid, String:string)
 {
 	foreach(new i : Player)
 	{
+		if(Character_GetFaction(i) == 0)
+			continue;
 		if(Character_GetFaction(i) != factionid || !Character_IsFactionOOCEnabled(i))
 			continue;
 		SendTwoLinesMessageStr(i, Faction_GetColor(factionid), string);
 	}
 	return 1;
 }
+
+stock Faction_SendMessageToTypeStr(factiontype, String:string)
+{
+	foreach(new i : Player)
+	{
+		if(Character_GetFaction(i) == 0)
+			continue;
+		new factionid = Character_GetFaction(i);
+		if(Faction_GetType(factionid) != factiontype || !Character_IsFactionOOCEnabled(i))
+			continue;
+		SendTwoLinesMessageStr(i, Faction_GetColor(factionid), string);
+	}
+	return 1;
+}
+
+
 
 // ACCESSORS
 stock Faction_IsValid(factionid)

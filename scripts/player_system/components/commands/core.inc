@@ -216,7 +216,7 @@ CMD:hotkeys(playerid, params[])
 	else
 	{
 		SendClientMessage(playerid, COLOR_GREEN, "Hai disabilitato le HotKeys. Ora puoi utilizzare soltanto i comandi.");
-		SendClientMessage(playerid, -1, "{00FF00}/entra{FFFFFF}: entra/usci da un edificio.");
+		SendClientMessage(playerid, -1, "{00FF00}/entra{FFFFFF}: entra/esci da un edificio.");
 		SendClientMessage(playerid, -1, "{00FF00}/motore{FFFFFF}: accende/spegne un veicolo.");
 		SendClientMessage(playerid, -1, "{00FF00}/vluci{FFFFFF}: accende/spegne i fari di un veicolo.");
 		SendClientMessage(playerid, -1, "{00FF00}/raccogli{FFFFFF}: raccogli un oggetto da terra.");

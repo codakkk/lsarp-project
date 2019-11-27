@@ -194,7 +194,5 @@ stock Weapon_GetName(weaponid)
 		"Esplosione", "Investito", "Annegamento", 
 		"Caduta", "Splat", "Sconosciuto"
 	};
-	if(weaponid < 0 || weaponid >= sizeof(gsWeaponNames))
-		return gsWeaponNames[sizeof(gsWeaponNames)-1];
     return gsWeaponNames[weaponid];
 }

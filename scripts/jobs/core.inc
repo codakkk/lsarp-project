@@ -276,7 +276,8 @@ CMD:annullacentralino(playerid, params[])
     SendClientMessage(playerid, COLOR_ORANGE, "Hai annullato la richiesta dell'utente.");
 
     FollowingPlayer[playerid] = INVALID_PLAYER_ID;
-    DestroyDynamicCP(FollowingPlayerCP[playerid]);
+    if(IsValidDynamicCP(FollowingPlayerCP[playerid]))
+        DestroyDynamicCP(FollowingPlayerCP[playerid]);
     FollowingPlayerCP[playerid] = 0;
     return 1;
 }

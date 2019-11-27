@@ -258,7 +258,7 @@ Dialog:Dialog_VehicleAction(playerid, response, listitem, inputtext[])
 {
     if(!response)
         return 0;
-    new vehicle_id = pSelectedVehicleListItem[playerid];
+    new vehicleid = pSelectedVehicleListItem[playerid];
     switch(listitem)
     {
         case 0: // Open/Close
@@ -273,25 +273,25 @@ Dialog:Dialog_VehicleAction(playerid, response, listitem, inputtext[])
         }
         case 2: // Trunk
         {
-            if(!IsPlayerInRangeOfVehicle(playerid, vehicle_id, 5.0))
+            if(!IsPlayerInRangeOfVehicle(playerid, vehicleid, 5.0))
                 return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo.");
-            Vehicle_ShowInventory(vehicle_id, playerid);
+            Character_InteractWithInventory(playerid, Vehicle_GetInventory(vehicleid), true, true);
         }
         case 3: // Sell to player
         {
-            if(!IsPlayerInRangeOfVehicle(playerid, vehicle_id, 5.0))
+            if(!IsPlayerInRangeOfVehicle(playerid, vehicleid, 5.0))
                 return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo.");
         }
         case 4: // Sell
         {
-            if(!IsPlayerInRangeOfVehicle(playerid, vehicle_id, 5.0))
+            if(!IsPlayerInRangeOfVehicle(playerid, vehicleid, 5.0))
                 return SendClientMessage(playerid, COLOR_ERROR, "Non sei vicino al veicolo.");
         }
 		case 5: // Info
 		{
 			new Float:health;
-			GetVehicleHealth(vehicle_id, health);
-			SendFormattedMessage(playerid, -1, "ID Veicolo: {00FF00}%d{FFFFFF} - HP: {00FF00}%.2f{FFFFFF}", vehicle_id, health);
+			GetVehicleHealth(vehicleid, health);
+			SendFormattedMessage(playerid, -1, "ID Veicolo: {00FF00}%d{FFFFFF} - HP: {00FF00}%.2f{FFFFFF}", vehicleid, health);
 		}
     }
     return 1;

@@ -2,6 +2,7 @@
 CMD:furniturecmds(playerid, params[])
 {
     SendClientMessage(playerid, -1, "[FURNITURE]: (/arreda)mento - /furnitureid (fid)");
+    SendClientMessage(playerid, -1, "[FURNITURE]: (/frot)ate");
     //SendClientMessage(playerid, -1, "[FURNITURE]: (/arreda)mento - /listaobject - /textureoggetto");
     //SendClientMessage(playerid, -1, "[FURNITURE]: /piazzaobject - /rinominaobject - /spostaoggetto");
     //SendClientMessage(playerid, -1, "[FURNITURE]: /furnitureid - /idmobili - /fid");
@@ -13,7 +14,7 @@ CMD:arredamento(playerid, params[])
 {
     if(EditObject_IsEditing(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
-    
+
     Character_ShowFurnitureDialog(playerid);
     return 1;
 }
@@ -39,6 +40,27 @@ CMD:furnitureid(playerid, params[])
     return 1;
 }
 alias:furnitureid("fid", "idmobili");
+
+flags:frotate(CMD_ALIVE_USER);
+CMD:frotate(playerid, params[])
+{
+    new objectid, Float:rx, Float:ry, Float:rz;
+    if(sscanf(params, "dfff", objectid, rx, ry, rz))
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: (/frot)ate [objectid] [rot x] [rot y] [rot z]");
+    
+    new bool:isExterior, EntityType:entityType, entityid;
+    new bool:furnable = Character_GetFurnitureWorld(playerid, isExterior, entityType, entityid, .onlyAllowed=true, .worldAllowed=true);
+
+    if(!furnable)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non ti trovi nei dintorni di un posto arredabile.");
+
+    if(!IsFurniture(objectid))
+        return SendClientMessage(playerid, COLOR_ERROR, "L'objectid inserito non è un mobile modificabile.");
+
+    SetDynamicObjectRot(objectid, rx, ry, rz);
+    return 1;
+}   
+alias:frotate("frot");
 
 /*flags:listaobject(CMD_ALIVE_USER);
 CMD:listaobject(playerid, params[])

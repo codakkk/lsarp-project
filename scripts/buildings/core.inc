@@ -499,6 +499,8 @@ stock Building_Delete(Building:building)
 	var_delete(Variant:building);
 
 	map_remove(Buildings, buildingid);
+
+	Furniture_DeleteAll(ENTITY_TYPE_BUILDING, buildingid);
     return 1;
 }
 

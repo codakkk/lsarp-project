@@ -24,23 +24,6 @@ hook OnCharacterSpawn(playerid)
 	return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
-/*hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
-{
-	if(!Character_IsAlive(playerid))
-		return Y_HOOKS_CONTINUE_RETURN_1;
-	
-	if(Character_IsLegHitted(playerid)) // || GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_CUFFED ||
-	{
-		if(newkeys & KEY_JUMP && !(oldkeys & KEY_JUMP))
-			ApplyAnimation(playerid, "GYMNASIUM", "gym_jog_falloff", 4.1, 0, 1, 1, 0, 0);
-
-		if(RELEASED(KEY_SPRINT) || HOLDING(KEY_SPRINT) || newkeys & KEY_SPRINT)
-			ApplyAnimation(playerid, "PED", "FALL_collapse", 4.1, 0, 1, 1, 0, 0);
-	}
-	
-	return Y_HOOKS_CONTINUE_RETURN_1;
-}*/
-
 stock DamageSystem_Update(playerid, Float:amount, issuerid, weaponid, bodypart)
 {
 	if(Character_IsAlive(playerid) || Character_IsInjured(playerid)) // Equivalent to !Character_IsDead(playerid)
@@ -63,7 +46,7 @@ CMD:danni(playerid, params[])
 		//return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /danni [playerid/partofname]");
 	}
 	
-	if(!IsPlayerConnected(id) || !Character_IsLogged(id))
+	if(!Character_IsLogged(id))
 		return SendClientMessage(playerid, COLOR_ERROR, "ID invalido.");
 	
 	if(!IsPlayerInRangeOfPlayer(playerid, id, 5.0))
@@ -76,7 +59,10 @@ CMD:danni(playerid, params[])
 	{
 		if(!CharacterDamageInfo[id][i][Used] || CharacterDamageInfo[id][i][Weapon] < 0)
 			continue;
-		str += str_format("%s\t%s\t%f\t%s\n", CharacterDamageInfo[id][i][IssuerName], Weapon_GetName(CharacterDamageInfo[id][i][Weapon]), CharacterDamageInfo[id][i][Damage], partName[CharacterDamageInfo[id][i][BodyPart]-3]);
+		new bodypart = CharacterDamageInfo[id][i][BodyPart]-3;
+		if(bodypart < 0 || bodypart >= sizeof(partName))
+			bodypart = sizeof(partName)-1;
+		str_append_format(str, "%s\t%s\t%f\t%s\n", CharacterDamageInfo[id][i][IssuerName], Weapon_GetName(CharacterDamageInfo[id][i][Weapon]), CharacterDamageInfo[id][i][Damage], partName[bodypart]);
 		count++;
 	}
 

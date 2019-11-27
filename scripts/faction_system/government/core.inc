@@ -28,7 +28,7 @@ hook OnGameModeInit()
     DefineTaxType(TAX_TYPE_TOBIN, "Tassa Business", 0);
     DefineTaxType(TAX_TYPE_TOBIN, "Tassa Veicolo", 0);
     DefineTaxType(TAX_TYPE_TOBIN, "Tassa Immatricolazione", 0);
-
+    LoadTaxes();
     return 1;
 }
 
@@ -58,7 +58,7 @@ stock bool:Tax_SetValue(taxType, newValue)
 
 stock Tax_CalculateByValue(taxType, baseValue)
 {
-    return baseValue + floatround(float(baseValue * Tax_Getvalue(taxType))/100.0, floatround_ceil);
+    return baseValue + floatround(float(baseValue * Tax_GetValue(taxType))/100.0, floatround_ceil);
 }
 
 static LoadTaxes()

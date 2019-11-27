@@ -16,7 +16,7 @@
 #include <YSI_Coding\y_hooks>
 
 
-#define MAX_FURNITURE_PER_PAGE      (5)
+#define MAX_FURNITURE_PER_PAGE      (15)
 #define MAX_EXTERIOR_DISTANCE       (10.0)
 #define MAX_EXTERIOR_OBJECTS        (10)
 
@@ -400,7 +400,12 @@ static HandleFurnitureOption(playerid, index, List:furnitures)
             case 4:
             {
                 new modelid = Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_MODEL_ID);
-                Furniture_StartBuy(playerid, modelid, FurnitureCustomData[FURNITURE_IS_EXTERIOR], FurnitureCustomData[FURNITURE_BELONGS_TO_TYPE], FurnitureCustomData[FURNITURE_BELONGS_TO_ID]);
+                new newObjectId = Furniture_StartBuy(playerid, modelid, FurnitureCustomData[FURNITURE_IS_EXTERIOR], FurnitureCustomData[FURNITURE_BELONGS_TO_TYPE], FurnitureCustomData[FURNITURE_BELONGS_TO_ID]);
+                new Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz;
+                GetDynamicObjectPos(objectid, x, y, z);
+                GetDynamicObjectRot(objectid, rx, ry, rz);
+                SetDynamicObjectPos(newObjectId, x, y, z);
+                SetDynamicObjectRot(newObjectId, rx, ry, rz);
                 ret = true;
                 break;
             }
@@ -701,7 +706,7 @@ stock Furniture_StartBuy(playerid, modelid, bool:isExterior, EntityType:belongsT
     EditObject_Start(playerid, EDIT_TYPE_BUYING_FURNITURE, objectid, 0);
 
     SendClientMessage(playerid, -1, "Premi {FF6347}ESC{FFFFFF} per annullare e {FF6347}SPAZIO{FFFFFF} per spostare la visuale. Clicca sul {FF6347}FLOPPY{FFFFFF} per salvare.");
-    return 1;
+    return objectid;
 }
 
 stock Furniture_FinishBuy(playerid, objectid)
@@ -846,7 +851,7 @@ stock bool:Furniture_AddToWorld(objectid)
     Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
     if(Furniture_AreLoaded(FurnitureCustomData[FURNITURE_BELONGS_TO_TYPE], FurnitureCustomData[FURNITURE_BELONGS_TO_ID]))
     {
-        printf("AddToWorld. Loaded. Type: %d - ID: %d - Exterior: %d", _:FurnitureCustomData[FURNITURE_BELONGS_TO_TYPE], FurnitureCustomData[FURNITURE_BELONGS_TO_ID], FurnitureCustomData[FURNITURE_IS_EXTERIOR] ? 1 : 0);
+        //printf("AddToWorld. Loaded. Type: %d - ID: %d - Exterior: %d", _:FurnitureCustomData[FURNITURE_BELONGS_TO_TYPE], FurnitureCustomData[FURNITURE_BELONGS_TO_ID], FurnitureCustomData[FURNITURE_IS_EXTERIOR] ? 1 : 0);
         new List:list = Furniture_GetByEntityFilter(FurnitureCustomData[FURNITURE_BELONGS_TO_TYPE], FurnitureCustomData[FURNITURE_BELONGS_TO_ID], FurnitureCustomData[FURNITURE_IS_EXTERIOR]);
         list_add(list, objectid);
         
@@ -1064,6 +1069,27 @@ stock Furniture_LoadTextures(objectid)
     return 1;
 }
 
+stock bool:Character_CanFurnish(playerid, EntityType:entityType, entityid)
+{
+    if(entityType == ENTITY_TYPE_HOUSE)
+    {
+        new House:house = House_Find(entityid);
+        if(House_IsValid(house))
+        {
+            return Character_DoesOwnHouse(playerid, house);
+        }
+    }
+    else if(entityType == ENTITY_TYPE_BUILDING)
+    {
+        new Building:building = Building_Find(entityid);
+        if(Building_IsValid(building))
+        {
+            return Character_DoesOwnBuilding(playerid, building);
+        }
+    }
+    return false;
+}
+
 // worldAllowed is used for ENTITY_TYPE_WORLD if admin duty
 stock bool:Character_GetFurnitureWorld(playerid, &bool:isExterior, &EntityType:type, &entityid, bool:onlyAllowed = true, bool:worldAllowed = false)
 {
@@ -1081,7 +1107,7 @@ stock bool:Character_GetFurnitureWorld(playerid, &bool:isExterior, &EntityType:t
         {
             if(onlyAllowed)
             {
-                if(!Character_DoesOwnHouse(playerid, house) || House_GetEnterWorld(house) != Character_GetVirtualWorld(playerid))  
+                if(House_GetEnterWorld(house) != Character_GetVirtualWorld(playerid))  
                     continue;
             }
             House_GetEnterPosition(house, x, y, z);
@@ -1101,7 +1127,7 @@ stock bool:Character_GetFurnitureWorld(playerid, &bool:isExterior, &EntityType:t
         {
             if(onlyAllowed)
             {
-                if(!Character_DoesOwnBuilding(playerid, building) || Building_GetEnterWorld(building) != Character_GetVirtualWorld(playerid))  
+                if(Building_GetEnterWorld(building) != Character_GetVirtualWorld(playerid))  
                     continue;
             }
             Building_GetEnterPos(building, x, y, z);
@@ -1152,20 +1178,13 @@ stock bool:Character_GetFurnitureWorld(playerid, &bool:isExterior, &EntityType:t
             }
         }
     }
+    if(!Character_CanFurnish(playerid, type, entityid) && onlyAllowed)
+    {
+        type = ENTITY_TYPE_NONE;
+        entityid = 0;
+        isExterior = false;
+    }
     return type != ENTITY_TYPE_NONE;
-}
-
-stock Character_ShowFurnitures(playerid, page)
-{
-    #pragma unused playerid
-    /*if(rows > page * MAX_FURNITURE_PER_PAGE + MAX_FURNITURE_PER_PAGE)
-        str += String:str_format(">>> Pagina %d\n", page + 2);
-    if(FurnitureLinkedTo[playerid] >= BUILDING_START_WORLD)
-        Dialog_Show_s(playerid, Dialog_CharacterFurnitures, DIALOG_STYLE_LIST, str_format("Lista mobili piazzati edificio %d", FurnitureLinkedTo[playerid] - BUILDING_START_WORLD), str, "Modifica", "Indietro");
-    else if(FurnitureLinkedTo[playerid] >= HOUSE_START_WORLD)
-        Dialog_Show_s(playerid, Dialog_CharacterFurnitures, DIALOG_STYLE_LIST, str_format("Lista mobili piazzati casa %d", FurnitureLinkedTo[playerid] - HOUSE_START_WORLD), str, "Modifica", "Indietro");
-    */
-    return 1;
 }
 
 stock bool:Furniture_IsExterior(objectid)
@@ -1223,4 +1242,26 @@ static GetMaxPlaceableFurnitures(playerid, bool:isExterior)
 {
     new maxFurnitures = isExterior ? Character_GetExtFurnitureSlot(playerid) : Character_GetFurnitureSlot(playerid);
     return maxFurnitures;
+}
+
+stock bool:Furniture_DeleteAll(EntityType:entityType, entityid)
+{
+    if(!Furniture_AreLoaded(entityType, entityid))
+        return false;
+    new List:list = Furniture_GetByEntity(entityType, entityid);
+    if(list_valid(list))
+    {
+        for_list(i : list)
+        {
+            Furniture_Delete(iter_get(i));
+        }
+    }
+
+    new data[E_FURNITURE_ENTITY_DATA];
+    map_get_arr(FurnitureByEntityType[entityType], entityid, data);
+    list_delete(data[All]);
+    list_delete(data[Interior]);
+    list_delete(data[Exterior]);
+    map_remove(FurnitureByEntityType[entityType], entityid);
+    return true;
 }

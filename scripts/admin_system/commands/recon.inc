@@ -64,6 +64,22 @@ hook OnPlayerStateChange(playerid, newstate, oldstate)
     }
 }
 
+flags:scan(CMD_JR_MODERATOR);
+CMD:scan(playerid, params[])
+{
+    new id;
+    if(sscanf(params, "k<u>", id))
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /scan [playerid/partofname]");
+    
+    if(!Character_IsLogged(id) || id == playerid)
+        return SendClientMessage(playerid, COLOR_ERROR, "ID non valido.");
+    
+    SendFormattedMessage(playerid, -1, "Scan di %s", Character_GetOOCName(id));
+    new speed = IsPlayerInAnyVehicle(id) ? Vehicle_GetSpeed(GetPlayerVehicleID(id)) : Player_GetSpeed(id);
+    SendFormattedMessage(playerid, -1, "Velocità attuale: %d KM/h", speed);
+    return 1;
+}
+
 flags:recon(CMD_JR_MODERATOR);
 CMD:recon(playerid, params[])
 {
@@ -93,7 +109,7 @@ CMD:recon(playerid, params[])
         GetPlayerHealth(playerid, RestoreHealth[playerid]);
         GetPlayerArmour(playerid, RestoreArmour[playerid]);
     }*/
-
+    SendClientMessage(playerid, COLOR_GREEN, "Usa /scan per ulteriori informazioni.");
     Recon(playerid, id);
     return 1;
 }

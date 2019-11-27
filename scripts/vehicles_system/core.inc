@@ -1027,3 +1027,15 @@ stock Vehicle_GetSpeed(vehicleid)
     vel = floatround( floatsqroot( x*x + y*y + z*z ) * 180 );
 	return vel;
 }
+
+stock Player_GetSpeed(playerid)
+{
+	static
+        Float:x,
+        Float:y,
+        Float:z,
+        vel;
+	GetPlayerVelocity(playerid, x, y, z);
+    vel = floatround( floatsqroot( x*x + y*y + z*z ) * 180 );
+	return vel;
+}

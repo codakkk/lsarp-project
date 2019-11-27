@@ -445,3 +445,146 @@ static HandleHouseOwnerDialog(playerid)
     }
 }
 
+stock MDC_ShowCriminalRecordDialogAdd(playerid, targetid)
+{
+	new response[e_DIALOG_RESPONSE_INFO];
+	
+	yield 1;
+	for(;;)
+	{
+		await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Aggiungi fedina penale"), @("Scrivi un rapporto descrivendo la vicenda accaduta che ha portato all'arresto del criminale."), @("Conferma"), @(""));
+		
+		if(!response[E_DIALOG_RESPONSE_Response] || isnull(response[E_DIALOG_RESPONSE_InputText]))
+			continue;
+		
+		new String:query = str_format("INSERT INTO `police_arrest_records` (officer_id, target_id, text, created_at) VALUES('%d', '%d', '%e', '%d'')", Character_GetID(playerid), Character_GetID(targetid), response[E_DIALOG_RESPONSE_InputText], gettime());
+		await mysql_aquery_s(gMySQL, query, .parallel=true);
+
+		new arrestRecordId = cache_insert_id();
+
+		new day, month, year, h, m, s;
+		TimestampToDate(gettime(), year, month, day, h, m, s);
+		
+		yield 1;
+		for(;;)
+		{
+			await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Aggiungi reati fedina penale"), str_format("Scrivi i reati commessi da %s in data %d/%d/%d.", Character_GetOOCName(targetid), day, month, year), @("Aggiungi"), @("Invia"));
+
+			if(!response[E_DIALOG_RESPONSE_Response])
+			{
+				Faction_SendMessageStr(Character_GetFaction(playerid), str_format("** HQ: %s ha aggiornato la fedina penale di %s.", Character_GetOOCName(playerid), Character_GetOOCName(targetid)));
+				break;
+			}
+
+			if(!isnull(response[E_DIALOG_RESPONSE_InputText]) && strlen(response[E_DIALOG_RESPONSE_InputText]) <= 200)
+			{
+				mysql_pquery_f(gMySQL, "INSERT INTO `police_crime_records` (arrest_record_id, text) VALUES('%d', '%e')", arrestRecordId, response[E_DIALOG_RESPONSE_InputText]);
+			}
+		}
+		break;
+	}
+
+	return 1;
+}
+
+flags:fedina(CMD_POLICE);
+CMD:fedina(playerid, params[])
+{
+    new name[MAX_PLAYER_NAME];
+    if(sscanf(params, "s[24]", name))
+    {
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /fedina [nome civile]");
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "ATTENZIONE: è necessario inserire il nome completo di _.");
+        return 1;
+    }
+    MDC_ShowCriminalRecords(playerid, name);
+    return 1;
+}   
+
+stock MDC_ShowCriminalRecords(playerid, const name[])
+{
+    new String:query = str_new("");
+    new List:Records = list_new();
+    new response[e_DIALOG_RESPONSE_INFO],
+        civilianName[MAX_PLAYER_NAME];
+    pawn_guard(query);
+    
+    yield 1;
+    for(;;)
+    {
+        str_clear(query);
+        str_append_format(query, "SELECT police_arrest_records.id, police_arrest_records.created_at, characters.name as civilian_name FROM police_arrest_records INNER JOIN `characters` ON police_arrest_records.target_id = characters.id AND LOWER(characters.name) = LOWER('%e')", name);
+        await mysql_aquery_s(gMySQL, query, .parallel=true);
+        
+        new rows = cache_num_rows();
+        if(rows <= 0)
+        {
+            SendClientMessageStr(playerid, COLOR_ERROR, str_format("Non sono stati trovati dati riguardanti il civile inserito (%s).", name));
+            break;
+        }
+
+        list_clear(Records);
+        //list_resize(Records, rows);
+        // Name is in each row
+        cache_get_value_name(0, "civilian_name", civilianName);
+
+        new String:info = str_new(""), time, recordId, year, month, day, h, m, s;
+        for(new i = 0; i < rows; ++i)
+        {
+            cache_get_value_name_int(i, "id", recordId);
+            cache_get_value_name_int(i, "created_at", time);
+            TimestampToDate(time, year, month, day, h, m, s);
+            str_append_format(info, "#%d - %d/%d/%d\n", i, day, month, year);
+
+            list_add(Records, recordId);
+        }
+
+        yield 1;
+        for(;;)
+        {
+            await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_LIST, str_format("Fedina penale di %s", civilianName), info, @("Visualizza"), @("Chiudi"));
+
+            if(!response[E_DIALOG_RESPONSE_Response])
+                break;
+            
+            new officerName[MAX_PLAYER_NAME], text[201];
+            recordId = list_get(Records, list_get(Records, response[E_DIALOG_RESPONSE_Listitem]));
+
+            str_clear(query);
+            str_append_format(query, "SELECT police_arrest_records.id, police_arrest_records.created_at, police_arrest_records.text, characters.name as officer_name FROM police_arrest_records INNER JOIN `characters` ON police_arrest_records.id = '%d' AND police_arrest_records.officer_id = characters.id", recordId);
+            await mysql_aquery_s(gMySQL, query, .parallel = true);
+
+            cache_get_value_name_int(0, "created_at", time);
+            cache_get_value_name(0, "officer_name", officerName);
+            cache_get_value_name(0, "text", text);
+
+            TimestampToDate(time, year, month, day, h, m, s);
+
+            new String:recordStr = str_format("FEDINA PENALE #%d\n\n", recordId);
+            pawn_guard(recordStr);
+            str_append_format(recordStr, "Nome e Cognome: %s\n\n", civilianName);
+            str_append_format(recordStr, "Agente: %s\n\n", officerName);
+            str_append_format(recordStr, "Data: %d/%d/%d\n\n", day, month, year);
+            str_append_format(recordStr, "Rapporto: %s\n\n", text);
+            str_append_format(recordStr, "Reati: \n\n");
+
+            str_clear(query);
+            str_append_format(query, "SELECT text FROM `police_crime_records` WHERE arrest_record_id = '%d'", recordId);
+            await mysql_aquery_s(gMySQL, query, .parallel = true);
+            rows = cache_num_rows();
+            if(rows <= 0)
+                str_append_format(recordStr, "- Non ci sono reati segnalati.");
+            else
+            {
+                for(new i = 0; i < rows; ++i)
+                {
+                    cache_get_value_name(i, "text", text);
+                    str_append_format(recordStr, "- %s\n", text);
+                }
+            }
+
+            await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, @("Visualizza crimine"), recordStr, @("Indietro"), @(""));
+        }
+    }
+    list_delete(Records);
+}
