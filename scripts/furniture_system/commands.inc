@@ -2,12 +2,14 @@
 CMD:furniturecmds(playerid, params[])
 {
     SendClientMessage(playerid, -1, "[FURNITURE]: (/arreda)mento - /furnitureid (fid)");
-    SendClientMessage(playerid, -1, "[FURNITURE]: (/frot)ate");
+    SendClientMessage(playerid, -1, "[FURNITURE]: (/frot)ate - (/fpos)ition - /fname - /fmove");
+    SendClientMessage(playerid, -1, "[FURNITURE]: /ftexture - /fdelete");
     //SendClientMessage(playerid, -1, "[FURNITURE]: (/arreda)mento - /listaobject - /textureoggetto");
     //SendClientMessage(playerid, -1, "[FURNITURE]: /piazzaobject - /rinominaobject - /spostaoggetto");
     //SendClientMessage(playerid, -1, "[FURNITURE]: /furnitureid - /idmobili - /fid");
     return 1;
 }
+alias:furniturecmds("mobilicmds");
 
 flags:arredamento(CMD_ALIVE_USER);
 CMD:arredamento(playerid, params[])
@@ -54,134 +56,125 @@ CMD:frotate(playerid, params[])
     if(!furnable)
         return SendClientMessage(playerid, COLOR_ERROR, "Non ti trovi nei dintorni di un posto arredabile.");
 
-    if(!IsFurniture(objectid))
-        return SendClientMessage(playerid, COLOR_ERROR, "L'objectid inserito non è un mobile modificabile.");
+    if(!IsFurniture(objectid) || !Furniture_IsOfWorld(objectid, entityType, entityid, isExterior))
+        return SendClientMessage(playerid, COLOR_ERROR, "L'objectid inserito non è un tuo mobile modificabile.");
 
-    SetDynamicObjectRot(objectid, rx, ry, rz);
+    Furniture_SetRotation(objectid, rx, ry, rz);
+    Furniture_Update(objectid, playerid);
     return 1;
 }   
 alias:frotate("frot");
 
-/*flags:listaobject(CMD_ALIVE_USER);
-CMD:listaobject(playerid, params[])
+flags:fposition(CMD_ALIVE_USER);
+CMD:fposition(playerid, params[])
 {
-    if(EditObject_IsEditing(playerid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
+    new objectid, Float:x, Float:y, Float:z;
+    if(sscanf(params, "dfff", objectid, x, y, z))
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: (/frot)ate [objectid] [x] [y] [z]");
     
-    new bool:isExterior, EntityType:type, entityid;
-    new bool:result = Character_GetNearbyFurnable(playerid, isExterior, type, entityid);
+    new bool:isExterior, EntityType:entityType, entityid;
+    new bool:furnable = Character_GetFurnitureWorld(playerid, isExterior, entityType, entityid, .onlyAllowed=true, .worldAllowed=true);
 
-    if(!result)
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un edificio arredabile.");
-    
-    Character_ShowFurnitures(playerid, 0);
+    if(!furnable)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non ti trovi nei dintorni di un posto arredabile.");
+
+    if(!IsFurniture(objectid) || !Furniture_IsOfWorld(objectid, entityType, entityid, isExterior))
+        return SendClientMessage(playerid, COLOR_ERROR, "L'objectid inserito non è un tuo mobile modificabile.");
+
+    if(!Furniture_ValidatePos(objectid, x, y, z))
+        return SendClientMessage(playerid, COLOR_ERROR, "Il mobile non puo' essere piazzato cosi lontano.");
+
+    Furniture_SetPosition(objectid, x, y, z);
+    Furniture_Update(objectid, playerid);
     return 1;
-}*/
+}   
+alias:fposition("fpos");
 
-/*flags:piazzaobject(CMD_ALIVE_USER);
-CMD:piazzaobject(playerid, params[])
+flags:fname(CMD_ALIVE_USER);
+CMD:fname(playerid, params[])
 {
-    if(EditObject_IsEditing(playerid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
+    new objectid, name[64];
+    if(sscanf(params, "ds[64]", objectid, name) || strlen(name) >= 64)
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /fname [objectid] [object name]");
     
-    new bool:isExterior, EntityType:type, entityid;
-    new bool:result = Character_GetNearbyFurnable(playerid, isExterior, type, entityid);
+    new bool:isExterior, EntityType:entityType, entityid;
+    new bool:furnable = Character_GetFurnitureWorld(playerid, isExterior, entityType, entityid, .onlyAllowed=true, .worldAllowed=true);
 
-    if(!result)
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di un edificio arredabile.");
-    
-    Furniture_ShowCategoryList(playerid);
+    if(!furnable)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non ti trovi nei dintorni di un posto arredabile.");
+
+    if(!IsFurniture(objectid) || !Furniture_IsOfWorld(objectid, entityType, entityid, isExterior))
+        return SendClientMessage(playerid, COLOR_ERROR, "L'objectid inserito non è un tuo mobile modificabile.");
+
+    Furniture_SetName(objectid, name);
+    Furniture_Update(objectid, playerid);
+    SendClientMessage(playerid, -1, "Il mobile è stato rinominato con successo.");
     return 1;
-}*/
+}   
+alias:fname("fnome");
 
-/*flags:rinominaobject(CMD_ALIVE_USER);
-CMD:rinominaobject(playerid, params[])
+flags:fdelete(CMD_ALIVE_USER);
+CMD:fdelete(playerid, params[])
 {
-    if(EditObject_IsEditing(playerid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando se stai editando un oggetto.");
-    new id, name[64];
+    new objectid;
+    if(sscanf(params, "d", objectid))
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /fdelete [objectid]");
     
-    if(sscanf(params, "ds[64]", id, name) || strlen(name) < 3)
-        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /rinominaobject <localid> <nome (min 3 caratteri - max 64 caratteri)>");
-    
-    new House:house = Character_CanFurnish(playerid, true);
+    new bool:isExterior, EntityType:entityType, entityid;
+    new bool:furnable = Character_GetFurnitureWorld(playerid, isExterior, entityType, entityid, .onlyAllowed=true, .worldAllowed=true);
 
-    if(!House_IsValid(house))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di una casa arredabile.");
+    if(!furnable)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non ti trovi nei dintorni di un posto arredabile.");
 
-    new objectid = Furniture_GetFurnitureObjectID(Character_GetVirtualWorld(playerid), id);
+    if(!IsFurniture(objectid) || !Furniture_IsOfWorld(objectid, entityType, entityid, isExterior))
+        return SendClientMessage(playerid, COLOR_ERROR, "L'objectid inserito non è un tuo mobile modificabile.");
 
-    if(Furniture_Rename(Character_GetVirtualWorld(playerid), objectid, name))
-    {
-        return SendFormattedMessage(playerid, COLOR_GREEN, "Hai rinominato l'oggetto. Nuovo nome: %s", name);
-    }
-    return SendClientMessage(playerid, COLOR_ERROR, "Non è stato possibile rinominare l'oggetto. ID invalido.");
-}
+    Furniture_Remove(playerid, objectid);
+    return 1;
+}   
+alias:fdelete("fdel", "frimuovi", "fremove");
 
-flags:spostaoggetto(CMD_ALIVE_USER);
-CMD:spostaoggetto(playerid, params[])
+flags:fmove(CMD_ALIVE_USER);
+CMD:fmove(playerid, params[])
 {
-    if(EditObject_IsEditing(playerid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+    new objectid;
+    if(sscanf(params, "d", objectid))
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /fmove [objectid]");
     
-    new id;
-    if(sscanf(params, "d", id))
-        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /spostaoggetto <local id>");
-    
-    new House:house = Character_CanFurnish(playerid, true);
+    new bool:isExterior, EntityType:entityType, entityid;
+    new bool:furnable = Character_GetFurnitureWorld(playerid, isExterior, entityType, entityid, .onlyAllowed=true, .worldAllowed=true);
 
-    if(!House_IsValid(house))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di una casa arredabile.");
+    if(!furnable)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non ti trovi nei dintorni di un posto arredabile.");
 
-    new 
-        world = Character_GetVirtualWorld(playerid),
-        objectid = Furniture_GetFurnitureObjectID(world, id);
-
-    if(objectid == -1)
-        return SendClientMessage(playerid, COLOR_ERROR, "L'id inserito non è valido.");
-
-    new Float:x, Float:y, Float:z;
-    GetDynamicObjectPos(objectid, x, y, z);
-
-    if(GetPlayerDistanceFromPoint(playerid, x, y, z) > 25.0)
-        return SendClientMessage(playerid, COLOR_ERROR, "Sei troppo distante dall'oggetto.");
-    
-    SendClientMessage(playerid, COLOR_WHITE, "Premi {FF6347}ESC{FFFFFF} per annullare e {FF6347}SPAZIO{FFFFFF} per spostare la visuale. Clicca sul {FF6347}FLOPPY{FFFFFF} per salvare.");
+    if(!IsFurniture(objectid) || !Furniture_IsOfWorld(objectid, entityType, entityid, isExterior))
+        return SendClientMessage(playerid, COLOR_ERROR, "L'objectid inserito non è un tuo mobile modificabile.");
+        
     EditObject_Start(playerid, EDIT_TYPE_FURNITURE, objectid, 0);
     return 1;
-}
+}   
+alias:fmove("fmuovi", "fsposta");
 
-flags:textureoggetto(CMD_ALIVE_USER);
-CMD:textureoggetto(playerid, params[])
+flags:ftexture(CMD_ALIVE_USER);
+CMD:ftexture(playerid, params[])
 {
-    if(EditObject_IsEditing(playerid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non puoi utilizzare questo comando ora.");
+    new objectid, index, modelid, txd[64], texture[64];
+    if(sscanf(params, "ddds[64]s[64]", objectid, index, modelid, txd, texture))
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /ftexture [objectid] [index] [modelid] [txd] [texture]");
     
-    new id, index, modelid, txd[64], texture[64];
-    if(sscanf(params, "ddds[64]s[64]", id, index, modelid, txd, texture))
-        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /textureoggetto <local id> <index> <modelid> <txd> <texture>");
-    
-    new House:house = Character_CanFurnish(playerid, true);
+    new bool:isExterior, EntityType:entityType, entityid;
+    new bool:furnable = Character_GetFurnitureWorld(playerid, isExterior, entityType, entityid, .onlyAllowed=true, .worldAllowed=true);
 
-    if(!House_IsValid(house))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non sei nei pressi di una casa arredabile.");
+    if(!furnable)
+        return SendClientMessage(playerid, COLOR_ERROR, "Non ti trovi nei dintorni di un posto arredabile.");
 
-    new 
-        world = Character_GetVirtualWorld(playerid),
-        objectid = Furniture_GetFurnitureObjectID(world, id);
-
-    if(objectid == -1)
-        return SendClientMessage(playerid, COLOR_ERROR, "L'id inserito non è valido.");
-
-    new Float:x, Float:y, Float:z;
-    GetDynamicObjectPos(objectid, x, y, z);
-
-    if(GetPlayerDistanceFromPoint(playerid, x, y, z) > 25.0)
-        return SendClientMessage(playerid, COLOR_ERROR, "Sei troppo distante dall'oggetto.");
+    if(!IsFurniture(objectid) || !Furniture_IsOfWorld(objectid, entityType, entityid, isExterior))
+        return SendClientMessage(playerid, COLOR_ERROR, "L'objectid inserito non è un tuo mobile modificabile.");
     
     Furniture_SetTexture(objectid, index, modelid, txd, texture, -1);
+    SendClientMessage(playerid, -1, "Hai modificato la texture del mobile.");
     return 1;
-}*/
+}
 
 flags:aplacefurniture(CMD_MODERATOR);
 CMD:aplacefurniture(playerid, params[])

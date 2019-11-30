@@ -90,6 +90,22 @@ CMD:atmid(playerid, params[])
     return 1;
 }
 
+flags:gotoatm(CMD_MODERATOR);
+CMD:gotoatm(playerid, params[])
+{
+    new id;
+    if(sscanf(params, "d", id))
+        return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /gotoatm [atmid]");
+    
+    if(!ATM_IsValid(id))
+        return SendClientMessage(playerid, COLOR_ERROR, "L'ATM id inserito non è valido.");
+    
+    new Float:x, Float:y, Float:z;
+    ATM_GetPosition(id, x, y, z);
+    Character_SetSafePosition(playerid, x, y, z + 1.5, ATM_GetInterior(id), ATM_GetWorld(id));
+    return 1;
+}
+
 CMD:ritira(playerid, params[])
 {
     new Building:building;
@@ -106,6 +122,8 @@ CMD:ritira(playerid, params[])
     Character_GiveBank(playerid, -money, "atm_withdraw");
 
     SendFormattedMessage(playerid, COLOR_YELLOW, "Hai prelevato $%d dal tuo conto bancario.", money);
+
+    Character_AddBankRecord(playerid, -money);
 
     Log(Character_GetOOCName(playerid), "atm", "/ritira", money);
     return 1;
@@ -127,6 +145,8 @@ CMD:deposita(playerid, params[])
     Character_GiveBank(playerid, money, "atm_withdraw");
 
     SendFormattedMessage(playerid, -1, "Hai depositato $%d nel tuo conto bancario.", money);
+    
+    Character_AddBankRecord(playerid, money);
 
     Log(Character_GetOOCName(playerid), "bank", "/deposita", money);
     return 1;
@@ -142,57 +162,59 @@ CMD:bonifico(playerid, params[])
     if(sscanf(params, "s[24]d", n, money))
     {
         SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USA: /bonifico [nome] [ammontare]");
-        SendClientMessage(playerid, COLOR_ERROR, "Ricorda che puoi utilizzare /bonifico gov <ammontare> per inviare un bonifico allo stato.");
+        SendClientMessage(playerid, COLOR_COMMAND_ERROR, "INFO: Ricorda che puoi utilizzare /bonifico gov <ammontare> per inviare un bonifico allo stato.");
+        SendClientMessageStr(playerid, COLOR_COMMAND_ERROR, str_format("INFO: Inoltre, su ogni transazione NON indirizzata al Governo, verrà applicato il %d percento di commissione.", Tax_GetValue(TAX_TYPE_TOBIN)));
         return 1;
     }
 
-    if(money < 1 || money > Character_GetBank(playerid))
-        return SendClientMessage(playerid, COLOR_ERROR, "Non hai tutti questi soldi in banca.");
+    new taxedPrice = Tax_CalculateByValue(TAX_TYPE_TOBIN, money);
+
+    if(taxedPrice < 1 || taxedPrice > Character_GetBank(playerid))
+        return SendClientMessageStr(playerid, COLOR_ERROR, str_format("Non hai $%s in banca.", FormatNumber(taxedPrice)));
+
 
     if(!strcmp(n, "gov", true) || !strcmp(n, "governo", true) || !strcmp(n, "government", true))
     {
-        SendFormattedMessage(playerid, COLOR_GREEN, "Hai inviato un bonifico di $%d al Governo.", money);
+        SendFormattedMessage(playerid, COLOR_GREEN, "Hai inviato un bonifico di $%s al Governo.", FormatNumber(money));
         Character_GiveBank(playerid, -money, "bank_bonifico");
-        Server_GiveGovernamentBank(money);
+        Gov_GiveMoney(MONEY_REASON_DONATION, money);
         return 1;
     }   
+    await mysql_aquery_s(gMySQL, str_format("SELECT id, name, bank FROM `characters` WHERE LOWER(name) = LOWER('%e')", n), .parallel=true);
+    
+    if(cache_num_rows() <= 0)
+        return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore inserito non esiste.");
+    
+    new id, name[24], bank;
+    cache_get_value_name_int(0, "id", id);
+    cache_get_value_name(0, "name", name);
+    cache_get_value_name_int(0, "bank", bank);
+    
+    new newBank = bank + money, other = Character_IsIDConnected(id);
+    new msg[128];
+    
+    format(msg, sizeof(msg), "Hai ricevuto un bonifico di $%s da %s.", FormatNumber(money), Character_GetOOCName(playerid));
 
-    inline OnLoad()
+    if(Character_IsLogged(other))
     {
-        if(cache_num_rows() > 0)
-        {
-            new id, name[24], bank;
-            cache_get_value_name_int(0, "id", id);
-            cache_get_value_name(0, "name", name);
-            cache_get_value_name_int(0, "bank", bank);
-            
-            new newBank = bank + money, other = Character_IsIDConnected(id);
-            new msg[128];
-            
-            format(msg, sizeof(msg), "Hai ricevuto un bonifico di $%d da %s", money, Character_GetOOCName(playerid));
-
-            if(Character_IsLogged(other))
-            {
-                SendClientMessage(other, COLOR_GREEN, msg);
-                Character_SetBank(other, newBank);
-            }
-            else
-            {
-                mysql_pquery_f(gMySQL, "UPDATE `characters` SET bank = '%d' WHERE id = '%d'", newBank, id);
-                SendNotification(id, msg);
-            }
-            SendFormattedMessage(playerid, 0xCBCCCEFF, "Hai effettuato un bonifico a %s di $%s.", name, FormatNumber(money));
-            Character_GiveBank(playerid, -money, "bank_bonifico");
-            
-            Log(Character_GetOOCName(playerid), name, "/bonifico", money);
-        }
-        else
-        {
-            SendClientMessage(playerid, COLOR_ERROR, "Il giocatore inserito non esiste.");
-        }
+        SendClientMessage(other, COLOR_GREEN, msg);
+        Character_SetBank(other, newBank);
     }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT id, name, bank FROM `characters` WHERE LOWER(name) = LOWER('%e')", n);
+    else
+    {
+        mysql_pquery_f(gMySQL, "UPDATE `characters` SET bank = '%d' WHERE id = '%d'", newBank, id);
+        SendNotification(id, msg);
+    }
+    
+    Character_AddBankTransferRecord(Character_GetID(playerid), id, money);
+    Gov_CollectTax(TAX_TYPE_TOBIN, money);
 
+    SendFormattedMessage(playerid, 0xCBCCCEFF, "Hai effettuato un bonifico di $%s al conto bancario di %s.", FormatNumber(money), name);
+    SendClientMessageStr(playerid, 0xCBCCCEFF, str_format("Commissioni: %d percento.", Tax_GetValue(TAX_TYPE_TOBIN)));
+    SendClientMessageStr(playerid, 0xCBCCCEFF, str_format("Totale: $%s.", FormatNumber(taxedPrice)));
+    Character_GiveBank(playerid, -taxedPrice, "bank_bonifico");
+    
+    Log(Character_GetOOCName(playerid), name, "/bonifico", money);
     return 1;
 }
 

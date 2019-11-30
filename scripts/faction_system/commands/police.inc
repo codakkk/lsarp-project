@@ -354,7 +354,8 @@ CMD:vsign(playerid, params[])
 {
 	new vehicleid = GetPlayerVehicleID(playerid);
 
-	if(vehicleid <= 0)return SendClientMessage(playerid, COLOR_ERROR, "Non sei in un veicolo.");
+	if(vehicleid <= 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Non sei in un veicolo.");
 
 	if(Vehicle_HasSign(vehicleid))
 	{
@@ -464,15 +465,16 @@ static ShowFineInfo(playerid, fineid)
 	if(!response[E_DIALOG_RESPONSE_Response])
 		return 0;
 	
-	if(Character_GetMoney(playerid) < price)
+	if(!Character_GiveMoney(playerid, -price, "fine"))
 	{
-		SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi.");
+		SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi per pagare la multa.");
 		return 0;
 	}
 
 	mysql_pquery_f(gMySQL, "DELETE FROM police_fine_records WHERE id = '%d'", fineid);
 
-	Character_GiveMoney(playerid, -price, "fine");
-	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai pagato la multa dell'amontare di $%d.", price);
+	Gov_GiveMoney(MONEY_REASON_FINE, price);
+
+	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai pagato la multa dall'ammontare di $%s.", FormatNumber(price));
 	return 1;
 }

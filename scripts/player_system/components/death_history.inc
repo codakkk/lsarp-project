@@ -18,12 +18,13 @@ hook OnCharacterClearData(playerid)
     return 1;
 }
 
-hook OnCharacterDeath(playerid, killerid, reason)
+//hook OnCharacterDeath(playerid, killerid, reason)
+stock UpdateDeathHistory(playerid)
 {
     if(Character_IsAlive(playerid))
     {
         if(!list_valid(LostItems[playerid]))
-        LostItems[playerid] = list_new();
+            LostItems[playerid] = list_new();
     
         list_clear(LostItems[playerid]);
 

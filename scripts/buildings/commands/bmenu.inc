@@ -18,7 +18,7 @@ static bool:Character_ShowBizDialog(playerid)
             break;
         }
         
-        await_arr(response) ShowPlayerAsyncDialog(playerid, DIALOG_STYLE_LIST, "Edificio", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nGestisci Negozio", "Continua", "Chiudi");
+        await_arr(response) ShowPlayerAsyncDialog(playerid, DIALOG_STYLE_LIST, "Edificio", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nGestisci Negozio\nPrezzo entrata", "Continua", "Chiudi");
 
         if(!response[E_DIALOG_RESPONSE_Response]) break;
 
@@ -31,6 +31,7 @@ static bool:Character_ShowBizDialog(playerid)
             case 4: ShowSellBuildingDialog(playerid, building);
             case 5: ShowSellBuildingToPlayerDialog(playerid, building);
             case 6: Building_ShowTypeMenu(building, playerid);
+            case 7: ShowBuildingEntrancePrice(playerid, building);
         }
 
         if(!Character_CanUseBuildingMenu(playerid, building))
@@ -46,6 +47,29 @@ static ToggleBuildingLockState(playerid, Building:building)
         SendClientMessage(playerid, COLOR_GREEN, "Hai chiuso l'edificio.");
     else
         SendClientMessage(playerid, COLOR_GREEN, "Hai aperto l'edificio.");
+}
+
+static ShowBuildingEntrancePrice(playerid, Building:building)
+{
+    yield 1;
+    new response[e_DIALOG_RESPONSE_INFO];
+    for(;;)
+    {
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Prezzo d'entrata"), @("Inserisci il prezzo d'entrata che vuoi settare per l'edificio.\nUsa 0 come prezzo per rimuoverlo."), @("Imposta"), @("Indietro"));
+
+        if(!response[E_DIALOG_RESPONSE_Response]) break;
+
+        new value = strval(response[E_DIALOG_RESPONSE_InputText]);
+
+        if(value < 0 || value >= cellmax)
+        {
+            SendClientMessage(playerid, COLOR_ERROR, "L'ammontare inserito non è valido.");
+            continue;
+        }
+        Building_SetEntrancePrice(building, value);
+	    SendFormattedMessage(playerid, -1, "Hai settato il prezzo d'entrata dell'edificio a $%s.", FormatNumber(value));
+        break;
+    }
 }
 
 static ShowBuildingDepositMoneyDialog(playerid,  Building:building)

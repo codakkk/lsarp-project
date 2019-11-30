@@ -23,6 +23,10 @@ CMD:ripara(playerid, params[])
     if(Character_GetJobType(playerid) != JOB_TYPE_MECHANIC || !Character_IsJobDuty(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei un meccanico in servizio.");
 
+
+    if(GetVehicleModel(GetPlayerVehicleID(playerid)) != 525)
+        return SendClientMessage(playerid, COLOR_ERROR, "Devi essere a bordo di un tow truck per poter utilizzare questo comando.");
+
     new id, price;
     if(sscanf(params, "k<u>d", id, price))
     {
@@ -72,6 +76,9 @@ CMD:vernicia(playerid, params[])
     if(Character_GetJobType(playerid) != JOB_TYPE_MECHANIC || !Character_IsJobDuty(playerid))
         return SendClientMessage(playerid, COLOR_ERROR, "Non sei un meccanico in servizio.");
     
+    if(GetVehicleModel(GetPlayerVehicleID(playerid)) != 525)
+        return SendClientMessage(playerid, COLOR_ERROR, "Devi essere a bordo di un tow truck per poter utilizzare questo comando.");
+
     new id, price, color1, color2;
     if(sscanf(params, "dddd", id, price, color1, color2))
     {
@@ -179,7 +186,9 @@ static AcceptVehicleRepair(playerid)
     if(!Character_CanInteract(senderid))
         return SendClientMessage(playerid, COLOR_ERROR, "Il giocatore non puo' ripararti il veicolo al momento.");
 
-    Character_GiveMoney(playerid, -price, "repair");
+    if(!Character_GiveMoney(playerid, -price, "repair"))
+        return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi per accettare la richiesta di riparazione.");
+    
     Character_GiveMoney(senderid, price, "repair");
 
     SendFormattedMessage(senderid, COLOR_ACCEPT_REQUEST, "%s ha accettato la tua richiesta di riparazione. Hai guadagnato $%d.", Character_GetRolePlayName(playerid), price);

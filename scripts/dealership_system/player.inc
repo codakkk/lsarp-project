@@ -139,9 +139,8 @@ stock Dealership_ShowVehiclesToPlayer(dealershipid, playerid)
     
 	for(new i = 0, j = list_size(vehicles); i < j; ++i)
     {
-		string += str_format("%s\t$%d\n", Vehicle_GetNameFromModel(Dealership_GetModelAt(dealershipid, i)), Dealership_GetPriceAt(dealershipid, i));
-	   //format(string, sizeof(string), "%s%d(0.0, 0.0, 0.0, 1.0, 3, 3)\t%s - ~g~~h~$%d\n", string, modelid, Vehicle_GetNameFromModel(modelid), price);
-	   //string += str_format("%d(0.0, 0.0, 0.0, 1.0, 1.0)\t%s~n~~g~~h~$%d\n", modelid, Vehicle_GetNameFromModel(modelid), price);
+		new price = Tax_CalculateByValue(TAX_TYPE_VAT, Dealership_GetPriceAt(dealershipid, i));
+		string += str_format("%s\t$%s\n", Vehicle_GetNameFromModel(Dealership_GetModelAt(dealershipid, i)), FormatNumber(price));
     }
     CurrentDealership{playerid} = dealershipid;
 
@@ -149,8 +148,6 @@ stock Dealership_ShowVehiclesToPlayer(dealershipid, playerid)
 	Dealership_GetName(dealershipid, name);
 
    	Dialog_Show_s(playerid, Dialog_DealershipVehicles, DIALOG_STYLE_TABLIST_HEADERS, @(name), string, "Acquista", "Chiudi");
-	//ShowPlayerDialog(playerid, Dialog_DealershipVehicles, DIALOG_STYLE_TABLIST_HEADERS, "Concessionaria", string, "Acquista", "Chiudi");
-    //Dialog_ShowPreview(playerid, Dialog_DealershipVehicles, "Concessionaria", string, "Acquista", "Chiudi");
 	return 1;
 }
 
@@ -161,9 +158,9 @@ Dialog:Dialog_DealershipVehicles(playerid, response, listitem, inputtext[])
     new
 	   	dealershipid = CurrentDealership{playerid},
 		vehicleModel = Dealership_GetModelAt(dealershipid, listitem),
-	   	vehiclePrice = Dealership_GetPriceAt(dealershipid, listitem)
+	   	vehiclePrice = Dealership_GetPriceAt(dealershipid, listitem),
+		vehiclePriceTaxed = Tax_CalculateByValue(TAX_TYPE_VAT, vehiclePrice)
     ;
-
 
 
     if(!Character_IsNearDealership(playerid, dealershipid))
@@ -172,7 +169,7 @@ Dialog:Dialog_DealershipVehicles(playerid, response, listitem, inputtext[])
 	if(Character_GetOwnedVehicleCount(playerid) >= Account_GetOwnableVehicleCount(playerid))
 		return SendClientMessage(playerid, COLOR_ERROR, "Possiedi già il massimo numero di veicoli acquistabili. Acquista un pacchetto premium per aumentarlo.");
 
-    if(Character_GetMoney(playerid) < vehiclePrice)
+    if(Character_GetMoney(playerid) < vehiclePriceTaxed)
     {
 		SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi.");
 		Dealership_ShowVehiclesToPlayer(dealershipid, playerid);
@@ -219,7 +216,11 @@ stock Dealership_PlayerConfirmBuy(playerid)
 {
     if(!Character_IsBuyingVehicle(playerid))
 		return 0;
-    if(Character_GetMoney(playerid) < SelectedVehiclePrice[playerid])
+	
+	new vehiclePrice = SelectedVehiclePrice[playerid],
+		vehiclePriceTaxed = Tax_CalculateByValue(TAX_TYPE_VAT, vehiclePrice);
+
+    if(Character_GetMoney(playerid) < vehiclePriceTaxed)
     {
 		new dealershipid = CurrentDealership{playerid};
 		SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi.");
@@ -235,10 +236,14 @@ stock Dealership_PlayerConfirmBuy(playerid)
 	}
 	else
 	{
-		if(Character_AddOwnedVehicle(playerid, SelectedVehicle[playerid]))
+		new result = Character_AddOwnedVehicle(playerid, SelectedVehicle[playerid]);
+		if(result)
 		{
-			SendFormattedMessage(playerid, -1, "Congratulazioni. Hai acquistato questo veicolo ({00AA00}%s{FFFFFF}) per {00FF00}$%d{FFFFFF}.", Vehicle_GetName(SelectedVehicle[playerid]), SelectedVehiclePrice[playerid]);
-			Character_GiveMoney(playerid, -SelectedVehiclePrice[playerid], "Concessionaria");
+			SendFormattedMessage(playerid, -1, "Congratulazioni. Hai acquistato questo veicolo ({00AA00}%s{FFFFFF}) per {00FF00}$%s{FFFFFF} (%d percento VAT).", Vehicle_GetName(SelectedVehicle[playerid]), FormatNumber(vehiclePriceTaxed), Tax_GetValue(TAX_TYPE_VAT));
+			
+			Character_GiveMoney(playerid, -vehiclePriceTaxed, "Concessionaria");
+			Gov_CollectTax(TAX_TYPE_VAT, vehiclePrice);
+
 			SetVehicleVirtualWorld(SelectedVehicle[playerid], 0);
 			Character_SetVirtualWorld(playerid, 0);
 			PutPlayerInVehicle(playerid, SelectedVehicle[playerid], 0);
@@ -248,7 +253,9 @@ stock Dealership_PlayerConfirmBuy(playerid)
 			Vehicle_SetEngineStatus(SelectedVehicle[playerid], false);
 		}
 		else
+		{
 			SendClientMessage(playerid, COLOR_ORANGE, "Hai raggiunto il limite massimo di veicoli acquistabili.");
+		}
 	}
 	SelectedVehicle[playerid] = 0;
 	SelectedVehiclePrice[playerid] = 0;

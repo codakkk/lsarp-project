@@ -208,7 +208,7 @@ stock Character_ShowStats(playerid, targetid)
 		format(timePlayed, sizeof(timePlayed), "%d min.", minutesPlayed);
 	}
 
-	new String:string = str_format("[Account] %s | Admin Level: [%d] | E-Mail: %s ", Account_GetName(playerid), Account_GetAdminLevel(playerid), Account_GetEMail(playerid));
+	new String:string = str_format("[Account] %s | Admin Level: [%d] | Admin Role: [%d] | E-Mail: %s ", Account_GetName(playerid), Account_GetAdminLevel(playerid), Account_GetAdminRole(playerid), Account_GetEMail(playerid));
 
 	new expire = Account_GetPremiumExpiry(playerid);
 	if(expire > 0)
@@ -230,8 +230,6 @@ stock Character_ShowStats(playerid, targetid)
 
 stock Character_GetOOCName(playerid)
 {
-    new name[MAX_PLAYER_NAME];
-    FixName(CharacterName[playerid], name);
     return CharacterName[playerid];
 }
 

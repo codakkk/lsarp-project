@@ -34,11 +34,10 @@ new
 #include <faction_system\ranks>
 
 #include <faction_system\police\core>
-//#include <faction_system\government\core>
+#include <faction_system\government\core>
 
 #include <faction_system\commands>
 #include <faction_system\commands\police>
-#include <faction_system\commands\government>
 #include <faction_system\commands\common>
 
 
@@ -61,7 +60,8 @@ static enum _:E_FACTION_DATA
 	Float:SpawnZ,
 	Interior,
 	World,
-	Color
+	Color,
+	Money
 };
 
 static
@@ -89,6 +89,7 @@ hook OnGameModeInit()
 						`spawn_interior` INT(11) DEFAULT '0', \
 						`spawn_world` INT(11) DEFAULT '0', \
 						`color` INT(11) DEFAULT '0', \
+						`money` INT(11) DEFAULT '0', \
 						PRIMARY KEY (`id`)) ENGINE=InnoDB DEFAULT CHARSET=latin1;", false);
 	Faction_LoadAll();
 	return 1;
@@ -212,6 +213,7 @@ stock Faction_LoadAll()
 			cache_get_value_name_int(i, "spawn_interior", data[Interior]);
 			cache_get_value_name_int(i, "spawn_world", data[World]);
 			cache_get_value_name_int(i, "color", data[Color]);
+			cache_get_value_name_int(i, "money", data[Money]);
 
 			map_add_arr(Factions, data[ID], data);
 
@@ -410,6 +412,33 @@ stock Faction_SetColor(factionid, color)
 	return 1;
 }
 
+stock Faction_GetMoney(factionid)
+{
+	if(!Faction_IsValid(factionid))
+		return 0;
+	return map_get(Factions, factionid, Money);
+}
+
+stock Faction_SetMoney(factionid, money)
+{
+	if(!Faction_IsValid(factionid))
+		return 0;
+	map_set_cell(Factions, factionid, Money, money);
+
+	if(Faction_GetID(factionid) > 0)
+		mysql_pquery_f(gMySQL, "UPDATE `factions` SET money = '%d' WHERE id = '%d'", money, Faction_GetID(factionid));
+	return 1;
+}
+
+stock Faction_GiveMoney(factionid, money)
+{
+	if(!Faction_IsValid(factionid))
+		return 0;
+
+	Faction_SetMoney(factionid, Faction_GetMoney(factionid) + money);
+	return 1;
+}
+
 stock bool:Faction_IsValidSpawnPosition(factionid)
 {
 	new Float:x, Float:y, Float:z;
@@ -545,4 +574,19 @@ Dialog:Dialog_ChangeFactionColor(playerid, response, listitem, inputtext[])
 
 	SendMessageToAdmins(true, COLOR_YELLOW, "AdmCmd: %s (%d) ha modificato il colore della fazione %d. Colore: %d.", Account_GetName(playerid), playerid, factionid, color);
 	return Faction_ShowList(playerid);
+}
+
+stock Faction_FindOneByType(factiontype)
+{
+	new result = 0;
+	for_map(i : Factions)
+	{
+		new factionid = iter_get_key(i);
+		if(Faction_GetType(factionid) == factiontype)
+		{
+			result = factionid;
+			break;
+		}
+	}
+	return result;
 }

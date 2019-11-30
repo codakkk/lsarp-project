@@ -139,13 +139,13 @@ hook OnPlyVirtualWorldChange(playerid, oldWorld, newWorld)
     return 1;
 }
 
-static stock Furniture_ValidatePos(objectid, Float:newX, Float:newY, Float:newZ)
+stock bool:Furniture_ValidatePos(objectid, Float:newX, Float:newY, Float:newZ)
 {
     if(!IsValidDynamicObject(objectid))
-        return 0;
+        return false;
     
     if(!Furniture_IsExterior(objectid))
-        return 1;
+        return true;
 
     Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
 
@@ -286,7 +286,6 @@ static bool:ShowPlacedFurnituresDialog(playerid, bool:isExterior, EntityType:typ
             lastIndex = size;
 
         str_clear(string);
-        printf("Start: %d - Last: %d - Size: %d",  startIndex, lastIndex, size);
         counter = 0;
         for(new i = startIndex; i < lastIndex; ++i)
         {
@@ -346,7 +345,7 @@ static HandleFurnitureOption(playerid, index, List:furnitures)
 {
     new bool:ret = false,
         response[e_DIALOG_RESPONSE_INFO];
-    new String:string = str_new("Sposta\nRinomina\nRimuovi\nResetta Textures\nDuplica\n");
+    new String:string = str_new("Sposta\nRinomina\nRimuovi\nModifica Texture\nResetta Textures\nDuplica\n");
     if(Account_GetAdminLevel(playerid) > 1)
         str_append_format(string, "Gotati");
     pawn_guard(string);
@@ -393,23 +392,25 @@ static HandleFurnitureOption(playerid, index, List:furnitures)
             }
             case 3:
             {
+                SendClientMessage(playerid, -1, "INFO: Usa /ftexture per modificare la texture del mobile.");
+            }
+            case 4:
+            {
                 Furniture_RemoveTextures(objectid);
                 SendClientMessage(playerid, COLOR_GREEN, "Hai rimosso le texture al mobile.");
                 Furniture_ShowOptions(playerid);
             }
-            case 4:
+            case 5:
             {
                 new modelid = Streamer_GetIntData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_MODEL_ID);
-                new newObjectId = Furniture_StartBuy(playerid, modelid, FurnitureCustomData[FURNITURE_IS_EXTERIOR], FurnitureCustomData[FURNITURE_BELONGS_TO_TYPE], FurnitureCustomData[FURNITURE_BELONGS_TO_ID]);
                 new Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz;
                 GetDynamicObjectPos(objectid, x, y, z);
                 GetDynamicObjectRot(objectid, rx, ry, rz);
-                SetDynamicObjectPos(newObjectId, x, y, z);
-                SetDynamicObjectRot(newObjectId, rx, ry, rz);
+                Furniture_StartBuy(playerid, modelid, FurnitureCustomData[FURNITURE_IS_EXTERIOR], FurnitureCustomData[FURNITURE_BELONGS_TO_TYPE], FurnitureCustomData[FURNITURE_BELONGS_TO_ID], x, y, z, rx, ry, rz);
                 ret = true;
                 break;
             }
-            case 5: // GOTO
+            case 6: // GOTO
             {
                 if(!Player_IsAdminDuty(playerid))
                     return 0;
@@ -439,7 +440,7 @@ static HandleRenameFurnitureDialog(playerid, objectid)
             continue;
         }
     
-        if(Furniture_Rename(objectid, response[E_DIALOG_RESPONSE_InputText]))
+        if(Furniture_SetName(objectid, response[E_DIALOG_RESPONSE_InputText]))
         {
             SendFormattedMessage(playerid, COLOR_GREEN, "Hai rinominato l'oggetto. Nuovo nome: %s", response[E_DIALOG_RESPONSE_InputText]);
         }
@@ -503,7 +504,8 @@ static HandleManualFurnitureIDDialog(playerid, bool:isExterior, EntityType:belon
     {
         await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_INPUT, @("Inserisci l'ID dell'arredamento"), @("Inserisci l'objectid che vuoi piazzare.\nRicorda di seguire le regole e di evitare abusi."), @("Piazza"), @("Annulla"));
         
-        if(!response[E_DIALOG_RESPONSE_Response]) break;
+        if(!response[E_DIALOG_RESPONSE_Response]) 
+            break;
 
         new objectid = strval(response[E_DIALOG_RESPONSE_InputText]);
         if(objectid <= 0)
@@ -638,7 +640,6 @@ stock Furniture_Load(EntityType:entityType, entityid)
         Float:x, Float:y, Float:z,
         Float:rx, Float:ry, Float:rz
         ;
-
     for(new i = 0; i < rows; ++i)
     {
         cache_get_value_name_int(i, "id", FurnitureCustomData[FURNITURE_DATABASE_ID]);
@@ -669,15 +670,20 @@ stock Furniture_Load(EntityType:entityType, entityid)
 
         cache_get_value_name_int(i, "is_exterior", type);
         FurnitureCustomData[FURNITURE_IS_EXTERIOR] = type ? true : false;
+
         new objectid = Server_CreateObject(modelid, x, y, z, rx, ry, rz, vw, interior);
-        
-        Furniture_LoadTextures(objectid);
-
         Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
-        
         Furniture_SetObject(objectid, FurnitureCustomData[FURNITURE_DATABASE_ID]);
-
         Furniture_AddToWorld(objectid);
+    }
+
+    new List:list = Furniture_GetByEntity(entityType, entityid);
+    if(list_valid(list))
+    {
+        for_list(i : list)
+        {
+            Furniture_Delete(iter_get(i));
+        }
     }
     return 1;
 }
@@ -688,7 +694,7 @@ stock Furniture_SetObject(objectid, dbid)
     return 1;
 }
 
-stock Furniture_StartBuy(playerid, modelid, bool:isExterior, EntityType:belongsToType, entityId)
+stock Furniture_StartBuy(playerid, modelid, bool:isExterior, EntityType:belongsToType, entityId, Float:x = 0.0, Float:y = 0.0, Float:z = 0.0, Float:rx = 0.0, Float:ry = 0.0, Float:rz = 0.0)
 {
     new maxFurnitures = GetMaxPlaceableFurnitures(playerid, isExterior);
     
@@ -698,11 +704,13 @@ stock Furniture_StartBuy(playerid, modelid, bool:isExterior, EntityType:belongsT
     //new world = isExterior ? 0 : Entity_GetVirtualWorld(belongsToType, entityId);
     //new interior = isExterior ? 0 : Entity_GetInterior(belongsToType, entityId);
 
-    new Float:x, Float:y, Float:z;
-	GetPlayerPos(playerid, x, y, z);
-    GetXYInFrontOfPlayer(playerid, x, y, 5);
+    if(x == 0.0 && y == 0.0 && z == 0.0)
+    {
+        GetPlayerPos(playerid, x, y, z);
+        GetXYInFrontOfPlayer(playerid, x, y, 5);
+    }
     
-    new objectid = Furniture_CreateTemporary(modelid, x, y, z, 0.0, 0.0, 0.0, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), isExterior, belongsToType, entityId);
+    new objectid = Furniture_CreateTemporary(modelid, x, y, z, rx, ry, rz, Character_GetVirtualWorld(playerid), GetPlayerInterior(playerid), isExterior, belongsToType, entityId);
     EditObject_Start(playerid, EDIT_TYPE_BUYING_FURNITURE, objectid, 0);
 
     SendClientMessage(playerid, -1, "Premi {FF6347}ESC{FFFFFF} per annullare e {FF6347}SPAZIO{FFFFFF} per spostare la visuale. Clicca sul {FF6347}FLOPPY{FFFFFF} per salvare.");
@@ -717,7 +725,6 @@ stock Furniture_FinishBuy(playerid, objectid)
 
     EditObject_End(playerid);
     Character_UpdateLabels(playerid);
-    //Furniture_UpdateInfoList(playerid);
     return 1;
 }
 
@@ -737,7 +744,7 @@ stock Furniture_CancelBuy(playerid)
 static Furniture_ShowOptions(playerid)
 {
     new String:s = @("Sposta\nRinomina\nRimuovi\nResetta Textures\n");
-    if(Account_GetAdminLevel(playerid) > 1)
+    if(Account_GetAdminLevel(playerid) > 1 && Player_IsAdminDuty(playerid))
     {
         s += @("Gotati");
     }
@@ -748,7 +755,7 @@ static Furniture_ShowOptions(playerid)
 
 stock Furniture_Update(objectid, playerid)
 {
-    if(!IsValidDynamicObject(objectid))
+    if(!IsFurniture(objectid))
         return 0;
     Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
 
@@ -762,25 +769,18 @@ stock Furniture_Update(objectid, playerid)
         Float:trx, Float:try, Float:trz;
     GetDynamicObjectPos(objectid, tx, ty, tz);
     GetDynamicObjectRot(objectid, trx, try, trz);
-
-    mysql_pquery_f(gMySQL, "UPDATE furnitures SET \
-            pos_x = '%f', pos_y = '%f', pos_z = '%f', \
-            rot_x = '%f', rot_y = '%f', rot_z = '%f', \
-            last_edit_by_account = '%d', last_edit_by_character = '%d' \
-            WHERE id = '%d'", 
-            tx, ty, tz,
-            trx, try, trz,
-            Account_GetID(playerid),
-            Character_GetID(playerid),
-            FurnitureCustomData[FURNITURE_DATABASE_ID]);
     
-    //Furniture_UpdateInfoList(playerid);
+    Furniture_SetPosition(objectid, tx, ty, tz);
+    Furniture_SetRotation(objectid, trx, try, trz);
+    mysql_pquery_f(gMySQL, "UPDATE furnitures SET last_edit_by_account = '%d', last_edit_by_character = '%d' WHERE id = '%d'", Account_GetID(playerid), Character_GetID(playerid), FurnitureCustomData[FURNITURE_DATABASE_ID]);
+    
+    Character_UpdateLabels(playerid);
     return 1;
 }
 
 stock Character_GetFurnitureSlot(playerid)
 {
-    static const limit[] = {200, 300, 400, 600};
+    static const limit[] = {600, 600, 600, 600};
 
     new slots = limit[Account_GetPremiumLevel(playerid)];
     new Cache:cache = mysql_query_f(gMySQL, true, "SELECT FurnitureSlots FROM Account WHERE ID = '%d';", Account_GetID(playerid));
@@ -796,7 +796,7 @@ stock Character_GetFurnitureSlot(playerid)
 
 stock Character_GetExtFurnitureSlot(playerid)
 {
-    static const limit[] = {5, 5, 10, 20};
+    static const limit[] = {10, 10, 15, 20};
     return limit[Account_GetPremiumLevel(playerid)];
 }
 
@@ -824,7 +824,7 @@ stock Furniture_Remove(playerid, objectid)
 
 stock bool:Furniture_Delete(objectid)
 {
-    if(!IsValidDynamicObject(objectid))
+    if(!IsFurniture(objectid))
         return false;
 
     Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
@@ -881,6 +881,14 @@ stock bool:Furniture_RemoveFromWorld(objectid)
     return false;
 }
 
+stock bool:Furniture_IsOfWorld(objectid, EntityType:entityType, entityid, bool:isExterior)
+{
+    new List:list = Furniture_GetByEntityFilter(entityType, entityid, isExterior);
+    if(!list_valid(list))
+        return false;
+    return list_find(list, objectid) != -1;
+}
+
 stock Furniture_ShowCategoryList(playerid)
 {
     static const info[] = "Inserisci ID Manualmente\nMura e scale\nTavoli per cucine e salotti\nSedie da uffici e da cucina\nLetti singoli e matrimoniali\nDivani e poltrone\nDecorazioni\nElettronica\nVario\nCucina\nBagno\nBottiglie, bicchieri e tazze\nPorte\nVasi\nPoster e graffiti\nContenitori rifiuti\nVestiti\nBombole e barili\nOggetti per il mare\nQuadri\nScatole\nColonne\nCibo\nUtensili\nMeccanica\nSpeciali\nLavagne";
@@ -890,20 +898,22 @@ stock Furniture_ShowCategoryList(playerid)
 
 stock bool:IsFurniture(objectid)
 {
+    if(!IsValidDynamicObject(objectid))
+        return false;
     Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
     return FurnitureCustomData[FURNITURE_DATABASE_ID] > 0;
 }
 
-stock Furniture_Rename(objectid, const name[])
+stock bool:Furniture_SetName(objectid, const name[])
 {
     if(!IsFurniture(objectid))
-        return 0;
+        return false;
     Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
     format(FurnitureCustomData[FURNITURE_NAME], sizeof(FurnitureCustomData[FURNITURE_NAME]), name);
     Streamer_SetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
 
     mysql_pquery_f(gMySQL, "UPDATE furnitures SET name = '%e' WHERE id = '%d'", name, FurnitureCustomData[FURNITURE_DATABASE_ID]);
-    return 1;
+    return true;
 }
 
 stock bool:Character_ToggleFurnitureLabels(playerid, bool:show)
@@ -913,7 +923,7 @@ stock bool:Character_ToggleFurnitureLabels(playerid, bool:show)
         return false;
     if(!show && !Furniture_IsShowingLabels(playerid))
         return false;
-    printf("IsExterior: %d - Type: %d - EntityID: %d", isExterior?1:0, _:type, entityid);
+    //printf("IsExterior: %d - Type: %d - EntityID: %d", isExterior?1:0, _:type, entityid);
     if(show)
     {
         if(!list_valid(FurnitureLabels[playerid]))
@@ -925,7 +935,7 @@ stock bool:Character_ToggleFurnitureLabels(playerid, bool:show)
         if(!list_valid(furnitures) || list_size(furnitures) <= 0)
             return false;
 
-        printf("Count: %d - Exterior: %s", list_size(furnitures), isExterior ? ("Si") : ("No"));
+        //printf("Count: %d - Exterior: %s", list_size(furnitures), isExterior ? ("Si") : ("No"));
         
         new String:text = str_new("");
         new characterName[MAX_PLAYER_NAME], accountName[MAX_PLAYER_NAME];
@@ -952,7 +962,7 @@ stock bool:Character_ToggleFurnitureLabels(playerid, bool:show)
             else
                 str_append_format(text, "World\n");
 
-            str_append_format(text, "%s\n", FurnitureCustomData[FURNITURE_NAME]);
+            str_append_format(text, "Object Name: %s\n", FurnitureCustomData[FURNITURE_NAME]);
 
             if(FurnitureCustomData[FURNITURE_LAST_EDIT_CHARACTER] > 0)
             {
@@ -1009,9 +1019,29 @@ stock bool:Furniture_IsShowingLabels(playerid)
     return list_valid(FurnitureLabels[playerid]);
 }
 
+stock bool:Furniture_SetPosition(objectid, Float:x, Float:y, Float:z)
+{
+    if(!IsFurniture(objectid))
+        return false;
+    Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+    SetDynamicObjectPos(objectid, x, y, z);
+    mysql_pquery_f(gMySQL, "UPDATE furnitures SET pos_x = '%f', pos_y = '%f', pos_z = '%f' WHERE id = '%d'", x, y, z, FurnitureCustomData[FURNITURE_DATABASE_ID]);
+    return true;
+}
+
+stock bool:Furniture_SetRotation(objectid, Float:rx, Float:ry, Float:rz)
+{
+    if(!IsFurniture(objectid))
+        return false;
+    Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
+    SetDynamicObjectRot(objectid, rx, ry, rz);
+    mysql_pquery_f(gMySQL, "UPDATE furnitures SET rot_x = '%f', rot_y = '%f', rot_z = '%f' WHERE id = '%d'", rx, ry, rz, FurnitureCustomData[FURNITURE_DATABASE_ID]);
+    return true;
+}
+
 stock Furniture_SetTexture(objectid, index, modelid, const txdName[], const textureName[], materialColor)
 {
-    if(!IsValidDynamicObject(objectid) || index < 0 || index > 15)
+    if(!IsFurniture(objectid) || index < 0 || index > 15)
         return 0;
     Streamer_GetArrayData(STREAMER_TYPE_OBJECT, objectid, E_STREAMER_EXTRA_ID, FurnitureCustomData, szCustomData);
     mysql_pquery_f(gMySQL, "INSERT INTO `furniture_textures` \
@@ -1050,22 +1080,20 @@ stock Furniture_LoadTextures(objectid)
     if(FurnitureCustomData[FURNITURE_DATABASE_ID] == 0)
         return 0;
     
-    inline OnLoad()
-    {
-        new rows = cache_num_rows();
-        new materialIndex, modelId, txdName[64], textureName[64], materialColor;
-        for(new i = 0; i < rows; ++i)
-        {
-            cache_get_value_index_int(i, 1, materialIndex);
-            cache_get_value_index_int(i, 2, modelId);
-            cache_get_value_index(i, 3, txdName);
-            cache_get_value_index(i, 4, textureName);
-            cache_get_value_index_int(i, 5, materialColor);
+    await mysql_aquery_s(gMySQL, str_format("SELECT * FROM furniture_textures WHERE furniture_id = '%d';", FurnitureCustomData[FURNITURE_DATABASE_ID]), .parallel=true);
 
-            SetDynamicObjectMaterial(objectid, materialIndex, modelId, txdName, textureName, materialColor);
-        }
+    new rows = cache_num_rows();
+    new materialIndex, modelId, txdName[64], textureName[64], materialColor;
+    for(new i = 0; i < rows; ++i)
+    {
+        cache_get_value_index_int(i, 1, materialIndex);
+        cache_get_value_index_int(i, 2, modelId);
+        cache_get_value_index(i, 3, txdName);
+        cache_get_value_index(i, 4, textureName);
+        cache_get_value_index_int(i, 5, materialColor);
+
+        SetDynamicObjectMaterial(objectid, materialIndex, modelId, txdName, textureName, materialColor);
     }
-    MySQL_TQueryInline(gMySQL, using inline OnLoad, "SELECT * FROM furniture_textures WHERE furniture_id = '%d';", FurnitureCustomData[FURNITURE_DATABASE_ID]);
     return 1;
 }
 

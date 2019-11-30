@@ -16,7 +16,7 @@ CMD:fcmds(playerid, params[])
 		}
 		else if(Faction_GetType(factionid) == FACTION_TYPE_GOVERNMENT)
 		{
-			SendClientMessage(playerid, COLOR_SLATEBLUE, "/servizio - /gov");
+			SendClientMessage(playerid, COLOR_SLATEBLUE, "/servizio - /gov - /tasse - /bilanciogov - /ritiragov - /depositagov");
 		}
 	}
 	return 1;
@@ -124,45 +124,47 @@ CMD:fcaccia(playerid, params[])
 	
 	new name[24];
 	if(sscanf(params, "s[24]", name))
-		return SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /fcaccia <nome>");
-	
-	inline OnQuery()
 	{
-		new rows = cache_num_rows();
-
-		if(rows <= 0)
-			return SendClientMessage(playerid, COLOR_ERROR, "Il nome inserito non è valido.");
-		
-		new id, tmpName[MAX_PLAYER_NAME];
-
-		cache_get_value_name_int(0, "id", id);
-		cache_get_value_name(0, "name", tmpName);
-
-		if(Character_GetID(playerid) == id)
-			return SendClientMessage(playerid, COLOR_ERROR, "Il nome inserito non è valido.");
-
-		foreach(new i : Player)
-		{
-			if(i == playerid || Character_GetID(i) != id)
-				continue;
-			
-			new fname[MAX_FACTION_NAME];
-			Faction_GetName(Character_GetFaction(playerid), fname);
-
-			SendFormattedMessage(i, COLOR_ORANGE, "%s ti ha cacciato dalla fazione %s.", Character_GetOOCName(playerid), fname);
-
-			Character_OffDuty(i);
-			
-			Character_SetFaction(i, INVALID_FACTION_ID);
-			Character_SetRank(i, 0);
-
-			break;
-		}
-
-		SendFormattedMessage(playerid, COLOR_ORANGE, "Hai cacciato %s dalla tua fazione.", tmpName);
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "USO: /fcaccia <nome>");
+		SendClientMessage(playerid, COLOR_COMMAND_ERROR, "INFO: Il nome inserito deve essere completo di _.");
+		return 1;
 	}
+	
+	await mysql_aquery_s(gMySQL, str_format("SELECT id, name FROM `characters` WHERE name = '%e' AND faction = '%d'", name, Character_GetFaction(playerid)), .parallel=true);
 
-	MySQL_TQueryInline(gMySQL, using inline OnQuery, "SELECT id, name FROM `characters` WHERE name = '%e' AND faction = '%d'", name, Character_GetFaction(playerid));
+	new rows = cache_num_rows();
+
+	if(rows <= 0)
+		return SendClientMessage(playerid, COLOR_ERROR, "Il nome inserito non è valido o il giocatore non fa parte della tua fazione.");
+	
+	new id, tmpName[MAX_PLAYER_NAME];
+
+	cache_get_value_name_int(0, "id", id);
+	cache_get_value_name(0, "name", tmpName);
+
+	if(Character_GetID(playerid) == id)
+		return SendClientMessage(playerid, COLOR_ERROR, "Il nome inserito non è valido.");
+
+	foreach(new i : Player)
+	{
+		if(i == playerid || Character_GetID(i) != id)
+			continue;
+		
+		new fname[MAX_FACTION_NAME];
+		Faction_GetName(Character_GetFaction(playerid), fname);
+
+		SendFormattedMessage(i, COLOR_ORANGE, "%s ti ha cacciato dalla fazione %s.", Character_GetOOCName(playerid), fname);
+
+		Character_OffDuty(i);
+		
+		Character_SetFaction(i, INVALID_FACTION_ID);
+		Character_SetRank(i, 0);
+
+		break;
+	}
+	mysql_pquery_f(gMySQL, "UPDATE `characters` SET faction = '%d', faction_rank = '0', faction_duty = '0' WHERE id = '%d'", INVALID_FACTION_ID, id);
+
+	SendFormattedMessage(playerid, COLOR_ORANGE, "Hai cacciato %s dalla tua fazione.", tmpName);
 	return 1;
 }
 

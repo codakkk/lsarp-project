@@ -79,6 +79,7 @@ static enum _:E_BUILDING_INFO
 	Faction,
 	Type,
 	Money,
+	EntrancePrice,
 	Map:Data,
 
     // Volatile
@@ -133,6 +134,7 @@ hook OnGameModeInit()
 						`faction` int(11) NOT NULL DEFAULT '-1', \
 						`type` tinyint(4) NOT NULL DEFAULT '0', \
 						`money` int(11) NOT NULL DEFAULT '0', \
+						`entrance_price` int(11) NOT NULL DEFAULT '0', \
 						PRIMARY KEY (`id`), \
 						KEY `OwnerID` (`owner_id`), \
 						CONSTRAINT `BuildingChars` FOREIGN KEY (`owner_id`) REFERENCES `characters` (`id`) ON DELETE SET NULL \
@@ -214,7 +216,8 @@ stock Building_LoadAll()
 			cache_get_value_name_int(i, "type", data[Type]);
 
 			cache_get_value_name_int(i, "money", data[Money]);
-
+			cache_get_value_name_int(i, "entrance_price", data[EntrancePrice]);
+			
 			cache_get_value_name(i, "data", jsonDataStr);
 
 			data[ExitWorld] = BUILDING_START_WORLD + data[ID];
@@ -532,8 +535,10 @@ stock Building_DestroyElements(Building:building)
     Pickup_Destroy(var_get(Variant:building, ExitPickupID));
 	new Text3D:t = Text3D:var_get(Variant:building, Enter3DText);
     DestroyDynamic3DTextLabelEx(t);
+	var_set_cell(Variant:building, Enter3DText, Text3D:INVALID_3DTEXT_ID);
 	t = Text3D:var_get(Variant:building, Exit3DText);
 	DestroyDynamic3DTextLabelEx(t);
+	var_set_cell(Variant:building, Exit3DText, Text3D:INVALID_3DTEXT_ID);
 	return 1;
 }
 
@@ -672,6 +677,19 @@ stock Building_SetMoney(Building:building, amount)
 {
 	var_set_cell(Variant:building, Money, amount);
 	mysql_pquery_f(gMySQL, "UPDATE `buildings` SET money = '%d' WHERE id = '%d'", 
+					amount, Building_GetID(building));
+	return 1;
+}
+
+stock Building_GetEntrancePrice(Building:building)
+{
+	return var_get(Variant:building, EntrancePrice);
+}
+
+stock Building_SetEntrancePrice(Building:building, amount)
+{
+	var_set_cell(Variant:building, EntrancePrice, amount);
+	mysql_pquery_f(gMySQL, "UPDATE `buildings` SET entrance_price = '%d' WHERE id = '%d'", 
 					amount, Building_GetID(building));
 	return 1;
 }
@@ -821,8 +839,6 @@ hook function Character_Enter(playerid)
 	}
     if(Building_IsValid(building))
     {
-		if(Building_IsLocked(building))
-			return GameTextForPlayer(playerid, "~r~Porta Chiusa", 5000, 1), 0;
 		new 
 			Float:x = 0.0, 
 			Float:y = 0.0, 
@@ -833,28 +849,46 @@ hook function Character_Enter(playerid)
 
 		if(type == ELEMENT_TYPE_BUILDING_ENTRANCE)
 		{
-			new String:str = Building_GetWelcomeTextStr(building);
-			if(str_len(str) > 0)
-				SendClientMessageStr(playerid, COLOR_GREEN, str);
 			Building_GetExitPos(building, x, y, z);
 			interiorId = Building_GetExitInterior(building);
 			world = Building_GetExitWorld(building);
-			
-			CallLocalFunction(#OnPlayerEnterBuilding, "dd", playerid, _:building);
 		}
 		else if(type == ELEMENT_TYPE_BUILDING_EXIT)
 		{
 			Building_GetEnterPos(building, x, y, z);
 			interiorId = Building_GetEnterInterior(building);
 			world = Building_GetEnterWorld(building);
+		}
 
+		if(Building_IsLocked(building) || (x == 0.0 && y == 0.0 && z == 0.0))
+			return GameTextForPlayer(playerid, "~r~Porta Chiusa", 5000, 1), 0;
+		
+		if(type == ELEMENT_TYPE_BUILDING_ENTRANCE)
+		{
+			new enterPrice = Building_GetEntrancePrice(building);
+			if(enterPrice > 0)
+			{
+				if(Character_GetMoney(playerid) < enterPrice)
+				{
+					SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi per entrare.");
+					return 0;
+				}
+				Character_GiveMoney(playerid, -enterPrice);
+				Building_GiveMoney(building, enterPrice);
+				SendClientMessageStr(playerid, -1, str_format("Hai pagato $%s per entrare nell'edificio.", FormatNumber(enterPrice)));
+			}
+
+			new String:str = Building_GetWelcomeTextStr(building);
+			if(str_len(str) > 0)
+				SendClientMessageStr(playerid, COLOR_GREEN, str);
+			CallLocalFunction(#OnPlayerEnterBuilding, "dd", playerid, _:building);
+		}
+		else if(type == ELEMENT_TYPE_BUILDING_EXIT)
+		{
 			CallLocalFunction(#OnPlayerExitBuilding, "dd", playerid, _:building);
 		}
-		if(x != 0.0 && y != 0.0 && z != 0.0)
-		{
-			// Should I use Fading?
-			Character_SetSafePosition(playerid, x, y, z, interiorId, world);
-		}
+		// Should I use Fading?
+		Character_SetSafePosition(playerid, x, y, z, interiorId, world);
 		return 1;
     }
     return continue(playerid);

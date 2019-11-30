@@ -28,7 +28,6 @@ static Character_ShowMDC(playerid)
     //str_append_format(info, "Lista Porto Armi\n");
     str_append_format(info, "Proprietario Biz\n");
     str_append_format(info, "Proprietario Casa\n");
-
     pawn_guard(info);
     
     yield 1;
@@ -96,7 +95,7 @@ static HandleCivilianSearchDialog(playerid)
             cache_get_value_name(0, "name", name);
         }
 
-        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_LIST, str_format("%s - Ricerca Cittadino", name), @("Dati del cittadino\nVeicoli del cittadino\nBiz del cittadino\nCase del cittadino"), @("Seleziona"), @("Indietro"));
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_LIST, str_format("%s - Ricerca Cittadino", name), @("Dati del cittadino\nVeicoli del cittadino\nBiz del cittadino\nCase del cittadino\nFedina penale"), @("Seleziona"), @("Indietro"));
 
         if(!response[E_DIALOG_RESPONSE_Response]) break;
 
@@ -106,6 +105,7 @@ static HandleCivilianSearchDialog(playerid)
             case 1: HandleCivilianVehiclesDialog(playerid, targetid, name);
             case 2: HandleCivilianBizDialog(playerid, targetid, name);
             case 3: HandleCivilianHouseDialog(playerid, targetid, name);
+            case 4: MDC_ShowCriminalRecords(playerid, name);
         }
     }
 }
@@ -348,10 +348,11 @@ static HandleSearchPlateDialog(playerid)
     }
 }
 
-static HandleWeaponLicenseListDialog(playerid)
+/*static HandleWeaponLicenseListDialog(playerid)
 {
     #pragma unused playerid
-}
+}*/
+
 static HandleBizOwnerDialog(playerid)
 {
     new 
@@ -457,7 +458,7 @@ stock MDC_ShowCriminalRecordDialogAdd(playerid, targetid)
 		if(!response[E_DIALOG_RESPONSE_Response] || isnull(response[E_DIALOG_RESPONSE_InputText]))
 			continue;
 		
-		new String:query = str_format("INSERT INTO `police_arrest_records` (officer_id, target_id, text, created_at) VALUES('%d', '%d', '%e', '%d'')", Character_GetID(playerid), Character_GetID(targetid), response[E_DIALOG_RESPONSE_InputText], gettime());
+		new String:query = str_format("INSERT INTO `police_arrest_records` (officer_id, target_id, text, created_at) VALUES('%d', '%d', '%e', '%d')", Character_GetID(playerid), Character_GetID(targetid), response[E_DIALOG_RESPONSE_InputText], gettime());
 		await mysql_aquery_s(gMySQL, query, .parallel=true);
 
 		new arrestRecordId = cache_insert_id();
@@ -503,12 +504,18 @@ CMD:fedina(playerid, params[])
 
 stock MDC_ShowCriminalRecords(playerid, const name[])
 {
-    new String:query = str_new("");
-    new List:Records = list_new();
-    new response[e_DIALOG_RESPONSE_INFO],
+    new 
+        String:query = str_new(""),
+        String:info = str_new(""),
+        List:Records = list_new(),
+        response[e_DIALOG_RESPONSE_INFO],
+        officerName[MAX_PLAYER_NAME],
         civilianName[MAX_PLAYER_NAME];
-    pawn_guard(query);
     
+    pawn_guard(query);
+    pawn_guard(info);
+
+        
     yield 1;
     for(;;)
     {
@@ -528,7 +535,8 @@ stock MDC_ShowCriminalRecords(playerid, const name[])
         // Name is in each row
         cache_get_value_name(0, "civilian_name", civilianName);
 
-        new String:info = str_new(""), time, recordId, year, month, day, h, m, s;
+        new time, recordId, year, month, day, h, m, s;
+        str_clear(info);
         for(new i = 0; i < rows; ++i)
         {
             cache_get_value_name_int(i, "id", recordId);
@@ -539,52 +547,49 @@ stock MDC_ShowCriminalRecords(playerid, const name[])
             list_add(Records, recordId);
         }
 
-        yield 1;
-        for(;;)
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_LIST, str_format("Fedina penale di %s", civilianName), info, @("Visualizza"), @("Chiudi"));
+
+        if(!response[E_DIALOG_RESPONSE_Response])
+            break;
+        
+        new text[201];
+        recordId = list_get(Records, response[E_DIALOG_RESPONSE_Listitem]);
+
+        str_clear(query);
+        str_append_format(query, "SELECT police_arrest_records.id, police_arrest_records.created_at, police_arrest_records.text, characters.name as officer_name FROM police_arrest_records INNER JOIN `characters` ON police_arrest_records.id = '%d' AND police_arrest_records.officer_id = characters.id", recordId);
+        await mysql_aquery_s(gMySQL, query, .parallel = true);
+
+        cache_get_value_name_int(0, "created_at", time);
+        cache_get_value_name(0, "officer_name", officerName);
+        cache_get_value_name(0, "text", text);
+
+        TimestampToDate(time, year, month, day, h, m, s);
+
+        str_clear(info);
+        str_append_format(info, "FEDINA PENALE #%d\n\n", recordId);
+        str_append_format(info, "Nome e Cognome: %s\n\n", civilianName);
+        str_append_format(info, "Agente: %s\n\n", officerName);
+        str_append_format(info, "Data: %d/%d/%d\n\n", day, month, year);
+        str_append_format(info, "Rapporto: %s\n\n", text);
+        str_append_format(info, "Reati: \n\n");
+
+        str_clear(query);
+        str_append_format(query, "SELECT text FROM `police_crime_records` WHERE arrest_record_id = '%d'", recordId);
+        await mysql_aquery_s(gMySQL, query, .parallel = true);
+
+        rows = cache_num_rows();
+        if(rows <= 0)
+            str_append_format(info, "- Non ci sono reati segnalati.");
+        else
         {
-            await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_LIST, str_format("Fedina penale di %s", civilianName), info, @("Visualizza"), @("Chiudi"));
-
-            if(!response[E_DIALOG_RESPONSE_Response])
-                break;
-            
-            new officerName[MAX_PLAYER_NAME], text[201];
-            recordId = list_get(Records, list_get(Records, response[E_DIALOG_RESPONSE_Listitem]));
-
-            str_clear(query);
-            str_append_format(query, "SELECT police_arrest_records.id, police_arrest_records.created_at, police_arrest_records.text, characters.name as officer_name FROM police_arrest_records INNER JOIN `characters` ON police_arrest_records.id = '%d' AND police_arrest_records.officer_id = characters.id", recordId);
-            await mysql_aquery_s(gMySQL, query, .parallel = true);
-
-            cache_get_value_name_int(0, "created_at", time);
-            cache_get_value_name(0, "officer_name", officerName);
-            cache_get_value_name(0, "text", text);
-
-            TimestampToDate(time, year, month, day, h, m, s);
-
-            new String:recordStr = str_format("FEDINA PENALE #%d\n\n", recordId);
-            pawn_guard(recordStr);
-            str_append_format(recordStr, "Nome e Cognome: %s\n\n", civilianName);
-            str_append_format(recordStr, "Agente: %s\n\n", officerName);
-            str_append_format(recordStr, "Data: %d/%d/%d\n\n", day, month, year);
-            str_append_format(recordStr, "Rapporto: %s\n\n", text);
-            str_append_format(recordStr, "Reati: \n\n");
-
-            str_clear(query);
-            str_append_format(query, "SELECT text FROM `police_crime_records` WHERE arrest_record_id = '%d'", recordId);
-            await mysql_aquery_s(gMySQL, query, .parallel = true);
-            rows = cache_num_rows();
-            if(rows <= 0)
-                str_append_format(recordStr, "- Non ci sono reati segnalati.");
-            else
+            for(new i = 0; i < rows; ++i)
             {
-                for(new i = 0; i < rows; ++i)
-                {
-                    cache_get_value_name(i, "text", text);
-                    str_append_format(recordStr, "- %s\n", text);
-                }
+                cache_get_value_name(i, "text", text);
+                str_append_format(info, "- %s\n", text);
             }
-
-            await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, @("Visualizza crimine"), recordStr, @("Indietro"), @(""));
         }
+
+        await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, @("Visualizza crimine"), info, @("Indietro"), @(""));
     }
     list_delete(Records);
 }

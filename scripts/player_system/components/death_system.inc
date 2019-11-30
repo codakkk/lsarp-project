@@ -108,6 +108,7 @@ public OnPlayerDeath(playerid, killerid, reason)
 	
 	if(Character_IsAlive(playerid))
 	{
+		UpdateDeathHistory(playerid);
 		new vid = GetPlayerVehicleID(playerid);
 		if(reason == 51 && vid > 0) //(IsAHelicopter(vid) || IsAPlane(vid)))
 		{

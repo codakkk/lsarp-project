@@ -144,7 +144,6 @@ hook OnGameModeInit()
 	#include "Cantiere_Distretto_LVPD_Exterior"
 	#include "Las_Venturas_Correctional_Facility_Exterior"
 	#include "Las_Venturas_Correctional_Facility_Interior"
-	#include "Las_Venturas_Repairs_Exterior"
 	#include "Cancelli_PD_Medic"
 	#include "Environment_Cinese_1_1"
 	#include "Tribunale"

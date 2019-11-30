@@ -1,6 +1,6 @@
 
+#include <faction_system\government\core>
 #include <buildings\core>
-
 #include <YSI_Coding\y_hooks>
 
 static enum _:E_SELLING_ITEMS
@@ -36,7 +36,10 @@ stock bool:Building_ShowSellingItems(Building:building, playerid, String:title)
         List:items = List:map_get(SellingItemsByType, Building_GetType(building));
     
     if(!list_valid(items) || list_size(items) <= 0)
-        return SendClientMessage(playerid, COLOR_ERROR, "Questo edificio non ha nulla da vendere."), false;
+    {
+        SendClientMessage(playerid, COLOR_ERROR, "Questo edificio non ha nulla da vendere.");
+        return;
+    }
 
     new String:info = str_new("Oggetto\tPrezzo ($)\n");
     for_list(i : items)
@@ -44,7 +47,7 @@ stock bool:Building_ShowSellingItems(Building:building, playerid, String:title)
         iter_get_arr(i, data);
         if(!ServerItem_IsValid(data[ItemID]))
             continue;
-        str_append_format(info, "%s\t{85bb65}${FFFFFF}%d\n", data[Name], data[Price]);
+        str_append_format(info, "%s\t{85bb65}${FFFFFF}%s\n", data[Name], FormatNumber(Tax_CalculateByValue(TAX_TYPE_VAT, data[Price])));
     }
     
     pawn_guard(title);
@@ -62,7 +65,9 @@ stock bool:Building_ShowSellingItems(Building:building, playerid, String:title)
         if(data[ItemID] <= 0)
             continue;
 
-        if(Character_GetMoney(playerid) < data[Price])
+        new taxedPrice = Tax_CalculateByValue(TAX_TYPE_VAT, data[Price]);
+
+        if(Character_GetMoney(playerid) < taxedPrice)
         {
             SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi per acquistare l'oggetto.");
             continue;
@@ -77,9 +82,11 @@ stock bool:Building_ShowSellingItems(Building:building, playerid, String:title)
         Character_GiveItem(playerid, data[ItemID], data[Amount], data[Extra]);
 
         Building_GiveMoney(building, data[Price]);
-        Character_GiveMoney(playerid, -data[Price], "buy_item_247");
+        Character_GiveMoney(playerid, -taxedPrice, "buy_item_247");
 
-        SendFormattedMessage(playerid, COLOR_ORANGE, "Hai acquistato \"%s\" per $%s.", data[Name], FormatNumber(data[Price]));
+        Gov_CollectTax(TAX_TYPE_VAT, data[Price]);
+
+        SendClientMessageStr(playerid, COLOR_ORANGE, str_format("Hai acquistato \"%s\" per $%s (%d percento di VAT).", data[Name], FormatNumber(taxedPrice), Tax_GetValue(TAX_TYPE_VAT)));
         break;
     }
 }

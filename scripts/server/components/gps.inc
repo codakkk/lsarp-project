@@ -66,6 +66,7 @@ CMD:gpscreate(playerid, params[])
     data[ID] = cache_insert_id();
     format(data[Name], 32, params);
     list_add_arr(Locations, data);
+
     SendFormattedMessage(playerid, COLOR_ORANGE, "Location GPS id %d creata con successo alla posizione corrente.", data[ID]);
     SendMessageToAdmins(0, COLOR_ADMIN, "AdmCmd: %s ha creato un nuovo luogo chiamato %s.", Account_GetName(playerid), params);
     return 1;
@@ -170,7 +171,7 @@ static ShowDeleteGPSDialog(playerid, listitem, data[E_GPS_LOCATION])
 
 CMD:gps(playerid, params[])
 {
-    if(!isnull(params) && !strcmp(params, "off", true))
+    if(YHash(params) == _I<off>)
     {
         HideGPS(playerid);
         SendClientMessage(playerid, -1, "Hai rimosso il checkpoint del GPS.");

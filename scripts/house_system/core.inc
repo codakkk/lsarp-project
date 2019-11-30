@@ -147,7 +147,8 @@ hook OnPlayerEnterDynamicCP(playerid, checkpointid)
         if(!House_IsOwned(house))
         {
             SendClientMessage(playerid, 0x33AA33FF, "Vuoi comprare questo immobile?");
-            SendFormattedMessage(playerid, 0x33AA33FF, "Prezzo: $%s", FormatNumber(House_GetPrice(house)));
+            SendFormattedMessage(playerid, 0x33AA33FF, "Prezzo base: $%s", FormatNumber(House_GetPrice(house)));
+            SendFormattedMessage(playerid, 0x33AA33FF, "Prezzo tassato: $%s", FormatNumber(Tax_CalculateByValue(TAX_TYPE_VAT, House_GetPrice(house))));
             SendClientMessage(playerid, -1, "/compra");
         }
         else if(Player_IsAdminDuty(playerid))
@@ -261,6 +262,29 @@ stock House_Delete(House:house)
     return 1;
 }
 
+stock RefreshHousesLabel()
+{
+    for_house(house)
+    {
+        if(House_IsOwned(house))
+            continue;
+        new Text3D:text = House_Get3DText(house);
+        if(IsValidDynamic3DTextLabel(text))
+            UpdateDynamic3DTextLabelTextStr(text, 0xC38A39FF, House_GetLabelStr(house));
+    }
+}
+
+stock String:House_GetLabelStr(House:house)
+{
+    new String:string = str_new("");
+    new taxedPrice = Tax_CalculateByValue(TAX_TYPE_VAT, House_GetPrice(house));
+    str_append_format(string, "Appartamento [%d] In Vendita:\n", House_GetID(house));
+    str_append_format(string, "Prezzo base: $%s\n", FormatNumber(House_GetPrice(house)));
+    //str_append_format(string, "Prezzo tassato: $%s\n", FormatNumber(taxedPrice));
+    str_append_format(string, "Interior: %d\n", House_GetInteriorID(house));
+    return string;
+}
+
 stock bool:House_CreateObjects(House:house)
 {
     if(!House_IsValid(house))
@@ -278,13 +302,10 @@ stock bool:House_CreateObjects(House:house)
     
     House_GetEnterPosition(house, x, y, z);
     House_GetExitPosition(house, ex, ey, ez);
-
-    new text[128];
     
     if(!House_IsOwned(house))
     {
-        format(text, sizeof(text), "Appartamento[%d] In Vendita:\nPrezzo: $%s\nInterior: %d", House_GetID(house), FormatNumber(House_GetPrice(house)), House_GetInteriorID(house));
-	    new Text3D:label = CreateDynamic3DTextLabel(text, 0xC38A39FF, x, y, z + 0.55, 5.0, .worldid = enterWorld, .interiorid = interior, .testlos = 1);
+	    new Text3D:label = CreateDynamic3DTextLabelStr(House_GetLabelStr(house), 0xC38A39FF, x, y, z + 0.55, 5.0, .worldid = enterWorld, .interiorid = interior, .testlos = 1);
         var_set_cell(Variant:house, h3DText, _:label);
     }
 
@@ -314,6 +335,9 @@ stock bool:House_DestroyObjects(House:house)
 	   DestroyDynamicCP(exitCheckpoint);
     if(IsValidDynamic3DTextLabel(label))
 	   DestroyDynamic3DTextLabelEx(label);
+    var_set_cell(Variant:house, EnterCheckpoint, 0);
+    var_set_cell(Variant:house, ExitCheckpoint, 0);
+    var_set_cell(Variant:house, h3DText, Text3D:INVALID_3DTEXT_ID);
     return true;
 }
 
@@ -384,6 +408,8 @@ stock House_SetEnterPosition(House:house, Float:x, Float:y, Float:z)
     var_set_cell(Variant:house, EnterY, y);
     var_set_cell(Variant:house, EnterZ, z);
 
+    House_CreateObjects(house);
+
     mysql_pquery_f(gMySQL, "UPDATE `houses` SET enter_x = '%f', enter_y = '%f', enter_z = '%f' WHERE id = '%d'", x, y, z, House_GetID(house));
     return 1;
 }
@@ -433,6 +459,8 @@ stock House_SetExitPosition(House:house, Float:x, Float:y, Float:z)
     var_set_cell(Variant:house, ExitY, y);
     var_set_cell(Variant:house, ExitZ, z);
 
+    House_CreateObjects(house);
+
     mysql_pquery_f(gMySQL, "UPDATE `houses` SET exit_x = '%f', exit_y = '%f', exit_z = '%f' WHERE id = '%d'", x, y, z, House_GetID(house));
     return 1;
 }
@@ -448,6 +476,7 @@ stock House_GetExitPosition(House:house, &Float:X, &Float:Y, &Float:Z)
 stock House_SetExitInterior(House:house, interior)
 {
     var_set_cell(Variant:house, ExitInterior, interior);
+    House_CreateObjects(house);
     mysql_pquery_f(gMySQL, "UPDATE `houses` SET exit_interior = '%d' WHERE id = '%d'", interior, House_GetID(house));
     return 1;
 }

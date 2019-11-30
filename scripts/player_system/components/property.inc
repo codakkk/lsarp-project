@@ -12,6 +12,7 @@
 
 #include <house_system\core>
 #include <pickup_system\core>
+#include <faction_system\government\core>
 #include <YSI_Coding\y_hooks>
 
 static
@@ -118,8 +119,10 @@ hook OnCharacterTryBuy(playerid)
 	{
 		if(!House_IsOwnable(house))
 			return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
+		
+		new taxedPrice = Tax_CalculateByValue(TAX_TYPE_VAT, House_GetPrice(house));
 		yield 1;
-		await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, House_GetAddressStr(house), str_format("Sei sicuro di voler acquistare questa casa per $%d?", House_GetPrice(house)), @("Acquista"), @("Annulla"));
+		await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, House_GetAddressStr(house), str_format("Sei sicuro di voler acquistare questa casa per $%s?", FormatNumber(taxedPrice)), @("Acquista"), @("Annulla"));
 		
 		if(response[E_DIALOG_RESPONSE_Response])
 		{
@@ -131,8 +134,9 @@ hook OnCharacterTryBuy(playerid)
 		if(!Building_IsOwnable(building) || Building_GetOwnerID(building) > 0)
 			return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
 
+		new taxedPrice = Tax_CalculateByValue(TAX_TYPE_VAT, Building_GetPrice(building));
 		yield 1;
-		await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, Building_GetAddressStr(building), str_format("Sei sicuro di voler acquistare questa biz per $%d?", Building_GetPrice(building)), @("Acquista"), @("Annulla"));
+		await_arr(response) ShowPlayerAsyncDialogStr(playerid, DIALOG_STYLE_MSGBOX, Building_GetAddressStr(building), str_format("Sei sicuro di voler acquistare questa biz per $%s?", FormatNumber(taxedPrice)), @("Acquista"), @("Annulla"));
 		
 		if(response[E_DIALOG_RESPONSE_Response])
 		{
@@ -228,21 +232,24 @@ stock Character_BuyBuilding(playerid, Building:building)
     if(!Building_IsOwnable(building))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
 
-    if(Character_GetMoney(playerid) < Building_GetPrice(building))
+	new 
+		buildingPrice = Building_GetPrice(building),
+		taxedBuildingPrice = Tax_CalculateByValue(TAX_TYPE_VAT, buildingPrice);
+
+    if(Character_GetMoney(playerid) < taxedBuildingPrice)
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi per acquistare questa proprietà.");
     
 	if(!Character_CanOwnBuilding(playerid, building))
 		return SendClientMessage(playerid, COLOR_ERROR, "Hai raggiunto il limite massimo di business. Acquista un pacchetto premium per incrementarlo.");
     
-	Character_GiveMoney(playerid, -Building_GetPrice(building));
-    
     Building_SetOwner(building, playerid);
 
-	//Character_AddOwnedBuilding(playerid, building);
+	Character_GiveMoney(playerid, -taxedBuildingPrice);
+	Gov_CollectTax(TAX_TYPE_VAT, buildingPrice);
 
 	new name[MAX_BUILDING_NAME];
 	Building_GetName(building, name);
-    SendFormattedMessage(playerid, COLOR_GREEN, "Hai acquistato questo business (%s) per $%d.", name, Building_GetPrice(building));
+    SendFormattedMessage(playerid, COLOR_GREEN, "Hai acquistato questo business (%s) per $%s (%d percento di V.A.T).", name, FormatNumber(taxedBuildingPrice), Tax_GetValue(TAX_TYPE_VAT));
     return 1;
 }
 
@@ -257,8 +264,11 @@ stock Character_BuyHouse(playerid, House:house)
     if(!House_IsOwnable(house))
 	   return SendClientMessage(playerid, COLOR_ERROR, "Questa proprietà non è in vendita.");
 
-    new price = House_GetPrice(house);
-    if(Character_GetMoney(playerid) < price)
+    new 
+		price = House_GetPrice(house),
+		taxedPrice = Tax_CalculateByValue(TAX_TYPE_VAT, price);
+
+    if(Character_GetMoney(playerid) < taxedPrice)
 	   return SendClientMessage(playerid, COLOR_ERROR, "Non hai abbastanza soldi per acquistare questa proprietà.");
 
 	if(!Character_CanOwnHouse(playerid, house))
@@ -266,9 +276,10 @@ stock Character_BuyHouse(playerid, House:house)
 
     if(House_SetOwner(house, playerid))
 	{
-    	Character_GiveMoney(playerid, -price, "Character_BuyHouse");
-    	
-		SendFormattedMessage(playerid, 0x33AA33FF, "Hai acquistato l'immobile situato a %s.", House_GetAddress(house));
+    	Character_GiveMoney(playerid, -taxedPrice, "Character_BuyHouse");
+    	Gov_CollectTax(TAX_TYPE_VAT, price);
+
+		SendFormattedMessage(playerid, 0x33AA33FF, "Hai acquistato l'immobile situato a %s per $%s (%d percento di V.A.T).", House_GetAddress(house), FormatNumber(taxedPrice), Tax_GetValue(TAX_TYPE_VAT));
 	}
     return 1;
 }
@@ -316,7 +327,7 @@ stock bool:Character_RemoveOwnedBuilding(playerid, Building:building)
 stock List:Character_GetOwnedBuildingsList(playerid)
 {
 	if(!list_valid(CharacterBuildings[playerid]))
-		return List:0;
+		CharacterBuildings[playerid] = list_new();
 	return CharacterBuildings[playerid];
 }
 
@@ -393,7 +404,7 @@ stock bool:Character_RemoveOwnedHouse(playerid, House:house)
 stock List:Character_GetOwnedHousesList(playerid)
 {
 	if(!list_valid(CharacterHouses[playerid]))
-		return List:0;
+		CharacterHouses[playerid] = list_new();
 	return CharacterHouses[playerid];
 }
 

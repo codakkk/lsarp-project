@@ -2,12 +2,13 @@
 
 static
     PlayerAMeExpiry[MAX_PLAYERS char],
-    Text3D:PlayerAMe3DText[MAX_PLAYERS]
+    Text3D:PlayerAMe3DText[MAX_PLAYERS] = {Text3D:INVALID_3DTEXT_ID, ...}
 ;
 
 hook OnCharacterClearData(playerid)
 {
     DestroyDynamic3DTextLabelEx(PlayerAMe3DText[playerid]);
+    PlayerAMe3DText[playerid] = Text3D:INVALID_3DTEXT_ID;
 	PlayerAMeExpiry{playerid} = 0;
     return 1;
 }
@@ -69,7 +70,7 @@ stock Character_AMe(playerid, text[], GLOBAL_TAG_TYPES:...)
     GetPlayerPos(playerid, x, y, z);
     foreach(new i : Player)
     {
-	   if(IsPlayerInRangeOfPoint(playerid, 25.0, x, y, z))
+	   if(IsPlayerInRangeOfPoint(i, 25.0, x, y, z))
 		  Streamer_Update(i);
     }
     return 1;

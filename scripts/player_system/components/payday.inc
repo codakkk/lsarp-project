@@ -1,6 +1,7 @@
 
 
 #include <faction_system\core>
+#include <faction_system\government\core>
 #include <jobs\core>
 
 #include <YSI_Coding\y_hooks>
@@ -46,18 +47,31 @@ stock Character_PayDay(playerid)
 		factionMoney = 0,
 		premiumMoney = 0,
 		businessMoney = 0,
+		businessTaxes = 0,
 		newPlayerMoney = 0, 
 		jobMoney = 0,
-		interests = 0,
 		paycheck = 0,
 		rentPrice = 0,
+		vehicleTaxes = 0,
+		totalTaxes = 0,
 		bool:kickedFromHouse = false
 	;
 
 	HandlePlayerHouseRent(playerid, rentPrice, kickedFromHouse);
 	
-	premiumMoney = GetPlayerMoneyByPremium(playerid);
-	paycheck += premiumMoney;
+	await mysql_aquery_s(gMySQL, str_format("SELECT price FROM `vehicles` WHERE owner_id = '%d'", Character_GetID(playerid)));
+	new rows = cache_num_rows();
+	if(rows > 0)
+	{
+		new vehiclePrice = 0;
+		for(new i = 0; i < rows; ++i)
+		{
+			cache_get_value_name_int(i, "price", vehiclePrice);
+			vehicleTaxes += (Tax_CalculateByValue(TAX_TYPE_VEHICLE, vehiclePrice) - vehiclePrice);
+		}
+		totalTaxes += vehicleTaxes;
+	}
+
 
 	factionMoney = GetPlayerFactionSalary(playerid);
 	paycheck += factionMoney;
@@ -65,13 +79,37 @@ stock Character_PayDay(playerid)
 	newPlayerMoney = GetPlayerMoneyForLevel(playerid);
 	paycheck += newPlayerMoney;
 
-	businessMoney = GetPlayerBuildingMoney(playerid);
-	paycheck += businessMoney;
-
 	jobMoney = GetPlayerMoneyByJob(playerid);
 	paycheck += jobMoney;
 
-	Character_AddPayCheck(playerid, paycheck);
+	// Place anything before Gov_CollectTax for taxed as salary
+	Gov_CollectTax(TAX_TYPE_SALARY, paycheck);
+	// Place anything after Gov_CollectTax for untaxed salary
+	
+	premiumMoney = GetPlayerMoneyByPremium(playerid);
+	paycheck += premiumMoney;
+
+	businessMoney = GetPlayerBuildingMoney(playerid);
+	paycheck += businessMoney;
+
+	businessTaxes = Tax_CalculateByValue(TAX_TYPE_BIZ, businessMoney);
+	/*for_player_building(building : playerid)
+	{
+		new price = Building_GetPrice(building);
+		if(price > 0)
+		{
+			Gov_CollectTax(TAX_TYPE_BIZ, price);
+			businessTaxes += Tax_CalculateOnlyTax(TAX_TYPE_BIZ, price);
+		}
+	}*/
+
+	new taxedPaycheck = paycheck - Tax_CalculateOnlyTax(TAX_TYPE_SALARY, paycheck);
+
+	Character_AddPayCheck(playerid, taxedPaycheck);
+
+	totalTaxes += businessTaxes;
+
+	Character_GiveBank(playerid, -totalTaxes, "taxes");
 
 	new h, m, s;
 	gettime(h, m, s);
@@ -81,9 +119,12 @@ stock Character_PayDay(playerid)
 	SendFormattedMessage(playerid, 0xB4B5B7FF, "Bilancio: $%s", FormatNumber(startBankMoney));
 	//SendFormattedMessage(playerid, 0xB4B5B7FF, "Tasso di interesse: %f", 0.1);
 	//SendFormattedMessage(playerid, 0xB4B5B7FF, "Interessi guadagnati: $%s", FormatNumber(interests));
-	SendFormattedMessage(playerid, 0xB4B5B7FF, "Tasse pagate: -$%d", 0);
+	SendFormattedMessage(playerid, 0xB4B5B7FF, "Tasse business: -$%s", FormatNumber(businessTaxes));
+	SendFormattedMessage(playerid, 0xB4B5B7FF, "Tasse veicoli: -$%s", FormatNumber(vehicleTaxes));
+	SendFormattedMessage(playerid, 0xB4B5B7FF, "Totale tasse pagate: -$%s", FormatNumber(totalTaxes));
 	SendFormattedMessage(playerid, 0xB4B5B7FF, "Affitto: -$%s", FormatNumber(rentPrice));
-	SendFormattedMessage(playerid, 0xB4B5B7FF, "Stipendio:  $%s", FormatNumber(paycheck));
+	SendFormattedMessage(playerid, 0xB4B5B7FF, "Stipendio lordo:  $%s", FormatNumber(paycheck));
+	SendFormattedMessage(playerid, 0xB4B5B7FF, "Stipendio netto:  $%s", FormatNumber(taxedPaycheck));
 	SendClientMessage(playerid, -1, "|__________________|");
 	SendFormattedMessage(playerid, -1, "Nuovo Bilancio: $%s", FormatNumber(Character_GetBank(playerid)));
 	

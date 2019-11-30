@@ -552,7 +552,6 @@ public Vehicle_LoadAll()
 	new Float:x, Float:y, Float:z, Float:a, color1, color2, factionid;
 	
 	count = cache_num_rows();
-	printf("Rows loaded: %d", count);
 	for(new i = 0; i < count; ++i)
 	{
 		alreadyLoaded = false;
@@ -975,6 +974,7 @@ stock Vehicle_RemoveSign(vehicleid)
 		return 0;
 	if(IsValidDynamic3DTextLabel(VehicleSign[vehicleid]))
 		DestroyDynamic3DTextLabelEx(VehicleSign[vehicleid]);
+	VehicleSign[vehicleid] = Text3D:INVALID_3DTEXT_ID;
 	return 1;
 }
 

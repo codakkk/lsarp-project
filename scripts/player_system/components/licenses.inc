@@ -255,6 +255,7 @@ Dialog:Dialog_LicenseBuy(playerid, response, listitem, inputtext[])
     {
         SendFormattedMessage(playerid, COLOR_GREEN, "Hai acquistato la licenza (%s) per $%d.", GetLicenseName(type), price);
         Character_GiveMoney(playerid, -price, "license_buy");
+        Gov_GiveMoney(MONEY_REASON_LICENSE, price);
     }
     return 1;
 }

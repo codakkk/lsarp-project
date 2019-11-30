@@ -25,7 +25,7 @@ stock bool:Character_ShowHouseDialog(playerid)
             break;
         }
         
-        await_arr(response) ShowPlayerAsyncDialog(playerid, DIALOG_STYLE_LIST, "Casa", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nCambia Interior\nLista Affittuari\nAttiva/Disattiva Affitto\nPrezzo Affitto", "Continua", "Chiudi");
+        await_arr(response) ShowPlayerAsyncDialog(playerid, DIALOG_STYLE_LIST, "Casa", "Apri/Chiudi Porta\nInventario\nDeposita Soldi\nRitira Soldi\nVendi\nVendi a Giocatore\nCambia Interior\nLista Affittuari\nAttiva/Disattiva Affitto\nPrezzo Affitto\nSposta Uscita", "Continua", "Chiudi");
 
         if(!response[E_DIALOG_RESPONSE_Response]) break;
 
@@ -41,7 +41,37 @@ stock bool:Character_ShowHouseDialog(playerid)
             case 7: ShowHouseRentersListDialog(playerid, house, 0);
             case 8: ToggleHouseRent(playerid, house);
             case 9: ShowChangeHouseRentPriceDialog(playerid, house);
+            case 10: ShowMoveExitDialog(playerid, house);
         }
+    }
+}
+
+static ShowMoveExitDialog(playerid, House:house)
+{
+    if(!Character_CanUseHouseMenu(playerid, house, true))
+    {
+        SendClientMessage(playerid, COLOR_ERROR, "Solo il proprietario puo' modificare l'uscita della casa.");
+        return;
+    }
+    
+    if(Character_GetVirtualWorld(playerid) != House_GetExitWorld(house))
+    {
+        SendClientMessage(playerid, COLOR_ERROR, "Questa funzionalità può essere utilizzata solo all'interno della casa.");
+        return;
+    }
+
+    new response[e_DIALOG_RESPONSE_INFO];
+
+    yield 1;
+    await_arr(response) ShowPlayerAsyncDialog(playerid, DIALOG_STYLE_MSGBOX, "Sposta Uscita", "Sei sicuro di voler spostare l'uscita della casa alla posizione corrente?", "Sposta", "Indietro");
+
+    if(response[E_DIALOG_RESPONSE_Response])
+    {
+        SendClientMessage(playerid, -1, "Hai spostato l'uscita della casa alla posizione corrente.");
+
+        new Float:x, Float:y, Float:z;
+        GetPlayerPos(playerid, x, y, z);
+        House_SetExitPosition(house, x, y, z);
     }
 }
 
