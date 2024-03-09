@@ -1,0 +1,1 @@
+A San Andreas Multiplayer (SAMP) role-playing game mode I've developed when I was young. It was an attempt to use modules and some funny plugins like PawnPlus and others.
