@@ -1,3 +1,0 @@
-AddSimpleModel(-1,19379, -2001, "object.dff", "lsarp.txd");
-
-
